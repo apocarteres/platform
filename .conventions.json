@@ -1,0 +1,4 @@
+{
+  "sources": ["platform-persistence/src", "scripts", "packages/project-conventions"],
+  "exclude": ["/test/resources/"]
+}

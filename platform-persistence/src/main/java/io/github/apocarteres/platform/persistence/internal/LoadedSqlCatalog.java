@@ -4,7 +4,7 @@ import io.github.apocarteres.platform.persistence.SqlCatalog;
 import java.util.Map;
 import java.util.TreeSet;
 
-/** Загруженный каталог SQL одной доменной области. */
+// REQ-PERSISTENCE-003
 record LoadedSqlCatalog(String directory, Map<String, String> statements) implements SqlCatalog {
 
   LoadedSqlCatalog {

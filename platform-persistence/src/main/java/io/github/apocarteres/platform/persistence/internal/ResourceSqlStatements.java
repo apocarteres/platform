@@ -11,16 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-/**
- * Загружает каталоги SQL из ресурсов {@code classpath:sql/<каталог>/*.sql}.
- *
- * <p>Загрузчик отказывает громко: отсутствующий каталог, пустой файл
- * и повторяющееся имя запроса — это ошибки конфигурации, которые обязаны
- * обнаруживаться при первом обращении, а не превращаться в непонятный
- * отказ драйвера во время работы.
- *
- * <p>Каталоги кешируются: файлы читаются один раз на каталог.
- */
+// REQ-PERSISTENCE-002, REQ-PERSISTENCE-004, REQ-PERSISTENCE-005
 public final class ResourceSqlStatements implements SqlStatements {
 
   private final PathMatchingResourcePatternResolver resourcePatterns;

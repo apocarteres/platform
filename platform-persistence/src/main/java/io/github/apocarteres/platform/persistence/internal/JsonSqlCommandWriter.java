@@ -6,13 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.github.apocarteres.platform.persistence.SqlCommandWriter;
 
-/**
- * Пишет команды DAO в JSON с датами в ISO-8601.
- *
- * <p>Собственный {@code ObjectMapper}, не общий с веб-слоем: формат даты
- * в команде обязан совпадать с тем, что понимает приведение типов
- * в SQL, и не должен меняться вслед за настройками ответа API.
- */
+// REQ-PERSISTENCE-009, ADR-0002
 public final class JsonSqlCommandWriter implements SqlCommandWriter {
 
   private final ObjectMapper json = new ObjectMapper()

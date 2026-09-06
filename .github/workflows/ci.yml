@@ -23,6 +23,18 @@ jobs:
           node scripts/docs/tickets-index.mjs --check
           node scripts/docs/releases-index.mjs --check
 
+  conventions:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Тесты пакета правил
+        run: node --test packages/project-conventions/test/*.test.mjs
+      - name: Правила соблюдаются в самом ядре
+        run: node packages/project-conventions/bin/conventions.mjs check
+
   java:
     runs-on: ubuntu-24.04
     steps:

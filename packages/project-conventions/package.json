@@ -1,7 +1,7 @@
 {
   "name": "@apocarteres/project-conventions",
   "version": "0.0.0",
-  "description": "Правила ведения проекта и инструменты проверки документации для проектов на ядре platform. Пока заглушка для проверки публикации.",
+  "description": "Правила ведения проекта и их проверки: комментарии только как ссылки на документы, синхронизация общего блока AGENTS.md, храповик существующих нарушений.",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",
@@ -12,6 +12,19 @@
     "registry": "https://npm.pkg.github.com"
   },
   "files": [
+    "bin",
+    "lib",
+    "fragments",
     "README.md"
-  ]
+  ],
+  "type": "module",
+  "bin": {
+    "conventions": "bin/conventions.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
 }

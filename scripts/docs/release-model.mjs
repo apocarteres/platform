@@ -21,7 +21,6 @@ function sections(content) {
   return result;
 }
 
-// documents contains immutable snapshots { file: repository-relative path, content, metadata }.
 export function validateReleases(documents) {
   const errors = [];
   const releases = new Map();

@@ -8,10 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
 
-/**
- * Все виды отказа загрузчика обнаруживаются при первом обращении к каталогу,
- * а не превращаются в отказ драйвера во время работы.
- */
 class ResourceSqlStatementsTest {
 
   private final SqlStatements statements = new ResourceSqlStatements(new DefaultResourceLoader());

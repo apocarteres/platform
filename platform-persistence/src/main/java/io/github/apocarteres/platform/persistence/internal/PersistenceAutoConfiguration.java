@@ -9,12 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 
-/**
- * Регистрирует порты слоя persistence, если потребитель не объявил свои.
- *
- * <p>{@link SqlCommandWriter} появляется только при наличии Jackson 2 на classpath:
- * зависимость объявлена optional, потребителю без Jackson 2 достаточно каталогов SQL.
- */
+// REQ-PERSISTENCE-011, REQ-PERSISTENCE-012
 @AutoConfiguration
 public class PersistenceAutoConfiguration {
 

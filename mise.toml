@@ -18,6 +18,23 @@ run = "node scripts/docs/tickets-index.mjs"
 description = "Собрать каталог выпусков"
 run = "node scripts/docs/releases-index.mjs"
 
+[tasks.conventions-check]
+description = "Проверить правила проекта: комментарии и блок правил в AGENTS.md"
+run = "node packages/project-conventions/bin/conventions.mjs check"
+
+[tasks.conventions-sync]
+description = "Вписать блок правил в AGENTS.md"
+run = "node packages/project-conventions/bin/conventions.mjs sync"
+
+[tasks.conventions-baseline]
+description = "Зафиксировать существующие комментарии храповиком"
+run = "node packages/project-conventions/bin/conventions.mjs baseline \"$@\""
+
+[tasks.conventions-test]
+description = "Тесты пакета правил"
+dir = "packages/project-conventions"
+run = "node --test test/*.test.mjs"
+
 [tasks.java-build]
 description = "Собрать Java-модули без тестов"
 run = "./mvnw --batch-mode --no-transfer-progress -DskipTests package"
@@ -28,4 +45,4 @@ run = "./mvnw --batch-mode --no-transfer-progress verify"
 
 [tasks.build]
 description = "Проверить документацию и собрать Java-модули с тестами"
-depends = ["docs-check", "java-test"]
+depends = ["docs-check", "conventions-test", "conventions-check", "java-test"]

@@ -1,5 +1,6 @@
 import { findProseComments } from './comments.mjs';
 import { findSystemClockUses } from './clock.mjs';
+import { toRule, validate } from './project-rules.mjs';
 
 export const RULES = [
   {
@@ -19,3 +20,14 @@ export const RULES = [
     find: findSystemClockUses,
   },
 ];
+
+export function projectRules(config) {
+  const entries = config.rules ?? [];
+  const errors = validate(entries, new Set(RULES.map((rule) => rule.id)));
+  return { rules: errors.length > 0 ? [] : entries.map(toRule), errors };
+}
+
+export function allRules(config) {
+  const { rules, errors } = projectRules(config);
+  return { rules: [...RULES, ...rules], errors };
+}

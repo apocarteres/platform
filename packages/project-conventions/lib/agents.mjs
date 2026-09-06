@@ -12,16 +12,21 @@ export function markerVersion(version) {
 export const INSTALLED_DOCS_PATH = 'node_modules/@apocarteres/project-conventions/docs';
 export const SOURCE_DOCS_PATH = 'docs/requirements';
 
-export function manifest(version, docsPath = INSTALLED_DOCS_PATH) {
-  const rows = RULES.map((rule) => `| ${rule.document} | ${rule.summary} | [\`${rule.file}\`](${docsPath}/${rule.file}) |`);
+export function manifest(version, docsPath = INSTALLED_DOCS_PATH, rules = RULES) {
+  const rows = rules.map((rule) => {
+    const location = rule.project ? rule.file : `${docsPath}/${rule.file}`;
+    const origin = rule.project ? 'проект' : 'платформа';
+    return `| ${rule.document} | ${origin} | ${rule.summary} | [\`${rule.file.split('/').pop()}\`](${location}) |`;
+  });
   return [
     '## Правила платформы',
     '',
-    `Правила поставляются пакетом \`@apocarteres/project-conventions\` версии ${markerVersion(version)} и в этот репозиторий не копируются.`,
-    'Нормативные тексты лежат рядом с установленным пакетом; читать их там, а не пересказывать здесь.',
+    `Правила платформы поставляются пакетом \`@apocarteres/project-conventions\` версии ${markerVersion(version)} и в этот репозиторий не копируются:`,
+    'их нормативные тексты лежат рядом с установленным пакетом. Правила проекта объявлены в \`.conventions.json\` и описаны его собственными документами.',
+    'Соблюдаются оба набора; правило платформы проект ослабить не может.',
     '',
-    '| Документ | О чём | Текст |',
-    '|---|---|---|',
+    '| Документ | Источник | О чём | Текст |',
+    '|---|---|---|---|',
     ...rows,
     '',
     'Перед правкой кода прочитать текст правила, которого она касается. Проверяется задачей `mise run conventions-check`:',

@@ -1,0 +1,82 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { allRules, projectRules } from '../lib/rules.mjs';
+import { toRule, validate } from '../lib/project-rules.mjs';
+
+const builtIn = new Set(['comments', 'clock']);
+
+test('правило проекта дополняет правила платформы, а не заменяет их', () => {
+  const { rules, errors } = allRules({
+    rules: [{
+      id: 'no-er-suffix', document: 'REQ-CODE-NAMING', text: 'docs/requirements/code-naming.md',
+      message: 'класс с суффиксом -er', forbid: 'class\\s+\\w+[Ee]r\\b',
+    }],
+  });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(rules.map((rule) => rule.id), ['comments', 'clock', 'no-er-suffix']);
+});
+
+test('идентификатор правила платформы занять нельзя', () => {
+  const errors = validate([{ id: 'clock', document: 'D', text: 't', message: 'm', forbid: 'a' }], builtIn);
+  assert.equal(errors.length, 1);
+  assert.match(errors[0], /занят правилом платформы/);
+});
+
+test('определение проверяется: поля, регулярное выражение, полярность', () => {
+  assert.match(validate([{ id: 'a', document: 'D', text: 't', message: 'm' }], builtIn)[0], /forbid.*where.*require/);
+  assert.match(validate([{ id: 'a', document: 'D', text: 't', message: 'm', forbid: '(' }], builtIn)[0], /не является регулярным/);
+  assert.match(validate([{ id: 'a', document: 'D', text: 't', message: 'm', forbid: 'x', typo: 1 }], builtIn).join(), /неизвестное поле typo/);
+  assert.match(validate([{ document: 'D', text: 't', message: 'm', forbid: 'x' }], builtIn).join(), /требуется id/);
+});
+
+test('пара where и require ловит объявление без обязательного признака', async (t) => {
+  const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const root = await mkdtemp(path.join(os.tmpdir(), 'project-rules-'));
+  try {
+    await mkdir(path.join(root, 'src'), { recursive: true });
+    await writeFile(path.join(root, 'src', 'A.java'), [
+      'public final class A {}',
+      'public abstract class B {}',
+      'public class C {}',
+      '// public class D {}',
+    ].join('\n'));
+    const rule = toRule({
+      id: 'final-classes', document: 'REQ-CODE-FINAL', text: 'docs/requirements/code-final.md',
+      message: 'неабстрактный класс без final', extensions: ['.java'],
+      where: '\\bclass\\s+\\w+', require: '\\b(final|abstract)\\b',
+    });
+    const violations = await rule.find(root, { sources: ['.'] });
+    assert.deepEqual([...violations.keys()], ['src/A.java']);
+    assert.deepEqual(violations.get('src/A.java').map((item) => item.line), [3]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('область действия и перечень исключений сужают правило', async () => {
+  const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const root = await mkdtemp(path.join(os.tmpdir(), 'project-rules-'));
+  try {
+    for (const file of ['backend/src/Manager.java', 'agent/src/Manager.java']) {
+      await mkdir(path.join(root, path.dirname(file)), { recursive: true });
+      await writeFile(path.join(root, file), 'class Manager {}\n');
+    }
+    const entry = {
+      id: 'no-er-suffix', document: 'D', text: 't', message: 'класс с суффиксом -er',
+      extensions: ['.java'], scope: ['backend'], forbid: 'class\\s+\\w+[Ee]r\\b',
+    };
+    assert.deepEqual([...(await toRule(entry).find(root, { sources: ['.'] })).keys()], ['backend/src/Manager.java']);
+    const allowed = toRule({ ...entry, allow: ['backend/src/Manager.java'] });
+    assert.equal((await allowed.find(root, { sources: ['.'] })).size, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('пустой перечень правил проекта допустим', () => {
+  assert.deepEqual(projectRules({}), { rules: [], errors: [] });
+});

@@ -23,11 +23,17 @@ test('состояние блока различает устаревшую ве
   assert.equal(inspectBlock('# Без блока\n', '1.0.0', fragment).state, 'missing');
 });
 
-test('манифест перечисляет правила и путь к их текстам, а не пересказывает их', () => {
+test('манифест указывает, где читать правила, и ничего не пересказывает', () => {
   const block = manifest('1.2.3');
-  assert.match(block, /REQ-CODE-COMMENTS/);
-  assert.match(block, /REQ-CODE-CLOCK/);
-  assert.match(block, /node_modules\/@apocarteres\/project-conventions\/docs\/code-clock\.md/);
-  assert.match(block, /версии 1\.2\.3/);
+  assert.match(block, /node_modules\/@apocarteres\/project-conventions\/docs/);
+  assert.match(block, /conventions-check/);
+  assert.doesNotMatch(block, /REQ-CODE-CLOCK/);
   assert.doesNotMatch(block, /Instant\.now/);
+  assert(block.split('\n').length <= 5, block);
+});
+
+test('правила проекта упоминаются только когда они есть', () => {
+  assert.doesNotMatch(manifest('1.0.0'), /\.conventions\.json/);
+  const withProject = manifest('1.0.0', 'docs/requirements', [{ project: true, file: 'x.md' }]);
+  assert.match(withProject, /\.conventions\.json/);
 });

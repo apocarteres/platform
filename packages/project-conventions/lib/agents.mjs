@@ -13,24 +13,14 @@ export const INSTALLED_DOCS_PATH = 'node_modules/@apocarteres/project-convention
 export const SOURCE_DOCS_PATH = 'docs/requirements';
 
 export function manifest(version, docsPath = INSTALLED_DOCS_PATH, rules = RULES) {
-  const rows = rules.map((rule) => {
-    const location = rule.project ? rule.file : `${docsPath}/${rule.file}`;
-    const origin = rule.project ? 'проект' : 'платформа';
-    return `| ${rule.document} | ${origin} | ${rule.summary} | [\`${rule.file.split('/').pop()}\`](${location}) |`;
-  });
+  const project = rules.filter((rule) => rule.project);
+  const sources = [`\`${docsPath}\``];
+  if (project.length > 0) sources.push('документы правил проекта из `.conventions.json`');
   return [
-    '## Правила платформы',
+    '## Правила кода',
     '',
-    `Правила платформы поставляются пакетом \`@apocarteres/project-conventions\` версии ${markerVersion(version)} и в этот репозиторий не копируются:`,
-    'их нормативные тексты лежат рядом с установленным пакетом. Правила проекта объявлены в \`.conventions.json\` и описаны его собственными документами.',
-    'Соблюдаются оба набора; правило платформы проект ослабить не может.',
-    '',
-    '| Документ | Источник | О чём | Текст |',
-    '|---|---|---|---|',
-    ...rows,
-    '',
-    'Перед правкой кода прочитать текст правила, которого она касается. Проверяется задачей `mise run conventions-check`:',
-    'существующие нарушения зафиксированы храповиком `.conventions/baseline.json` и могут только убывать, новые отклоняются.',
+    `Тексты: ${sources.join(', ')}. Прочитать перед правкой кода.`,
+    'Проверка: `mise run conventions-check`.',
   ].join('\n');
 }
 

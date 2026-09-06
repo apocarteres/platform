@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readConfig } from '../lib/config.mjs';
-import { findProseComments } from '../lib/comments.mjs';
+import { RULES } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { inspectBlock, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 
@@ -36,11 +36,19 @@ async function check(root) {
     if (block.state === 'edited') problems.push('AGENTS.md: блок правил изменён вручную; правьте вне маркеров, затем conventions sync');
   }
 
-  const violations = await findProseComments(root, await readConfig(root));
-  const { exceeded, improved } = compare(violations, await readBaseline(root));
-  for (const entry of exceeded) {
-    problems.push(`${entry.file}: пояснительных комментариев ${entry.actual}, допускается ${entry.allowed}`);
-    for (const comment of entry.comments.slice(0, 5)) problems.push(`    ${entry.file}:${comment.line}: ${comment.text}`);
+  const config = await readConfig(root);
+  const baseline = await readBaseline(root);
+  let tracked = 0;
+  let improvedTotal = 0;
+  for (const rule of RULES) {
+    const violations = await rule.find(root, config);
+    tracked += violations.size;
+    const { exceeded, improved } = compare(violations, baseline[rule.id] ?? {});
+    improvedTotal += improved.length;
+    for (const entry of exceeded) {
+      problems.push(`${entry.file}: ${rule.title} ${entry.actual}, допускается ${entry.allowed}`);
+      for (const item of entry.items.slice(0, 5)) problems.push(`    ${entry.file}:${item.line}: ${item.text}`);
+    }
   }
   if (problems.length > 0) {
     console.error('Проверка правил не пройдена:');
@@ -48,28 +56,34 @@ async function check(root) {
     process.exitCode = 1;
     return;
   }
-  if (improved.length > 0) {
-    console.log(`Комментариев стало меньше в файлах: ${improved.length}. Опустите храповик: conventions baseline`);
+  if (improvedTotal > 0) {
+    console.log(`Нарушений стало меньше в файлах: ${improvedTotal}. Опустите храповик: conventions baseline`);
   }
-  console.log(`Правила соблюдены. Файлов с зафиксированными комментариями: ${violations.size}.`);
+  console.log(`Правила соблюдены. Файлов под храповиком: ${tracked}.`);
 }
 
 async function baseline(root, allowGrowth) {
-  const violations = await findProseComments(root, await readConfig(root));
-  const current = counts(violations);
+  const config = await readConfig(root);
   const previous = await readBaseline(root);
   const seeding = !(await baselineExists(root));
-  const grown = Object.entries(current).filter(([file, count]) => count > (previous[file] ?? 0));
+  const current = {};
+  const grown = [];
+  for (const rule of RULES) {
+    current[rule.id] = counts(await rule.find(root, config));
+    const before = previous[rule.id] ?? {};
+    for (const [file, count] of Object.entries(current[rule.id])) {
+      if (count > (before[file] ?? 0)) grown.push(`${rule.id} ${file}: ${before[file] ?? 0} -> ${count}`);
+    }
+  }
   if (grown.length > 0 && !allowGrowth && !seeding) {
     console.error('Храповик поднимается только явно (--allow-growth):');
-    for (const [file, count] of grown) console.error(`- ${file}: ${previous[file] ?? 0} -> ${count}`);
+    for (const entry of grown) console.error(`- ${entry}`);
     process.exitCode = 1;
     return;
   }
   await writeBaseline(root, current);
-  const total = Object.values(current).reduce((sum, count) => sum + count, 0);
-  const action = seeding ? 'создан' : 'обновлён';
-  console.log(`${BASELINE_FILE} ${action}: файлов ${Object.keys(current).length}, комментариев ${total}.`);
+  const summary = RULES.map((rule) => `${rule.id} ${Object.values(current[rule.id]).reduce((sum, count) => sum + count, 0)}`).join(', ');
+  console.log(`${BASELINE_FILE} ${seeding ? 'создан' : 'обновлён'}: ${summary}.`);
 }
 
 async function sync(root) {

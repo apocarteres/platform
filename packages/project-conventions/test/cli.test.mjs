@@ -80,12 +80,29 @@ test('храповик фиксирует существующие коммен�
   }
 });
 
+test('обращение к системным часам отклоняется, перечень исключений его снимает', async () => {
+  const root = await project({ 'AGENTS.md': '---\na: b\n---\n', 'src/Clock.java': 'class Clock {}\n' });
+  try {
+    await conventions(root, 'sync');
+    await writeFile(path.join(root, 'src', 'Clock.java'), 'class Clock {\n  Instant t = Instant.now();\n}\n');
+    const failed = await conventions(root, 'check');
+    assert.equal(failed.code, 1);
+    assert.match(failed.output, /src\/Clock\.java:2: Instant\.now/);
+
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: ['.'], clockAllowlist: ['src/Clock.java'] }));
+    const allowed = await conventions(root, 'check');
+    assert.equal(allowed.code, 0, allowed.output);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('устаревшая версия блока в AGENTS.md отклоняется', async () => {
   const root = await project({ 'AGENTS.md': '---\na: b\n---\n' });
   try {
     await conventions(root, 'sync');
     const agents = await readFile(path.join(root, 'AGENTS.md'), 'utf8');
-    await writeFile(path.join(root, 'AGENTS.md'), agents.replace(/conventions:begin v[0-9.]+/, 'conventions:begin v0.0.1'));
+    await writeFile(path.join(root, 'AGENTS.md'), agents.replace(/conventions:begin v[\w.]+/, 'conventions:begin v0.0.1'));
     const failed = await conventions(root, 'check');
     assert.equal(failed.code, 1);
     assert.match(failed.output, /conventions sync/);

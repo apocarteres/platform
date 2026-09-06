@@ -12,12 +12,11 @@ authority: navigation
 
 [Правила](RULES.md) · [Закрытые задачи](closed/SUMMARY.md) · [Планы функций](features/SUMMARY.md)
 
-Всего: 5. Включены самостоятельные задачи и этапы планов функций.
+Всего: 4. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Пакет процессных правил и инструментов документации](conventions-package.md) | P1 | Запланирована | Не назначен | process, documentation, tooling |
-| [Публикация пакетов ядра в GitHub Packages](github-packages-publishing.md) | P1 | В работе | Не назначен | build, delivery, tooling |
 | [Исследование: отдельный сервис уведомлений](notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](platform-persistence.md) | P2 | В работе | Не назначен | backend, persistence |
 | [Starter `platform-web-errors`: единый контракт ошибок API](platform-web-errors.md) | P2 | Запланирована | Не назначен | backend, api, frontend |

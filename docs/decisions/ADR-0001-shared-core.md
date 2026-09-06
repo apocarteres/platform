@@ -185,7 +185,7 @@ CLI с командами `check`, `tickets-index`, `releases-index`, `file-size
    Ответ владельца, 2026-09-06: **`io.github.apocarteres.platform`, `@apocarteres`, репозиторий `apocarteres/platform`.**
 
 6. **Registry.** GitHub Packages или иное?
-   Ответ владельца, 2026-09-06: **GitHub Packages.** Настройка — [TICKET-GITHUB-PACKAGES-PUBLISHING](../tickets/github-packages-publishing.md).
+   Ответ владельца, 2026-09-06: **GitHub Packages.** Настройка — [TICKET-GITHUB-PACKAGES-PUBLISHING](../tickets/closed/github-packages-publishing.md).
 
 7. **Единый набор версий Node.** zavpn на 22.x, clanlog на 24.x. Пакеты платформы должны собираться под обе или проекты выравниваются?
    Ответ: —

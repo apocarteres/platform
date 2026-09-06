@@ -51,3 +51,12 @@ related: ADR-0001, REQ-PUBLISHING, RUN-GITHUB-PACKAGES, TICKET-PLATFORM-PERSISTE
 - Требование [REQ-PUBLISHING](../requirements/publishing.md) с семью положениями и инструкция [RUN-GITHUB-PACKAGES](../runbooks/github-packages.md).
 
 Не проверено и требует владельца: чтение опубликованных пакетов из чистого окружения по личному токену `read:packages` (критерии приёмки 1 и 2) и прогон инструкции на второй машине (критерий 3).
+
+### Шаг 2 (2026-09-06)
+
+- `ci` на `fd69fa6` зелёный; тег `v0.1.0` поставлен, прогон `publish #1` завершился успешно за 38 с: job `maven` 34 с, job `npm` 7 с.
+- В разделе Packages репозитория появились четыре пакета версии `0.1.0`: `platform-parent`, `platform-bom`, `platform-persistence`, `@apocarteres/project-conventions`. Критерий приёмки 1 в части публикации выполнен; критерий 2 в части публикации выполнен.
+- Предупреждения прогона: `actions/setup-java@v4` объявлен устаревшим, `checkout@v4` и `setup-node@v4` собраны под Node 20. Все три подняты до v5.
+- Локально до тега проверено: `deploy` в файловый репозиторий подставляет `0.1.0` во все POM, включая состав BOM; профиль `release` отклоняет `0.1.0-SNAPSHOT`; `npm pack --dry-run` заглушки проходит.
+
+Осталось владельцу: личный токен с правом `read:packages`, затем проверка чтения по инструкции `RUN-GITHUB-PACKAGES` командой `mvn dependency:get` и `npm install` из чистого каталога; прогон инструкции на второй машине или в контейнере. После этого критерии 1–3 закрываются и задача переводится в `done`.

@@ -1,0 +1,23 @@
+# Версии инструментов пока не закреплены: см. открытый вопрос о выравнивании
+# Node между zavpn (22.x) и clanlog (24.x) в docs/decisions/ADR-0001-shared-core.md.
+
+[tasks.docs-test]
+description = "Тесты инструментов проверки документации"
+run = "node --test scripts/docs/*.test.mjs"
+
+[tasks.docs-check]
+description = "Проверить метаданные, ссылки и сводки документации"
+depends = ["docs-test"]
+run = ["node scripts/docs/check-docs.mjs", "node scripts/docs/tickets-index.mjs --check", "node scripts/docs/releases-index.mjs --check"]
+
+[tasks.tickets-index]
+description = "Собрать сводки задач из метаданных"
+run = "node scripts/docs/tickets-index.mjs"
+
+[tasks.releases-index]
+description = "Собрать каталог выпусков"
+run = "node scripts/docs/releases-index.mjs"
+
+[tasks.build]
+description = "Проверить документацию; сборка пакетов появится вместе с первым пакетом"
+depends = ["docs-check"]

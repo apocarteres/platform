@@ -5,3 +5,4 @@ dist/
 *.log
 .flattened-pom.xml
 packages/*/node_modules/
+.idea/

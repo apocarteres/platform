@@ -14,7 +14,7 @@
   "files": [
     "bin",
     "lib",
-    "fragments",
+    "docs",
     "README.md"
   ],
   "type": "module",
@@ -25,6 +25,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "prepack": "node scripts/collect-docs.mjs"
   }
 }

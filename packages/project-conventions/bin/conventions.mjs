@@ -5,17 +5,23 @@ import { fileURLToPath } from 'node:url';
 import { readConfig } from '../lib/config.mjs';
 import { RULES } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
-import { inspectBlock, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
+import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
+async function docsPath(root) {
+  try {
+    await readFile(path.join(root, SOURCE_DOCS_PATH, RULES[0].file));
+    return SOURCE_DOCS_PATH;
+  } catch {
+    return INSTALLED_DOCS_PATH;
+  }
+}
 
 async function packageVersion() {
   return JSON.parse(await readFile(path.join(packageRoot, 'package.json'), 'utf8')).version;
 }
 
-async function fragment() {
-  return readFile(path.join(packageRoot, 'fragments', 'agents.md'), 'utf8');
-}
 
 async function check(root) {
   const problems = [];
@@ -29,7 +35,7 @@ async function check(root) {
   if (agents === undefined) {
     problems.push('AGENTS.md отсутствует; выполните conventions sync');
   } else {
-    const block = inspectBlock(agents, version, await fragment());
+    const block = inspectBlock(agents, version, manifest(version, await docsPath(root)));
     if (block.state === 'missing') problems.push('AGENTS.md не содержит блок правил; выполните conventions sync');
     if (block.state === 'unterminated') problems.push('AGENTS.md: нет закрывающего маркера conventions:end');
     if (block.state === 'outdated') problems.push(`AGENTS.md содержит правила ${block.version}, установлена v${markerVersion(version)}; выполните conventions sync`);
@@ -94,7 +100,7 @@ async function sync(root) {
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
-  await writeAgents(root, replaceBlock(agents, version, await fragment()));
+  await writeAgents(root, replaceBlock(agents, version, manifest(version, await docsPath(root))));
   console.log(`AGENTS.md: блок правил v${markerVersion(version)} записан.`);
 }
 

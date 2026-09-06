@@ -6,3 +6,4 @@ dist/
 .flattened-pom.xml
 packages/*/node_modules/
 .idea/
+packages/*/docs/

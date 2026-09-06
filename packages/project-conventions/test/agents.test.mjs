@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { inspectBlock, replaceBlock } from '../lib/agents.mjs';
+import { inspectBlock, manifest, replaceBlock } from '../lib/agents.mjs';
 
 const fragment = '## Комментарии\n\n- Правило.';
 
@@ -21,4 +21,13 @@ test('состояние блока различает устаревшую ве
   assert.equal(inspectBlock(synced, '1.1.0', fragment).state, 'outdated');
   assert.equal(inspectBlock(synced.replace('Правило.', 'Правило изменено.'), '1.0.0', fragment).state, 'edited');
   assert.equal(inspectBlock('# Без блока\n', '1.0.0', fragment).state, 'missing');
+});
+
+test('манифест перечисляет правила и путь к их текстам, а не пересказывает их', () => {
+  const block = manifest('1.2.3');
+  assert.match(block, /REQ-CODE-COMMENTS/);
+  assert.match(block, /REQ-CODE-CLOCK/);
+  assert.match(block, /node_modules\/@apocarteres\/project-conventions\/docs\/code-clock\.md/);
+  assert.match(block, /версии 1\.2\.3/);
+  assert.doesNotMatch(block, /Instant\.now/);
 });

@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { RULES } from './rules.mjs';
 import path from 'node:path';
 
 const BEGIN = /<!-- conventions:begin (v[0-9]+\.[0-9]+\.[0-9]+|vunreleased) -->/;
@@ -8,25 +9,45 @@ export function markerVersion(version) {
   return version === '0.0.0' ? 'unreleased' : version;
 }
 
-export function markerBlock(version, fragment) {
-  return `<!-- conventions:begin v${markerVersion(version)} -->\n${fragment.trim()}\n${END}`;
+export const INSTALLED_DOCS_PATH = 'node_modules/@apocarteres/project-conventions/docs';
+export const SOURCE_DOCS_PATH = 'docs/requirements';
+
+export function manifest(version, docsPath = INSTALLED_DOCS_PATH) {
+  const rows = RULES.map((rule) => `| ${rule.document} | ${rule.summary} | [\`${rule.file}\`](${docsPath}/${rule.file}) |`);
+  return [
+    '## Правила платформы',
+    '',
+    `Правила поставляются пакетом \`@apocarteres/project-conventions\` версии ${markerVersion(version)} и в этот репозиторий не копируются.`,
+    'Нормативные тексты лежат рядом с установленным пакетом; читать их там, а не пересказывать здесь.',
+    '',
+    '| Документ | О чём | Текст |',
+    '|---|---|---|',
+    ...rows,
+    '',
+    'Перед правкой кода прочитать текст правила, которого она касается. Проверяется задачей `mise run conventions-check`:',
+    'существующие нарушения зафиксированы храповиком `.conventions/baseline.json` и могут только убывать, новые отклоняются.',
+  ].join('\n');
 }
 
-export function replaceBlock(content, version, fragment) {
-  const block = markerBlock(version, fragment);
+export function markerBlock(version, block) {
+  return `<!-- conventions:begin v${markerVersion(version)} -->\n${block.trim()}\n${END}`;
+}
+
+export function replaceBlock(content, version, block) {
+  const rendered = markerBlock(version, block);
   const begin = content.match(BEGIN);
   if (!begin) {
     const frontMatter = content.match(/^---\n[\s\S]*?\n---\n/);
     const offset = frontMatter ? frontMatter[0].length : 0;
-    return `${content.slice(0, offset)}\n${block}\n${content.slice(offset)}`.replace(/\n{3,}/g, '\n\n');
+    return `${content.slice(0, offset)}\n${rendered}\n${content.slice(offset)}`.replace(/\n{3,}/g, '\n\n');
   }
   const start = content.indexOf(begin[0]);
   const end = content.indexOf(END, start);
   if (end === -1) throw new Error('Открывающий маркер conventions:begin есть, закрывающий conventions:end отсутствует');
-  return content.slice(0, start) + block + content.slice(end + END.length);
+  return content.slice(0, start) + rendered + content.slice(end + END.length);
 }
 
-export function inspectBlock(content, version, fragment) {
+export function inspectBlock(content, version, block) {
   const begin = content.match(BEGIN);
   if (!begin) return { state: 'missing' };
   const start = content.indexOf(begin[0]);
@@ -34,7 +55,7 @@ export function inspectBlock(content, version, fragment) {
   if (end === -1) return { state: 'unterminated' };
   const actual = content.slice(start, end + END.length);
   if (begin[1] !== `v${markerVersion(version)}`) return { state: 'outdated', version: begin[1] };
-  return { state: actual === markerBlock(version, fragment) ? 'current' : 'edited' };
+  return { state: actual === markerBlock(version, block) ? 'current' : 'edited' };
 }
 
 export async function readAgents(root) {

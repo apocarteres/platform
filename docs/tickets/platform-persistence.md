@@ -1,7 +1,7 @@
 ---
 id: TICKET-PLATFORM-PERSISTENCE
 type: ticket
-status: backlog
+status: in_progress
 scope: backend, persistence
 authority: supporting
 priority: P2
@@ -38,3 +38,15 @@ related: ADR-0001
 - В zavpn и clanlog не остаётся собственных классов с этими именами; сборка и тесты обоих проектов проходят.
 - ArchUnit-правила проектов, ссылающиеся на `Jdbc*` и DAO, продолжают работать.
 - Поведение при отсутствующем каталоге, пустом файле и повторяющемся имени запроса покрыто тестами starter.
+
+## Ход выполнения
+
+### Шаг 1 (2026-09-06)
+
+Пункты 1–3 требований не зависят от публикации и выполнены в этом репозитории; зависимость `depends-on` относится к пункту 4, замене импортов в проектах.
+
+- Объединённая реализация в `platform-persistence/src/main/java/io/github/apocarteres/platform/persistence`: нормализация путей из zavpn (`\\`, `//`), неизменяемые карты и javadoc из clanlog. Порт `SqlCommandWriter` с `JsonSqlCommandWriter` перенесён из clanlog как optional-часть: Jackson 2 объявлен `optional`, бин появляется только при его наличии на classpath.
+- Автоконфигурация `PersistenceAutoConfiguration` регистрирует `SqlStatements` и `SqlCommandWriter` с `@ConditionalOnMissingBean`.
+- Тесты: `ResourceSqlStatementsTest` (перенесён из clanlog, добавлены случаи нормализации и `//`), `PersistenceAutoConfigurationTest` (бины по умолчанию, приоритет бина потребителя, отсутствие Jackson 2), `ConditionalWriteResultTest`.
+
+Осталось: пункт 4 после публикации `v0.1.0` — замена импортов и удаление копий в zavpn и clanlog, проверка ArchUnit-правил проектов.

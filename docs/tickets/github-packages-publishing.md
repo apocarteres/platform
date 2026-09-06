@@ -1,12 +1,12 @@
 ---
 id: TICKET-GITHUB-PACKAGES-PUBLISHING
 type: ticket
-status: backlog
+status: in_progress
 scope: build, delivery, tooling
 authority: supporting
 priority: P1
 release: unassigned
-related: ADR-0001
+related: ADR-0001, REQ-PUBLISHING, RUN-GITHUB-PACKAGES, TICKET-PLATFORM-PERSISTENCE
 ---
 
 # Публикация пакетов ядра в GitHub Packages
@@ -35,3 +35,19 @@ related: ADR-0001
 - Тег `v0.1.0` публикует BOM и хотя бы один starter; `mvn dependency:get` из чистого окружения с токеном скачивает его.
 - npm-пакет-заглушка публикуется тем же workflow и устанавливается в чистом каталоге.
 - Runbook проверен на втором компьютере или в контейнере без сохранённых учётных данных.
+
+## Ход выполнения
+
+### Шаг 1 (2026-09-06)
+
+Решение владельца: registry остаётся GitHub Packages, сравнение с собственным реестром и CI записано в обсуждении и не изменило выбор.
+
+Сделано:
+
+- Корневой `pom.xml` (`platform-parent`): версия `${revision}` с подстановкой `flatten-maven-plugin`, импорт `spring-boot-dependencies` 4.0.4, `distributionManagement` на GitHub Packages, профиль `release` с `requireReleaseVersion` и `requireReleaseDeps`.
+- `platform-bom` без родителя, чтобы потребитель не наследовал импорт Spring Boot BOM.
+- Первый публикуемый starter — `platform-persistence`; его перенос идёт по [TICKET-PLATFORM-PERSISTENCE](platform-persistence.md), здесь он нужен как реальный артефакт для проверки канала публикации.
+- Workflow `publish.yml` по тегу `vX.Y.Z`: Maven `deploy` с `-Drevision` и профилем `release`, npm `publish` заглушки `@apocarteres/project-conventions` под той же версией. Workflow `ci.yml`: документация, Java, поиск секретов.
+- Требование [REQ-PUBLISHING](../requirements/publishing.md) с семью положениями и инструкция [RUN-GITHUB-PACKAGES](../runbooks/github-packages.md).
+
+Не проверено и требует владельца: чтение опубликованных пакетов из чистого окружения по личному токену `read:packages` (критерии приёмки 1 и 2) и прогон инструкции на второй машине (критерий 3).

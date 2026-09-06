@@ -1,0 +1,47 @@
+name: publish
+
+# Публикация по тегу vX.Y.Z: версия артефактов берётся из тега (REQ-PUBLISHING-002),
+# SNAPSHOT отклоняется профилем release (REQ-PUBLISHING-003).
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  maven:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          server-id: github
+      - name: Публикация Maven-артефактов в GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          ./mvnw --batch-mode --no-transfer-progress -Drevision="$version" -Prelease deploy
+
+  npm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: "@apocarteres"
+      - name: Публикация npm-пакетов в GitHub Packages
+        working-directory: packages/project-conventions
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          npm version "$version" --no-git-tag-version
+          npm publish

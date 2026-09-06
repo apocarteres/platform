@@ -18,6 +18,14 @@ run = "node scripts/docs/tickets-index.mjs"
 description = "Собрать каталог выпусков"
 run = "node scripts/docs/releases-index.mjs"
 
+[tasks.java-build]
+description = "Собрать Java-модули без тестов"
+run = "./mvnw --batch-mode --no-transfer-progress -DskipTests package"
+
+[tasks.java-test]
+description = "Тесты Java-модулей"
+run = "./mvnw --batch-mode --no-transfer-progress verify"
+
 [tasks.build]
-description = "Проверить документацию; сборка пакетов появится вместе с первым пакетом"
-depends = ["docs-check"]
+description = "Проверить документацию и собрать Java-модули с тестами"
+depends = ["docs-check", "java-test"]

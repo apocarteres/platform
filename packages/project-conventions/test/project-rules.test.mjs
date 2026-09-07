@@ -13,7 +13,9 @@ test('правило проекта дополняет правила платф
     }],
   });
   assert.deepEqual(errors, []);
-  assert.deepEqual(rules.map((rule) => rule.id), ['comments', 'clock', 'naming-er', 'no-er-suffix']);
+  assert.deepEqual(rules.map((rule) => rule.id), [
+    'comments', 'clock', 'money-types', 'file-size', 'config-secrets', 'naming-er', 'no-er-suffix',
+  ]);
 });
 
 test('идентификатор правила платформы занять нельзя', () => {

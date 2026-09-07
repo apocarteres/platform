@@ -7,6 +7,7 @@ export const DELIVERED_DOCUMENTS = [
   'deployment.md',
   'release-cycle.md',
   'code-design.md',
+  'configuration.md',
   'compatibility.md',
   'agent-work.md',
   'code-comments.md',

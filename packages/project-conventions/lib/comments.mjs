@@ -99,16 +99,16 @@ export function classify(text) {
   return words.length === 0 ? 'reference' : 'prose';
 }
 
-export async function collectSourceFiles(root, { sources = ['.'], exclude = [] } = {}) {
+export async function collectSourceFiles(root, { sources = ['.'], exclude = [] } = {}, extensions = SOURCE_EXTENSIONS) {
   const excludes = [...DEFAULT_EXCLUDE, ...exclude];
   const files = [];
   for (const source of sources) {
-    await walk(path.resolve(root, source), root, excludes, files);
+    await walk(path.resolve(root, source), root, excludes, files, extensions);
   }
   return files.sort();
 }
 
-async function walk(directory, root, excludes, files) {
+async function walk(directory, root, excludes, files, extensions) {
   let entries;
   try {
     entries = await readdir(directory, { withFileTypes: true });
@@ -121,8 +121,8 @@ async function walk(directory, root, excludes, files) {
     const relative = `/${path.relative(root, full).split(path.sep).join('/')}`;
     if (excludes.some((pattern) => relative.includes(pattern))) continue;
     if (entry.isDirectory()) {
-      await walk(full, root, excludes, files);
-    } else if (SOURCE_EXTENSIONS.has(path.extname(entry.name))) {
+      await walk(full, root, excludes, files, extensions);
+    } else if (extensions.has(path.extname(entry.name))) {
       files.push(relative.slice(1));
     }
   }

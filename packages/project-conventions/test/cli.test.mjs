@@ -21,7 +21,9 @@ async function conventions(root, ...args) {
 
 async function project(files) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'conventions-'));
-  for (const [name, content] of Object.entries(files)) {
+  // REQ-BUILD-003
+  const withToolchain = { 'mise.toml': '[tools]\nnode = "22.22.3"\n', ...files };
+  for (const [name, content] of Object.entries(withToolchain)) {
     const target = path.join(root, name);
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, content);
@@ -178,6 +180,51 @@ test('принятие цикла работает в репозитории б�
     assert.match(adopted.output, /Открыт первый выпуск RELEASE-/);
     assert.match(await readFile(path.join(root, 'docs/releases/INDEX.md'), 'utf8'), /IDX-RELEASES/);
     assert.match(await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8'), /adopt-sample-2026-09-07\.md/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('расхождение закреплённых версий роняет проверку правил', async () => {
+  const root = await project({
+    'AGENTS.md': '---\na: b\n---\n',
+    'src/A.java': 'class A {}\n',
+    '.node-version': '22.11.0\n',
+  });
+  try {
+    await conventions(root, 'sync');
+    const failed = await conventions(root, 'check');
+    assert.equal(failed.code, 1, failed.output);
+    assert.match(failed.output, /\.node-version: 22\.11\.0 против node = 22\.22\.3/);
+
+    await writeFile(path.join(root, '.node-version'), '22.22.3\n');
+    const passed = await conventions(root, 'check');
+    assert.equal(passed.code, 0, passed.output);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('денежная величина на double и длинный файл роняют проверку правил', async () => {
+  const root = await project({
+    'AGENTS.md': '---\na: b\n---\n',
+    'src/Billing.java': 'class Billing {\n  private double totalPrice;\n}\n',
+    '.conventions.json': '{"sources": ["src"], "fileLines": 2}\n',
+  });
+  try {
+    await conventions(root, 'sync');
+    const failed = await conventions(root, 'check');
+    assert.equal(failed.code, 1, failed.output);
+    assert.match(failed.output, /src\/Billing\.java: денежных величин на double или float 1/);
+    assert.match(failed.output, /src\/Billing\.java: строк сверх предела 2/);
+
+    assert.equal((await conventions(root, 'baseline')).code, 0);
+    const ratcheted = await conventions(root, 'check');
+    assert.equal(ratcheted.code, 0, ratcheted.output);
+
+    await writeFile(path.join(root, 'src', 'Billing.java'), 'class Billing {\n  private double totalPrice;\n  private float feeAmount;\n}\n');
+    const grown = await conventions(root, 'check');
+    assert.equal(grown.code, 1, 'храповик не даёт нарушениям расти');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONFIG_FILE, readConfig } from '../lib/config.mjs';
 import { collectSourceFiles } from '../lib/comments.mjs';
+import { findToolchainMismatches } from '../lib/toolchain.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
@@ -53,6 +54,9 @@ async function check(root) {
     if (block.state === 'outdated') problems.push(`AGENTS.md содержит правила ${block.version}, установлена v${markerVersion(version)}; выполните conventions sync`);
     if (block.state === 'edited') problems.push('AGENTS.md: блок правил изменён вручную; правьте вне маркеров, затем conventions sync');
   }
+
+  // REQ-BUILD-010
+  problems.push(...await findToolchainMismatches(root));
 
   // REQ-ADOPTION-009
   const scanned = await collectSourceFiles(root, config);

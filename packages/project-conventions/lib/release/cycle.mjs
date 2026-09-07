@@ -160,6 +160,20 @@ function obligationTicket(obligation, releaseId, today) {
   return { id, slug: obligation.slug, date, content: lines.join('\n') };
 }
 
+// REQ-RELEASE-020
+export async function adoptCycle(root, { scheme, version, today }) {
+  const existing = await releases(root);
+  if (existing.length > 0) {
+    return { adopted: false, problems: ['В проекте уже есть выпуски: принятие цикла выполняется один раз'] };
+  }
+  const before = await unassignedTerminalTickets(root);
+  for (const ticket of before) {
+    await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'before-cycle' }));
+  }
+  const opened = await openNext(root, { scheme, version, today });
+  return { adopted: opened.opened, ...opened, stamped: before.map(ticketId) };
+}
+
 export async function openNext(root, { scheme, version, today }) {
   const existing = await releases(root);
   const already = await openRelease(root);

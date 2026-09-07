@@ -7,7 +7,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, unassignedTerminalTickets } from '../lib/release/documents.mjs';
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
-import { closability, closeRelease, openNext } from '../lib/release/cycle.mjs';
+import { adoptCycle, closability, closeRelease, openNext } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 
 const run = promisify(execFile);
@@ -183,6 +183,25 @@ test('отказ в закрытии не оставляет тега', async ()
     assert.equal(refused.closed, false, 'без расписки закрытие отказывает');
     const { stdout: tags } = await run('git', ['-C', root, 'tag', '--list']);
     assert.equal(tags.trim(), '', 'тег не ставится при отказе');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('принятие цикла не записывает в первый выпуск то, что выпущено до него', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/closed/old-one.md'), ticket('TICKET-OLD-ONE', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/old-two.md'), ticket('TICKET-OLD-TWO', 'cancelled'));
+
+    const adopted = await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(adopted.adopted, true);
+    assert.deepEqual(adopted.stamped.sort(), ['TICKET-OLD-ONE', 'TICKET-OLD-TWO']);
+    assert.match(await readFile(path.join(root, 'docs/tickets/closed/old-one.md'), 'utf8'), /release: before-cycle/);
+    assert.deepEqual(await unassignedTerminalTickets(root), [], 'состав первого выпуска наполняется только новыми закрытиями');
+
+    const again = await adoptCycle(root, { scheme: 'date', today: NEXT_DAY });
+    assert.equal(again.adopted, false, 'принятие цикла выполняется один раз');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

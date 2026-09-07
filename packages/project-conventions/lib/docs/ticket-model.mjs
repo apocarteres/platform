@@ -32,7 +32,8 @@ export function validateTicket(file, content, parsed) {
   }
   if (!priorities.includes(metadata.get('priority'))) fail('priority должен быть P0, P1, P2, P3 или unassigned');
   const release = metadata.get('release');
-  if (release !== 'unassigned' && !releaseIdPattern.test(release ?? '')) fail('release должен быть unassigned или идентификатором RELEASE-...');
+  const releaseValues = ['unassigned', 'before-cycle'];
+  if (!releaseValues.includes(release) && !releaseIdPattern.test(release ?? '')) fail('release должен быть unassigned, before-cycle или идентификатором RELEASE-...');
   const status = metadata.get('status');
   if (['in_progress', 'blocked'].includes(status) && metadata.get('priority') === 'unassigned') {
     fail('перед началом работы требуется назначить приоритет');

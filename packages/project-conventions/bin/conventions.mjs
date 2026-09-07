@@ -9,7 +9,7 @@ import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVe
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { closeRelease, closability, openNext } from '../lib/release/cycle.mjs';
+import { adoptCycle, closeRelease, closability, openNext } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
@@ -254,6 +254,21 @@ async function releaseOpen(root, version) {
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
 }
 
+async function releaseAdopt(root) {
+  const config = await readConfig(root);
+  const scheme = releaseScheme(config);
+  const result = await adoptCycle(root, { scheme, today: systemNow() });
+  if (!result.adopted) {
+    console.error('Цикл выпусков не принят:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Закрытых задач помечено как выпущенные до цикла: ${result.stamped.length}`);
+  console.log(`Открыт первый выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
+  for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
+}
+
 async function releaseSatisfy(root, id, ticketId) {
   if (!id || !ticketId) {
     console.error('conventions release satisfy <обязательство> --ticket <TICKET-ID>');
@@ -343,9 +358,10 @@ else if (command === 'release') {
   else if (subcommand === 'close') await releaseClose(root, valueOf('--next-version'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'));
   else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
+  else if (subcommand === 'adopt') await releaseAdopt(root);
   else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
   else {
-    console.error('conventions release <status|close|open|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');
+    console.error('conventions release <status|close|open|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');
     process.exitCode = 2;
   }
 }

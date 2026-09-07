@@ -54,6 +54,15 @@ export async function unassignedTerminalTickets(root) {
     && (ticket.metadata.get('release') ?? 'unassigned') === 'unassigned');
 }
 
+// REQ-RELEASE-007, REQ-RELEASE-008
+export async function compositionTickets(root, releaseId) {
+  return (await tickets(root)).filter((ticket) => {
+    if (!terminalStatuses.has(ticket.metadata.get('status'))) return false;
+    const release = ticket.metadata.get('release') ?? 'unassigned';
+    return release === 'unassigned' || release === releaseId;
+  });
+}
+
 export function nextReleaseId(existing, scheme, today, version) {
   if (scheme === 'semver') {
     if (!version) throw new Error('Для схемы semver нужен номер версии: --version X.Y.Z');
@@ -87,6 +96,20 @@ export function replaceMetadata(content, updates, removals = []) {
     else head[index] = `${key}: ${value}`;
   }
   return ['---', ...head, '---', ...lines.slice(end + 1)].join('\n');
+}
+
+export function sectionLines(content, heading) {
+  const lines = content.split('\n');
+  const start = lines.findIndex((line) => line.trim() === heading);
+  if (start === -1) throw new Error(`В документе нет раздела ${heading}`);
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    if (lines[index].startsWith('## ')) {
+      end = index;
+      break;
+    }
+  }
+  return lines.slice(start + 1, end);
 }
 
 export function replaceSection(content, heading, body) {

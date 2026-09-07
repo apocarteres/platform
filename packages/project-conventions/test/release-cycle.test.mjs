@@ -7,7 +7,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, unassignedTerminalTickets } from '../lib/release/documents.mjs';
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
-import { adoptCycle, closability, closeRelease, openNext } from '../lib/release/cycle.mjs';
+import { adoptCycle, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 
 const run = promisify(execFile);
@@ -142,7 +142,7 @@ test('закрытие записывает состав, коммит и рез
     await rm(obligationTicket);
     await writeFile(
       path.join(root, 'docs/tickets/closed/adopt-sample-2026-09-07.md'),
-      body.replace('status: backlog', 'status: done').replace('release: RELEASE-2026-09-1', 'release: unassigned'),
+      body.replace('status: backlog', 'status: done'),
     );
     const commit = await commitAll(root);
     await writeReceipt(root, { commit, completedAt: '2026-09-07T10:00:00Z', checks: ['verify'] });
@@ -159,6 +159,7 @@ test('закрытие записывает состав, коммит и рез
     assert.match(document, /2026-09-07T10:00:00Z/);
     assert.match(document, /- \[x\] Тег выпуска создан на проверенном коммите — `2026\.09\.1`/);
     assert.match(document, /- \[x\] Обязательства ядра этого выпуска закрыты[^\n]*закрыты: sample/);
+    assert.match(document, /Обязательство ядра `sample`, закрыто в этом выпуске/);
     assert.equal(document.includes('- [ ]'), false, 'критерии закрытого выпуска отмечены с подтверждением');
 
     const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
@@ -202,6 +203,33 @@ test('принятие цикла не записывает в первый вы
 
     const again = await adoptCycle(root, { scheme: 'date', today: NEXT_DAY });
     assert.equal(again.adopted, false, 'принятие цикла выполняется один раз');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('обязательство закрывается ссылкой на уже выполненную задачу и снимает заготовку', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/closed/old-work.md'), ticket('TICKET-OLD-WORK', 'done'));
+    await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
+    const draft = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    assert.match(await readFile(draft, 'utf8'), /obligation: sample/);
+
+    const missing = await satisfyObligation(root, { obligationId: 'sample', ticketId: 'TICKET-NONE' });
+    assert.equal(missing.satisfied, false, 'ссылка на несуществующую задачу отклоняется');
+
+    const satisfied = await satisfyObligation(root, { obligationId: 'sample', ticketId: 'TICKET-OLD-WORK' });
+    assert.equal(satisfied.satisfied, true);
+    assert.deepEqual(satisfied.removed, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+    await assert.rejects(readFile(draft, 'utf8'), 'заготовка удалена: работа уже выполнена');
+
+    const release = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
+    assert.equal(release.includes('TICKET-ADOPT-SAMPLE-2026-09-07'), false, 'строка состава снята');
+
+    const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
+    assert.equal(state.closed.sample.ticket, 'TICKET-OLD-WORK');
+    assert.equal(obligationState(OBLIGATION, state).status, 'closed');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -9,11 +9,10 @@ import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVe
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { adoptCycle, closeRelease, closability, openNext } from '../lib/release/cycle.mjs';
+import { adoptCycle, closeRelease, closability, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
-import { openRelease as currentRelease, tickets as allTickets } from '../lib/release/documents.mjs';
 import { systemNow } from '../lib/now.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -275,31 +274,14 @@ async function releaseSatisfy(root, id, ticketId) {
     process.exitCode = 2;
     return;
   }
-  const { obligations: declared } = await loadObligations(root);
-  const obligation = declared.find((item) => item.id === id);
-  if (obligation === undefined) {
-    console.error(`Ядро не объявляет обязательства ${id}`);
+  const result = await satisfyObligation(root, { obligationId: id, ticketId });
+  if (!result.satisfied) {
+    for (const problem of result.problems) console.error(`- ${problem}`);
     process.exitCode = 1;
     return;
   }
-  const evidence = (await allTickets(root)).find((ticket) => ticket.metadata.get('id') === ticketId);
-  if (evidence === undefined) {
-    console.error(`Задачи ${ticketId} в проекте нет: обязательство закрывается ссылкой на существующую задачу`);
-    process.exitCode = 1;
-    return;
-  }
-  if (evidence.metadata.get('status') !== 'done') {
-    console.error(`Задача ${ticketId} не выполнена: обязательство закрывается только выполненной работой`);
-    process.exitCode = 1;
-    return;
-  }
-  const state = await readState(root);
-  const release = await currentRelease(root);
-  state.closed ??= {};
-  state.closed[id] = { release: release?.metadata.get('id') ?? 'до цикла выпусков', ticket: ticketId };
-  delete state.deferred?.[id];
-  await writeState(root, state);
-  console.log(`Обязательство ${id} закрыто задачей ${ticketId}`);
+  console.log(`Обязательство ${id} закрыто задачей ${result.evidence}`);
+  for (const removed of result.removed) console.log(`- задача-заготовка ${removed} удалена: работа уже выполнена`);
 }
 
 async function releaseDefer(root, id, reason) {

@@ -1,13 +1,15 @@
-import { writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  RELEASES_DIR, TICKETS_DIR, nextReleaseId, openRelease, releaseTag, releases, replaceMetadata,
-  replaceSection, ticketId, ticketLinkTarget, tickets, unassignedTerminalTickets, writeDocument,
+  RELEASES_DIR, TICKETS_DIR, compositionTickets, nextReleaseId, openRelease, releaseTag, releases,
+  replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
+  unassignedTerminalTickets, writeDocument,
 } from './documents.mjs';
 import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { readReceipt } from './receipt.mjs';
+import { terminalStatuses } from '../docs/ticket-model.mjs';
 import { createTag, headCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014
@@ -19,7 +21,9 @@ export async function closability(root, { scheme }) {
   const commit = await headCommit(root);
   const receipt = await readReceipt(root, commit);
   if (receipt === null) problems.push(`Нет расписки о пройденном verify для ${commit.slice(0, 8)}`);
-  const composition = await unassignedTerminalTickets(root);
+  const composition = release === null
+    ? []
+    : await compositionTickets(root, release.metadata.get('id'));
   if (composition.length === 0) problems.push('Состав пуст: нечего выпускать');
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
@@ -36,9 +40,12 @@ function compositionRows(root, composition) {
     '| Задача | Причина включения |',
     '|---|---|',
     ...composition.map((ticket) => {
-      const reason = ticket.metadata.get('priority') === 'unassigned'
-        ? 'Закрыта в этом выпуске'
-        : `Закрыта в этом выпуске, приоритет ${ticket.metadata.get('priority')}`;
+      const obligation = ticket.metadata.get('obligation');
+      const reason = obligation === undefined
+        ? (ticket.metadata.get('priority') === 'unassigned'
+          ? 'Закрыта в этом выпуске'
+          : `Закрыта в этом выпуске, приоритет ${ticket.metadata.get('priority')}`)
+        : `Обязательство ядра \`${obligation}\`, закрыто в этом выпуске`;
       return `| [${ticketId(ticket)}](${ticketLinkTarget(root, ticket)}) | ${reason} |`;
     }),
   ];
@@ -158,6 +165,49 @@ function obligationTicket(obligation, releaseId, today) {
     '',
   ];
   return { id, slug: obligation.slug, date, content: lines.join('\n') };
+}
+
+// REQ-RELEASE-019
+export async function satisfyObligation(root, { obligationId, ticketId: evidenceId }) {
+  const { obligations } = await loadObligations(root);
+  const obligation = obligations.find((item) => item.id === obligationId);
+  if (obligation === undefined) return { satisfied: false, problems: [`Ядро не объявляет обязательства ${obligationId}`] };
+
+  const all = await tickets(root);
+  const evidence = all.find((ticket) => ticketId(ticket) === evidenceId);
+  if (evidence === undefined) {
+    return { satisfied: false, problems: [`Задачи ${evidenceId} в проекте нет: обязательство закрывается ссылкой на существующую задачу`] };
+  }
+  if (!terminalStatuses.has(evidence.metadata.get('status'))) {
+    return { satisfied: false, problems: [`Задача ${evidenceId} не завершена: обязательство закрывается только выполненной работой`] };
+  }
+
+  const materialized = all.find((ticket) => ticket.metadata.get('obligation') === obligationId);
+  const removed = [];
+  if (materialized !== undefined && !terminalStatuses.has(materialized.metadata.get('status'))) {
+    await rm(materialized.file);
+    removed.push(ticketId(materialized));
+  }
+
+  const release = await openRelease(root);
+  if (release !== null && removed.length > 0) {
+    const kept = sectionLines(release.content, '## Состав')
+      .filter((line) => line.startsWith('| [') && !removed.some((id) => line.includes(id)));
+    const body = kept.length === 0
+      ? ['Обязательств ядра к исполнению нет; состав наполняется по факту закрытия задач.']
+      : ['| Задача | Причина включения |', '|---|---|', ...kept];
+    await writeDocument(release.file, replaceSection(release.content, '## Состав', body));
+  }
+
+  const state = await readState(root);
+  state.closed ??= {};
+  state.closed[obligationId] = {
+    release: release?.metadata.get('id') ?? 'до цикла выпусков',
+    ticket: evidenceId,
+  };
+  delete state.deferred?.[obligationId];
+  await writeState(root, state);
+  return { satisfied: true, removed, evidence: evidenceId };
 }
 
 // REQ-RELEASE-020

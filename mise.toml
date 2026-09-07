@@ -1,5 +1,5 @@
 # Версии инструментов пока не закреплены: см. открытый вопрос о выравнивании
-# Node между zavpn (22.x) и clanlog (24.x) в docs/decisions/ADR-0001-shared-core.md.
+# версий Node у потребителей в docs/decisions/ADR-0001-shared-core.md.
 
 [tasks.docs-test]
 description = "Тесты инструментов проверки документации"

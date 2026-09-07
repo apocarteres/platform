@@ -129,3 +129,23 @@ test('подключение нового правила засеивается 
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('настройка, под которую не попадает ни один файл, подключением не считается', async () => {
+  const root = await project({
+    'AGENTS.md': '---\na: b\n---\n',
+    'src/A.java': 'class A {}\n',
+    '.conventions.json': '{"sources": []}\n',
+  });
+  try {
+    await conventions(root, 'sync');
+    const empty = await conventions(root, 'check');
+    assert.equal(empty.code, 1, empty.output);
+    assert.match(empty.output, /не применяются ни к одному файлу/);
+
+    await writeFile(path.join(root, '.conventions.json'), '{"sources": ["src"]}\n');
+    const applied = await conventions(root, 'check');
+    assert.equal(applied.code, 0, applied.output);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

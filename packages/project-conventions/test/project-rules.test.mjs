@@ -94,3 +94,23 @@ test('уровень требования обязателен и проверя
   assert.deepEqual(validate([{ ...base, level: 'рекомендация' }], builtIn), []);
   assert.deepEqual(validate([{ ...base, level: 'директива' }], builtIn), []);
 });
+
+test('каждый документ требований либо доставляется потребителю, либо объявлен внутренним', async () => {
+  const { readdir } = await import('node:fs/promises');
+  const { fileURLToPath } = await import('node:url');
+  const path = (await import('node:path')).default;
+  const { DELIVERED_DOCUMENTS, CORE_ONLY_DOCUMENTS } = await import('../lib/documents.mjs');
+
+  const requirements = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../docs/requirements');
+  const documents = (await readdir(requirements)).filter((name) => name.endsWith('.md'));
+  assert(documents.length > 0, 'каталог требований ядра не найден');
+  for (const document of documents) {
+    const classified = DELIVERED_DOCUMENTS.includes(document) || document in CORE_ONLY_DOCUMENTS;
+    assert(classified, `${document}: документ не объявлен ни доставляемым, ни внутренним`);
+  }
+  for (const [document, reason] of Object.entries(CORE_ONLY_DOCUMENTS)) {
+    assert(documents.includes(document), `${document}: объявлен внутренним, но такого документа нет`);
+    assert(reason && reason.length > 10, `${document}: у внутреннего документа должна быть причина`);
+    assert(!DELIVERED_DOCUMENTS.includes(document), `${document}: не может быть и внутренним, и доставляемым`);
+  }
+});

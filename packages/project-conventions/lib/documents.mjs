@@ -1,4 +1,5 @@
 export const DELIVERED_DOCUMENTS = [
+  'adoption.md',
   'project-process.md',
   'build.md',
   'quality-checks.md',
@@ -15,3 +16,9 @@ export const DELIVERED_DOCUMENTS = [
   'project-rules.md',
   'rule-distribution.md',
 ];
+
+// REQ-ADOPTION-016
+export const CORE_ONLY_DOCUMENTS = {
+  'persistence.md': 'контракт кода самого ядра: каталог запросов, загрузчик, порты',
+  'publishing.md': 'правила версионирования и публикации артефактов ядра',
+};

@@ -2,7 +2,8 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readConfig } from '../lib/config.mjs';
+import { CONFIG_FILE, readConfig } from '../lib/config.mjs';
+import { collectSourceFiles } from '../lib/comments.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
@@ -51,6 +52,12 @@ async function check(root) {
     if (block.state === 'unterminated') problems.push('AGENTS.md: нет закрывающего маркера conventions:end');
     if (block.state === 'outdated') problems.push(`AGENTS.md содержит правила ${block.version}, установлена v${markerVersion(version)}; выполните conventions sync`);
     if (block.state === 'edited') problems.push('AGENTS.md: блок правил изменён вручную; правьте вне маркеров, затем conventions sync');
+  }
+
+  // REQ-ADOPTION-009
+  const scanned = await collectSourceFiles(root, config);
+  if (scanned.length === 0) {
+    problems.push(`${CONFIG_FILE}: правила не применяются ни к одному файлу; перечислите каталоги с исходниками в "sources"`);
   }
 
   const baseline = await readBaseline(root);

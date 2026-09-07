@@ -51,6 +51,7 @@ export async function buildTicketIndexes(root) {
   tickets.sort((a, b) => priorities.indexOf(a.priority) - priorities.indexOf(b.priority)
     || a.id.localeCompare(b.id, 'en'));
   const outputs = new Map();
+  const hasFeatures = await exists(path.join(directory, 'features/INDEX.md'));
   for (const closed of [false, true]) {
     const target = path.join(directory, closed ? 'closed/INDEX.md' : 'INDEX.md');
     const href = (file) => path.relative(path.dirname(target), file).split(path.sep).map(encodeURIComponent).join('/');
@@ -59,7 +60,9 @@ export async function buildTicketIndexes(root) {
       'status: active', 'scope: planning', 'authority: navigation', '---', '',
       `# ${closed ? 'Закрытые' : 'Открытые'} задачи`, '',
       'Сгенерировано командой `mise run tickets-index`. Вручную не редактировать.', '',
-      `[Правила](${closed ? '../' : ''}RULES.md) · [${closed ? 'Открытые' : 'Закрытые'} задачи](${closed ? '../INDEX.md' : 'closed/INDEX.md'}) · [Планы функций](${closed ? '../' : ''}features/INDEX.md)`, '',
+      [`[${closed ? 'Открытые' : 'Закрытые'} задачи](${closed ? '../INDEX.md' : 'closed/INDEX.md'})`,
+        ...(hasFeatures ? [`[Планы функций](${closed ? '../' : ''}features/INDEX.md)`] : [])].join(' · '), '',
+      'Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.', '',
       `Всего: ${selected.length}. Включены самостоятельные задачи и этапы планов функций.`, '',
       '| Задача | Приоритет | Статус | Выпуск | Области |', '|---|---|---|---|---|'];
     for (const ticket of selected) lines.push(`| [${cell(ticket.title)}](${href(ticket.file)}) | ${ticket.priority === 'unassigned' ? 'Не назначен' : ticket.priority} | ${labels[ticket.status]} | ${releaseCell(root, ticket.release, href)} | ${cell(ticket.scope)} |`);
@@ -70,6 +73,16 @@ export async function buildTicketIndexes(root) {
     outputs.set(target, lines.join('\n') + '\n');
   }
   return { errors, outputs };
+}
+
+async function exists(file) {
+  try {
+    await readFile(file, 'utf8');
+    return true;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
 }
 
 function releaseCell(root, release, href) {

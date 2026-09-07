@@ -30,7 +30,7 @@ authority: navigation
 
 ## Метаданные документов
 
-Все Markdown-документы каталога начинаются с YAML front matter с обязательными полями `id`, `type`, `status`, `scope`, `authority`. Необязательные поля `depends-on`, `supersedes`, `superseded-by`, `related` содержат идентификаторы документов через запятую. Поле `clause-id-prefix` включает стабильные идентификаторы положений нормативного документа. Поля задач `priority`, `release`, `questions` и поля выпусков `opened-on`, `released-on`, `commit` описаны в [правилах задач](tickets/RULES.md) и [правилах выпусков](releases/RULES.md). Дата изменения не хранится: её источник — Git.
+Все Markdown-документы каталога начинаются с YAML front matter с обязательными полями `id`, `type`, `status`, `scope`, `authority`. Необязательные поля `depends-on`, `supersedes`, `superseded-by`, `related` содержат идентификаторы документов через запятую. Поле `clause-id-prefix` включает стабильные идентификаторы положений нормативного документа. Поля задач `priority`, `release`, `questions` описаны в [документе задачи](requirements/tickets.md), поля выпусков `opened-on`, `released-on`, `commit` — в [цикле выпуска](requirements/release-cycle.md). Дата изменения не хранится: её источник — Git.
 
 | Тип | Состояния |
 |---|---|

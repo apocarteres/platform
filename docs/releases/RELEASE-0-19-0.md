@@ -11,7 +11,7 @@ commit: e4f7661257a9bfc8f3e42200aee11f4c8c5a999b
 
 # Выпуск 0.19.0
 
-[Правила](RULES.md) · [Каталог](INDEX.md)
+[Каталог](INDEX.md)
 
 ## Цель
 

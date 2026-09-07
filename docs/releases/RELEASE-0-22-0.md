@@ -11,7 +11,7 @@ commit: 62ea99057b7ce4ed973ae5fb6185f99dae85a7b4
 
 # Выпуск 0.22.0
 
-[Правила](RULES.md) · [Каталог](INDEX.md)
+[Каталог](INDEX.md)
 
 ## Цель
 

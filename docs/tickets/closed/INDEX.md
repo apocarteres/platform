@@ -10,9 +10,11 @@ authority: navigation
 
 Сгенерировано командой `mise run tickets-index`. Вручную не редактировать.
 
-[Правила](../RULES.md) · [Открытые задачи](../INDEX.md) · [Планы функций](../features/INDEX.md)
+[Открытые задачи](../INDEX.md) · [Планы функций](../features/INDEX.md)
 
-Всего: 11. Включены самостоятельные задачи и этапы планов функций.
+Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
+
+Всего: 12. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -25,5 +27,6 @@ authority: navigation
 | [Принятие цикла выпусков репозиторием с историей](release-cycle-adoption.md) | P1 | Выполнена | [RELEASE-0-20-0](../../releases/RELEASE-0-20-0.md) | release |
 | [Невыполненное обязательство оставалось в закрытом выпуске](unfinished-obligation-stranded-in-closed-release.md) | P1 | Выполнена | [RELEASE-0-23-0](../../releases/RELEASE-0-23-0.md) | release |
 | [Подключение к проекту без каталогов документации падало трассировкой](adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
+| [Правила каталогов задач и выпусков жили копиями в каждом репозитории](catalog-rules-into-the-core.md) | P2 | Выполнена | Не назначен | documentation, process |
 | [Ссылка на нормативный документ ядра считалась ссылкой в пустоту](references-to-delivered-core-documents.md) | P2 | Выполнена | [RELEASE-0-22-0](../../releases/RELEASE-0-22-0.md) | documentation |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |

@@ -10,7 +10,9 @@ authority: navigation
 
 Сгенерировано командой `mise run releases-index`. Вручную не редактировать.
 
-[Правила](RULES.md) · [Шаблон](TEMPLATE.md) · [Задачи](../tickets/INDEX.md)
+[Задачи](../tickets/INDEX.md)
+
+Правила выпуска — `REQ-RELEASE` в поставке пакета правил.
 
 | Выпуск | Статус | Открыт | Выпущен |
 |---|---|---|---|

@@ -53,7 +53,8 @@ export async function updateReleaseIndex(root, { check = false } = {}) {
     '---', 'id: IDX-RELEASES', 'type: index', 'status: active', 'scope: planning, release', 'authority: navigation', '---', '',
     '# Выпуски проекта', '',
     'Сгенерировано командой `mise run releases-index`. Вручную не редактировать.', '',
-    '[Правила](RULES.md) · [Шаблон](TEMPLATE.md) · [Задачи](../tickets/INDEX.md)', '',
+    '[Задачи](../tickets/INDEX.md)', '',
+    'Правила выпуска — `REQ-RELEASE` в поставке пакета правил.', '',
     '| Выпуск | Статус | Открыт | Выпущен |', '|---|---|---|---|', ...rows, '',
     ...(rows.length ? [] : ['Выпуски пока не запланированы. Существующим задачам выпуск не назначен.', ''])
   ].join('\n');

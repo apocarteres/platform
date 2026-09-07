@@ -10,7 +10,7 @@ authority: navigation
 
 Сгенерировано командой `mise run tickets-index`. Вручную не редактировать.
 
-[Правила](RULES.md) · [Закрытые задачи](closed/SUMMARY.md) · [Планы функций](features/SUMMARY.md)
+[Правила](RULES.md) · [Закрытые задачи](closed/INDEX.md) · [Планы функций](features/INDEX.md)
 
 Всего: 5. Включены самостоятельные задачи и этапы планов функций.
 

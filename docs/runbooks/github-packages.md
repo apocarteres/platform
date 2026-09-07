@@ -9,7 +9,7 @@ related: REQ-PUBLISHING
 
 # GitHub Packages: публикация ядра и подключение потребителя
 
-[Каталог инструкций](README.md) · [Требование](../requirements/publishing.md)
+[Каталог инструкций](INDEX.md) · [Требование](../requirements/publishing.md)
 
 ## Публикация новой версии
 

@@ -28,12 +28,12 @@ async function writeFixtureFile(root, relativePath, content) {
 async function createValidFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'platform-docs-check-'));
 
-  await writeFixtureFile(root, 'docs/README.md', `${metadata('IDX-DOCS', 'index', 'active', 'documentation', 'navigation')}# Документация
+  await writeFixtureFile(root, 'docs/INDEX.md', `${metadata('IDX-DOCS', 'index', 'active', 'documentation', 'navigation')}# Документация
 
 - [Требования](REQUIREMENTS.md)
-- [Решения](decisions/README.md)
-- [Инструкции](runbooks/README.md)
-- [Задачи](tickets/SUMMARY.md)
+- [Решения](decisions/INDEX.md)
+- [Инструкции](runbooks/INDEX.md)
+- [Задачи](tickets/INDEX.md)
 - [Выпуски](releases/INDEX.md)
 `);
   await writeFixtureFile(root, 'docs/REQUIREMENTS.md', `${metadata('REQ-ROOT', 'requirement', 'active', 'project', 'normative')}# Требования
@@ -47,16 +47,16 @@ async function createValidFixture() {
 
 Правило.
 `);
-  await writeFixtureFile(root, 'docs/runbooks/README.md', `${metadata('IDX-RUNBOOKS', 'index', 'active', 'operations', 'navigation')}# Инструкции
+  await writeFixtureFile(root, 'docs/runbooks/INDEX.md', `${metadata('IDX-RUNBOOKS', 'index', 'active', 'operations', 'navigation')}# Инструкции
 
 - [Пример](example.md)
 `);
   await writeFixtureFile(root, 'docs/runbooks/example.md', `${metadata('RUN-EXAMPLE', 'runbook', 'active', 'operations', 'supporting')}# Эксплуатационная инструкция\n`);
-  await writeFixtureFile(root, 'docs/decisions/README.md', `${metadata('IDX-DECISIONS', 'index', 'active', 'architecture', 'navigation')}# Решения
+  await writeFixtureFile(root, 'docs/decisions/INDEX.md', `${metadata('IDX-DECISIONS', 'index', 'active', 'architecture', 'navigation')}# Решения
 `);
-  await writeFixtureFile(root, 'docs/tickets/SUMMARY.md', `${metadata('IDX-TICKETS', 'index', 'active', 'planning', 'navigation')}# Задачи\n`);
-  await writeFixtureFile(root, 'docs/tickets/closed/SUMMARY.md', `${metadata('IDX-CLOSED', 'index', 'active', 'planning', 'navigation')}# Закрытые задачи\n`);
-  await writeFixtureFile(root, 'docs/tickets/features/SUMMARY.md', `${metadata('IDX-FEATURES', 'index', 'active', 'planning', 'navigation')}# Планы функций\n`);
+  await writeFixtureFile(root, 'docs/tickets/INDEX.md', `${metadata('IDX-TICKETS', 'index', 'active', 'planning', 'navigation')}# Задачи\n`);
+  await writeFixtureFile(root, 'docs/tickets/closed/INDEX.md', `${metadata('IDX-CLOSED', 'index', 'active', 'planning', 'navigation')}# Закрытые задачи\n`);
+  await writeFixtureFile(root, 'docs/tickets/features/INDEX.md', `${metadata('IDX-FEATURES', 'index', 'active', 'planning', 'navigation')}# Планы функций\n`);
   await writeFixtureFile(root, 'docs/releases/INDEX.md', `${metadata('IDX-RELEASES', 'index', 'active', 'planning', 'navigation')}# Выпуски\n`);
 
   return root;
@@ -151,9 +151,9 @@ Status: active.
 
 test('требует индекс для каждого плана функции', async () => {
   await withFixture(async (root) => {
-    await writeFixtureFile(root, 'docs/tickets/features/example/README.md', `${metadata('FEATURE-EXAMPLE', 'ticket', 'backlog', 'example', 'supporting')}# План функции\n`);
+    await writeFixtureFile(root, 'docs/tickets/features/example/INDEX.md', `${metadata('FEATURE-EXAMPLE', 'ticket', 'backlog', 'example', 'supporting')}# План функции\n`);
     const result = await checkDocumentation(root);
-    assert(result.errors.some((error) => error.includes('docs/tickets/features/SUMMARY.md: отсутствует ссылка на docs/tickets/features/example/README.md')));
+    assert(result.errors.some((error) => error.includes('docs/tickets/features/INDEX.md: отсутствует ссылка на docs/tickets/features/example/INDEX.md')));
   });
 });
 

@@ -53,14 +53,14 @@ export async function buildTicketIndexes(root) {
     || a.id.localeCompare(b.id, 'en'));
   const outputs = new Map();
   for (const closed of [false, true]) {
-    const target = path.join(directory, closed ? 'closed/SUMMARY.md' : 'SUMMARY.md');
+    const target = path.join(directory, closed ? 'closed/INDEX.md' : 'INDEX.md');
     const href = (file) => path.relative(path.dirname(target), file).split(path.sep).map(encodeURIComponent).join('/');
     const selected = tickets.filter((ticket) => terminalStatuses.has(ticket.status) === closed);
     const lines = ['---', `id: ${closed ? 'IDX-TICKETS-CLOSED' : 'IDX-TICKETS'}`, 'type: index',
       'status: active', 'scope: planning', 'authority: navigation', '---', '',
       `# ${closed ? 'Закрытые' : 'Открытые'} задачи`, '',
       'Сгенерировано командой `mise run tickets-index`. Вручную не редактировать.', '',
-      `[Правила](${closed ? '../' : ''}RULES.md) · [${closed ? 'Открытые' : 'Закрытые'} задачи](${closed ? '../SUMMARY.md' : 'closed/SUMMARY.md'}) · [Планы функций](${closed ? '../' : ''}features/SUMMARY.md)`, '',
+      `[Правила](${closed ? '../' : ''}RULES.md) · [${closed ? 'Открытые' : 'Закрытые'} задачи](${closed ? '../INDEX.md' : 'closed/INDEX.md'}) · [Планы функций](${closed ? '../' : ''}features/INDEX.md)`, '',
       `Всего: ${selected.length}. Включены самостоятельные задачи и этапы планов функций.`, '',
       '| Задача | Приоритет | Статус | Выпуск | Области |', '|---|---|---|---|---|'];
     for (const ticket of selected) lines.push(`| [${cell(ticket.title)}](${href(ticket.file)}) | ${ticket.priority === 'unassigned' ? 'Не назначен' : ticket.priority} | ${labels[ticket.status]} | ${ticket.release === 'unassigned' ? 'Не назначен' : `[${ticket.release}](${href(path.join(root, 'docs/releases', ticket.release + '.md'))})`} | ${cell(ticket.scope)} |`);

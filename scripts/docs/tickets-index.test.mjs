@@ -70,11 +70,11 @@ test('сводки учитывают приоритет, закрытые за�
   await fixture(async (root, put) => {
     await put('features/plan/step.md', ticket({ id: 'TICKET-FIRST', priority: 'P0' }, '# Первый этап\n'));
     assert.deepEqual(await updateTicketIndexes(root), []);
-    const open = await readFile(path.join(root, 'docs/tickets/SUMMARY.md'), 'utf8');
+    const open = await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8');
     assert(open.includes('Всего: 2.'));
     assert(open.indexOf('Первый этап') < open.indexOf('[Задача]'));
     assert(!open.includes('done.md'));
-    const closed = await readFile(path.join(root, 'docs/tickets/closed/SUMMARY.md'), 'utf8');
+    const closed = await readFile(path.join(root, 'docs/tickets/closed/INDEX.md'), 'utf8');
     assert(closed.includes('Всего: 1.'));
     assert(closed.includes('(done.md)'));
     assert.deepEqual(await updateTicketIndexes(root, { check: true }), []);
@@ -84,7 +84,7 @@ test('сводки учитывают приоритет, закрытые за�
 test('проверка обнаруживает ручное изменение, новый тикет и смену приоритета без записи', async () => {
   await fixture(async (root, put) => {
     await updateTicketIndexes(root);
-    const file = path.join(root, 'docs/tickets/SUMMARY.md');
+    const file = path.join(root, 'docs/tickets/INDEX.md');
     const original = await readFile(file, 'utf8');
     await writeFile(file, original + 'Ручная правка\n');
     assert((await updateTicketIndexes(root, { check: true })).length);
@@ -101,7 +101,7 @@ test('проверка обнаруживает ручное изменение,
 test('ошибка метаданных и повторный идентификатор не перезаписывают сводки', async () => {
   await fixture(async (root, put) => {
     await updateTicketIndexes(root);
-    const file = path.join(root, 'docs/tickets/SUMMARY.md');
+    const file = path.join(root, 'docs/tickets/INDEX.md');
     const original = await readFile(file, 'utf8');
     await put('duplicate.md', ticket());
     assert((await updateTicketIndexes(root)).some(error => error.includes('идентификатор')));

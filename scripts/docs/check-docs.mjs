@@ -27,9 +27,9 @@ const STATUS_BY_TYPE = new Map([
 const ALLOWED_AUTHORITIES = new Set(['normative', 'supporting', 'historical', 'navigation']);
 const REQUIRED_CATALOG_TARGETS = [
   'docs/REQUIREMENTS.md',
-  'docs/decisions/README.md',
-  'docs/runbooks/README.md',
-  'docs/tickets/SUMMARY.md',
+  'docs/decisions/INDEX.md',
+  'docs/runbooks/INDEX.md',
+  'docs/tickets/INDEX.md',
   'docs/releases/INDEX.md',
 ];
 
@@ -377,7 +377,7 @@ async function checkChildIndexCoverage(projectRoot, directory, indexPath, errors
     if (!entry.isDirectory()) {
       continue;
     }
-    const requiredPath = path.resolve(directory, entry.name, 'README.md');
+    const requiredPath = path.resolve(directory, entry.name, 'INDEX.md');
     try {
       const requiredStat = await stat(requiredPath);
       if (!requiredStat.isFile()) {
@@ -443,13 +443,13 @@ export async function checkDocumentation(projectRoot) {
   await checkIndexCoverage(
     resolvedRoot,
     path.join(docsRoot, 'runbooks'),
-    path.join(docsRoot, 'runbooks', 'README.md'),
+    path.join(docsRoot, 'runbooks', 'INDEX.md'),
     errors,
   );
   await checkIndexCoverage(
     resolvedRoot,
     path.join(docsRoot, 'decisions'),
-    path.join(docsRoot, 'decisions', 'README.md'),
+    path.join(docsRoot, 'decisions', 'INDEX.md'),
     errors,
   );
 
@@ -460,18 +460,18 @@ export async function checkDocumentation(projectRoot) {
   await checkIndexCoverage(
     resolvedRoot,
     ticketsRoot,
-    path.join(ticketsRoot, 'SUMMARY.md'),
+    path.join(ticketsRoot, 'INDEX.md'),
     errors,
   );
   await checkIndexCoverage(
     resolvedRoot,
     path.join(ticketsRoot, 'closed'),
-    path.join(ticketsRoot, 'closed', 'SUMMARY.md'),
+    path.join(ticketsRoot, 'closed', 'INDEX.md'),
     errors,
   );
 
   const featuresRoot = path.join(ticketsRoot, 'features');
-  const featuresIndex = path.join(featuresRoot, 'SUMMARY.md');
+  const featuresIndex = path.join(featuresRoot, 'INDEX.md');
   await checkChildIndexCoverage(resolvedRoot, featuresRoot, featuresIndex, errors);
   const featureEntries = await readDirectoryEntries(featuresRoot);
   for (const entry of featureEntries) {
@@ -482,17 +482,17 @@ export async function checkDocumentation(projectRoot) {
     await checkIndexCoverage(
       resolvedRoot,
       featureDirectory,
-      path.join(featureDirectory, 'README.md'),
+      path.join(featureDirectory, 'INDEX.md'),
       errors,
     );
   }
 
-  const documentationIndex = path.join(docsRoot, 'README.md');
+  const documentationIndex = path.join(docsRoot, 'INDEX.md');
   const documentationTargets = await collectIndexTargets(resolvedRoot, documentationIndex);
   for (const requiredTarget of REQUIRED_CATALOG_TARGETS) {
     const absoluteTarget = path.join(resolvedRoot, requiredTarget);
     if (!documentationTargets.has(absoluteTarget)) {
-      errors.push(`docs/README.md: отсутствует ссылка на ${requiredTarget}`);
+      errors.push(`docs/INDEX.md: отсутствует ссылка на ${requiredTarget}`);
     }
   }
 

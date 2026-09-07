@@ -10,7 +10,7 @@ authority: navigation
 
 Сгенерировано командой `mise run releases-index`. Вручную не редактировать.
 
-[Правила](RULES.md) · [Шаблон](TEMPLATE.md) · [Задачи](../tickets/SUMMARY.md)
+[Правила](RULES.md) · [Шаблон](TEMPLATE.md) · [Задачи](../tickets/INDEX.md)
 
 | Выпуск | Статус | Открыт | Выпущен |
 |---|---|---|---|

@@ -51,6 +51,19 @@
         </excludes>
       </resource>
     </resources>
+    <plugins>
+      <!-- REQ-BUILD-011 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin>
@@ -69,6 +82,10 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>3.5.4</version>
+          <configuration>
+            <!-- REQ-BUILD-011 -->
+            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.springframework.boot</groupId>

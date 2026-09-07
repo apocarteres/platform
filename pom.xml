@@ -80,10 +80,11 @@
       </plugins>
     </pluginManagement>
     <plugins>
-      <!-- Подставляет ${revision} в публикуемый POM, иначе потребитель получит нерезолвимую версию. -->
+      <!-- REQ-BUILD-011 -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
+        <inherited>false</inherited>
         <configuration>
           <updatePomFile>true</updatePomFile>
           <flattenMode>resolveCiFriendliesOnly</flattenMode>
@@ -108,6 +109,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
+        <inherited>false</inherited>
         <executions>
           <execution>
             <id>attach-sources</id>

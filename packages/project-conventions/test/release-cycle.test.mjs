@@ -256,3 +256,25 @@ test('ссылки состава следуют за задачей, перее
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('невыполненное обязательство переносится в следующий выпуск вместе с задачей', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    const draft = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    assert.match(await readFile(draft, 'utf8'), /release: RELEASE-2026-09-1/);
+
+    const release = await openRelease(root);
+    await writeFile(release.file, release.content.replace('status: draft', 'status: released'));
+    const next = await openNext(root, { scheme: 'date', today: NEXT_DAY });
+    assert.equal(next.opened, true);
+    assert.deepEqual(next.created, [], 'вторая заготовка не создаётся');
+    assert.deepEqual(next.carried, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+
+    assert.match(await readFile(draft, 'utf8'), /release: RELEASE-2026-09-2/);
+    const opened = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-2.md'), 'utf8');
+    assert.match(opened, /TICKET-ADOPT-SAMPLE-2026-09-07[^\n]*перенесено из предыдущего выпуска/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

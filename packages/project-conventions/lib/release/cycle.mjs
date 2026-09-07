@@ -236,26 +236,34 @@ export async function openNext(root, { scheme, version, today }) {
   const pending = pendingObligations(obligations, state, isCore);
 
   // REQ-RELEASE-013
-  const materialized = new Set((await tickets(root))
-    .map((ticket) => ticket.metadata.get('obligation'))
-    .filter((value) => value !== undefined));
+  const obligationTickets = new Map((await tickets(root))
+    .filter((ticket) => ticket.metadata.get('obligation') !== undefined)
+    .map((ticket) => [ticket.metadata.get('obligation'), ticket]));
   const created = [];
+  const carried = [];
   state.seen ??= {};
   for (const entry of pending) {
     if (state.seen[entry.obligation.id] === undefined) state.seen[entry.obligation.id] = state.releaseCount ?? 0;
-    if (materialized.has(entry.obligation.id)) continue;
+    const already = obligationTickets.get(entry.obligation.id);
+    if (already !== undefined) {
+      // REQ-RELEASE-021
+      if (!terminalStatuses.has(already.metadata.get('status'))) {
+        carried.push({ ticket: already, obligation: entry.obligation });
+      }
+      continue;
+    }
     const ticket = obligationTicket(entry.obligation, id, today);
     const file = path.join(root, TICKETS_DIR, `${entry.obligation.slug}-${ticket.date}.md`);
     created.push({ ...ticket, file, obligation: entry.obligation });
   }
 
-  const rows = created.length === 0
+  const planned = [
+    ...created.map((ticket) => `| [${ticket.id}](../tickets/${path.basename(ticket.file)}) | Обязательство ядра \`${ticket.obligation.id}\`, срок ${ticket.obligation.dueReleases} выпуск(ов) |`),
+    ...carried.map((entry) => `| [${ticketId(entry.ticket)}](${ticketLinkTarget(root, entry.ticket)}) | Обязательство ядра \`${entry.obligation.id}\`, перенесено из предыдущего выпуска |`),
+  ];
+  const rows = planned.length === 0
     ? ['Обязательств ядра к исполнению нет; состав наполняется по факту закрытия задач.']
-    : [
-      '| Задача | Причина включения |',
-      '|---|---|',
-      ...created.map((ticket) => `| [${ticket.id}](../tickets/${path.basename(ticket.file)}) | Обязательство ядра \`${ticket.obligation.id}\`, срок ${ticket.obligation.dueReleases} выпуск(ов) |`),
-    ];
+    : ['| Задача | Причина включения |', '|---|---|', ...planned];
 
   const document = [
     '---',
@@ -298,8 +306,15 @@ export async function openNext(root, { scheme, version, today }) {
   const file = path.join(root, RELEASES_DIR, `${id}.md`);
   await writeFile(file, document);
   for (const ticket of created) await writeFile(ticket.file, ticket.content);
+  for (const entry of carried) {
+    await writeDocument(entry.ticket.file, replaceMetadata(entry.ticket.content, { release: id }));
+  }
   await writeState(root, state);
-  return { opened: true, id, tag, file, created: created.map((ticket) => ticket.id) };
+  return {
+    opened: true, id, tag, file,
+    created: created.map((ticket) => ticket.id),
+    carried: carried.map((entry) => ticketId(entry.ticket)),
+  };
 }
 
 export { obligationState, readState };

@@ -110,3 +110,22 @@ test('устаревшая версия блока в AGENTS.md отклоняе
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('подключение нового правила засеивается без ключа, рост существующего нет', async () => {
+  const root = await project({ 'AGENTS.md': '---\na: b\n---\n', 'src/A.java': '// Пояснение\nclass A {}\n' });
+  try {
+    await conventions(root, 'sync');
+    assert.equal((await conventions(root, 'baseline')).code, 0);
+    await writeFile(path.join(root, '.conventions/baseline.json'),
+      JSON.stringify({ version: 2, rules: { comments: { 'src/A.java': 1 } } }));
+    await writeFile(path.join(root, 'src', 'A.java'), '// Пояснение\nclass AgentPlanHasher {}\n');
+    const adopted = await conventions(root, 'baseline');
+    assert.equal(adopted.code, 0, adopted.output);
+    await writeFile(path.join(root, 'src', 'A.java'), '// Пояснение\nclass AgentPlanHasher {\n  // Второе пояснение\n}\n');
+    const grown = await conventions(root, 'baseline');
+    assert.equal(grown.code, 1);
+    assert.match(grown.output, /comments/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

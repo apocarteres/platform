@@ -90,7 +90,9 @@ async function baseline(root, allowGrowth) {
   const grown = [];
   for (const rule of rules) {
     current[rule.id] = counts(await rule.find(root, config));
-    const before = previous[rule.id] ?? {};
+    const adopted = previous[rule.id] === undefined;
+    if (adopted) continue;
+    const before = previous[rule.id];
     for (const [file, count] of Object.entries(current[rule.id])) {
       if (count > (before[file] ?? 0)) grown.push(`${rule.id} ${file}: ${before[file] ?? 0} -> ${count}`);
     }

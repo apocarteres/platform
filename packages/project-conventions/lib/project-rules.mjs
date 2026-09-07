@@ -3,8 +3,10 @@ import path from 'node:path';
 import { SOURCE_EXTENSIONS, collectSourceFiles } from './comments.mjs';
 import { codeLines } from './clock.mjs';
 
+import { LEVELS } from './levels.mjs';
+
 const KNOWN_FIELDS = new Set([
-  'id', 'document', 'text', 'summary', 'scope', 'extensions', 'forbid', 'where', 'require', 'message', 'allow',
+  'id', 'level', 'document', 'text', 'summary', 'scope', 'extensions', 'forbid', 'where', 'require', 'message', 'allow',
 ]);
 
 export function validate(entries, builtInIds) {
@@ -24,6 +26,9 @@ export function validate(entries, builtInIds) {
     else if (seen.has(entry.id)) errors.push(`${where}: идентификатор повторяется`);
     else seen.add(entry.id);
     if (!entry.message) errors.push(`${where}: требуется message`);
+    if (!LEVELS.includes(entry.level)) {
+      errors.push(`${where}: требуется level со значением ${LEVELS.join(' или ')}`);
+    }
     if (!entry.document || !entry.text) errors.push(`${where}: требуются document и text со ссылкой на нормативный документ проекта`);
     const hasForbid = typeof entry.forbid === 'string';
     const hasRequire = typeof entry.require === 'string' && typeof entry.where === 'string';
@@ -61,6 +66,7 @@ export function toRule(entry) {
   const required = forbid ? null : new RegExp(entry.require);
   return {
     id: entry.id,
+    level: entry.level,
     document: entry.document,
     file: entry.text,
     summary: entry.summary ?? entry.message,

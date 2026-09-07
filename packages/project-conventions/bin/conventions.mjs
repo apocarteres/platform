@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readConfig } from '../lib/config.mjs';
-import { RULES, allRules } from '../lib/rules.mjs';
+import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 
@@ -48,15 +48,21 @@ async function check(root) {
   const baseline = await readBaseline(root);
   let tracked = 0;
   let improvedTotal = 0;
+  const advisories = [];
   for (const rule of rules) {
     const violations = await rule.find(root, config);
     tracked += violations.size;
     const { exceeded, improved } = compare(violations, baseline[rule.id] ?? {});
     improvedTotal += improved.length;
+    const target = rule.level === RECOMMENDATION ? advisories : problems;
     for (const entry of exceeded) {
-      problems.push(`${entry.file}: ${rule.title} ${entry.actual}, допускается ${entry.allowed}`);
-      for (const item of entry.items.slice(0, 5)) problems.push(`    ${entry.file}:${item.line}: ${item.text}`);
+      target.push(`${entry.file}: ${rule.title} ${entry.actual}, зафиксировано ${entry.allowed} (${rule.document})`);
+      for (const item of entry.items.slice(0, 5)) target.push(`    ${entry.file}:${item.line}: ${item.text}`);
     }
+  }
+  if (advisories.length > 0) {
+    console.log('Рекомендации не соблюдены; проверку это не роняет:');
+    for (const advisory of advisories) console.log(`- ${advisory}`);
   }
   if (problems.length > 0) {
     console.error('Проверка правил не пройдена:');

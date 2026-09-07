@@ -3,30 +3,30 @@ import test from 'node:test';
 import { allRules, projectRules } from '../lib/rules.mjs';
 import { toRule, validate } from '../lib/project-rules.mjs';
 
-const builtIn = new Set(['comments', 'clock']);
+const builtIn = new Set(['comments', 'clock', 'naming-er']);
 
 test('правило проекта дополняет правила платформы, а не заменяет их', () => {
   const { rules, errors } = allRules({
     rules: [{
-      id: 'no-er-suffix', document: 'REQ-CODE-NAMING', text: 'docs/requirements/code-naming.md',
+      id: 'no-er-suffix', level: 'рекомендация', document: 'REQ-CODE-NAMING', text: 'docs/requirements/code-naming.md',
       message: 'класс с суффиксом -er', forbid: 'class\\s+\\w+[Ee]r\\b',
     }],
   });
   assert.deepEqual(errors, []);
-  assert.deepEqual(rules.map((rule) => rule.id), ['comments', 'clock', 'no-er-suffix']);
+  assert.deepEqual(rules.map((rule) => rule.id), ['comments', 'clock', 'naming-er', 'no-er-suffix']);
 });
 
 test('идентификатор правила платформы занять нельзя', () => {
-  const errors = validate([{ id: 'clock', document: 'D', text: 't', message: 'm', forbid: 'a' }], builtIn);
+  const errors = validate([{ id: 'clock', level: 'директива', document: 'D', text: 't', message: 'm', forbid: 'a' }], builtIn);
   assert.equal(errors.length, 1);
   assert.match(errors[0], /занят правилом платформы/);
 });
 
 test('определение проверяется: поля, регулярное выражение, полярность', () => {
-  assert.match(validate([{ id: 'a', document: 'D', text: 't', message: 'm' }], builtIn)[0], /forbid.*where.*require/);
-  assert.match(validate([{ id: 'a', document: 'D', text: 't', message: 'm', forbid: '(' }], builtIn)[0], /не является регулярным/);
-  assert.match(validate([{ id: 'a', document: 'D', text: 't', message: 'm', forbid: 'x', typo: 1 }], builtIn).join(), /неизвестное поле typo/);
-  assert.match(validate([{ document: 'D', text: 't', message: 'm', forbid: 'x' }], builtIn).join(), /требуется id/);
+  assert.match(validate([{ id: 'a', level: 'директива', document: 'D', text: 't', message: 'm' }], builtIn)[0], /forbid.*where.*require/);
+  assert.match(validate([{ id: 'a', level: 'директива', document: 'D', text: 't', message: 'm', forbid: '(' }], builtIn)[0], /не является регулярным/);
+  assert.match(validate([{ id: 'a', level: 'директива', document: 'D', text: 't', message: 'm', forbid: 'x', typo: 1 }], builtIn).join(), /неизвестное поле typo/);
+  assert.match(validate([{ level: 'директива', document: 'D', text: 't', message: 'm', forbid: 'x' }], builtIn).join(), /требуется id/);
 });
 
 test('пара where и require ловит объявление без обязательного признака', async (t) => {
@@ -43,7 +43,7 @@ test('пара where и require ловит объявление без обяз�
       '// public class D {}',
     ].join('\n'));
     const rule = toRule({
-      id: 'final-classes', document: 'REQ-CODE-FINAL', text: 'docs/requirements/code-final.md',
+      id: 'final-classes', level: 'директива', document: 'REQ-CODE-FINAL', text: 'docs/requirements/code-final.md',
       message: 'неабстрактный класс без final', extensions: ['.java'],
       where: '\\bclass\\s+\\w+', require: '\\b(final|abstract)\\b',
     });
@@ -66,7 +66,7 @@ test('область действия и перечень исключений �
       await writeFile(path.join(root, file), 'class Manager {}\n');
     }
     const entry = {
-      id: 'no-er-suffix', document: 'D', text: 't', message: 'класс с суффиксом -er',
+      id: 'no-er-suffix', level: 'рекомендация', document: 'D', text: 't', message: 'класс с суффиксом -er',
       extensions: ['.java'], scope: ['backend'], forbid: 'class\\s+\\w+[Ee]r\\b',
     };
     assert.deepEqual([...(await toRule(entry).find(root, { sources: ['.'] })).keys()], ['backend/src/Manager.java']);
@@ -85,4 +85,12 @@ test('каждый документ правила входит в перече�
   const { DELIVERED_DOCUMENTS } = await import('../lib/documents.mjs');
   const { RULES } = await import('../lib/rules.mjs');
   for (const rule of RULES) assert(DELIVERED_DOCUMENTS.includes(rule.file), rule.file);
+});
+
+test('уровень требования обязателен и проверяется по перечню', () => {
+  const base = { id: 'x', document: 'D', text: 't', message: 'm', forbid: 'a' };
+  assert.match(validate([base], builtIn).join(), /требуется level/);
+  assert.match(validate([{ ...base, level: 'желательно' }], builtIn).join(), /требуется level/);
+  assert.deepEqual(validate([{ ...base, level: 'рекомендация' }], builtIn), []);
+  assert.deepEqual(validate([{ ...base, level: 'директива' }], builtIn), []);
 });

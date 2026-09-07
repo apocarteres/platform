@@ -54,6 +54,22 @@ function resultLines(receipt, commit, tag) {
   ];
 }
 
+function criteriaLines(receipt, tag, obligations) {
+  return [
+    `- [x] Набор \`verify\` пройден на выпускаемом коммите — расписка ${receipt.completedAt}, наборы: ${receipt.checks.join(', ')}`,
+    `- [x] Тег выпуска создан на проверенном коммите — \`${tag}\``,
+    `- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ${obligations}`,
+  ];
+}
+
+function obligationsSummary(closed, deferred, isCore) {
+  if (isCore) return 'ядро не объявляет обязательств самому себе';
+  const parts = [];
+  if (closed.length > 0) parts.push(`закрыты: ${closed.join(', ')}`);
+  if (deferred.length > 0) parts.push(`перенесены: ${deferred.join(', ')}`);
+  return parts.length === 0 ? 'обязательств к исполнению в этом выпуске не было' : parts.join('; ');
+}
+
 // REQ-RELEASE-001, REQ-RELEASE-005
 export async function closeRelease(root, { scheme, today }) {
   const state = await closability(root, { scheme });
@@ -68,6 +84,15 @@ export async function closeRelease(root, { scheme, today }) {
   });
   content = replaceSection(content, '## Состав', compositionRows(root, composition));
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
+  const closedNow = state.obligations
+    .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))
+    .map((obligation) => obligation.id);
+  const deferredNow = Object.keys(state.state.deferred ?? {});
+  content = replaceSection(
+    content,
+    '## Критерии выхода',
+    criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore)),
+  );
   const writes = [{ file: release.file, content }];
 
   for (const ticket of composition) {
@@ -193,8 +218,8 @@ export async function openNext(root, { scheme, version, today }) {
     '## Критерии выхода',
     '',
     '- [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска',
+    '- [ ] Тег выпуска создан на проверенном коммите — ставится командой выпуска',
     '- [ ] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной',
-    '- [ ] Развёртывание выполнено тегом выпуска',
     '',
     '## Не входит',
     '',

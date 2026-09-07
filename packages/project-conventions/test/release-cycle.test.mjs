@@ -157,6 +157,9 @@ test('закрытие записывает состав, коммит и рез
     assert.match(document, new RegExp(`commit: ${commit}`));
     assert.match(document, /TICKET-ADOPT-SAMPLE-2026-09-07/);
     assert.match(document, /2026-09-07T10:00:00Z/);
+    assert.match(document, /- \[x\] Тег выпуска создан на проверенном коммите — `2026\.09\.1`/);
+    assert.match(document, /- \[x\] Обязательства ядра этого выпуска закрыты[^\n]*закрыты: sample/);
+    assert.equal(document.includes('- [ ]'), false, 'критерии закрытого выпуска отмечены с подтверждением');
 
     const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
     assert.equal(state.releaseCount, 1);

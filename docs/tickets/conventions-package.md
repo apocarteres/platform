@@ -43,7 +43,7 @@ related: ADR-0001, TICKET-CODE-COMMENTS-RULE
 
 ## Границы
 
-Правило о комментариях и минимальный CLI (`check`, `sync`, `baseline`) выделены в [TICKET-CODE-COMMENTS-RULE](code-comments-rule.md): они не зависят от вопросов ниже. Здесь остаётся перенос остальных общих правил, миграция формата тикетов clanlog, reusable workflow и переносимые храповики.
+Правило о комментариях и минимальный CLI (`check`, `sync`, `baseline`) выделены в [TICKET-CODE-COMMENTS-RULE](closed/code-comments-rule.md): они не зависят от вопросов ниже. Здесь остаётся перенос остальных общих правил, миграция формата тикетов clanlog, reusable workflow и переносимые храповики.
 
 ## Открытые вопросы
 

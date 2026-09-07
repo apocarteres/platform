@@ -12,9 +12,10 @@ authority: navigation
 
 [Правила](../RULES.md) · [Открытые задачи](../SUMMARY.md) · [Планы функций](../features/SUMMARY.md)
 
-Всего: 2. Включены самостоятельные задачи и этапы планов функций.
+Всего: 3. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Правила из платформы: контракт, доставка и внедрение](code-comments-rule.md) | P1 | Выполнена | Не назначен | process, tooling, backend, frontend |
 | [Публикация пакетов ядра в GitHub Packages](github-packages-publishing.md) | P1 | Выполнена | Не назначен | build, delivery, tooling |
 | [Starter `platform-time`: порт часов](platform-time.md) | P1 | Выполнена | Не назначен | backend, java |

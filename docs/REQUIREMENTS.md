@@ -30,7 +30,12 @@ authority: normative
 
 ### Код: Java
 
+- [Java: порт часов](requirements/java-clock.md) — `java.time.Clock` как порт, реализация в `platform-time`, вывод значений, управляемые часы в тестах.
 - [Java: имена типов и суффикс -er](requirements/java-naming.md) — рекомендация: перечни имён образцов и доменных существительных, что проверяется.
+
+### Код: TypeScript
+
+- [TypeScript: порт часов](requirements/typescript-clock.md) — объявление порта, внедрение вместо модуля-синглтона, единственная рабочая реализация, подмена в тестах.
 
 ### Ядро
 

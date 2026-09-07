@@ -16,6 +16,7 @@
   <modules>
     <module>platform-bom</module>
     <module>platform-persistence</module>
+    <module>platform-time</module>
   </modules>
 
   <properties>

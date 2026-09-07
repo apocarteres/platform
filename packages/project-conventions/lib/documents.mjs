@@ -5,7 +5,9 @@ export const DELIVERED_DOCUMENTS = [
   'agent-work.md',
   'code-comments.md',
   'code-clock.md',
+  'java-clock.md',
   'java-naming.md',
+  'typescript-clock.md',
   'project-rules.md',
   'rule-distribution.md',
 ];

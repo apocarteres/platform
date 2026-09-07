@@ -1,4 +1,14 @@
 {
-  "sources": ["platform-persistence/src", "scripts", "packages/project-conventions"],
-  "exclude": ["/test/resources/"]
+  "sources": [
+    "platform-persistence/src",
+    "platform-time/src",
+    "scripts",
+    "packages/project-conventions"
+  ],
+  "exclude": [
+    "/test/resources/"
+  ],
+  "clockAllowlist": [
+    "platform-time/src/main/java/io/github/apocarteres/platform/time/internal/TimeAutoConfiguration.java"
+  ]
 }

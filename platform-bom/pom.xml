@@ -26,6 +26,11 @@
         <artifactId>platform-persistence</artifactId>
         <version>${revision}</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-time</artifactId>
+        <version>${revision}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

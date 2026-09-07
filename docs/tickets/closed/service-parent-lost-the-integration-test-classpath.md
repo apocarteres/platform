@@ -50,4 +50,4 @@ Failed to execute goal maven-failsafe-plugin:3.5.4:verify (default) on project z
 
 - [x] `classesDirectory` задан для набора интеграционных тестов — `platform-service-parent/pom.xml`
 - [x] Исходники сервиса не упаковываются отдельным артефактом: библиотечная привязка `attach-sources` в родителе сервиса снята
-- [x] `verify` потребителя пройден целиком на этом родителе
+- [x] `verify` потребителя пройден целиком на этом родителе: 779 модульных и 212 интеграционных тестов

@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 18. Включены самостоятельные задачи и этапы планов функций.
+Всего: 19. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -35,4 +35,5 @@ authority: navigation
 | [Четыре проверки жили скриптами одного репозитория](four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Ссылка на нормативный документ ядра считалась ссылкой в пустоту](references-to-delivered-core-documents.md) | P2 | Выполнена | [RELEASE-0-22-0](../../releases/RELEASE-0-22-0.md) | documentation |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
+| [Сборка сервиса оставляла в дереве плоский POM](service-build-left-a-flattened-pom.md) | P2 | Выполнена | Не назначен | build, platform |
 | [Правило размера считало наборы тестов на Python и Ruby рабочим кодом](size-rule-knew-only-java-and-js-tests.md) | P2 | Выполнена | [RELEASE-0-28-0](../../releases/RELEASE-0-28-0.md) | quality, tooling |

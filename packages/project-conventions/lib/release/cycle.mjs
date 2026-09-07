@@ -8,7 +8,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { readReceipt } from './receipt.mjs';
-import { headCommit, tagExists, workingTreeClean } from './git.mjs';
+import { createTag, headCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014
 export async function closability(root, { scheme }) {
@@ -54,6 +54,7 @@ function resultLines(receipt, commit, tag) {
   ];
 }
 
+// REQ-RELEASE-001, REQ-RELEASE-005
 export async function closeRelease(root, { scheme, today }) {
   const state = await closability(root, { scheme });
   if (state.problems.length > 0) return { closed: false, problems: state.problems };
@@ -67,10 +68,10 @@ export async function closeRelease(root, { scheme, today }) {
   });
   content = replaceSection(content, '## Состав', compositionRows(root, composition));
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
-  await writeDocument(release.file, content);
+  const writes = [{ file: release.file, content }];
 
   for (const ticket of composition) {
-    await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: id }));
+    writes.push({ file: ticket.file, content: replaceMetadata(ticket.content, { release: id }) });
   }
 
   const obligationState_ = state.state;
@@ -84,6 +85,9 @@ export async function closeRelease(root, { scheme, today }) {
       delete obligationState_.deferred?.[obligation.id];
     }
   }
+  // REQ-RELEASE-005
+  await createTag(root, tag, commit, `Выпуск ${id}`);
+  for (const write of writes) await writeDocument(write.file, write.content);
   await writeState(root, obligationState_);
 
   return { closed: true, id, tag, commit, composition: composition.map(ticketId) };

@@ -161,6 +161,25 @@ test('закрытие записывает состав, коммит и рез
     const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
     assert.equal(state.releaseCount, 1);
     assert.equal(state.closed.sample.release, 'RELEASE-2026-09-1');
+
+    const { stdout: tagged } = await run('git', ['-C', root, 'rev-list', '-n', '1', '2026.09.1']);
+    assert.equal(tagged.trim(), commit, 'тег выпуска стоит на коммите с распиской');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('отказ в закрытии не оставляет тега', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/done-one.md'), ticket('TICKET-DONE-ONE', 'done'));
+    await commitAll(root);
+
+    const refused = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(refused.closed, false, 'без расписки закрытие отказывает');
+    const { stdout: tags } = await run('git', ['-C', root, 'tag', '--list']);
+    assert.equal(tags.trim(), '', 'тег не ставится при отказе');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

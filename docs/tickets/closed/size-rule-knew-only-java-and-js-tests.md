@@ -5,7 +5,7 @@ status: done
 scope: quality, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-0-28-0
 related: REQ-CODE-DESIGN
 ---
 

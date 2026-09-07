@@ -7,7 +7,13 @@ export const DEFAULT_FILE_LINES = 800;
 export const SIZE_EXTENSIONS = new Set([...SOURCE_EXTENSIONS, '.html', '.scss', '.css', '.py', '.rb', '.rs']);
 
 // REQ-CODE-DESIGN-010
-const TESTS = /(?:\.spec\.ts|\.test\.mjs|\.test\.js|Test\.java|Tests\.java|IT\.java|_test\.rs)$/;
+const TESTS = new RegExp([
+  '\\.spec\\.(?:ts|js|mjs)$', '\\.test\\.(?:ts|js|mjs)$',
+  '(?:Test|Tests|IT|Spec)\\.java$',
+  '(?:^|/)test_[^/]*\\.py$', '_test\\.py$', '(?:^|/)conftest\\.py$',
+  '_test\\.rb$', '_spec\\.rb$',
+  '_test\\.rs$', '(?:^|/)tests?/',
+].join('|'));
 
 export async function findOversizedFiles(root, config) {
   const limit = config.fileLines ?? DEFAULT_FILE_LINES;

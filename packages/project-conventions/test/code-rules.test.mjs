@@ -72,6 +72,24 @@ test('файл сверх предела даёт нарушение на каж
   }
 });
 
+test('наборы тестов не считаются в любом языке проекта', async () => {
+  const long = `${Array.from({ length: 12 }, (_, index) => `line ${index + 1}`).join('\n')}\n`;
+  const root = await project({
+    'src/test_live_flow.py': long,
+    'src/flow_test.py': long,
+    'src/flow_spec.rb': long,
+    'src/tests/helper.mjs': long,
+    'src/FlowSpec.java': long,
+    'src/flow.py': long,
+  });
+  try {
+    const violations = await findOversizedFiles(root, { sources: ['src'], fileLines: 10 });
+    assert.deepEqual([...violations.keys()], ['src/flow.py'], 'считается только рабочий код');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('чувствительность свойства определяется последней частью имени', () => {
   for (const key of ['spring.datasource.password', 'client-secret', 'recaptcha.site-key', 'auth_token', 'api.key']) {
     assert.equal(sensitiveKey(key), true, key);

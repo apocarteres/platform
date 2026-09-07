@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# REQ-QUALITY-004: шлагбаум перед отправкой изменений.
+# Полный набор: mise run verify. Обход в исключительном случае: git push --no-verify.
+
+printf '[pre-push] mise run check\n'
+exec mise run check

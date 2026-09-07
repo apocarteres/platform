@@ -1,5 +1,9 @@
-# Версии инструментов пока не закреплены: см. открытый вопрос о выравнивании
-# версий Node у потребителей в docs/decisions/ADR-0001-shared-core.md.
+# REQ-BUILD-004: версии инструментов закреплены и совпадают с версиями потребителя.
+[tools]
+java = "21"
+node = "22.22.3"
+npm = "10.9.4"
+
 
 [tasks.docs-check]
 description = "Проверить метаданные, ссылки и сводки документации"
@@ -43,6 +47,22 @@ run = "./mvnw --batch-mode --no-transfer-progress verify"
 description = "Опубликовать ядро локально: Maven в ~/.m2, npm-архив в target/local-packages"
 run = "scripts/install-local.sh \"$@\""
 
-[tasks.build]
-description = "Проверить документацию и собрать Java-модули с тестами"
-depends = ["docs-check", "conventions-check", "java-test"]
+[tasks.check]
+description = "Быстрый шлагбаум перед отправкой: документация, правила, тесты пакета и Java-модулей"
+run = [
+  "mise run docs-check",
+  "mise run conventions-check",
+  "mise run conventions-test",
+  "mise run java-test",
+]
+
+[tasks.verify]
+description = "Всё, что проверяется локально: шлагбаум и локальная публикация"
+run = [
+  "mise run check",
+  "mise run install-local",
+]
+
+[tasks.install-hooks]
+description = "Поставить хук pre-push, выполняющий быстрый шлагбаум"
+run = "scripts/git-hooks/install.sh"

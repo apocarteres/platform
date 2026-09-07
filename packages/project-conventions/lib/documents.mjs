@@ -1,5 +1,8 @@
 export const DELIVERED_DOCUMENTS = [
   'project-process.md',
+  'build.md',
+  'quality-checks.md',
+  'deployment.md',
   'code-design.md',
   'compatibility.md',
   'agent-work.md',

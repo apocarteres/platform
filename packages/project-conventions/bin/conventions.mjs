@@ -9,6 +9,11 @@ import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVe
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { updateReleaseIndex } from '../lib/docs/releases-index.mjs';
+import { closeRelease, closability, openNext } from '../lib/release/cycle.mjs';
+import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
+import { writeReceipt } from '../lib/release/receipt.mjs';
+import { headCommit } from '../lib/release/git.mjs';
+import { systemNow } from '../lib/now.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
@@ -148,6 +153,132 @@ async function releasesIndex(root) {
   console.log('Сводка выпусков согласована.');
 }
 
+function releaseScheme(config) {
+  return config.release?.scheme ?? 'date';
+}
+
+async function receipt(root, checks) {
+  const commit = await headCommit(root);
+  const file = await writeReceipt(root, {
+    commit,
+    completedAt: systemNow().toISOString(),
+    checks: checks.length > 0 ? checks : ['verify'],
+  });
+  console.log(`Расписка о проверках записана: ${path.relative(root, file)}`);
+}
+
+async function obligations(root) {
+  const state = await readState(root);
+  const { obligations: declared, isCore } = await loadObligations(root);
+  if (declared.length === 0) {
+    console.log('Ядро не объявляет обязательств.');
+    return;
+  }
+  if (isCore) {
+    console.log('Это репозиторий ядра: обязательства объявлены здесь и относятся к потребителям.');
+    for (const obligation of declared) {
+      console.log(`- ${obligation.id} (${obligation.level}, ${obligation.requirement}), срок ${obligation.dueReleases} выпуск(ов)`);
+    }
+    return;
+  }
+  console.log(`Выпусков закрыто: ${state.releaseCount ?? 0}. Обязательства ядра:`);
+  for (const obligation of declared) {
+    const current = obligationState(obligation, state);
+    const detail = current.status === 'closed'
+      ? `закрыто задачей ${current.ticket} в выпуске ${current.release}`
+      : current.status === 'new'
+        ? 'ещё не попадало в выпуск'
+        : `${current.status === 'overdue' ? 'просрочено' : 'в работе'}, прошло выпусков: ${current.elapsed} из ${obligation.dueReleases}${current.deferral ? `, отсрочка: ${current.deferral.reason}` : ''}`;
+    console.log(`- ${obligation.id} (${obligation.level}, ${obligation.requirement}): ${detail}`);
+  }
+}
+
+async function releaseStatus(root) {
+  const config = await readConfig(root);
+  const state = await closability(root, { scheme: releaseScheme(config) });
+  if (state.release === null) {
+    console.error('Открытого выпуска нет: выполните conventions release open');
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Открытый выпуск: ${state.release.metadata.get('id')}, тег при закрытии: ${state.tag}`);
+  console.log(`Состав по факту закрытия задач: ${state.composition.length}`);
+  if (state.problems.length === 0) {
+    console.log('Выпуск можно закрывать.');
+    return;
+  }
+  console.error('Выпуск закрыть нельзя:');
+  for (const problem of state.problems) console.error(`- ${problem}`);
+  process.exitCode = 1;
+}
+
+async function releaseClose(root, nextVersion) {
+  const config = await readConfig(root);
+  const scheme = releaseScheme(config);
+  if (scheme === 'semver' && !nextVersion) {
+    console.error('Схема semver: номер следующего выпуска задаётся ключом --next-version X.Y.Z');
+    process.exitCode = 2;
+    return;
+  }
+  const result = await closeRelease(root, { scheme, today: systemNow() });
+  if (!result.closed) {
+    console.error('Выпуск закрыть нельзя:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Выпуск ${result.id} закрыт: коммит ${result.commit.slice(0, 8)}, задач в составе ${result.composition.length}.`);
+  console.log(`Тег выпуска: ${result.tag}`);
+  const opened = await openNext(root, { scheme, version: nextVersion, today: systemNow() });
+  if (!opened.opened) {
+    console.error('Следующий выпуск не открыт:');
+    for (const problem of opened.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Открыт выпуск ${opened.id}${opened.created.length > 0 ? `, обязательств в составе: ${opened.created.length}` : ''}.`);
+  for (const ticket of opened.created) console.log(`- ${ticket}`);
+}
+
+async function releaseOpen(root, version) {
+  const config = await readConfig(root);
+  const result = await openNext(root, { scheme: releaseScheme(config), version, today: systemNow() });
+  if (!result.opened) {
+    console.error('Выпуск не открыт:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
+  for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
+}
+
+async function releaseDefer(root, id, reason) {
+  if (!id || !reason) {
+    console.error('conventions release defer <обязательство> --reason "<причина>"');
+    process.exitCode = 2;
+    return;
+  }
+  const declared = await declaredObligations(root);
+  const obligation = declared.find((item) => item.id === id);
+  if (obligation === undefined) {
+    console.error(`Ядро не объявляет обязательства ${id}`);
+    process.exitCode = 1;
+    return;
+  }
+  const state = await readState(root);
+  const current = obligationState(obligation, state);
+  if (current.status === 'overdue') {
+    console.error(`Обязательство ${id} просрочено: перенос невозможен, срок истёк`);
+    process.exitCode = 1;
+    return;
+  }
+  state.deferred ??= {};
+  state.deferred[id] = { reason, recordedAt: systemNow().toISOString().slice(0, 10) };
+  await writeState(root, state);
+  console.log(`Обязательство ${id} перенесено: ${reason}`);
+}
+
 async function sync(root) {
   const version = await packageVersion();
   let agents = '';
@@ -164,13 +295,31 @@ const [command, ...rest] = process.argv.slice(2);
 const rootOption = rest.indexOf('--root');
 const root = path.resolve(rootOption === -1 ? process.cwd() : rest[rootOption + 1]);
 
+const valueOf = (name) => {
+  const index = rest.indexOf(name);
+  return index === -1 ? undefined : rest[index + 1];
+};
+
 if (command === 'check') await check(root);
+else if (command === 'receipt') await receipt(root, rest.filter((value) => !value.startsWith('--') && value !== root));
+else if (command === 'obligations') await obligations(root);
+else if (command === 'release') {
+  const [subcommand, ...args] = rest.filter((value) => value !== '--root' && value !== root);
+  if (subcommand === 'status') await releaseStatus(root);
+  else if (subcommand === 'close') await releaseClose(root, valueOf('--next-version'));
+  else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'));
+  else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
+  else {
+    console.error('conventions release <status|close|open|defer> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"]');
+    process.exitCode = 2;
+  }
+}
 else if (command === 'docs-check') await docsCheck(root);
 else if (command === 'tickets-index') await ticketsIndex(root);
 else if (command === 'releases-index') await releasesIndex(root);
 else if (command === 'baseline') await baseline(root, rest.includes('--allow-growth'));
 else if (command === 'sync') await sync(root);
 else {
-  console.error('conventions <check|docs-check|tickets-index|releases-index|sync|baseline> [--root <path>] [--allow-growth]');
+  console.error('conventions <check|docs-check|tickets-index|releases-index|sync|baseline|receipt|obligations|release> [--root <path>] [--allow-growth]');
   process.exitCode = 2;
 }

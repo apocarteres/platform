@@ -12,6 +12,7 @@
     "bin",
     "lib",
     "docs",
+    "obligations.json",
     "README.md"
   ],
   "type": "module",

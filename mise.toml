@@ -57,10 +57,17 @@ run = [
 ]
 
 [tasks.verify]
-description = "Всё, что проверяется локально: шлагбаум и локальная публикация"
+description = "Всё, что проверяется локально; заканчивается распиской о проверках"
 run = [
   "mise run check",
-  "mise run install-local",
+  "node packages/project-conventions/bin/conventions.mjs receipt check verify",
+]
+
+[tasks.release]
+description = "Закрыть выпуск: проверки, тег на проверенном коммите, открытие следующего. Аргумент — номер следующей версии"
+run = [
+  "mise run verify",
+  "node packages/project-conventions/bin/conventions.mjs release close --next-version \"$1\"",
 ]
 
 [tasks.install-hooks]

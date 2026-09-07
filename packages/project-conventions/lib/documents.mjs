@@ -3,6 +3,7 @@ export const DELIVERED_DOCUMENTS = [
   'build.md',
   'quality-checks.md',
   'deployment.md',
+  'release-cycle.md',
   'code-design.md',
   'compatibility.md',
   'agent-work.md',

@@ -9,6 +9,10 @@
     "/test/resources/"
   ],
   "clockAllowlist": [
+    "packages/project-conventions/lib/now.mjs",
     "platform-time/src/main/java/io/github/apocarteres/platform/time/internal/TimeAutoConfiguration.java"
-  ]
+  ],
+  "release": {
+    "scheme": "semver"
+  }
 }

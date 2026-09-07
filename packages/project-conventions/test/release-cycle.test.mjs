@@ -9,6 +9,7 @@ import { nextReleaseId, openRelease, releaseTag, unassignedTerminalTickets } fro
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
 import { adoptCycle, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
+import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
 
 const run = promisify(execFile);
 const FIXED_DAY = new Date('2026-09-07T00:00:00Z');
@@ -230,6 +231,27 @@ test('обязательство закрывается ссылкой на уж
     const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
     assert.equal(state.closed.sample.ticket, 'TICKET-OLD-WORK');
     assert.equal(obligationState(OBLIGATION, state).status, 'closed');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('ссылки состава следуют за задачей, переехавшей в closed', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    const open = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    const body = await readFile(open, 'utf8');
+    await writeFile(path.join(root, 'docs/tickets/closed/adopt-sample-2026-09-07.md'), body.replace('status: backlog', 'status: done'));
+    await rm(open);
+
+    const stale = await refreshCompositionLinks(root, { check: true });
+    assert.equal(stale.length, 1, 'устаревшая ссылка состава замечена проверкой');
+
+    await refreshCompositionLinks(root, { check: false });
+    const release = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
+    assert.match(release, /\(\.\.\/tickets\/closed\/adopt-sample-2026-09-07\.md\)/);
+    assert.deepEqual(await refreshCompositionLinks(root, { check: true }), []);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

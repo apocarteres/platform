@@ -3,6 +3,40 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontMatter } from './ticket-model.mjs';
 
+// REQ-RELEASE-007, REQ-RELEASE-008
+export async function refreshCompositionLinks(root, { check = false } = {}) {
+  const { tickets, replaceSection, sectionLines, ticketId, writeDocument } = await import('../release/documents.mjs');
+  const directory = path.join(root, 'docs/releases');
+  const byId = new Map((await tickets(root)).map((ticket) => [ticketId(ticket), ticket]));
+  const errors = [];
+  for (const name of (await readdir(directory)).sort()) {
+    if (!name.endsWith('.md')) continue;
+    const file = path.join(directory, name);
+    const content = await readFile(file, 'utf8');
+    const metadata = parseFrontMatter(content)?.metadata;
+    if (metadata?.get('type') !== 'release' || metadata.get('status') === 'released') continue;
+    let changed = false;
+    const rows = sectionLines(content, '## Состав').map((line) => {
+      const match = /^\|\s*\[([A-Z][A-Z0-9-]*)\]\(([^)\s]+)\)\s*\|(.*)$/.exec(line);
+      if (match === null) return line;
+      const [, id, href, rest] = match;
+      const ticket = byId.get(id);
+      if (ticket === undefined) return line;
+      const target = path.relative(directory, ticket.file).split(path.sep).join('/');
+      if (target === href) return line;
+      changed = true;
+      return `| [${id}](${target}) |${rest}`;
+    });
+    if (!changed) continue;
+    if (check) {
+      errors.push(`docs/releases/${name}: ссылки состава устарели; выполните mise run releases-index`);
+      continue;
+    }
+    await writeDocument(file, replaceSection(content, '## Состав', rows));
+  }
+  return errors;
+}
+
 export async function updateReleaseIndex(root, { check = false } = {}) {
   const directory = path.join(root, 'docs/releases');
   const rows = [];

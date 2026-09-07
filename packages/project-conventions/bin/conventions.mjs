@@ -8,7 +8,7 @@ import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBase
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
-import { updateReleaseIndex } from '../lib/docs/releases-index.mjs';
+import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 import { adoptCycle, closeRelease, closability, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
@@ -121,6 +121,7 @@ async function docsCheck(root) {
   const result = await checkDocumentation(root, { requiredCatalogTargets: config.docs?.requiredCatalogTargets ?? [] });
   const indexErrors = [
     ...await updateTicketIndexes(root, { check: true }),
+    ...await refreshCompositionLinks(root, { check: true }),
     ...await updateReleaseIndex(root, { check: true }),
   ];
   const errors = [...result.errors, ...indexErrors];
@@ -144,6 +145,7 @@ async function ticketsIndex(root) {
 }
 
 async function releasesIndex(root) {
+  await refreshCompositionLinks(root, { check: false });
   const errors = await updateReleaseIndex(root, { check: false });
   if (errors.length > 0) {
     for (const error of errors) console.error(`- ${error}`);

@@ -5,9 +5,30 @@ import path from 'node:path';
 import { validateReleases, releaseStatuses } from './release-model.mjs';
 import { parseFrontMatter, validateTicket } from './ticket-model.mjs';
 
+const DELIVERED_DOCS_DIR = 'node_modules/@apocarteres/project-conventions/docs';
+
+// REQ-RULE-DISTRIBUTION
+async function deliveredIds(root) {
+  const found = new Set();
+  let names;
+  try {
+    names = await readdir(path.join(root, DELIVERED_DOCS_DIR));
+  } catch (error) {
+    if (error.code === 'ENOENT') return found;
+    throw error;
+  }
+  for (const name of names) {
+    if (!name.endsWith('.md')) continue;
+    const content = await readFile(path.join(root, DELIVERED_DOCS_DIR, name), 'utf8');
+    const id = parseFrontMatter(content)?.metadata?.get('id');
+    if (id) found.add(id);
+  }
+  return found;
+}
+
 const REQUIRED_METADATA_FIELDS = ['id', 'type', 'status', 'scope', 'authority'];
 const DOCUMENT_REFERENCE_FIELDS = ['depends-on', 'supersedes', 'superseded-by', 'related'];
-const OPTIONAL_METADATA_FIELDS = [...DOCUMENT_REFERENCE_FIELDS, 'clause-id-prefix', 'priority', 'questions', 'release', 'opened-on', 'released-on', 'commit'];
+const OPTIONAL_METADATA_FIELDS = [...DOCUMENT_REFERENCE_FIELDS, 'clause-id-prefix', 'priority', 'questions', 'release', 'opened-on', 'released-on', 'commit', 'obligation'];
 const ALLOWED_METADATA_FIELDS = new Set([
   ...REQUIRED_METADATA_FIELDS,
   ...OPTIONAL_METADATA_FIELDS,
@@ -429,9 +450,10 @@ export async function checkDocumentation(projectRoot, options = {}) {
 
   errors.push(...validateReleases(documents));
 
+  const delivered = await deliveredIds(resolvedRoot);
   for (const reference of references) {
     for (const targetId of reference.targetIds) {
-      if (!ids.has(targetId)) {
+      if (!ids.has(targetId) && !delivered.has(targetId)) {
         errors.push(`${reference.relativePath}: поле ${reference.field} ссылается на неизвестный документ ${targetId}`);
       }
     }

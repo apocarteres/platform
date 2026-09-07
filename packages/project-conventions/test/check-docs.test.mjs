@@ -253,3 +253,59 @@ test('общая проверка сверяет назначение выпус
     assert(updated.errors.some(error => error.includes('отсутствует ссылка на docs/releases/rules.md')));
   });
 });
+
+test('задача, выпущенная до цикла, не требует документа выпуска и может ссылаться на обязательство', async () => {
+  await withFixture(async (root) => {
+    await writeFixtureFile(root, 'docs/tickets/closed/old.md', `---
+id: TICKET-OLD
+type: ticket
+status: done
+scope: example
+authority: supporting
+priority: P2
+release: before-cycle
+obligation: sample
+---
+
+# Старая задача
+`);
+    await writeFixtureFile(root, 'docs/tickets/closed/INDEX.md', `${metadata('IDX-CLOSED', 'index', 'active', 'planning', 'navigation')}# Закрытые задачи
+
+- [Старая задача](old.md)
+`);
+    const result = await checkDocumentation(root);
+    assert.deepEqual(result.errors, []);
+  });
+});
+
+test('ссылка на нормативный документ, доставленный пакетом правил, считается известной', async () => {
+  await withFixture(async (root) => {
+    await writeFixtureFile(root, 'docs/tickets/closed/linked.md', `---
+id: TICKET-LINKED
+type: ticket
+status: done
+scope: example
+authority: supporting
+priority: P2
+release: unassigned
+related: REQ-DELIVERED
+---
+
+# Задача со ссылкой на требование ядра
+`);
+    await writeFixtureFile(root, 'docs/tickets/closed/INDEX.md', `${metadata('IDX-CLOSED', 'index', 'active', 'planning', 'navigation')}# Закрытые задачи
+
+- [Задача со ссылкой](linked.md)
+`);
+    const unknown = await checkDocumentation(root);
+    assert.ok(unknown.errors.some((error) => error.includes('REQ-DELIVERED')), 'без пакета ссылка неизвестна');
+
+    await writeFixtureFile(
+      root,
+      'node_modules/@apocarteres/project-conventions/docs/delivered.md',
+      `${metadata('REQ-DELIVERED', 'requirement', 'active', 'example', 'normative')}# Доставленное требование\n`,
+    );
+    const known = await checkDocumentation(root);
+    assert.deepEqual(known.errors, []);
+  });
+});

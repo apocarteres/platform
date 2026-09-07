@@ -62,7 +62,7 @@ export async function buildTicketIndexes(root) {
       `[Правила](${closed ? '../' : ''}RULES.md) · [${closed ? 'Открытые' : 'Закрытые'} задачи](${closed ? '../INDEX.md' : 'closed/INDEX.md'}) · [Планы функций](${closed ? '../' : ''}features/INDEX.md)`, '',
       `Всего: ${selected.length}. Включены самостоятельные задачи и этапы планов функций.`, '',
       '| Задача | Приоритет | Статус | Выпуск | Области |', '|---|---|---|---|---|'];
-    for (const ticket of selected) lines.push(`| [${cell(ticket.title)}](${href(ticket.file)}) | ${ticket.priority === 'unassigned' ? 'Не назначен' : ticket.priority} | ${labels[ticket.status]} | ${ticket.release === 'unassigned' ? 'Не назначен' : `[${ticket.release}](${href(path.join(root, 'docs/releases', ticket.release + '.md'))})`} | ${cell(ticket.scope)} |`);
+    for (const ticket of selected) lines.push(`| [${cell(ticket.title)}](${href(ticket.file)}) | ${ticket.priority === 'unassigned' ? 'Не назначен' : ticket.priority} | ${labels[ticket.status]} | ${releaseCell(root, ticket.release, href)} | ${cell(ticket.scope)} |`);
     if (!closed && supporting.length) {
       lines.push('', '## Порядок работы и контекст', '');
       for (const item of supporting) lines.push(`- [${cell(item.title)}](${href(item.file)})`);
@@ -70,6 +70,12 @@ export async function buildTicketIndexes(root) {
     outputs.set(target, lines.join('\n') + '\n');
   }
   return { errors, outputs };
+}
+
+function releaseCell(root, release, href) {
+  if (release === 'unassigned') return 'Не назначен';
+  if (release === 'before-cycle') return 'До цикла выпусков';
+  return `[${release}](${href(path.join(root, 'docs/releases', `${release}.md`))})`;
 }
 
 export async function updateTicketIndexes(root, { check = false } = {}) {

@@ -67,7 +67,7 @@ run = [
 description = "Закрыть выпуск: проверки, тег на проверенном коммите, открытие следующего. Аргумент — номер следующей версии"
 run = [
   "mise run verify",
-  "node packages/project-conventions/bin/conventions.mjs release close --next-version \"$1\"",
+  "node packages/project-conventions/bin/conventions.mjs release close --next-version {{arg(name=\"version\")}}",
   "mise run install-local",
 ]
 

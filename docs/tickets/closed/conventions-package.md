@@ -5,7 +5,7 @@ status: done
 scope: process, documentation, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-0-29-0
 questions: resolved
 related: ADR-0001, TICKET-CODE-COMMENTS-RULE
 ---

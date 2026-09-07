@@ -80,3 +80,9 @@ test('область действия и перечень исключений �
 test('пустой перечень правил проекта допустим', () => {
   assert.deepEqual(projectRules({}), { rules: [], errors: [] });
 });
+
+test('каждый документ правила входит в перечень доставляемых', async () => {
+  const { DELIVERED_DOCUMENTS } = await import('../lib/documents.mjs');
+  const { RULES } = await import('../lib/rules.mjs');
+  for (const rule of RULES) assert(DELIVERED_DOCUMENTS.includes(rule.file), rule.file);
+});

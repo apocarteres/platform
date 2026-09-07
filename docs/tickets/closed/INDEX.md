@@ -28,6 +28,6 @@ authority: navigation
 | [Невыполненное обязательство оставалось в закрытом выпуске](unfinished-obligation-stranded-in-closed-release.md) | P1 | Выполнена | [RELEASE-0-23-0](../../releases/RELEASE-0-23-0.md) | release |
 | [Подключение к проекту без каталогов документации падало трассировкой](adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
-| [Четыре проверки жили скриптами одного репозитория](four-checks-from-a-second-consumer.md) | P2 | Выполнена | Не назначен | quality, tooling |
+| [Четыре проверки жили скриптами одного репозитория](four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Ссылка на нормативный документ ядра считалась ссылкой в пустоту](references-to-delivered-core-documents.md) | P2 | Выполнена | [RELEASE-0-22-0](../../releases/RELEASE-0-22-0.md) | documentation |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |

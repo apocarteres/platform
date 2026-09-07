@@ -5,7 +5,7 @@ status: done
 scope: backend, java
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-0-19-0
 related: REQ-JAVA-CLOCK
 ---
 

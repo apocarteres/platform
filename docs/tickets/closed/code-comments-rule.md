@@ -5,7 +5,7 @@ status: done
 scope: process, tooling, backend, frontend
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-0-19-0
 related: ADR-0001, TICKET-CONVENTIONS-PACKAGE, REQ-CODE-COMMENTS, REQ-CODE-CLOCK
 ---
 

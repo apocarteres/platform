@@ -5,7 +5,7 @@ status: done
 scope: build, delivery, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-0-19-0
 related: ADR-0001, REQ-PUBLISHING, RUN-GITHUB-PACKAGES, TICKET-PLATFORM-PERSISTENCE
 ---
 

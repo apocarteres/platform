@@ -16,6 +16,6 @@ authority: navigation
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
-| [Правила из платформы: контракт, доставка и внедрение](code-comments-rule.md) | P1 | Выполнена | Не назначен | process, tooling, backend, frontend |
-| [Публикация пакетов ядра в GitHub Packages](github-packages-publishing.md) | P1 | Выполнена | Не назначен | build, delivery, tooling |
-| [Starter `platform-time`: порт часов](platform-time.md) | P1 | Выполнена | Не назначен | backend, java |
+| [Правила из платформы: контракт, доставка и внедрение](code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
+| [Публикация пакетов ядра в GitHub Packages](github-packages-publishing.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | build, delivery, tooling |
+| [Starter `platform-time`: порт часов](platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |

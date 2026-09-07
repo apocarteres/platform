@@ -68,6 +68,7 @@ description = "Закрыть выпуск: проверки, тег на про
 run = [
   "mise run verify",
   "node packages/project-conventions/bin/conventions.mjs release close --next-version \"$1\"",
+  "mise run install-local",
 ]
 
 [tasks.install-hooks]

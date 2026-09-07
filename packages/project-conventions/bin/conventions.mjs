@@ -13,6 +13,7 @@ import { closeRelease, closability, openNext } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
+import { openRelease as currentRelease, tickets as allTickets } from '../lib/release/documents.mjs';
 import { systemNow } from '../lib/now.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -253,6 +254,39 @@ async function releaseOpen(root, version) {
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
 }
 
+async function releaseSatisfy(root, id, ticketId) {
+  if (!id || !ticketId) {
+    console.error('conventions release satisfy <обязательство> --ticket <TICKET-ID>');
+    process.exitCode = 2;
+    return;
+  }
+  const { obligations: declared } = await loadObligations(root);
+  const obligation = declared.find((item) => item.id === id);
+  if (obligation === undefined) {
+    console.error(`Ядро не объявляет обязательства ${id}`);
+    process.exitCode = 1;
+    return;
+  }
+  const evidence = (await allTickets(root)).find((ticket) => ticket.metadata.get('id') === ticketId);
+  if (evidence === undefined) {
+    console.error(`Задачи ${ticketId} в проекте нет: обязательство закрывается ссылкой на существующую задачу`);
+    process.exitCode = 1;
+    return;
+  }
+  if (evidence.metadata.get('status') !== 'done') {
+    console.error(`Задача ${ticketId} не выполнена: обязательство закрывается только выполненной работой`);
+    process.exitCode = 1;
+    return;
+  }
+  const state = await readState(root);
+  const release = await currentRelease(root);
+  state.closed ??= {};
+  state.closed[id] = { release: release?.metadata.get('id') ?? 'до цикла выпусков', ticket: ticketId };
+  delete state.deferred?.[id];
+  await writeState(root, state);
+  console.log(`Обязательство ${id} закрыто задачей ${ticketId}`);
+}
+
 async function releaseDefer(root, id, reason) {
   if (!id || !reason) {
     console.error('conventions release defer <обязательство> --reason "<причина>"');
@@ -309,8 +343,9 @@ else if (command === 'release') {
   else if (subcommand === 'close') await releaseClose(root, valueOf('--next-version'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'));
   else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
+  else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
   else {
-    console.error('conventions release <status|close|open|defer> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"]');
+    console.error('conventions release <status|close|open|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');
     process.exitCode = 2;
   }
 }

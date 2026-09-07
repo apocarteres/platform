@@ -38,3 +38,13 @@ test('нумерация строк сохраняется после вырез
   assert.equal(lines.length, 4);
   assert.match(lines[3], /Instant\.now\(\)/);
 });
+
+test('строковый аргумент не превращает new Date в вызов без аргументов', () => {
+  const found = findClockCalls("const a = new Date('2026-06-01T00:00:00Z');\nconst b = new Date(`${prefix}Z`);", '.ts');
+  assert.deepEqual(found, []);
+});
+
+test('обращение к часам внутри строки нарушением не считается', () => {
+  const found = findClockCalls('log("Instant.now() запрещён");', '.java');
+  assert.deepEqual(found, []);
+});

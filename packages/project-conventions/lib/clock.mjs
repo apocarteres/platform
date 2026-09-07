@@ -10,6 +10,8 @@ const JAVA_CALLS = [
 ];
 const SCRIPT_CALLS = ['Date.now(', 'performance.now(', 'process.hrtime('];
 const BARE_DATE = /(^|[^.\w])new Date\s*\(\s*\)/;
+// REQ-CODE-CLOCK-006
+const LITERAL = '_';
 
 export function codeLines(source) {
   const lines = [''];
@@ -21,15 +23,16 @@ export function codeLines(source) {
   while (index < source.length) {
     const current = source[index];
     if (source.startsWith('"""', index)) {
+      push(LITERAL);
       index += 3;
       while (index < source.length && !source.startsWith('"""', index)) {
-        push(source[index] === '\n' ? '\n' : ' ');
+        if (source[index] === '\n') push('\n');
         index += 1;
       }
       index += 3;
     } else if (current === '"' || current === "'" || current === '`') {
       const quote = current;
-      push(' ');
+      push(LITERAL);
       index += 1;
       while (index < source.length) {
         if (source[index] === '\\') {
@@ -38,7 +41,7 @@ export function codeLines(source) {
           index += 1;
           break;
         } else {
-          push(source[index] === '\n' ? '\n' : ' ');
+          if (source[index] === '\n') push('\n');
           index += 1;
         }
       }

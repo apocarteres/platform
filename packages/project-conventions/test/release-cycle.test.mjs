@@ -298,3 +298,20 @@ test('первый выпуск открывается в проекте, где
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('открытие выпуска с уже занятым номером отказывает и не трогает документ', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'semver', version: '0.19.0', today: FIXED_DAY });
+    const file = path.join(root, 'docs/releases/RELEASE-0-19-0.md');
+    const released = (await readFile(file, 'utf8')).replace('status: draft', 'status: released');
+    await writeFile(file, released);
+
+    const again = await openNext(root, { scheme: 'semver', version: '0.19.0', today: NEXT_DAY });
+    assert.equal(again.opened, false);
+    assert.match(again.problems.join(), /уже существует/);
+    assert.equal(await readFile(file, 'utf8'), released, 'закрытый документ не перезаписан');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 15. Включены самостоятельные задачи и этапы планов функций.
+Всего: 16. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -26,6 +26,7 @@ authority: navigation
 | [Starter `platform-time`: порт часов](platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Состав выпуска не видел запланированные обязательства](release-composition-misses-planned-obligations.md) | P1 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Принятие цикла выпусков репозиторием с историей](release-cycle-adoption.md) | P1 | Выполнена | [RELEASE-0-20-0](../../releases/RELEASE-0-20-0.md) | release |
+| [Повторный номер выпуска перезаписывал закрытый документ](release-number-reused-overwrote-a-closed-release.md) | P1 | Выполнена | Не назначен | release |
 | [Невыполненное обязательство оставалось в закрытом выпуске](unfinished-obligation-stranded-in-closed-release.md) | P1 | Выполнена | [RELEASE-0-23-0](../../releases/RELEASE-0-23-0.md) | release |
 | [Подключение к проекту без каталогов документации падало трассировкой](adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |

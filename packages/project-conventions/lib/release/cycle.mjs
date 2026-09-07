@@ -231,6 +231,13 @@ export async function openNext(root, { scheme, version, today }) {
     return { opened: false, problems: [`Выпуск ${already.metadata.get('id')} уже открыт: открытый выпуск всегда ровно один`] };
   }
   const { id, tag, number } = nextReleaseId(existing, scheme, today, version);
+  // REQ-RELEASE-005
+  if (existing.some((release) => release.metadata.get('id') === id)) {
+    return {
+      opened: false,
+      problems: [`Выпуск ${id} уже существует: номер не переиспользуется, задайте следующий номер`],
+    };
+  }
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
   const pending = pendingObligations(obligations, state, isCore);

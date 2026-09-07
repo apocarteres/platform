@@ -28,8 +28,8 @@ export const RULES = [
   {
     id: 'naming-er',
     level: RECOMMENDATION,
-    document: 'REQ-CODE-NAMING',
-    file: 'code-naming.md',
+    document: 'REQ-JAVA-NAMING',
+    file: 'java-naming.md',
     summary: 'Имя типа не оканчивается на -er вне перечня образцов и доменных существительных',
     title: 'имён с суффиксом -er вне перечня',
     find: findNamingViolations,

@@ -8,7 +8,7 @@ const builtIn = new Set(['comments', 'clock', 'naming-er']);
 test('правило проекта дополняет правила платформы, а не заменяет их', () => {
   const { rules, errors } = allRules({
     rules: [{
-      id: 'no-er-suffix', level: 'рекомендация', document: 'REQ-CODE-NAMING', text: 'docs/requirements/code-naming.md',
+      id: 'no-er-suffix', level: 'рекомендация', document: 'REQ-JAVA-NAMING', text: 'docs/requirements/java-naming.md',
       message: 'класс с суффиксом -er', forbid: 'class\\s+\\w+[Ee]r\\b',
     }],
   });

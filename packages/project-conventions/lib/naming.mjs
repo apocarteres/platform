@@ -3,7 +3,7 @@ import path from 'node:path';
 import { collectSourceFiles } from './comments.mjs';
 import { codeLines } from './clock.mjs';
 
-// REQ-CODE-NAMING-002
+// REQ-JAVA-NAMING-002
 export const PATTERN_SUFFIXES = [
   'Adapter', 'Builder', 'Compiler', 'Consumer', 'Controller', 'Decoder', 'Encoder', 'Filter',
   'Forwarder', 'Handler', 'Listener', 'Loader', 'Mapper', 'Parser', 'Producer', 'Provider',
@@ -11,7 +11,7 @@ export const PATTERN_SUFFIXES = [
   'Validator', 'Verifier', 'Worker', 'Writer',
 ];
 
-// REQ-CODE-NAMING-003
+// REQ-JAVA-NAMING-003
 export const DOMAIN_NOUNS = [
   'Buffer', 'Cipher', 'Cluster', 'Container', 'Counter', 'Folder', 'Header', 'Layer', 'Manager',
   'Marker', 'Member', 'Number', 'Offer', 'Order', 'Owner', 'Parameter', 'Peer', 'Register',

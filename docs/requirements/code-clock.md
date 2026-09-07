@@ -14,6 +14,8 @@ related: REQ-CODE-COMMENTS
 
 Документ нормативен для платформы и для всех проектов, подключивших пакет `@apocarteres/project-conventions`. Он не копируется в репозитории потребителей: пакет доставляет этот файл вместе с собой.
 
+**Область действия: весь код.** Правило не зависит от языка; перечни запрещённых вызовов приведены по языкам.
+
 ## Правило
 
 1. <a id="REQ-CODE-CLOCK-000"></a> **REQ-CODE-CLOCK-000** — Прямое обращение к системным часам запрещено и в рабочем коде, и в тестах. Время получают через интерфейс часов: в рабочем коде он реализован системными часами, в тестах всегда возвращает заданное значение.
@@ -22,8 +24,16 @@ related: REQ-CODE-COMMENTS
 
 ## Что запрещено
 
+### Java
+
 1. <a id="REQ-CODE-CLOCK-001"></a> **REQ-CODE-CLOCK-001** — В файлах `.java` запрещены вызовы `Instant.now`, `LocalDate.now`, `LocalDateTime.now`, `LocalTime.now`, `OffsetDateTime.now`, `ZonedDateTime.now`, `Year.now`, `YearMonth.now`, `System.currentTimeMillis`, `System.nanoTime`, `Clock.systemUTC`, `Clock.systemDefaultZone`, `Clock.system`.
+
+### TypeScript и JavaScript
+
 2. <a id="REQ-CODE-CLOCK-002"></a> **REQ-CODE-CLOCK-002** — В файлах `.ts`, `.mjs`, `.js` запрещены `Date.now`, `performance.now`, `process.hrtime` и `new Date()` без аргументов. `new Date(value)` с аргументом разрешён: он не обращается к часам.
+
+### Рабочий код и тесты
+
 3. <a id="REQ-CODE-CLOCK-003"></a> **REQ-CODE-CLOCK-003** — Запрет действует одинаково в рабочем коде и в тестах. Тест, зависящий от текущего момента, недоказуем: его исход определяют обстоятельства машины.
 
 ## Что разрешено

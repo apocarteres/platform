@@ -3,8 +3,8 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import test from 'node:test';
-import { parseFrontMatter, validateTicket } from './ticket-model.mjs';
-import { updateTicketIndexes } from './tickets-index.mjs';
+import { parseFrontMatter, validateTicket } from '../lib/docs/ticket-model.mjs';
+import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 
 const ticket = (overrides = {}, body = '# Задача\n') => {
   const fields = { id: 'TICKET-EXAMPLE', type: 'ticket', status: 'backlog', scope: 'testing',

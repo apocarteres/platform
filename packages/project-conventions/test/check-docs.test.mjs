@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { checkDocumentation } from './check-docs.mjs';
+import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 
 function metadata(id, type, status, scope, authority) {
   return [

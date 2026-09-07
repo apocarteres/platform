@@ -18,10 +18,8 @@ jobs:
           node-version: 24
       - name: Проверка документации и сводок
         run: |
-          node --test scripts/docs/*.test.mjs
-          node scripts/docs/check-docs.mjs
-          node scripts/docs/tickets-index.mjs --check
-          node scripts/docs/releases-index.mjs --check
+          node --test packages/project-conventions/test/*.test.mjs
+          node packages/project-conventions/bin/conventions.mjs docs-check
 
   conventions:
     runs-on: ubuntu-24.04

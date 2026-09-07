@@ -6,6 +6,9 @@ import { readConfig } from '../lib/config.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
+import { checkDocumentation } from '../lib/docs/check-docs.mjs';
+import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
+import { updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
@@ -108,6 +111,43 @@ async function baseline(root, allowGrowth) {
   console.log(`${BASELINE_FILE} ${seeding ? 'создан' : 'обновлён'}: ${summary}.`);
 }
 
+async function docsCheck(root) {
+  const config = await readConfig(root);
+  const result = await checkDocumentation(root, { requiredCatalogTargets: config.docs?.requiredCatalogTargets ?? [] });
+  const indexErrors = [
+    ...await updateTicketIndexes(root, { check: true }),
+    ...await updateReleaseIndex(root, { check: true }),
+  ];
+  const errors = [...result.errors, ...indexErrors];
+  if (errors.length > 0) {
+    console.error(`Проверка документации завершилась с ошибками (${errors.length}):`);
+    for (const error of errors) console.error(`- ${error}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Документация проверена: ${result.markdownCount} Markdown-документов, ${result.requirementClauseCount} стабильных положений.`);
+}
+
+async function ticketsIndex(root) {
+  const errors = await updateTicketIndexes(root, { check: false });
+  if (errors.length > 0) {
+    for (const error of errors) console.error(`- ${error}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log('Сводки задач согласованы.');
+}
+
+async function releasesIndex(root) {
+  const errors = await updateReleaseIndex(root, { check: false });
+  if (errors.length > 0) {
+    for (const error of errors) console.error(`- ${error}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log('Сводка выпусков согласована.');
+}
+
 async function sync(root) {
   const version = await packageVersion();
   let agents = '';
@@ -125,9 +165,12 @@ const rootOption = rest.indexOf('--root');
 const root = path.resolve(rootOption === -1 ? process.cwd() : rest[rootOption + 1]);
 
 if (command === 'check') await check(root);
+else if (command === 'docs-check') await docsCheck(root);
+else if (command === 'tickets-index') await ticketsIndex(root);
+else if (command === 'releases-index') await releasesIndex(root);
 else if (command === 'baseline') await baseline(root, rest.includes('--allow-growth'));
 else if (command === 'sync') await sync(root);
 else {
-  console.error('conventions <check|sync|baseline> [--root <path>] [--allow-growth]');
+  console.error('conventions <check|docs-check|tickets-index|releases-index|sync|baseline> [--root <path>] [--allow-growth]');
   process.exitCode = 2;
 }

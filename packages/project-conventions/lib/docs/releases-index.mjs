@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { parseFrontMatter } from './ticket-model.mjs';
 
 export async function updateReleaseIndex(root, { check = false } = {}) {
@@ -29,10 +28,4 @@ export async function updateReleaseIndex(root, { check = false } = {}) {
   let actual;
   try { actual = await readFile(file, 'utf8'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   return actual === expected ? [] : ['docs/releases/INDEX.md: сводка устарела; выполните mise run releases-index'];
-}
-
-if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
-  const errors = await updateReleaseIndex(process.cwd(), { check: process.argv.includes('--check') });
-  if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
-  else console.log('Сводка выпусков согласована.');
 }

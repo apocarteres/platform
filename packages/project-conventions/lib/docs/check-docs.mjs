@@ -4,7 +4,6 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { validateReleases, releaseStatuses } from './release-model.mjs';
 import { parseFrontMatter, validateTicket } from './ticket-model.mjs';
-import { pathToFileURL } from 'node:url';
 
 const REQUIRED_METADATA_FIELDS = ['id', 'type', 'status', 'scope', 'authority'];
 const DOCUMENT_REFERENCE_FIELDS = ['depends-on', 'supersedes', 'superseded-by', 'related'];
@@ -25,7 +24,7 @@ const STATUS_BY_TYPE = new Map([
 ]);
 
 const ALLOWED_AUTHORITIES = new Set(['normative', 'supporting', 'historical', 'navigation']);
-const REQUIRED_CATALOG_TARGETS = [
+const DEFAULT_CATALOG_TARGETS = [
   'docs/REQUIREMENTS.md',
   'docs/decisions/INDEX.md',
   'docs/runbooks/INDEX.md',
@@ -395,7 +394,11 @@ async function checkChildIndexCoverage(projectRoot, directory, indexPath, errors
   }
 }
 
-export async function checkDocumentation(projectRoot) {
+export async function checkDocumentation(projectRoot, options = {}) {
+  const requiredCatalogTargets = [
+    ...DEFAULT_CATALOG_TARGETS,
+    ...(options.requiredCatalogTargets ?? []),
+  ];
   const resolvedRoot = path.resolve(projectRoot);
   const docsRoot = path.join(resolvedRoot, 'docs');
   const files = await walkFiles(docsRoot);
@@ -489,7 +492,7 @@ export async function checkDocumentation(projectRoot) {
 
   const documentationIndex = path.join(docsRoot, 'INDEX.md');
   const documentationTargets = await collectIndexTargets(resolvedRoot, documentationIndex);
-  for (const requiredTarget of REQUIRED_CATALOG_TARGETS) {
+  for (const requiredTarget of requiredCatalogTargets) {
     const absoluteTarget = path.join(resolvedRoot, requiredTarget);
     if (!documentationTargets.has(absoluteTarget)) {
       errors.push(`docs/INDEX.md: отсутствует ссылка на ${requiredTarget}`);
@@ -501,24 +504,4 @@ export async function checkDocumentation(projectRoot) {
     markdownCount: markdownFiles.length,
     requirementClauseCount: clauseIds.size,
   };
-}
-
-async function main() {
-  const projectRoot = process.argv[2] ?? process.cwd();
-  const result = await checkDocumentation(projectRoot);
-  if (result.errors.length > 0) {
-    console.error(`Проверка документации завершилась с ошибками (${result.errors.length}):`);
-    for (const error of result.errors) {
-      console.error(`- ${error}`);
-    }
-    process.exitCode = 1;
-    return;
-  }
-
-  console.log(`Документация проверена: ${result.markdownCount} Markdown-документов, ${result.requirementClauseCount} стабильных положений.`);
-}
-
-const entryPoint = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : null;
-if (entryPoint === import.meta.url) {
-  await main();
 }

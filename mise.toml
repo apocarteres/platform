@@ -1,22 +1,18 @@
 # Версии инструментов пока не закреплены: см. открытый вопрос о выравнивании
 # версий Node у потребителей в docs/decisions/ADR-0001-shared-core.md.
 
-[tasks.docs-test]
-description = "Тесты инструментов проверки документации"
-run = "node --test scripts/docs/*.test.mjs"
-
 [tasks.docs-check]
 description = "Проверить метаданные, ссылки и сводки документации"
-depends = ["docs-test"]
-run = ["node scripts/docs/check-docs.mjs", "node scripts/docs/tickets-index.mjs --check", "node scripts/docs/releases-index.mjs --check"]
+depends = ["conventions-test"]
+run = "node packages/project-conventions/bin/conventions.mjs docs-check"
 
 [tasks.tickets-index]
 description = "Собрать сводки задач из метаданных"
-run = "node scripts/docs/tickets-index.mjs"
+run = "node packages/project-conventions/bin/conventions.mjs tickets-index"
 
 [tasks.releases-index]
 description = "Собрать каталог выпусков"
-run = "node scripts/docs/releases-index.mjs"
+run = "node packages/project-conventions/bin/conventions.mjs releases-index"
 
 [tasks.conventions-check]
 description = "Проверить правила проекта: комментарии и блок правил в AGENTS.md"
@@ -45,4 +41,4 @@ run = "./mvnw --batch-mode --no-transfer-progress verify"
 
 [tasks.build]
 description = "Проверить документацию и собрать Java-модули с тестами"
-depends = ["docs-check", "conventions-test", "conventions-check", "java-test"]
+depends = ["docs-check", "conventions-check", "java-test"]

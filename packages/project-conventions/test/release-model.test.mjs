@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { validateReleases } from './release-model.mjs';
+import { validateReleases } from '../lib/docs/release-model.mjs';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import { updateReleaseIndex } from './releases-index.mjs';
+import { updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 
 const releaseId = 'RELEASE-TEST';
 const ticketId = 'TICKET-TEST';

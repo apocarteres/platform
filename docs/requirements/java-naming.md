@@ -24,7 +24,7 @@ related: REQ-PROJECT-RULES
 
 ## Имена образцов
 
-2. <a id="REQ-JAVA-NAMING-002"></a> **REQ-JAVA-NAMING-002** — Разрешены имена классических образцов проектирования, где суффикс называет роль в известной схеме, а не действие: `Adapter`, `Builder`, `Compiler`, `Consumer`, `Controller`, `Decoder`, `Encoder`, `Filter`, `Forwarder`, `Handler`, `Listener`, `Loader`, `Mapper`, `Parser`, `Producer`, `Provider`, `Publisher`, `Reader`, `Resolver`, `Router`, `Runner`, `Scheduler`, `Serializer`, `Subscriber`, `Validator`, `Verifier`, `Worker`, `Writer`.
+2. <a id="REQ-JAVA-NAMING-002"></a> **REQ-JAVA-NAMING-002** — Разрешены имена классических образцов проектирования, где суффикс называет роль в известной схеме, а не действие: `Adapter`, `Builder`, `Compiler`, `Consumer`, `Controller`, `Decoder`, `Encoder`, `Filter`, `Forwarder`, `Handler`, `Initializer`, `Listener`, `Loader`, `Mapper`, `Parser`, `Producer`, `Provider`, `Publisher`, `Reader`, `Resolver`, `Router`, `Runner`, `Scheduler`, `Serializer`, `Subscriber`, `Validator`, `Verifier`, `Worker`, `Writer`.
 
 ## Доменные существительные
 

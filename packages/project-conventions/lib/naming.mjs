@@ -6,7 +6,7 @@ import { codeLines } from './clock.mjs';
 // REQ-JAVA-NAMING-002
 export const PATTERN_SUFFIXES = [
   'Adapter', 'Builder', 'Compiler', 'Consumer', 'Controller', 'Decoder', 'Encoder', 'Filter',
-  'Forwarder', 'Handler', 'Listener', 'Loader', 'Mapper', 'Parser', 'Producer', 'Provider',
+  'Forwarder', 'Handler', 'Initializer', 'Listener', 'Loader', 'Mapper', 'Parser', 'Producer', 'Provider',
   'Publisher', 'Reader', 'Resolver', 'Router', 'Runner', 'Scheduler', 'Serializer', 'Subscriber',
   'Validator', 'Verifier', 'Worker', 'Writer',
 ];

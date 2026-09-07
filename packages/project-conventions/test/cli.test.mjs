@@ -149,3 +149,36 @@ test('настройка, под которую не попадает ни од�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('принятие цикла работает в репозитории без каталогов документации', async () => {
+  const root = await project({
+    'AGENTS.md': '---\na: b\n---\n',
+    'src/A.java': 'class A {}\n',
+    '.conventions.json': '{"sources": ["src"], "release": {"scheme": "date"}}\n',
+    'node_modules/@apocarteres/project-conventions/obligations.json': JSON.stringify({
+      obligations: [{
+        id: 'sample',
+        title: 'Пример',
+        requirement: 'REQ-QUALITY-001',
+        level: 'директива',
+        since: '0.25.0',
+        dueReleases: 1,
+        slug: 'adopt-sample',
+        ticket: {
+          scope: 'quality', priority: 'P2', problem: 'Проект не соответствует требованию ядра.',
+          required: ['Сделать.'], acceptance: ['Сделано.'],
+        },
+      }],
+    }),
+  });
+  try {
+    await run('git', ['-C', root, 'init', '--quiet']);
+    const adopted = await conventions(root, 'release', 'adopt');
+    assert.equal(adopted.code, 0, adopted.output);
+    assert.match(adopted.output, /Открыт первый выпуск RELEASE-/);
+    assert.match(await readFile(path.join(root, 'docs/releases/INDEX.md'), 'utf8'), /IDX-RELEASES/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8'), /adopt-sample-2026-09-07\.md/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

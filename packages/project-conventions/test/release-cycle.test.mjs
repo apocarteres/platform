@@ -278,3 +278,23 @@ test('невыполненное обязательство переноситс
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('первый выпуск открывается в проекте, где каталогов документации ещё нет', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'release-cycle-bare-'));
+  try {
+    await mkdir(path.join(root, 'node_modules/@apocarteres/project-conventions'), { recursive: true });
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [OBLIGATION] }),
+    );
+    await run('git', ['-C', root, 'init', '--quiet']);
+
+    const adopted = await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(adopted.adopted, true, 'принятие цикла не должно требовать заранее созданных каталогов');
+    assert.deepEqual(adopted.created, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+    assert.match(await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8'), /status: draft/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'), 'utf8'), /obligation: sample/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

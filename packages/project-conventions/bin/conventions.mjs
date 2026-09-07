@@ -275,6 +275,9 @@ async function releaseAdopt(root) {
   console.log(`Закрытых задач помечено как выпущенные до цикла: ${result.stamped.length}`);
   console.log(`Открыт первый выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
+  await updateTicketIndexes(root, { check: false });
+  await updateReleaseIndex(root, { check: false });
+  console.log('Сводки задач и выпусков собраны.');
 }
 
 async function releaseSatisfy(root, id, ticketId) {

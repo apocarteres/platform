@@ -46,6 +46,12 @@ node_modules/.bin/conventions release adopt
 node_modules/.bin/conventions obligations && mise run verify
 ```
 
+Шаг 5 создаёт каталоги `docs/tickets` и `docs/releases` и собирает их сводки.
+Остальные документы каталога пишет потребитель: `docs/INDEX.md`,
+`docs/tickets/RULES.md`, `docs/releases/RULES.md`, `TEMPLATE.md`,
+`docs/tickets/features/INDEX.md`. Что именно отсутствует — называет
+`conventions docs-check`, файл за файлом.
+
 Наборы `check` и `verify` с фиксированными именами и хук `pre-push`
 создаются в том же изменении: без них правила есть, а шлагбаума нет.
 `verify` заканчивается распиской о проверках:

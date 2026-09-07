@@ -1,4 +1,4 @@
-import { rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   RELEASES_DIR, TICKETS_DIR, compositionTickets, nextReleaseId, openRelease, releaseTag, releases,
@@ -277,7 +277,7 @@ export async function openNext(root, { scheme, version, today }) {
     '',
     `# Выпуск ${number}`,
     '',
-    '[Правила](RULES.md) · [Каталог](INDEX.md)',
+    'Правила выпуска — `REQ-RELEASE` в поставке пакета правил. [Каталог](INDEX.md)',
     '',
     '## Цель',
     '',
@@ -303,7 +303,12 @@ export async function openNext(root, { scheme, version, today }) {
     '',
   ].join('\n');
 
+  // REQ-QUALITY-005
   const file = path.join(root, RELEASES_DIR, `${id}.md`);
+  await mkdir(path.join(root, RELEASES_DIR), { recursive: true });
+  for (const directory of [TICKETS_DIR, `${TICKETS_DIR}/closed`]) {
+    await mkdir(path.join(root, directory), { recursive: true });
+  }
   await writeFile(file, document);
   for (const ticket of created) await writeFile(ticket.file, ticket.content);
   for (const entry of carried) {

@@ -351,8 +351,15 @@ async function resolveLocalLink(projectRoot, sourcePath, link) {
   return { targetPath };
 }
 
+// REQ-QUALITY-005
 async function collectIndexTargets(projectRoot, indexPath) {
-  const content = await readFile(indexPath, 'utf8');
+  let content;
+  try {
+    content = await readFile(indexPath, 'utf8');
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    return null;
+  }
   const targets = new Set();
 
   for (const link of extractMarkdownLinks(content)) {
@@ -377,6 +384,10 @@ async function readDirectoryEntries(directory) {
 async function checkIndexCoverage(projectRoot, directory, indexPath, errors) {
   const targets = await collectIndexTargets(projectRoot, indexPath);
   const entries = await readDirectoryEntries(directory);
+  if (targets === null) {
+    if (entries.length > 0) errors.push(`${toProjectPath(projectRoot, indexPath)}: сводка каталога отсутствует; создайте файл`);
+    return;
+  }
 
   for (const entry of entries) {
     if (!entry.isFile() || !entry.name.endsWith('.md') || entry.name === path.basename(indexPath)) {
@@ -392,6 +403,10 @@ async function checkIndexCoverage(projectRoot, directory, indexPath, errors) {
 async function checkChildIndexCoverage(projectRoot, directory, indexPath, errors) {
   const targets = await collectIndexTargets(projectRoot, indexPath);
   const entries = await readDirectoryEntries(directory);
+  if (targets === null) {
+    if (entries.length > 0) errors.push(`${toProjectPath(projectRoot, indexPath)}: сводка каталога отсутствует; создайте файл`);
+    return;
+  }
 
   for (const entry of entries) {
     if (!entry.isDirectory()) {
@@ -514,10 +529,14 @@ export async function checkDocumentation(projectRoot, options = {}) {
 
   const documentationIndex = path.join(docsRoot, 'INDEX.md');
   const documentationTargets = await collectIndexTargets(resolvedRoot, documentationIndex);
-  for (const requiredTarget of requiredCatalogTargets) {
-    const absoluteTarget = path.join(resolvedRoot, requiredTarget);
-    if (!documentationTargets.has(absoluteTarget)) {
-      errors.push(`docs/INDEX.md: отсутствует ссылка на ${requiredTarget}`);
+  if (documentationTargets === null) {
+    errors.push('docs/INDEX.md: входная сводка документации отсутствует; создайте файл со ссылками на каталоги');
+  } else {
+    for (const requiredTarget of requiredCatalogTargets) {
+      const absoluteTarget = path.join(resolvedRoot, requiredTarget);
+      if (!documentationTargets.has(absoluteTarget)) {
+        errors.push(`docs/INDEX.md: отсутствует ссылка на ${requiredTarget}`);
+      }
     }
   }
 

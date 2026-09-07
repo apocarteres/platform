@@ -39,6 +39,10 @@ run = "./mvnw --batch-mode --no-transfer-progress -DskipTests package"
 description = "Тесты Java-модулей"
 run = "./mvnw --batch-mode --no-transfer-progress verify"
 
+[tasks.install-local]
+description = "Опубликовать ядро локально: Maven в ~/.m2, npm-архив в target/local-packages"
+run = "scripts/install-local.sh \"$@\""
+
 [tasks.build]
 description = "Проверить документацию и собрать Java-модули с тестами"
 depends = ["docs-check", "conventions-check", "java-test"]

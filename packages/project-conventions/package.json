@@ -8,9 +8,6 @@
     "url": "git+https://github.com/apocarteres/platform.git",
     "directory": "packages/project-conventions"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "files": [
     "bin",
     "lib",

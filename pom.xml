@@ -152,11 +152,4 @@
     </profile>
   </profiles>
 
-  <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub Packages: apocarteres/platform</name>
-      <url>https://maven.pkg.github.com/apocarteres/platform</url>
-    </repository>
-  </distributionManagement>
 </project>

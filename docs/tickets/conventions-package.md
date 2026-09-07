@@ -31,7 +31,6 @@ related: ADR-0001, TICKET-CODE-COMMENTS-RULE
 1. Параметризовать `check-docs.mjs`: перечень обязательных целей каталога, имена индексных файлов и расположение задач читаются из конфигурации проекта, а не из констант.
 2. Оформить CLI с командами `check`, `tickets-index`, `releases-index`, `file-sizes`, `toolchain-pins`, `money-types`, `config-secrets` (последние четыре переносятся из `clanlog/scripts/ops`) и `sync`.
 3. Команда `sync` вписывает тексты правил в проект между маркерами `<!-- conventions:begin -->` и `<!-- conventions:end -->`; `check` отказывает при ручной правке внутри маркеров и при отставании версии пакета.
-4. Reusable GitHub workflow (`workflow_call`) с job `docs`, `secrets`, `backend`, `frontend`; проектные job остаются в проектах.
 
 ## Критерии приёмки
 
@@ -41,7 +40,7 @@ related: ADR-0001, TICKET-CODE-COMMENTS-RULE
 
 ## Границы
 
-Правило о комментариях и минимальный CLI (`check`, `sync`, `baseline`) выделены в [TICKET-CODE-COMMENTS-RULE](closed/code-comments-rule.md) и выполнены. Миграция формата задач clanlog вынесена в [отдельную задачу](clanlog-ticket-format-migration.md) по решению владельца от 2026-09-07: она ждёт его слова о переводе clanlog, а остальная работа от неё не зависит. Здесь остаётся перенос остальных общих правил, параметризация проверок, полный CLI, reusable workflow и переносимые храповики.
+Правило о комментариях и минимальный CLI (`check`, `sync`, `baseline`) выделены в [TICKET-CODE-COMMENTS-RULE](closed/code-comments-rule.md) и выполнены. Миграция формата задач clanlog вынесена в [отдельную задачу](clanlog-ticket-format-migration.md) по решению владельца от 2026-09-07: она ждёт его слова о переводе clanlog, а остальная работа от неё не зависит. Здесь остаётся перенос остальных общих правил, полный CLI и переносимые храповики. Reusable workflow исключён решением [ADR-0003](../decisions/ADR-0003-local-artifact-publishing.md): GitHub Actions не используются.
 
 ## Открытые вопросы
 
@@ -71,3 +70,11 @@ related: ADR-0001, TICKET-CODE-COMMENTS-RULE
 CLI получил три команды: `docs-check`, `tickets-index`, `releases-index`. Отдельно от `check`, а не внутри него, потому что вопросы разные: `docs-check` спрашивает, согласована ли документация, `check` — соблюдены ли правила кода. В ядре обе вызываются задачами менеджера окружения, в CI — напрямую.
 
 Тестов в пакете стало 58.
+
+### Шаг 3 (2026-09-07)
+
+Решение владельца от 2026-09-07 убрало из задачи reusable workflow: GitHub остаётся хранилищем репозитория, проверки и публикация выполняются локально. Основание и цена решения записаны в [ADR-0003](../decisions/ADR-0003-local-artifact-publishing.md).
+
+Публикация ядра переведена на локальную: `mise run install-local` ставит Java-артефакты в локальный репозиторий Maven и собирает архив npm-пакета в `target/local-packages`. Версия по-прежнему берётся из тега, `-SNAPSHOT` отклоняется профилем release. Из `pom.xml`, `platform-bom/pom.xml` и `package.json` убраны адреса registry, workflow удалены.
+
+Требование о registry заменено: `REQ-PUBLISHING-007` описывает локальную публикацию, `REQ-PUBLISHING-010` — как потребитель фиксирует версию ядра и получает артефакты. Инструкция `github-packages.md` переписана в `local-publishing.md`.

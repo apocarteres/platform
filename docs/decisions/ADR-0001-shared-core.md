@@ -56,7 +56,7 @@ related: TICKET-CONVENTIONS-PACKAGE, TICKET-PLATFORM-PERSISTENCE, TICKET-PLATFOR
    Решение владельца, 2026-09-06: **`ProblemDetail`.** Реализация — [TICKET-PLATFORM-WEB-ERRORS](../tickets/platform-web-errors.md).
 3. **Где рендерятся уведомления.** Сервер, сборка из клиентского кода либо отдельный сервис.
    Решение владельца, 2026-09-06: **отдельный сервис**, потребители становятся его клиентами. Заведено [исследование](../tickets/notification-service-research.md).
-4. **Имена и registry.** Решение владельца, 2026-09-06: groupId `io.github.apocarteres.platform`, npm scope `@apocarteres`, публикация в GitHub Packages. Настройка — [TICKET-GITHUB-PACKAGES-PUBLISHING](../tickets/closed/github-packages-publishing.md).
+4. **Имена и registry.** Решение владельца, 2026-09-06: groupId `io.github.apocarteres.platform`, npm scope `@apocarteres`, публикация в GitHub Packages. Настройка — [TICKET-GITHUB-PACKAGES-PUBLISHING](../tickets/closed/github-packages-publishing.md). Часть про registry заменена решением [ADR-0003](ADR-0003-local-artifact-publishing.md): публикация выполняется локально, координаты артефактов не изменились.
 5. **Правила не копируются потребителю.** Решение владельца, 2026-09-06: нормативный текст существует в одном месте, потребитель получает ссылку и читает доставленный пакетом документ. Закреплено требованием [REQ-RULE-DISTRIBUTION](../requirements/rule-distribution.md).
 6. **Наследование правил.** Решение владельца, 2026-09-06: правила проекта действуют поверх правил платформы, соблюдаются оба набора, ослабить правило платформы проект не может. Закреплено требованием [REQ-PROJECT-RULES](../requirements/project-rules.md).
 

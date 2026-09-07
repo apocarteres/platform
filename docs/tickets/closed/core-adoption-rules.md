@@ -5,7 +5,7 @@ status: done
 scope: process, platform
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-0-24-0
 related: REQ-ADOPTION
 ---
 

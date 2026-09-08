@@ -77,6 +77,26 @@
           </execution>
         </executions>
       </plugin>
+      <!-- REQ-DEPS-004 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>dependency-conflicts</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <banDuplicatePomDependencyVersions/>
+                <requireReleaseDeps/>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -119,6 +139,35 @@
   </build>
 
   <profiles>
+    <!-- REQ-DEPS-006 -->
+    <profile>
+      <id>dependency-conflicts</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>dependency-conflicts-report</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <fail>false</fail>
+                  <rules>
+                    <requireUpperBoundDeps/>
+                    <dependencyConvergence/>
+                  </rules>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <!-- REQ-QUALITY-003 -->
     <profile>
       <id>integration-tests</id>

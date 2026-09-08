@@ -4,6 +4,7 @@ export const DELIVERED_DOCUMENTS = [
   'tickets.md',
   'build.md',
   'quality-checks.md',
+  'dependencies.md',
   'deployment.md',
   'release-cycle.md',
   'code-design.md',

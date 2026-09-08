@@ -14,10 +14,11 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 20. Включены самостоятельные задачи и этапы планов функций.
+Всего: 21. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Закрепление версии компонента платформы у потребителя молча перестало действовать](core-owns-application-platform-versions.md) | P0 | Выполнена | Не назначен | build, backend, platform |
 | [Версия платформы приложений задавалась дважды и разошлась](application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
 | [Пакет процессных правил и инструментов документации](conventions-package.md) | P1 | Выполнена | [RELEASE-0-29-0](../../releases/RELEASE-0-29-0.md) | process, documentation, tooling |

@@ -133,3 +133,60 @@ test('проверка секретов читает файлы конфигур
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('мёртвое свойство версии находится, действующее — нет', async () => {
+  const { deadVersionProperties } = await import('../lib/dependencies.mjs');
+  const dead = ['<properties>', '  <tomcat.version>11.0.25</tomcat.version>', '</properties>'].join('\n');
+  const alive = [
+    '<properties>',
+    '  <testcontainers.version>2.0.4</testcontainers.version>',
+    '</properties>',
+    '<dependency><version>${testcontainers.version}</version></dependency>',
+  ].join('\n');
+  assert.deepEqual(deadVersionProperties(dead).map((item) => item.line), [2]);
+  assert.match(deadVersionProperties(dead)[0].text, /tomcat\.version ни на что не влияет/);
+  assert.deepEqual(deadVersionProperties(alive), []);
+});
+
+test('версия артефакта, которым управляет ядро, в POM потребителя находится', async () => {
+  const { managedVersionPins, CORE_MANAGED_GROUPS } = await import('../lib/dependencies.mjs');
+  const source = [
+    '<dependency>',
+    '  <groupId>org.springframework.modulith</groupId>',
+    '  <artifactId>spring-modulith-bom</artifactId>',
+    '  <version>2.0.7</version>',
+    '</dependency>',
+    '<dependency>',
+    '  <groupId>org.testcontainers</groupId>',
+    '  <artifactId>testcontainers-bom</artifactId>',
+    '  <version>2.0.4</version>',
+    '</dependency>',
+    '<dependency>',
+    '  <groupId>org.springframework.boot</groupId>',
+    '  <artifactId>spring-boot-starter-web</artifactId>',
+    '</dependency>',
+  ].join('\n');
+  const found = managedVersionPins(source, CORE_MANAGED_GROUPS);
+  assert.deepEqual(found.map((item) => item.line), [4]);
+  assert.match(found[0].text, /spring-modulith-bom.*управляет ядро/);
+});
+
+test('POM самого ядра источником нарушений не считается', async () => {
+  const { projectGroup, findDependencyIssues } = await import('../lib/dependencies.mjs');
+  const inherited = [
+    '<project>',
+    '  <parent><groupId>io.github.apocarteres.platform</groupId><artifactId>platform-parent</artifactId></parent>',
+    '  <artifactId>platform-service-parent</artifactId>',
+    '</project>',
+  ].join('\n');
+  assert.equal(projectGroup(inherited), 'io.github.apocarteres.platform', 'группа наследуется от родителя');
+
+  const root = await project({
+    'pom.xml': inherited.replace('</project>', '  <dependencyManagement><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-dependencies</artifactId><version>4.0.8</version></dependency></dependencies></dependencyManagement>\n</project>'),
+  });
+  try {
+    assert.equal((await findDependencyIssues(root, {})).size, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

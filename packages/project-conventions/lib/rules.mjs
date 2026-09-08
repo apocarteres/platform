@@ -5,6 +5,7 @@ import { findNamingViolations } from './naming.mjs';
 import { findMoneyViolations } from './money.mjs';
 import { findOversizedFiles } from './filesize.mjs';
 import { findConfigSecrets } from './secrets.mjs';
+import { findDependencyIssues } from './dependencies.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 
 export { DIRECTIVE, LEVELS, RECOMMENDATION } from './levels.mjs';
@@ -54,6 +55,15 @@ export const RULES = [
     summary: 'Чувствительное свойство конфигурации задаётся только подстановкой из окружения',
     title: 'свойств с литеральным значением',
     find: findConfigSecrets,
+  },
+  {
+    id: 'dependency-versions',
+    level: DIRECTIVE,
+    document: 'REQ-DEPS',
+    file: 'dependencies.md',
+    summary: 'Версиями платформы приложений и её компонентов управляет ядро; мёртвое свойство версии запрещено',
+    title: 'версий, которыми потребитель не управляет',
+    find: findDependencyIssues,
   },
   {
     id: 'naming-er',

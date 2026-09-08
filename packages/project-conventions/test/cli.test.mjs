@@ -179,7 +179,7 @@ test('принятие цикла работает в репозитории б�
     assert.equal(adopted.code, 0, adopted.output);
     assert.match(adopted.output, /Открыт первый выпуск RELEASE-/);
     assert.match(await readFile(path.join(root, 'docs/releases/INDEX.md'), 'utf8'), /IDX-RELEASES/);
-    assert.match(await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8'), /adopt-sample-2026-09-07\.md/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8'), /adopt-sample-\d{4}-\d{2}-\d{2}\.md/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -14,7 +14,8 @@ test('правило проекта дополняет правила платф
   });
   assert.deepEqual(errors, []);
   assert.deepEqual(rules.map((rule) => rule.id), [
-    'comments', 'clock', 'money-types', 'file-size', 'config-secrets', 'naming-er', 'no-er-suffix',
+    'comments', 'clock', 'money-types', 'file-size', 'config-secrets', 'dependency-versions',
+    'naming-er', 'no-er-suffix',
   ]);
 });
 

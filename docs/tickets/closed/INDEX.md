@@ -41,4 +41,4 @@ authority: navigation
 | [Сборка сервиса оставляла в дереве плоский POM](OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |
 | [Правило размера считало наборы тестов на Python и Ruby рабочим кодом](OPS-014-size-rule-knew-only-java-and-js-tests.md) | P2 | Выполнена | [RELEASE-0-28-0](../../releases/RELEASE-0-28-0.md) | quality, tooling |
 | [Схема имён не знала об этапах плана функции](DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
-| [План функции из одного файла оставался вне перехода на схему](DOC-008-single-file-feature-plans.md) | P3 | Выполнена | Не назначен | documentation, process |
+| [План функции из одного файла оставался вне перехода на схему](DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |

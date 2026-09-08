@@ -7,6 +7,7 @@ import { collectSourceFiles } from '../lib/comments.mjs';
 import { findToolchainMismatches } from '../lib/toolchain.mjs';
 import { TICKET_AREAS } from '../lib/document-naming.mjs';
 import { migrate, plan } from '../lib/naming-migration.mjs';
+import { DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, report, runWithLimits } from '../lib/run.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
@@ -268,6 +269,39 @@ async function releaseOpen(root, version) {
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
 }
 
+// REQ-AGENT-WORK-018
+async function run(root, argv) {
+  const separator = argv.indexOf('--');
+  const options = separator === -1 ? argv : argv.slice(0, separator);
+  const command = separator === -1 ? [] : argv.slice(separator + 1);
+  if (command.length === 0) {
+    console.error('conventions run [--idle <с>] [--limit <с>] -- <команда>');
+    process.exitCode = 2;
+    return;
+  }
+  const numberOf = (name, fallback) => {
+    const index = options.indexOf(name);
+    if (index === -1) return fallback;
+    const value = Number(options[index + 1]);
+    if (!Number.isFinite(value) || value < 0) {
+      console.error(`${name} требует число секунд`);
+      process.exit(2);
+    }
+    return value;
+  };
+  const limitSeconds = numberOf('--limit', DEFAULT_LIMIT_SECONDS);
+  const idleSeconds = numberOf('--idle', DEFAULT_IDLE_SECONDS);
+  const result = await runWithLimits(command[0], command.slice(1), {
+    limitSeconds,
+    idleSeconds,
+    cwd: root,
+    onOutput: (chunk) => process.stdout.write(chunk),
+  });
+  const message = report(result, command.join(' '), { limitSeconds, idleSeconds });
+  if (message !== null) console.error(`\n${message}`);
+  process.exitCode = result.code;
+}
+
 async function naming(root, subcommand, mapFile) {
   const config = await readConfig(root);
   const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
@@ -373,6 +407,7 @@ const valueOf = (name) => {
 if (command === 'check') await check(root);
 else if (command === 'receipt') await receipt(root, rest.filter((value) => !value.startsWith('--') && value !== root));
 else if (command === 'obligations') await obligations(root);
+else if (command === 'run') await run(root, rest.filter((value) => value !== '--root' && value !== root));
 else if (command === 'naming') await naming(root, rest.find((value) => !value.startsWith('--') && value !== root), valueOf('--map'));
 else if (command === 'release') {
   const [subcommand, ...args] = rest.filter((value) => value !== '--root' && value !== root);

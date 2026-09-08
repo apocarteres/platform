@@ -1,13 +1,14 @@
 ---
-id: TICKET-PLATFORM-PERSISTENCE
+id: DATA-001
 type: ticket
 status: in_progress
 scope: backend, persistence
 authority: supporting
 priority: P2
 release: unassigned
-depends-on: TICKET-GITHUB-PACKAGES-PUBLISHING
+depends-on: OPS-007
 related: ADR-0001
+legacy-id: TICKET-PLATFORM-PERSISTENCE
 ---
 
 # Starter `platform-persistence`: SQL-каталог и условная запись

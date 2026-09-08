@@ -1,5 +1,5 @@
 ---
-id: TICKET-UNFINISHED-OBLIGATION-STRANDED-IN-CLOSED-RELEASE
+id: OPS-015
 type: ticket
 status: done
 scope: release
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-23-0
 related: REQ-RELEASE
+legacy-id: TICKET-UNFINISHED-OBLIGATION-STRANDED-IN-CLOSED-RELEASE
 ---
 
 # Невыполненное обязательство оставалось в закрытом выпуске

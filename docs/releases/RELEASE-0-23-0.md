@@ -21,7 +21,7 @@ commit: 3917521674f599708c79479a80e475b28ed4f8d4
 
 | Задача | Причина включения |
 |---|---|
-| [TICKET-UNFINISHED-OBLIGATION-STRANDED-IN-CLOSED-RELEASE](../tickets/closed/unfinished-obligation-stranded-in-closed-release.md) | Закрыта в этом выпуске, приоритет P1 |
+| [OPS-015](../tickets/closed/OPS-015-unfinished-obligation-stranded-in-closed-release.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

@@ -1,5 +1,5 @@
 ---
-id: TICKET-CORE-ADOPTION-RULES
+id: DOC-004
 type: ticket
 status: done
 scope: process, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-24-0
 related: REQ-ADOPTION
+legacy-id: TICKET-CORE-ADOPTION-RULES
 ---
 
 # Правила подключения ядра нигде не записаны

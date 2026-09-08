@@ -21,9 +21,9 @@ commit: e4f7661257a9bfc8f3e42200aee11f4c8c5a999b
 
 | Задача | Причина включения |
 |---|---|
-| [TICKET-CODE-COMMENTS-RULE](../tickets/closed/code-comments-rule.md) | Закрыта в этом выпуске, приоритет P1 |
-| [TICKET-GITHUB-PACKAGES-PUBLISHING](../tickets/closed/github-packages-publishing.md) | Закрыта в этом выпуске, приоритет P1 |
-| [TICKET-PLATFORM-TIME](../tickets/closed/platform-time.md) | Закрыта в этом выпуске, приоритет P1 |
+| [OPS-002](../tickets/closed/OPS-002-code-comments-rule.md) | Закрыта в этом выпуске, приоритет P1 |
+| [OPS-007](../tickets/closed/OPS-007-github-packages-publishing.md) | Закрыта в этом выпуске, приоритет P1 |
+| [QUAL-001](../tickets/closed/QUAL-001-platform-time.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

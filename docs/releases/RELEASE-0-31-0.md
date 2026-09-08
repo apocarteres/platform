@@ -21,7 +21,7 @@ commit: 2875a4ce512edad4e175748c81df730369113117
 
 | Задача | Причина включения |
 |---|---|
-| [TICKET-SERVICE-PARENT-LOST-THE-INTEGRATION-TEST-CLASSPATH](../tickets/closed/service-parent-lost-the-integration-test-classpath.md) | Закрыта в этом выпуске, приоритет P1 |
+| [OPS-013](../tickets/closed/OPS-013-service-parent-lost-the-integration-test-classpath.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

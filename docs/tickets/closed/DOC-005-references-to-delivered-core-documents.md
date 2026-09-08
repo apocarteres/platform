@@ -1,5 +1,5 @@
 ---
-id: TICKET-REFERENCES-TO-DELIVERED-CORE-DOCUMENTS
+id: DOC-005
 type: ticket
 status: done
 scope: documentation
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-22-0
 related: REQ-RULE-DISTRIBUTION
+legacy-id: TICKET-REFERENCES-TO-DELIVERED-CORE-DOCUMENTS
 ---
 
 # Ссылка на нормативный документ ядра считалась ссылкой в пустоту

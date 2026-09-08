@@ -1,12 +1,13 @@
 ---
-id: TICKET-CODE-COMMENTS-RULE
+id: OPS-002
 type: ticket
 status: done
 scope: process, tooling, backend, frontend
 authority: supporting
 priority: P1
 release: RELEASE-0-19-0
-related: ADR-0001, TICKET-CONVENTIONS-PACKAGE, REQ-CODE-COMMENTS, REQ-CODE-CLOCK
+related: ADR-0001, OPS-003, REQ-CODE-COMMENTS, REQ-CODE-CLOCK
+legacy-id: TICKET-CODE-COMMENTS-RULE
 ---
 
 # Правила из платформы: контракт, доставка и внедрение
@@ -23,7 +24,7 @@ related: ADR-0001, TICKET-CONVENTIONS-PACKAGE, REQ-CODE-COMMENTS, REQ-CODE-CLOCK
 
 ## Границы
 
-Задача выделена из [TICKET-CONVENTIONS-PACKAGE](conventions-package.md), у которого открыты вопросы об имени индексного файла, разрезе сводок, приоритете правил и составе общего фрагмента. Ни один из них не требуется для правила о комментариях, поэтому здесь поставляется только раздел «Комментарии в коде» и минимальный CLI.
+Задача выделена из [OPS-003](OPS-003-conventions-package.md), у которого открыты вопросы об имени индексного файла, разрезе сводок, приоритете правил и составе общего фрагмента. Ни один из них не требуется для правила о комментариях, поэтому здесь поставляется только раздел «Комментарии в коде» и минимальный CLI.
 
 Не входит: перенос остальных общих правил `AGENTS.md`, миграция формата тикетов clanlog, reusable workflow, храповики размеров и версий инструментов.
 
@@ -195,4 +196,4 @@ related: ADR-0001, TICKET-CONVENTIONS-PACKAGE, REQ-CODE-COMMENTS, REQ-CODE-CLOCK
 
 За время задачи правил стало три, у них появился уровень требования, а нормативные тексты перестали копироваться потребителю: пакет доставляет одиннадцать документов, а в `AGENTS.md` остаётся ссылка на них.
 
-Что осталось за границами задачи и живёт в [задаче о пакете правил](conventions-package.md): перенос остальных общих правил, миграция формата задач clanlog, reusable workflow, храповики размеров файлов и версий инструментов.
+Что осталось за границами задачи и живёт в [задаче о пакете правил](OPS-003-conventions-package.md): перенос остальных общих правил, миграция формата задач clanlog, reusable workflow, храповики размеров файлов и версий инструментов.

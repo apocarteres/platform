@@ -2,6 +2,7 @@ export const DELIVERED_DOCUMENTS = [
   'adoption.md',
   'project-process.md',
   'tickets.md',
+  'naming.md',
   'build.md',
   'quality-checks.md',
   'dependencies.md',

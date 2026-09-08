@@ -4,7 +4,7 @@ type: decision
 status: proposed
 scope: platform, process, backend, frontend
 authority: supporting
-related: TICKET-CONVENTIONS-PACKAGE, TICKET-PLATFORM-PERSISTENCE, TICKET-PLATFORM-WEB-ERRORS, TICKET-NOTIFICATION-SERVICE-RESEARCH, TICKET-CODE-COMMENTS-RULE
+related: OPS-003, DATA-001, API-001, ARC-001, OPS-002
 ---
 
 # ADR-0001: выделение общего ядра
@@ -46,17 +46,17 @@ related: TICKET-CONVENTIONS-PACKAGE, TICKET-PLATFORM-PERSISTENCE, TICKET-PLATFOR
 - **Java:** BOM и набор Spring Boot starters с автоконфигурацией и портами для расширения проектом.
 - **Angular:** пакеты в одном npm scope: контракт модальных окон, перехватчики HTTP, форматирование, постраничность, локализация.
 - **Процесс:** пакет правил с проверками, генераторами сводок и нормативными документами, которые он доставляет потребителю.
-- **Уведомления:** отдельный сервис, а не библиотека: конструктор и хранилище шаблонов, каналы доставки, рассылки, история. Потребители становятся его клиентами. Границы и цена определяются [исследованием](../tickets/notification-service-research.md).
+- **Уведомления:** отдельный сервис, а не библиотека: конструктор и хранилище шаблонов, каналы доставки, рассылки, история. Потребители становятся его клиентами. Границы и цена определяются [исследованием](../tickets/ARC-001-notification-service-research.md).
 
 ## Решения
 
 1. **Формат метаданных документов.** YAML front matter либо строки шапки в свободном виде.
    Решение владельца, 2026-09-06: **YAML front matter.** Типизирован, проверяется тестами, поддерживает `depends-on`, `related`, `superseded-by`. Отменённая задача обязана содержать раздел «Почему не делаем», что проверяется.
 2. **Контракт ошибок API.** RFC 9457 `ProblemDetail` с расширением `code` либо собственная пара «код и сообщение».
-   Решение владельца, 2026-09-06: **`ProblemDetail`.** Реализация — [TICKET-PLATFORM-WEB-ERRORS](../tickets/platform-web-errors.md).
+   Решение владельца, 2026-09-06: **`ProblemDetail`.** Реализация — [API-001](../tickets/API-001-platform-web-errors.md).
 3. **Где рендерятся уведомления.** Сервер, сборка из клиентского кода либо отдельный сервис.
-   Решение владельца, 2026-09-06: **отдельный сервис**, потребители становятся его клиентами. Заведено [исследование](../tickets/notification-service-research.md).
-4. **Имена и registry.** Решение владельца, 2026-09-06: groupId `io.github.apocarteres.platform`, npm scope `@apocarteres`, публикация в GitHub Packages. Настройка — [TICKET-GITHUB-PACKAGES-PUBLISHING](../tickets/closed/github-packages-publishing.md). Часть про registry заменена решением [ADR-0003](ADR-0003-local-artifact-publishing.md): публикация выполняется локально, координаты артефактов не изменились.
+   Решение владельца, 2026-09-06: **отдельный сервис**, потребители становятся его клиентами. Заведено [исследование](../tickets/ARC-001-notification-service-research.md).
+4. **Имена и registry.** Решение владельца, 2026-09-06: groupId `io.github.apocarteres.platform`, npm scope `@apocarteres`, публикация в GitHub Packages. Настройка — [OPS-007](../tickets/closed/OPS-007-github-packages-publishing.md). Часть про registry заменена решением [ADR-0003](ADR-0003-local-artifact-publishing.md): публикация выполняется локально, координаты артефактов не изменились.
 5. **Правила не копируются потребителю.** Решение владельца, 2026-09-06: нормативный текст существует в одном месте, потребитель получает ссылку и читает доставленный пакетом документ. Закреплено требованием [REQ-RULE-DISTRIBUTION](../requirements/rule-distribution.md).
 6. **Наследование правил.** Решение владельца, 2026-09-06: правила проекта действуют поверх правил платформы, соблюдаются оба набора, ослабить правило платформы проект не может. Закреплено требованием [REQ-PROJECT-RULES](../requirements/project-rules.md).
 
@@ -66,7 +66,7 @@ related: TICKET-CONVENTIONS-PACKAGE, TICKET-PLATFORM-PERSISTENCE, TICKET-PLATFOR
 
 1. **Версии Node у потребителей.** Потребители могут находиться на разных мажорных версиях Node. Пакеты платформы собираются под все используемые версии или потребители выравниваются?
    Ответ 2026-09-07: потребители выравниваются. Требование `REQ-BUILD-004` закрепляет версии инструментов и требует одинаковых версий на всех машинах; ядро закрепило те же версии, что первый потребитель: Java 21, Node 22.22.3. Пакет правил объявляет минимально поддерживаемую версию Node в `engines`, и потребитель с более старой версией получает отказ установки, а не молчаливую несовместимость.
-2. **Стек и границы сервиса уведомлений.** Вынесено в открытые вопросы [исследования](../tickets/notification-service-research.md).
+2. **Стек и границы сервиса уведомлений.** Вынесено в открытые вопросы [исследования](../tickets/ARC-001-notification-service-research.md).
    Ответ: —
 
 ## Порядок внедрения

@@ -5,7 +5,7 @@ status: active
 scope: process, tooling
 authority: normative
 clause-id-prefix: REQ-CODE-COMMENTS
-related: TICKET-CODE-COMMENTS-RULE
+related: OPS-002
 ---
 
 # Комментарии в коде: контракт проверки

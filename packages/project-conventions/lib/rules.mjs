@@ -6,6 +6,7 @@ import { findMoneyViolations } from './money.mjs';
 import { findOversizedFiles } from './filesize.mjs';
 import { findConfigSecrets } from './secrets.mjs';
 import { findDependencyIssues } from './dependencies.mjs';
+import { findNamingIssues } from './document-naming.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 
 export { DIRECTIVE, LEVELS, RECOMMENDATION } from './levels.mjs';
@@ -64,6 +65,15 @@ export const RULES = [
     summary: 'Версиями платформы приложений и её компонентов управляет ядро; мёртвое свойство версии запрещено',
     title: 'версий, которыми потребитель не управляет',
     find: findDependencyIssues,
+  },
+  {
+    id: 'document-naming',
+    level: DIRECTIVE,
+    document: 'REQ-NAMING',
+    file: 'naming.md',
+    summary: 'Идентификатор, имя файла и область документа соответствуют схеме',
+    title: 'расхождений имени и идентификатора',
+    find: findNamingIssues,
   },
   {
     id: 'naming-er',

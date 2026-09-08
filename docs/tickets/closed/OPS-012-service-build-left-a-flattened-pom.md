@@ -1,5 +1,5 @@
 ---
-id: TICKET-SERVICE-BUILD-LEFT-A-FLATTENED-POM
+id: OPS-012
 type: ticket
 status: done
 scope: build, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-32-0
 related: REQ-BUILD
+legacy-id: TICKET-SERVICE-BUILD-LEFT-A-FLATTENED-POM
 ---
 
 # Сборка сервиса оставляла в дереве плоский POM

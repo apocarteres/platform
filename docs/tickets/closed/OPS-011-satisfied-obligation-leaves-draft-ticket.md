@@ -1,5 +1,5 @@
 ---
-id: TICKET-SATISFIED-OBLIGATION-LEAVES-DRAFT-TICKET
+id: OPS-011
 type: ticket
 status: done
 scope: release
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-21-0
 related: REQ-RELEASE
+legacy-id: TICKET-SATISFIED-OBLIGATION-LEAVES-DRAFT-TICKET
 ---
 
 # Закрытие обязательства ссылкой оставляло задачу-заготовку

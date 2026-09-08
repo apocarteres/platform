@@ -1,5 +1,5 @@
 ---
-id: TICKET-SERVICE-PARENT-LOST-THE-INTEGRATION-TEST-CLASSPATH
+id: OPS-013
 type: ticket
 status: done
 scope: build, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-31-0
 related: REQ-BUILD, REQ-QUALITY
+legacy-id: TICKET-SERVICE-PARENT-LOST-THE-INTEGRATION-TEST-CLASSPATH
 ---
 
 # Родитель сервиса терял классы проекта в интеграционных тестах

@@ -21,7 +21,7 @@ commit: 526d61711a882b13b672f9a8578ef4004c799d42
 
 | Задача | Причина включения |
 |---|---|
-| [TICKET-ADOPTION-ON-A-BARE-REPOSITORY](../tickets/closed/adoption-on-a-bare-repository.md) | Закрыта в этом выпуске, приоритет P2 |
+| [DOC-001](../tickets/closed/DOC-001-adoption-on-a-bare-repository.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

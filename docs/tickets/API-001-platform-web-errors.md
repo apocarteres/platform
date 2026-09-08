@@ -1,13 +1,14 @@
 ---
-id: TICKET-PLATFORM-WEB-ERRORS
+id: API-001
 type: ticket
 status: backlog
 scope: backend, api, frontend
 authority: supporting
 priority: P2
 release: unassigned
-depends-on: TICKET-GITHUB-PACKAGES-PUBLISHING
+depends-on: OPS-007
 related: ADR-0001
+legacy-id: TICKET-PLATFORM-WEB-ERRORS
 ---
 
 # Starter `platform-web-errors`: единый контракт ошибок API

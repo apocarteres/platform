@@ -1,5 +1,5 @@
 ---
-id: TICKET-SIZE-RULE-KNEW-ONLY-JAVA-AND-JS-TESTS
+id: OPS-014
 type: ticket
 status: done
 scope: quality, tooling
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-28-0
 related: REQ-CODE-DESIGN
+legacy-id: TICKET-SIZE-RULE-KNEW-ONLY-JAVA-AND-JS-TESTS
 ---
 
 # Правило размера считало наборы тестов на Python и Ruby рабочим кодом

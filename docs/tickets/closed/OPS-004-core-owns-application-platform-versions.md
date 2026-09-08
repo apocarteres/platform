@@ -1,5 +1,5 @@
 ---
-id: TICKET-CORE-OWNS-APPLICATION-PLATFORM-VERSIONS
+id: OPS-004
 type: ticket
 status: done
 scope: build, backend, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P0
 release: RELEASE-0-34-0
 related: REQ-DEPS, REQ-BUILD
+legacy-id: TICKET-CORE-OWNS-APPLICATION-PLATFORM-VERSIONS
 ---
 
 # Закрепление версии компонента платформы у потребителя молча перестало действовать

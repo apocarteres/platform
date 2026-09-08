@@ -11,6 +11,39 @@ const DOCUMENT_ID = /\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+\b/g;
 const DOCUMENT_PATH = /[\w./-]+\.md(?:#[\w-]+)?/g;
 const CONNECTORS = new Set(['см', 'see', 'ref']);
 
+const BEFORE_REGEX = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^', 'n']);
+
+// REQ-CODE-COMMENTS
+function regexStart(source, index) {
+  const next = source[index + 1];
+  if (next === '/' || next === '*' || next === undefined) return false;
+  let back = index - 1;
+  while (back >= 0 && (source[back] === ' ' || source[back] === '\t')) back -= 1;
+  if (back < 0) return true;
+  const previous = source[back];
+  if (previous === '\n') return true;
+  if (previous === 'n' && /(?:^|[^A-Za-z0-9_$])return$/.test(source.slice(0, back + 1))) return true;
+  return BEFORE_REGEX.has(previous) && previous !== 'n';
+}
+
+function skipRegex(source, index) {
+  let position = index + 1;
+  let inClass = false;
+  while (position < source.length) {
+    const character = source[position];
+    if (character === '\\') {
+      position += 2;
+      continue;
+    }
+    if (character === '\n') return index + 1;
+    if (character === '[') inClass = true;
+    else if (character === ']') inClass = false;
+    else if (character === '/' && !inClass) return position + 1;
+    position += 1;
+  }
+  return index + 1;
+}
+
 export function extractComments(source) {
   const comments = [];
   let index = 0;
@@ -44,6 +77,8 @@ export function extractComments(source) {
           index += 1;
         }
       }
+    } else if (current === '/' && regexStart(source, index)) {
+      index = skipRegex(source, index);
     } else if (current === '/' && source[index + 1] === '/') {
       const start = line;
       let text = '';

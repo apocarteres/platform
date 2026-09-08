@@ -1,5 +1,5 @@
 ---
-id: TICKET-CATALOG-RULES-INTO-THE-CORE
+id: DOC-002
 type: ticket
 status: done
 scope: documentation, process
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-26-0
 related: REQ-TICKETS, REQ-RELEASE, REQ-RULE-DISTRIBUTION
+legacy-id: TICKET-CATALOG-RULES-INTO-THE-CORE
 ---
 
 # Правила каталогов задач и выпусков жили копиями в каждом репозитории

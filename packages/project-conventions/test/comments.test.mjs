@@ -3,7 +3,7 @@ import test from 'node:test';
 import { classify, extractComments } from '../lib/comments.mjs';
 
 test('ссылка на документ допустима, пояснение нет', () => {
-  for (const allowed of ['ADR-0003', 'см. ADR-0009', 'REQ-PUBLISHING-004', 'MOD-013, ARC-017', 'REQ-PERSISTENCE', 'TICKET-CONVENTIONS-PACKAGE', 'docs/tickets/RULES.md', '[ADR-0002](../docs/decisions/ADR-0002.md)']) {
+  for (const allowed of ['ADR-0003', 'см. ADR-0009', 'REQ-PUBLISHING-004', 'MOD-013, ARC-017', 'REQ-PERSISTENCE', 'OPS-003', 'docs/tickets/RULES.md', '[ADR-0002](../docs/decisions/ADR-0002.md)']) {
     assert.equal(classify(allowed), 'reference', allowed);
   }
   for (const forbidden of ['Зачем тип, а не исключение', 'TODO: починить', 'ADR-0003 объясняет выбор sealed-типа', 'Кеширует каталоги', 'HTTP-запрос уходит в очередь']) {
@@ -44,4 +44,12 @@ test('javadoc разбирается целиком, номер строки у�
   assert.equal(comments.length, 1);
   assert.equal(comments[0].line, 2);
   assert.equal(classify(comments[0].text), 'prose');
+});
+
+test('регулярное выражение с экранированной косой чертой комментарием не считается', () => {
+  assert.deepEqual(extractComments("found.push(name.replace(/^\\.\\//, ''));"), []);
+  assert.deepEqual(extractComments('const re = /[/]/.test(value);'), []);
+  assert.deepEqual(extractComments('const share = total / count / 2;'), []);
+  assert.equal(extractComments('const re = /https?:\\/\\/[a-z]+/; // ADR-0003').length, 1, 'комментарий после выражения виден');
+  assert.equal(extractComments('const x = a / b; // пояснение').length, 1);
 });

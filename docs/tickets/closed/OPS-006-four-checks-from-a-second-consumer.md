@@ -1,5 +1,5 @@
 ---
-id: TICKET-FOUR-CHECKS-FROM-A-SECOND-CONSUMER
+id: OPS-006
 type: ticket
 status: done
 scope: quality, tooling
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-27-0
 related: REQ-CODE-DESIGN, REQ-CONFIG, REQ-BUILD
+legacy-id: TICKET-FOUR-CHECKS-FROM-A-SECOND-CONSUMER
 ---
 
 # Четыре проверки жили скриптами одного репозитория

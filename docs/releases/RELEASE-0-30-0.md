@@ -21,7 +21,7 @@ commit: 79dec0cc82c65d74e35e28424228f84519e2e372
 
 | Задача | Причина включения |
 |---|---|
-| [TICKET-APPLICATION-PLATFORM-VERSION-DECLARED-TWICE](../tickets/closed/application-platform-version-declared-twice.md) | Закрыта в этом выпуске, приоритет P1 |
+| [OPS-001](../tickets/closed/OPS-001-application-platform-version-declared-twice.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

@@ -4,7 +4,7 @@ type: decision
 status: accepted
 scope: backend, persistence
 authority: supporting
-related: REQ-PERSISTENCE, TICKET-PLATFORM-PERSISTENCE
+related: REQ-PERSISTENCE, DATA-001
 ---
 
 # ADR-0002: контракты слоя persistence

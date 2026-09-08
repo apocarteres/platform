@@ -21,7 +21,7 @@ commit: 2e149e24f226e6e64c5e7e9a9399b6f59272668d
 
 | Задача | Причина включения |
 |---|---|
-| [TICKET-SERVICE-BUILD-LEFT-A-FLATTENED-POM](../tickets/closed/service-build-left-a-flattened-pom.md) | Закрыта в этом выпуске, приоритет P2 |
+| [OPS-012](../tickets/closed/OPS-012-service-build-left-a-flattened-pom.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

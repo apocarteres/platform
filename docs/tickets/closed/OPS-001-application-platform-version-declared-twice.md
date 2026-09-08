@@ -1,5 +1,5 @@
 ---
-id: TICKET-APPLICATION-PLATFORM-VERSION-DECLARED-TWICE
+id: OPS-001
 type: ticket
 status: done
 scope: build, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-30-0
 related: REQ-BUILD
+legacy-id: TICKET-APPLICATION-PLATFORM-VERSION-DECLARED-TWICE
 ---
 
 # Версия платформы приложений задавалась дважды и разошлась

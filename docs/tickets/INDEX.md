@@ -18,7 +18,7 @@ authority: navigation
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
-| [Миграция формата задач clanlog](clanlog-ticket-format-migration.md) | P2 | Заблокирована | Не назначен | process, documentation |
-| [Исследование: отдельный сервис уведомлений](notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
-| [Starter `platform-persistence`: SQL-каталог и условная запись](platform-persistence.md) | P2 | В работе | Не назначен | backend, persistence |
-| [Starter `platform-web-errors`: единый контракт ошибок API](platform-web-errors.md) | P2 | Запланирована | Не назначен | backend, api, frontend |
+| [Starter `platform-web-errors`: единый контракт ошибок API](API-001-platform-web-errors.md) | P2 | Запланирована | Не назначен | backend, api, frontend |
+| [Исследование: отдельный сервис уведомлений](ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
+| [Starter `platform-persistence`: SQL-каталог и условная запись](DATA-001-platform-persistence.md) | P2 | В работе | Не назначен | backend, persistence |
+| [Миграция формата задач clanlog](DOC-003-clanlog-ticket-format-migration.md) | P2 | Заблокирована | Не назначен | process, documentation |

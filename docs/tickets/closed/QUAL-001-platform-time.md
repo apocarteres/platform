@@ -1,5 +1,5 @@
 ---
-id: TICKET-PLATFORM-TIME
+id: QUAL-001
 type: ticket
 status: done
 scope: backend, java
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-19-0
 related: REQ-JAVA-CLOCK
+legacy-id: TICKET-PLATFORM-TIME
 ---
 
 # Starter `platform-time`: порт часов

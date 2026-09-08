@@ -1,5 +1,5 @@
 ---
-id: TICKET-RELEASE-NUMBER-REUSED-OVERWROTE-A-CLOSED-RELEASE
+id: OPS-010
 type: ticket
 status: done
 scope: release
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-29-0
 related: REQ-RELEASE
+legacy-id: TICKET-RELEASE-NUMBER-REUSED-OVERWROTE-A-CLOSED-RELEASE
 ---
 
 # Повторный номер выпуска перезаписывал закрытый документ

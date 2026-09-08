@@ -1,5 +1,5 @@
 ---
-id: TICKET-DOCS-CHECKS-UNAWARE-OF-RELEASE-CYCLE
+id: OPS-005
 type: ticket
 status: done
 scope: documentation, release
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-22-0
 related: REQ-RELEASE
+legacy-id: TICKET-DOCS-CHECKS-UNAWARE-OF-RELEASE-CYCLE
 ---
 
 # Проверки документации не знали о собственных данных цикла выпусков

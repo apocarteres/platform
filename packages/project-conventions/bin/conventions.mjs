@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { CONFIG_FILE, readConfig } from '../lib/config.mjs';
 import { collectSourceFiles } from '../lib/comments.mjs';
 import { findToolchainMismatches } from '../lib/toolchain.mjs';
+import { TICKET_AREAS } from '../lib/document-naming.mjs';
+import { migrate, plan } from '../lib/naming-migration.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
@@ -266,6 +268,27 @@ async function releaseOpen(root, version) {
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
 }
 
+async function naming(root, subcommand, mapFile) {
+  const config = await readConfig(root);
+  const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
+  let overrides = {};
+  if (mapFile) overrides = JSON.parse(await readFile(path.join(root, mapFile), 'utf8'));
+  if (subcommand === 'plan') {
+    const moves = await plan(root, { overrides, areas });
+    console.log(`Переименований: ${moves.length}`);
+    for (const move of moves) console.log(`- ${move.legacyId} -> ${move.id}: ${move.to}`);
+    return;
+  }
+  if (subcommand === 'migrate') {
+    const { moves, touched } = await migrate(root, { overrides, areas });
+    console.log(`Переименовано задач: ${moves.length}, файлов со ссылками поправлено: ${touched ?? 0}`);
+    for (const move of moves) console.log(`- ${move.legacyId} -> ${move.id}`);
+    return;
+  }
+  console.error('conventions naming <plan|migrate> [--map <файл>]');
+  process.exitCode = 2;
+}
+
 async function releaseAdopt(root) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
@@ -350,6 +373,7 @@ const valueOf = (name) => {
 if (command === 'check') await check(root);
 else if (command === 'receipt') await receipt(root, rest.filter((value) => !value.startsWith('--') && value !== root));
 else if (command === 'obligations') await obligations(root);
+else if (command === 'naming') await naming(root, rest.find((value) => !value.startsWith('--') && value !== root), valueOf('--map'));
 else if (command === 'release') {
   const [subcommand, ...args] = rest.filter((value) => value !== '--root' && value !== root);
   if (subcommand === 'status') await releaseStatus(root);

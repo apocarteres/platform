@@ -1,5 +1,5 @@
 ---
-id: TICKET-RELEASE-CYCLE-ADOPTION
+id: OPS-009
 type: ticket
 status: done
 scope: release
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-20-0
 related: REQ-RELEASE
+legacy-id: TICKET-RELEASE-CYCLE-ADOPTION
 ---
 
 # Принятие цикла выпусков репозиторием с историей

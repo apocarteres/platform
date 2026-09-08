@@ -1,5 +1,5 @@
 ---
-id: TICKET-VERSION-SUBSTITUTION-LEAKED-INTO-THE-CONSUMER
+id: OPS-016
 type: ticket
 status: done
 scope: build, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-33-0
 related: REQ-BUILD
+legacy-id: TICKET-VERSION-SUBSTITUTION-LEAKED-INTO-THE-CONSUMER
 ---
 
 # Подстановка версии и присоединение исходников протекали в потребителя

@@ -1,5 +1,5 @@
 ---
-id: TICKET-RELEASE-COMPOSITION-MISSES-PLANNED-OBLIGATIONS
+id: OPS-008
 type: ticket
 status: done
 scope: release
@@ -7,6 +7,7 @@ authority: supporting
 priority: P1
 release: RELEASE-0-21-0
 related: REQ-RELEASE
+legacy-id: TICKET-RELEASE-COMPOSITION-MISSES-PLANNED-OBLIGATIONS
 ---
 
 # Состав выпуска не видел запланированные обязательства

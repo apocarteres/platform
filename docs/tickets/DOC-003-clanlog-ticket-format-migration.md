@@ -1,12 +1,13 @@
 ---
-id: TICKET-CLANLOG-TICKET-FORMAT-MIGRATION
+id: DOC-003
 type: ticket
 status: blocked
 scope: process, documentation
 authority: supporting
 priority: P2
 release: unassigned
-related: TICKET-CONVENTIONS-PACKAGE
+related: OPS-003
+legacy-id: TICKET-CLANLOG-TICKET-FORMAT-MIGRATION
 ---
 
 # Миграция формата задач clanlog
@@ -17,7 +18,7 @@ related: TICKET-CONVENTIONS-PACKAGE
 
 ## Основание
 
-1. Задача выделена из [пакета правил](closed/conventions-package.md) решением владельца от 2026-09-07: остальная работа по пакету от миграции не зависит, а миграция ждёт отдельного решения о переводе clanlog на ядро.
+1. Задача выделена из [пакета правил](closed/OPS-003-conventions-package.md) решением владельца от 2026-09-07: остальная работа по пакету от миграции не зависит, а миграция ждёт отдельного решения о переводе clanlog на ядро.
 2. Формат задач clanlog несовместим с проверками пакета: перечень статусов и расположение задач заданы иначе, области выражены каталогами, а не полем.
 
 ## Последствия при сохранении текущего поведения

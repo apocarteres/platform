@@ -1,5 +1,5 @@
 ---
-id: TICKET-NOTIFICATION-SERVICE-RESEARCH
+id: ARC-001
 type: ticket
 status: backlog
 scope: notification, architecture, research
@@ -8,6 +8,7 @@ priority: P2
 release: unassigned
 questions: open
 related: ADR-0001
+legacy-id: TICKET-NOTIFICATION-SERVICE-RESEARCH
 ---
 
 # Исследование: отдельный сервис уведомлений

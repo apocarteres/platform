@@ -1,5 +1,5 @@
 ---
-id: TICKET-ADOPTION-ON-A-BARE-REPOSITORY
+id: DOC-001
 type: ticket
 status: done
 scope: process, platform
@@ -7,6 +7,7 @@ authority: supporting
 priority: P2
 release: RELEASE-0-25-0
 related: REQ-ADOPTION
+legacy-id: TICKET-ADOPTION-ON-A-BARE-REPOSITORY
 ---
 
 # Подключение к проекту без каталогов документации падало трассировкой

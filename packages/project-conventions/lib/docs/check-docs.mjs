@@ -28,7 +28,7 @@ async function deliveredIds(root) {
 
 const REQUIRED_METADATA_FIELDS = ['id', 'type', 'status', 'scope', 'authority'];
 const DOCUMENT_REFERENCE_FIELDS = ['depends-on', 'supersedes', 'superseded-by', 'related'];
-const OPTIONAL_METADATA_FIELDS = [...DOCUMENT_REFERENCE_FIELDS, 'clause-id-prefix', 'priority', 'questions', 'release', 'opened-on', 'released-on', 'commit', 'obligation'];
+const OPTIONAL_METADATA_FIELDS = [...DOCUMENT_REFERENCE_FIELDS, 'clause-id-prefix', 'priority', 'questions', 'release', 'opened-on', 'released-on', 'commit', 'obligation', 'legacy-id'];
 const ALLOWED_METADATA_FIELDS = new Set([
   ...REQUIRED_METADATA_FIELDS,
   ...OPTIONAL_METADATA_FIELDS,

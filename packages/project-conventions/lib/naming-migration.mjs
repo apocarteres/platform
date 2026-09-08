@@ -52,8 +52,28 @@ export function sortKey(file, metadata) {
   return `${date} ${stem}`;
 }
 
+async function featurePlans(root) {
+  const directory = 'docs/tickets/features';
+  let entries;
+  try {
+    entries = await readdir(path.join(root, directory), { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+  const found = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.md') || entry.name === 'INDEX.md') continue;
+    const file = path.join(root, directory, entry.name);
+    const parsed = parseFrontMatter(await readFile(file, 'utf8'));
+    if (parsed?.metadata?.get('type') !== 'ticket') continue;
+    found.push({ file, content: await readFile(file, 'utf8'), metadata: parsed.metadata });
+  }
+  return found;
+}
+
 export async function plan(root, { overrides = {}, areas = TICKET_AREAS } = {}) {
-  const all = await tickets(root);
+  const all = [...await tickets(root), ...await featurePlans(root)];
   const decided = all.map((ticket) => ({
     ticket,
     file: path.relative(root, ticket.file).split(path.sep).join('/'),

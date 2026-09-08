@@ -5,7 +5,7 @@ status: done
 scope: documentation, process
 authority: supporting
 priority: P3
-release: unassigned
+release: RELEASE-0-36-0
 related: REQ-NAMING
 ---
 

@@ -5,7 +5,7 @@ status: done
 scope: process, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-0-38-0
 related: REQ-AGENT-WORK
 ---
 

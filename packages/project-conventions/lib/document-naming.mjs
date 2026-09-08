@@ -35,6 +35,16 @@ export function nameIssue(file, metadata, areas) {
   const type = metadata.get('type') ?? '';
   if (GENERIC.has(name)) return null;
 
+  // REQ-NAMING-011
+  if (type === 'ticket' && /\/features\/[^/]+\//.test(`/${file}`)) {
+    const stage = new RegExp(`^(\\d{2})-${SLUG}\\.md$`).exec(name);
+    if (stage === null) return 'имя файла этапа плана должно быть <NN>-<слаг>.md';
+    const expected = new RegExp('^([A-Z]{2,5})-(\\d{2})$').exec(id);
+    if (expected === null) return `идентификатор этапа плана должен быть <ПЛАН>-<NN>, получен ${id}`;
+    if (expected[2] !== stage[1]) return `номер этапа в имени файла ${stage[1]} не совпадает с идентификатором ${id}`;
+    return null;
+  }
+
   if (type === 'ticket') {
     const expected = new RegExp(`^(${areas.join('|')})-(\\d{3})-${SLUG}\\.md$`);
     const match = expected.exec(name);

@@ -43,6 +43,17 @@ test('решение, выпуск и требование проверяютс�
   assert.equal(nameIssue('docs/tickets/INDEX.md', metadata({ id: 'IDX-TICKETS', type: 'index' }), TICKET_AREAS), null);
 });
 
+test('этап плана функции проверяется по номеру порядка, а не по области', () => {
+  const stage = metadata({ id: 'UR-08', type: 'ticket' });
+  assert.equal(nameIssue('docs/tickets/features/user-registration/08-rollout.md', stage, TICKET_AREAS), null);
+  assert.match(nameIssue('docs/tickets/features/user-registration/rollout.md', stage, TICKET_AREAS), /<NN>-<слаг>/);
+  assert.match(nameIssue('docs/tickets/features/user-registration/07-rollout.md', stage, TICKET_AREAS), /07 не совпадает/);
+  assert.match(
+    nameIssue('docs/tickets/features/user-registration/08-rollout.md', metadata({ id: 'TICKET-ROLLOUT', type: 'ticket' }), TICKET_AREAS),
+    /<ПЛАН>-<NN>/,
+  );
+});
+
 test('область выводится из областей задачи, план функции — всегда FEAT', () => {
   assert.equal(areaFor(metadata({ id: 'X', scope: 'backend, security' }), 'docs/tickets/x.md'), 'SEC');
   assert.equal(areaFor(metadata({ id: 'X', scope: 'build, quality' }), 'docs/tickets/x.md'), 'OPS');

@@ -35,7 +35,7 @@ authority: navigation
 | [Подключение к проекту без каталогов документации падало трассировкой](DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
 | [Ссылка на нормативный документ ядра считалась ссылкой в пустоту](DOC-005-references-to-delivered-core-documents.md) | P2 | Выполнена | [RELEASE-0-22-0](../../releases/RELEASE-0-22-0.md) | documentation |
-| [Имена документов и идентификаторы задавались по-разному в каждом репозитории](DOC-006-document-naming-scheme.md) | P2 | Выполнена | Не назначен | documentation, process |
+| [Имена документов и идентификаторы задавались по-разному в каждом репозитории](DOC-006-document-naming-scheme.md) | P2 | Выполнена | [RELEASE-0-35-0](../../releases/RELEASE-0-35-0.md) | documentation, process |
 | [Четыре проверки жили скриптами одного репозитория](OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

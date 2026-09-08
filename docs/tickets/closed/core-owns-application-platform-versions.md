@@ -5,7 +5,7 @@ status: done
 scope: build, backend, platform
 authority: supporting
 priority: P0
-release: unassigned
+release: RELEASE-0-34-0
 related: REQ-DEPS, REQ-BUILD
 ---
 

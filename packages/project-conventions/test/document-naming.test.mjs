@@ -107,3 +107,20 @@ test('переход правит идентификатор, имя файла 
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('идентификатор с областью вне перечня переименовывается, а не сохраняется', async () => {
+  const root = await project({
+    'docs/tickets/closed/QUAL-004-known-area.md': ticket('QUAL-004', 'quality'),
+    'docs/tickets/closed/BUG-001-auction-pool-disagrees.md': ticket('BUG-001', 'auction, money'),
+    'docs/tickets/closed/MOD-001-modular-architecture.md': ticket('MOD-001', 'architecture, modules'),
+  });
+  try {
+    const moves = await plan(root, {});
+    assert.deepEqual(moves.map((move) => [move.legacyId, move.id]), [
+      ['BUG-001', 'QUAL-005'],
+      ['MOD-001', 'ARC-001'],
+    ], 'известная область сохраняется, неизвестная получает область из перечня и следующий свободный номер');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

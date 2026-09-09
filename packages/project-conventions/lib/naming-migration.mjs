@@ -12,9 +12,9 @@ const AREA_BY_SCOPE = [
   ['API', ['api', 'openapi', 'contract']],
   ['PERF', ['performance', 'concurrency', 'throughput', 'latency']],
   ['TEST', ['test', 'testing', 'e2e']],
-  ['OPS', ['build', 'deployment', 'production', 'release', 'dependency', 'ops', 'observability', 'monitoring', 'tooling', 'infrastructure']],
-  ['DOC', ['documentation', 'planning', 'process']],
   ['ARC', ['architecture', 'design', 'modules', 'platform']],
+  ['OPS', ['build', 'deployment', 'production', 'release', 'dependency', 'dependencies', 'ops', 'observability', 'monitoring', 'tooling', 'infrastructure']],
+  ['DOC', ['documentation', 'planning', 'process']],
   ['FEAT', ['feature']],
 ];
 
@@ -82,7 +82,8 @@ export async function plan(root, { overrides = {}, areas = TICKET_AREAS } = {}) 
   const taken = new Map();
   for (const entry of decided) {
     const current = /^([A-Z]+)-(\d{3})$/.exec(ticketId(entry.ticket));
-    if (current === null) continue;
+    // REQ-NAMING-002
+    if (current === null || !areas.includes(current[1])) continue;
     taken.set(ticketId(entry.ticket), entry);
     entry.keep = true;
   }

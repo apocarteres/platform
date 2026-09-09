@@ -5,7 +5,7 @@ status: done
 scope: build, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-0-41-0
 related: REQ-DEPS, REQ-BUILD
 ---
 

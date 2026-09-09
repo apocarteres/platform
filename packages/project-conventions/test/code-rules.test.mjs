@@ -190,3 +190,46 @@ test('POM самого ядра источником нарушений не с�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('проект вне родителя ядра получает одну находку о самом этом факте', async () => {
+  const { findDependencyIssues } = await import('../lib/dependencies.mjs');
+  const foreign = [
+    '<project>',
+    '  <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>4.0.4</version></parent>',
+    '  <groupId>net.example</groupId>',
+    '  <properties><java.version>21</java.version></properties>',
+    '  <dependencyManagement><dependencies>',
+    '    <dependency><groupId>io.github.apocarteres.platform</groupId><artifactId>platform-bom</artifactId><version>0.40.0</version><type>pom</type><scope>import</scope></dependency>',
+    '    <dependency><groupId>org.springframework.modulith</groupId><artifactId>spring-modulith-bom</artifactId><version>2.0.7</version><type>pom</type><scope>import</scope></dependency>',
+    '  </dependencies></dependencyManagement>',
+    '</project>',
+  ].join('\n');
+  const root = await project({ 'pom.xml': foreign });
+  try {
+    const found = await findDependencyIssues(root, {});
+    assert.deepEqual([...found.keys()], ['pom.xml']);
+    assert.equal(found.get('pom.xml').length, 1, 'вместо трёх находок называется одна причина');
+    assert.match(found.get('pom.xml')[0].text, /не наследует родителя ядра/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('версия артефакта ядра у потребителя на родителе ядра нарушением не считается', async () => {
+  const { findDependencyIssues } = await import('../lib/dependencies.mjs');
+  const consumer = [
+    '<project>',
+    '  <parent><groupId>io.github.apocarteres.platform</groupId><artifactId>platform-service-parent</artifactId><version>0.40.0</version></parent>',
+    '  <groupId>net.example</groupId>',
+    '  <dependencyManagement><dependencies>',
+    '    <dependency><groupId>io.github.apocarteres.platform</groupId><artifactId>platform-bom</artifactId><version>0.40.0</version><type>pom</type><scope>import</scope></dependency>',
+    '  </dependencies></dependencyManagement>',
+    '</project>',
+  ].join('\n');
+  const root = await project({ 'pom.xml': consumer });
+  try {
+    assert.equal((await findDependencyIssues(root, {})).size, 0, 'версия ядра закрепляется потребителем по REQ-BUILD-007');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

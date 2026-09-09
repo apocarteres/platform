@@ -37,6 +37,12 @@ function withoutParent(source) {
   return source.replace(/<parent>[\s\S]*?<\/parent>/g, '');
 }
 
+// REQ-BUILD-011
+export function parentGroup(source) {
+  const parent = /<parent>[\s\S]*?<\/parent>/.exec(source)?.[0] ?? '';
+  return /<groupId>([^<]+)<\/groupId>/.exec(parent)?.[1] ?? '';
+}
+
 export function projectGroup(source) {
   const body = withoutParent(source);
   const boundary = body.search(/<(?:dependencies|dependencyManagement|build|modules)>/);
@@ -77,6 +83,8 @@ export function managedVersionPins(source, groups) {
   return found;
 }
 
+const CORE_GROUP = CORE_MANAGED_GROUPS[0];
+
 export async function findDependencyIssues(root, config) {
   const groups = [...CORE_MANAGED_GROUPS, ...(config.managedGroups ?? [])];
   const violations = new Map();
@@ -84,7 +92,19 @@ export async function findDependencyIssues(root, config) {
     const source = await readFile(path.join(root, file), 'utf8');
     // REQ-DEPS-002
     if (groups.some((managed) => projectGroup(source) === managed)) continue;
-    const found = [...deadVersionProperties(source), ...managedVersionPins(source, groups)]
+
+    // REQ-BUILD-011
+    if (parentGroup(source) !== CORE_GROUP) {
+      const line = source.slice(0, source.indexOf('<parent>') + 1).split('\n').length;
+      violations.set(file, [{
+        line: Math.max(line, 1),
+        text: 'POM не наследует родителя ядра: пока версиями платформы приложений управляет сам проект, сверять их с ядром нечем',
+      }]);
+      continue;
+    }
+
+    const pinned = groups.filter((managed) => managed !== CORE_GROUP);
+    const found = [...deadVersionProperties(source), ...managedVersionPins(source, pinned)]
       .sort((left, right) => left.line - right.line);
     if (found.length > 0) violations.set(file, found);
   }

@@ -56,3 +56,12 @@ test('монотонный счётчик часами не считается',
   assert.equal(findClockCalls('var at = System.currentTimeMillis();', '.java').length, 1, 'настенное время остаётся запрещённым');
   assert.equal(findClockCalls('const at = Date.now();', '.ts').length, 1);
 });
+
+test('подстановка в шаблонной строке — это код, а не литерал', () => {
+  assert.equal(findClockCalls('const label = `снимок ${new Date().toISOString()}`;', '.ts').length, 1);
+  assert.equal(findClockCalls('const label = `снимок ${Date.now()}`;', '.ts').length, 1);
+  assert.deepEqual(findClockCalls('const label = `просто текст new Date()`;', '.ts'), [], 'текст шаблона остаётся литералом');
+  assert.deepEqual(findClockCalls("const ok = new Date('2026-06-01T00:00:00Z');", '.ts'), [], 'аргумент-литерал не превращает вызов в обращение к часам');
+  assert.deepEqual(findClockCalls('const inner = `${fmt(new Date(value))}`;', '.ts'), []);
+  assert.deepEqual(findClockCalls('const nested = `${items.map((x) => `${x.id}`).join()}`;', '.ts'), []);
+});

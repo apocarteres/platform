@@ -41,6 +41,19 @@ export function codeLines(source) {
         } else if (source[index] === quote) {
           index += 1;
           break;
+        // REQ-CODE-CLOCK-009
+        } else if (quote === '`' && source[index] === '$' && source[index + 1] === '{') {
+          push(' ');
+          index += 2;
+          let depth = 1;
+          while (index < source.length && depth > 0) {
+            const inside = source[index];
+            if (inside === '{') depth += 1;
+            else if (inside === '}') depth -= 1;
+            if (depth > 0) push(inside === '\n' ? '\n' : inside);
+            index += 1;
+          }
+          push(' ');
         } else {
           if (source[index] === '\n') push('\n');
           index += 1;

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import {
   DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, IDLE_EXIT_CODE, LIMIT_EXIT_CODE, report, runWithLimits,
@@ -46,7 +47,7 @@ test('общий предел завершает даже разговорчив
 });
 
 test('потомки завершаются вместе с процессом', async () => {
-  const marker = `conventions-run-probe-${process.pid}-${Date.now()}`;
+  const marker = `conventions-run-probe-${randomUUID().replaceAll('-', '')}`;
   const result = await runWithLimits(...shell(`sh -c 'sleep 30 # ${marker}' & echo запущен; sleep 30`), { idleSeconds: 1 });
   assert.equal(result.exceeded, 'idle');
   await new Promise((resolve) => setTimeout(resolve, 6500));

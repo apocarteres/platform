@@ -5,7 +5,7 @@ status: done
 scope: process, documentation
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-0-42-0
 related: OPS-003
 legacy-id: TICKET-CLANLOG-TICKET-FORMAT-MIGRATION
 ---

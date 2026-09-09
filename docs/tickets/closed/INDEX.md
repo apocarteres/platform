@@ -41,6 +41,6 @@ authority: navigation
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |
 | [Правило размера считало наборы тестов на Python и Ruby рабочим кодом](OPS-014-size-rule-knew-only-java-and-js-tests.md) | P2 | Выполнена | [RELEASE-0-28-0](../../releases/RELEASE-0-28-0.md) | quality, tooling |
-| [Переход на схему имён сохранял область вне закрытого перечня](OPS-018-migration-kept-areas-outside-the-list.md) | P2 | Выполнена | Не назначен | documentation, tooling, process |
+| [Переход на схему имён сохранял область вне закрытого перечня](OPS-018-migration-kept-areas-outside-the-list.md) | P2 | Выполнена | [RELEASE-0-39-0](../../releases/RELEASE-0-39-0.md) | documentation, tooling, process |
 | [Схема имён не знала об этапах плана функции](DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |

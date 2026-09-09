@@ -5,10 +5,11 @@ import { collectSourceFiles } from './comments.mjs';
 const JAVA_CALLS = [
   'Instant.now(', 'LocalDate.now(', 'LocalDateTime.now(', 'LocalTime.now(',
   'OffsetDateTime.now(', 'ZonedDateTime.now(', 'Year.now(', 'YearMonth.now(',
-  'System.currentTimeMillis(', 'System.nanoTime(', 'Clock.systemUTC(',
+  'System.currentTimeMillis(', 'Clock.systemUTC(',
   'Clock.systemDefaultZone(', 'Clock.system(',
 ];
-const SCRIPT_CALLS = ['Date.now(', 'performance.now(', 'process.hrtime('];
+// REQ-CODE-CLOCK-008
+const SCRIPT_CALLS = ['Date.now('];
 const BARE_DATE = /(^|[^.\w])new Date\s*\(\s*\)/;
 // REQ-CODE-CLOCK-006
 const LITERAL = '_';

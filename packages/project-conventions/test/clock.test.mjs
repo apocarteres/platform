@@ -48,3 +48,11 @@ test('обращение к часам внутри строки нарушен�
   const found = findClockCalls('log("Instant.now() запрещён");', '.java');
   assert.deepEqual(found, []);
 });
+
+test('монотонный счётчик часами не считается', () => {
+  assert.deepEqual(findClockCalls('var elapsed = System.nanoTime() - startedAt;', '.java'), []);
+  assert.deepEqual(findClockCalls('const elapsed = performance.now() - startedAt;', '.ts'), []);
+  assert.deepEqual(findClockCalls('const started = process.hrtime.bigint();', '.ts'), []);
+  assert.equal(findClockCalls('var at = System.currentTimeMillis();', '.java').length, 1, 'настенное время остаётся запрещённым');
+  assert.equal(findClockCalls('const at = Date.now();', '.ts').length, 1);
+});

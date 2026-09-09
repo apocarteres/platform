@@ -26,11 +26,11 @@ related: REQ-CODE-COMMENTS
 
 ### Java
 
-1. <a id="REQ-CODE-CLOCK-001"></a> **REQ-CODE-CLOCK-001** — В файлах `.java` запрещены вызовы `Instant.now`, `LocalDate.now`, `LocalDateTime.now`, `LocalTime.now`, `OffsetDateTime.now`, `ZonedDateTime.now`, `Year.now`, `YearMonth.now`, `System.currentTimeMillis`, `System.nanoTime`, `Clock.systemUTC`, `Clock.systemDefaultZone`, `Clock.system`.
+1. <a id="REQ-CODE-CLOCK-001"></a> **REQ-CODE-CLOCK-001** — В файлах `.java` запрещены вызовы `Instant.now`, `LocalDate.now`, `LocalDateTime.now`, `LocalTime.now`, `OffsetDateTime.now`, `ZonedDateTime.now`, `Year.now`, `YearMonth.now`, `System.currentTimeMillis`, `Clock.systemUTC`, `Clock.systemDefaultZone`, `Clock.system`.
 
 ### TypeScript и JavaScript
 
-2. <a id="REQ-CODE-CLOCK-002"></a> **REQ-CODE-CLOCK-002** — В файлах `.ts`, `.mjs`, `.js` запрещены `Date.now`, `performance.now`, `process.hrtime` и `new Date()` без аргументов. `new Date(value)` с аргументом разрешён: он не обращается к часам.
+2. <a id="REQ-CODE-CLOCK-002"></a> **REQ-CODE-CLOCK-002** — В файлах `.ts`, `.mjs`, `.js` запрещены `Date.now` и `new Date()` без аргументов. `new Date(value)` с аргументом разрешён: он не обращается к часам.
 
 ### Рабочий код и тесты
 
@@ -42,6 +42,8 @@ related: REQ-CODE-COMMENTS
 5. <a id="REQ-CODE-CLOCK-005"></a> **REQ-CODE-CLOCK-005** — Файлы, реализующие часы для рабочего кода, перечисляются в `.conventions.json` полем `clockAllowlist` и проверкой не рассматриваются. Перечень задаётся путями относительно корня проекта.
 6. <a id="REQ-CODE-CLOCK-006"></a> **REQ-CODE-CLOCK-006** — Обращения внутри строковых литералов и комментариев нарушением не считаются.
 
+7. <a id="REQ-CODE-CLOCK-008"></a> **REQ-CODE-CLOCK-008** — Монотонный счётчик — не часы: `System.nanoTime`, `performance.now` и `process.hrtime` измеряют промежуток, а не момент, и разрешены там, где измеряется длительность. Мерить длительность часами — ошибка: настенное время скачет от синхронизации и перехода на другое время, и разность двух отсчётов оказывается отрицательной или огромной. Утверждать по монотонному счётчику, что событие наступило, всё равно нельзя: это запрещает `REQ-QUALITY-010`.
+
 ## Существующий код
 
-7. <a id="REQ-CODE-CLOCK-007"></a> **REQ-CODE-CLOCK-007** — Существующие обращения фиксируются храповиком `.conventions/baseline.json` отдельным разделом правила. Первичное засеивание разрешено без ключей, последующий рост требует `--allow-growth`.
+8. <a id="REQ-CODE-CLOCK-007"></a> **REQ-CODE-CLOCK-007** — Существующие обращения фиксируются храповиком `.conventions/baseline.json` отдельным разделом правила. Первичное засеивание разрешено без ключей, последующий рост требует `--allow-growth`.

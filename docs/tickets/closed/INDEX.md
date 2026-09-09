@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 29. Включены самостоятельные задачи и этапы планов функций.
+Всего: 30. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -44,6 +44,7 @@ authority: navigation
 | [Правило размера считало наборы тестов на Python и Ruby рабочим кодом](OPS-014-size-rule-knew-only-java-and-js-tests.md) | P2 | Выполнена | [RELEASE-0-28-0](../../releases/RELEASE-0-28-0.md) | quality, tooling |
 | [Переход на схему имён сохранял область вне закрытого перечня](OPS-018-migration-kept-areas-outside-the-list.md) | P2 | Выполнена | [RELEASE-0-39-0](../../releases/RELEASE-0-39-0.md) | documentation, tooling, process |
 | [Правило версий срабатывало там, где ядро версиями не управляет](OPS-020-dependency-rule-fired-outside-its-scope.md) | P2 | Выполнена | [RELEASE-0-41-0](../../releases/RELEASE-0-41-0.md) | build, tooling |
+| [Монотонный счётчик считался обращением к часам](QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | Не назначен | quality, tooling |
 | [Схема имён не знала об этапах плана функции](DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |

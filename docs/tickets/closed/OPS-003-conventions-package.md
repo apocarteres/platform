@@ -43,7 +43,7 @@ legacy-id: TICKET-CONVENTIONS-PACKAGE
 
 ## Границы
 
-Правило о комментариях и минимальный CLI (`check`, `sync`, `baseline`) выделены в [OPS-002](OPS-002-code-comments-rule.md) и выполнены. Миграция формата задач clanlog вынесена в [отдельную задачу](../DOC-003-clanlog-ticket-format-migration.md) по решению владельца от 2026-09-07: она ждёт его слова о переводе clanlog, а остальная работа от неё не зависит. Здесь остаётся перенос остальных общих правил, полный CLI и переносимые храповики. Reusable workflow исключён решением [ADR-0003](../../decisions/ADR-0003-local-artifact-publishing.md): GitHub Actions не используются.
+Правило о комментариях и минимальный CLI (`check`, `sync`, `baseline`) выделены в [OPS-002](OPS-002-code-comments-rule.md) и выполнены. Миграция формата задач clanlog вынесена в [отдельную задачу](DOC-003-clanlog-ticket-format-migration.md) по решению владельца от 2026-09-07: она ждёт его слова о переводе clanlog, а остальная работа от неё не зависит. Здесь остаётся перенос остальных общих правил, полный CLI и переносимые храповики. Reusable workflow исключён решением [ADR-0003](../../decisions/ADR-0003-local-artifact-publishing.md): GitHub Actions не используются.
 
 ## Открытые вопросы
 
@@ -167,7 +167,7 @@ CLI получил три команды: `docs-check`, `tickets-index`, `releas
 [отдельной задачей потребителя](https://github.com/apocarteres/zavpn).
 
 Скрипты остаются в clanlog до его перевода на ядро: перевод ведётся
-[отдельной задачей](../DOC-003-clanlog-ticket-format-migration.md) и ждёт слова владельца.
+[отдельной задачей](DOC-003-clanlog-ticket-format-migration.md) и ждёт слова владельца.
 
 Задача закрыта: пакет содержит все запланированные проверки, инструменты
 документации, цикл выпуска, правила подключения и доставляет 17 нормативных

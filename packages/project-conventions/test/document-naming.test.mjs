@@ -63,8 +63,11 @@ test('область выводится из областей задачи, пл
   assert.equal(areaFor(metadata({ id: 'X', scope: 'backend' }), 'docs/tickets/x.md', { X: 'ARC' }), 'ARC', 'перечень поправок главнее');
 });
 
-test('слаг берётся из имени файла без даты и не растёт бесконечно', () => {
+test('слаг берётся из имени файла без даты и без прежнего идентификатора', () => {
   assert.equal(slugFor('docs/tickets/agent-sync-queue-lock-test-flaky-2026-09-06.md'), 'agent-sync-queue-lock-test-flaky');
+  assert.equal(slugFor('docs/tickets/closed/DES-004-resend-call-written-twice.md'), 'resend-call-written-twice');
+  assert.equal(slugFor('docs/tickets/closed/MOD-016-modular-architecture.md'), 'modular-architecture');
+  assert.equal(slugFor('docs/tickets/closed/ADR-0003-local-publishing.md'), 'local-publishing');
   assert.ok(slugFor(`docs/tickets/${'very-long-part-'.repeat(12)}end.md`).length <= 60);
 });
 

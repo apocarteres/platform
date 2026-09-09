@@ -33,9 +33,12 @@ export function areaFor(metadata, file, overrides = {}) {
   return 'QUAL';
 }
 
+const LEADING_ID = /^[A-Za-z]{2,6}-\d{2,4}-/;
+
+// REQ-NAMING-005
 export function slugFor(file) {
   const stem = path.posix.basename(file, '.md');
-  const withoutDate = stem.replace(DATE, '');
+  const withoutDate = stem.replace(DATE, '').replace(LEADING_ID, '');
   const cleaned = withoutDate.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const parts = cleaned.split('-');
   const limited = [];

@@ -5,7 +5,7 @@ status: done
 scope: quality, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-0-44-0
 related: REQ-CODE-CLOCK
 ---
 

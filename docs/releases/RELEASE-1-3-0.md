@@ -19,7 +19,7 @@ opened-on: 2026-09-10
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-021](../tickets/OPS-021-push-gate-cannot-see-wiring-failures.md) | Указана при открытии выпуска |
+| [OPS-021](../tickets/closed/OPS-021-push-gate-cannot-see-wiring-failures.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

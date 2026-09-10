@@ -46,7 +46,12 @@ export function validateTicket(file, content, parsed) {
   const questions = metadata.get('questions');
   if (hasQuestions !== metadata.has('questions')) fail('раздел «Открытые вопросы» и поле questions должны присутствовать вместе');
   if (questions && !['open', 'resolved'].includes(questions)) fail('questions должен быть open или resolved');
-  if (questions === 'open' && ['in_progress', 'done'].includes(status)) fail('работа по задаче с открытыми вопросами запрещена; выделите независимую часть отдельно');
+  // REQ-TICKETS-012
+  if (questions === 'open' && (status === 'in_progress' || terminalStatuses.has(status))) {
+    fail(status === 'in_progress'
+      ? 'работа по задаче с открытыми вопросами запрещена; выделите независимую часть отдельно'
+      : 'задача с открытыми вопросами не закрывается; вынесите неразрешённый вопрос отдельной задачей');
+  }
   if (status === 'cancelled' && !/^## Почему не делаем\s*$/m.test(body)) {
     fail('отменённая задача должна содержать раздел «Почему не делаем»');
   }

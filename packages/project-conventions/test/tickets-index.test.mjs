@@ -54,6 +54,14 @@ test('открытые вопросы блокируют выполнение и
   assert(errors({ questions: 'open' }).length);
   assert(errors({ questions: 'unknown' }, body).length);
   for (const status of ['in_progress', 'done']) assert(errors({ questions: 'open', status }, body).length);
+  // REQ-TICKETS-012
+  const closed = 'docs/tickets/closed/example.md';
+  const cancelledBody = `${body}\n## Почему не делаем\n\nПремисса опровергнута.\n`;
+  const refused = errors({ questions: 'open', status: 'cancelled' }, cancelledBody, closed);
+  assert.equal(refused.length, 1, refused.join('\n'));
+  assert.match(refused[0], /вынесите неразрешённый вопрос отдельной задачей/);
+  assert(errors({ questions: 'open', status: 'superseded', 'superseded-by': 'TICKET-OTHER' }, body, closed).length);
+  assert.deepEqual(errors({ questions: 'resolved', status: 'cancelled' }, cancelledBody, closed), []);
   assert.deepEqual(errors({ questions: 'open', status: 'blocked' }, body), []);
   assert.deepEqual(errors({ questions: 'resolved', status: 'in_progress' }, body), []);
 });

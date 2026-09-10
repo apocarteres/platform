@@ -76,3 +76,26 @@ export function pendingObligations(obligations, state, isCore = false) {
     .map((obligation) => ({ obligation, state: obligationState(obligation, state) }))
     .filter((entry) => entry.state.status !== 'closed');
 }
+
+// REQ-RELEASE-035
+export async function findObligationDebts(root) {
+  const { obligations, isCore } = await loadObligations(root);
+  if (isCore) return { problems: [], advisories: [] };
+  const state = await readState(root);
+  const problems = [];
+  const advisories = [];
+  for (const { obligation, state: status } of pendingObligations(obligations, state, isCore)) {
+    const where = `обязательство ядра ${obligation.id} (${obligation.requirement}, ядро ${obligation.since})`;
+    if (status.status === 'overdue') {
+      problems.push(`Долг перед ядром: ${where} просрочено, срок ${obligation.dueReleases} выпуск(ов), прошло ${status.elapsed}`);
+      continue;
+    }
+    if (status.status === 'new') {
+      advisories.push(`Долг перед ядром: ${where} ещё не взято в работу; задача заводится открытием выпуска`);
+      continue;
+    }
+    const deferred = status.deferral === undefined ? '' : `, отложено: ${status.deferral.reason ?? 'причина не записана'}`;
+    advisories.push(`Долг перед ядром: ${where} не закрыто, остаётся выпусков ${status.remaining}${deferred}`);
+  }
+  return { problems, advisories };
+}

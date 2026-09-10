@@ -16,7 +16,7 @@ import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 import { adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
-import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
+import { declaredObligations, findObligationDebts, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
@@ -72,6 +72,11 @@ async function check(root) {
   let tracked = 0;
   let improvedTotal = 0;
   const advisories = [];
+
+  // REQ-RELEASE-035
+  const debts = await findObligationDebts(root);
+  problems.push(...debts.problems);
+  advisories.push(...debts.advisories);
   for (const rule of rules) {
     const violations = await rule.find(root, config);
     tracked += violations.size;

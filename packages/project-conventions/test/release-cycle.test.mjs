@@ -6,7 +6,7 @@ import test from 'node:test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, ticketId, unassignedDoneTickets } from '../lib/release/documents.mjs';
-import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
+import { findObligationDebts, obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
 import { adoptCycle, cancelRelease, closability, closeRelease, dropFromComposition, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { environmentWithoutGit, headCommit, workingTreeClean } from '../lib/release/git.mjs';
@@ -642,6 +642,39 @@ test('после завершения выпуска открытого выпу
     assert.equal(await openRelease(root), null, 'открытого выпуска нет');
     const state = await closability(root, { scheme: 'date' });
     assert.ok(state.problems.some((problem) => problem.includes('Открытого выпуска нет')), state.problems.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-035
+test('проверка правил роняет сборку на просроченном долге и предупреждает о долге в срок', async () => {
+  const root = await project();
+  try {
+    const state = (releaseCount, seenAt) => writeFile(
+      path.join(root, '.conventions/obligations.json'),
+      JSON.stringify({ releaseCount, seen: { sample: seenAt }, closed: {}, deferred: {} }),
+    );
+    await mkdir(path.join(root, '.conventions'), { recursive: true });
+
+    await state(3, 1);
+    const overdue = await findObligationDebts(root);
+    assert.equal(overdue.problems.length, 1, overdue.problems.join('\n'));
+    assert.match(overdue.problems[0], /обязательство ядра sample .* просрочено, срок 2 выпуск\(ов\), прошло 2/);
+    assert.deepEqual(overdue.advisories, []);
+
+    await state(2, 1);
+    const inTime = await findObligationDebts(root);
+    assert.deepEqual(inTime.problems, [], 'долг в срок сборку не роняет');
+    assert.equal(inTime.advisories.length, 1);
+    assert.match(inTime.advisories[0], /не закрыто, остаётся выпусков 1/);
+
+    await writeFile(
+      path.join(root, '.conventions/obligations.json'),
+      JSON.stringify({ releaseCount: 1, seen: { sample: 1 }, closed: { sample: { release: 'RELEASE-2026-09-1', ticket: 'TICKET-DONE' } }, deferred: {} }),
+    );
+    const closed = await findObligationDebts(root);
+    assert.deepEqual(closed, { problems: [], advisories: [] }, 'закрытое обязательство долгом не считается');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -51,6 +51,30 @@ export function rangeAccepts(range, version) {
   });
 }
 
+const JAVA_TARGET_PROPERTIES = ['java.version', 'maven.compiler.release', 'maven.compiler.source', 'maven.compiler.target'];
+
+// REQ-BUILD-010
+export function javaTargets(source) {
+  const declared = [];
+  const add = (label, version) => {
+    const value = version.trim();
+    if (!value.startsWith('${')) declared.push({ label, major: value.split('.')[0] });
+  };
+  for (const property of JAVA_TARGET_PROPERTIES) {
+    const tag = property.replaceAll('.', '\\.');
+    for (const match of source.matchAll(new RegExp(`<${tag}>([^<]+)</${tag}>`, 'g'))) {
+      add(`<${property}>${match[1].trim()}</${property}>`, match[1]);
+    }
+  }
+  for (const plugin of source.matchAll(/<plugin>([\s\S]*?)<\/plugin>/g)) {
+    if (!plugin[1].includes('<artifactId>maven-compiler-plugin</artifactId>')) continue;
+    for (const match of plugin[1].matchAll(/<release>([^<]+)<\/release>/g)) {
+      add(`<release>${match[1].trim()}</release> в maven-compiler-plugin`, match[1]);
+    }
+  }
+  return declared;
+}
+
 async function manifests(root, name) {
   const found = [];
   const walk = async (directory, depth) => {
@@ -112,10 +136,15 @@ export async function findToolchainMismatches(root) {
   const java = tools.get('java');
   if (java !== undefined) {
     for (const manifest of await manifests(root, 'pom.xml')) {
-      const declared = /<java\.version>([^<]+)<\/java\.version>/.exec(await read(root, manifest))?.[1];
-      if (declared === undefined) continue;
-      if (declared.split('.')[0] !== java.split('.')[0]) {
-        problems.push(`${manifest}: <java.version>${declared}</java.version> против java = ${java} в ${MISE_FILE}`);
+      const targets = javaTargets(await read(root, manifest));
+      if (targets.length === 0) continue;
+      const majors = new Set(targets.map((target) => target.major));
+      if (majors.size > 1) {
+        problems.push(`${manifest}: цель компиляции объявлена по-разному: ${targets.map((target) => target.label).join(', ')}`);
+        continue;
+      }
+      if (targets[0].major !== java.split('.')[0]) {
+        problems.push(`${manifest}: ${targets[0].label} против java = ${java} в ${MISE_FILE}`);
       }
     }
   }

@@ -33,7 +33,7 @@ authority: navigation
 | [Подстановка версии и присоединение исходников протекали в потребителя](OPS-016-version-substitution-leaked-into-the-consumer.md) | P1 | Выполнена | [RELEASE-0-33-0](../../releases/RELEASE-0-33-0.md) | build, platform |
 | [Процесс, запущенный исполнителем, мог висеть без предела](OPS-017-bounded-process-runs-for-agents.md) | P1 | Выполнена | [RELEASE-0-38-0](../../releases/RELEASE-0-38-0.md) | process, tooling |
 | [Starter `platform-time`: порт часов](QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
-| [Starter `platform-persistence`: SQL-каталог и условная запись](DATA-001-platform-persistence.md) | P2 | Выполнена | Не назначен | backend, persistence |
+| [Starter `platform-persistence`: SQL-каталог и условная запись](DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
 | [Миграция формата задач clanlog](DOC-003-clanlog-ticket-format-migration.md) | P2 | Выполнена | [RELEASE-0-42-0](../../releases/RELEASE-0-42-0.md) | process, documentation |
@@ -47,7 +47,7 @@ authority: navigation
 | [Правило версий срабатывало там, где ядро версиями не управляет](OPS-020-dependency-rule-fired-outside-its-scope.md) | P2 | Выполнена | [RELEASE-0-41-0](../../releases/RELEASE-0-41-0.md) | build, tooling |
 | [Монотонный счётчик считался обращением к часам](QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
-| [Команда расписки подтверждает проверки, которых не было](QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | Не назначен | quality, tooling, release |
+| [Команда расписки подтверждает проверки, которых не было](QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |
 | [Схема имён не знала об этапах плана функции](DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |

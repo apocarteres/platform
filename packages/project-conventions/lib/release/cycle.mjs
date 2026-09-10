@@ -3,7 +3,7 @@ import path from 'node:path';
 import {
   RELEASES_DIR, TICKETS_DIR, compositionTickets, nextReleaseId, openRelease, releaseTag, releases,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
-  unassignedTerminalTickets, writeDocument,
+  unassignedDoneTickets, writeDocument,
 } from './documents.mjs';
 import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
@@ -244,7 +244,7 @@ export async function adoptCycle(root, { scheme, version, today }) {
   }
   const missingNumber = releaseNumberProblem(scheme, version);
   if (missingNumber !== null) return { adopted: false, problems: [missingNumber] };
-  const before = await unassignedTerminalTickets(root);
+  const before = await unassignedDoneTickets(root);
   for (const ticket of before) {
     await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'before-cycle' }));
   }

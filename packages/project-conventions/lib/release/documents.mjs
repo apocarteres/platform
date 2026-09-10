@@ -1,6 +1,6 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseFrontMatter, terminalStatuses } from '../docs/ticket-model.mjs';
+import { parseFrontMatter } from '../docs/ticket-model.mjs';
 
 // REQ-RELEASE-004, REQ-RELEASE-007, REQ-RELEASE-010
 export const RELEASES_DIR = 'docs/releases';
@@ -48,16 +48,21 @@ export async function tickets(root) {
   ];
 }
 
-export async function unassignedTerminalTickets(root) {
+// REQ-RELEASE-031
+export function shipsResult(ticket) {
+  return ticket.metadata.get('status') === 'done';
+}
+
+export async function unassignedDoneTickets(root) {
   return (await tickets(root)).filter((ticket) =>
-    terminalStatuses.has(ticket.metadata.get('status'))
+    shipsResult(ticket)
     && (ticket.metadata.get('release') ?? 'unassigned') === 'unassigned');
 }
 
-// REQ-RELEASE-007, REQ-RELEASE-008
+// REQ-RELEASE-007, REQ-RELEASE-008, REQ-RELEASE-031
 export async function compositionTickets(root, releaseId) {
   return (await tickets(root)).filter((ticket) => {
-    if (!terminalStatuses.has(ticket.metadata.get('status'))) return false;
+    if (!shipsResult(ticket)) return false;
     const release = ticket.metadata.get('release') ?? 'unassigned';
     return release === 'unassigned' || release === releaseId;
   });

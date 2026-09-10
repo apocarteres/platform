@@ -5,12 +5,13 @@ import path from 'node:path';
 import test from 'node:test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { nextReleaseId, openRelease, releaseTag, unassignedTerminalTickets } from '../lib/release/documents.mjs';
+import { nextReleaseId, openRelease, releaseTag, ticketId, unassignedDoneTickets } from '../lib/release/documents.mjs';
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
 import { adoptCycle, cancelRelease, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { environmentWithoutGit, headCommit, workingTreeClean } from '../lib/release/git.mjs';
 import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
+import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 
 const run = promisify(execFile);
 const git = (...args) => run('git', args, { env: environmentWithoutGit() });
@@ -71,6 +72,10 @@ async function commitAll(root) {
   await git('-C', root, 'commit', '--quiet', '-m', 'состояние');
   const { stdout } = await git('-C', root, 'rev-parse', 'HEAD');
   return stdout.trim();
+}
+
+function cancelled(id) {
+  return `${ticket(id, 'cancelled')}\n## Почему не делаем\n\nРабота передана в ядро.\n`;
 }
 
 function ticket(id, status, release = 'unassigned') {
@@ -220,9 +225,11 @@ test('принятие цикла не записывает в первый вы
 
     const adopted = await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(adopted.adopted, true);
-    assert.deepEqual(adopted.stamped.sort(), ['TICKET-OLD-ONE', 'TICKET-OLD-TWO']);
+    // REQ-RELEASE-031
+    assert.deepEqual(adopted.stamped.sort(), ['TICKET-OLD-ONE'], 'пометку получает только выпущенный результат');
     assert.match(await readFile(path.join(root, 'docs/tickets/closed/old-one.md'), 'utf8'), /release: before-cycle/);
-    assert.deepEqual(await unassignedTerminalTickets(root), [], 'состав первого выпуска наполняется только новыми закрытиями');
+    assert.match(await readFile(path.join(root, 'docs/tickets/closed/old-two.md'), 'utf8'), /release: unassigned/);
+    assert.deepEqual(await unassignedDoneTickets(root), [], 'состав первого выпуска наполняется только новыми закрытиями');
 
     const again = await adoptCycle(root, { scheme: 'date', today: NEXT_DAY });
     assert.equal(again.adopted, false, 'принятие цикла выполняется один раз');
@@ -402,6 +409,62 @@ test('принятие цикла на semver без номера ничего �
     const kept = await readFile(path.join(root, 'docs/tickets/closed/QUAL-001-done.md'), 'utf8');
     assert.match(kept, /^release: unassigned$/m);
     assert.deepEqual(await releaseDocuments(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-031
+test('отменённая задача не попадает в состав и не ломает проверку документов', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/dropped.md'), cancelled('TICKET-DROPPED'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+
+    const closed = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(closed.closed, true, closed.problems?.join('\n'));
+    assert.deepEqual(closed.composition, ['TICKET-SHIPPED']);
+
+    const released = await readFile(path.join(root, `docs/releases/${closed.id}.md`), 'utf8');
+    assert.match(released, /TICKET-SHIPPED/);
+    assert.doesNotMatch(released, /TICKET-DROPPED/, 'отменённая задача в составе не упоминается');
+
+    const dropped = await readFile(path.join(root, 'docs/tickets/closed/dropped.md'), 'utf8');
+    assert.match(dropped, /^release: unassigned$/m, 'отменённой задаче выпуск не назначается');
+
+    const { errors } = await checkDocumentation(root);
+    const aboutComposition = errors.filter((error) => /TICKET-DROPPED|не выполнена|в составе/.test(error));
+    assert.deepEqual(aboutComposition, [], errors.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-031
+test('отменённая задача не возвращается в состав следующего выпуска', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/dropped.md'), cancelled('TICKET-DROPPED'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+
+    const state = await closability(root, { scheme: 'date' });
+    assert.deepEqual(state.composition.map(ticketId), [], 'следующий выпуск отменённую задачу не подбирает');
+    assert.ok(state.problems.some((problem) => problem.includes('Состав пуст')), state.problems.join('\n'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

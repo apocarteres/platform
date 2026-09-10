@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 35. Включены самостоятельные задачи и этапы планов функций.
+Всего: 36. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -46,6 +46,7 @@ authority: navigation
 | [Правило размера считало наборы тестов на Python и Ruby рабочим кодом](OPS-014-size-rule-knew-only-java-and-js-tests.md) | P2 | Выполнена | [RELEASE-0-28-0](../../releases/RELEASE-0-28-0.md) | quality, tooling |
 | [Переход на схему имён сохранял область вне закрытого перечня](OPS-018-migration-kept-areas-outside-the-list.md) | P2 | Выполнена | [RELEASE-0-39-0](../../releases/RELEASE-0-39-0.md) | documentation, tooling, process |
 | [Правило версий срабатывало там, где ядро версиями не управляет](OPS-020-dependency-rule-fired-outside-its-scope.md) | P2 | Выполнена | [RELEASE-0-41-0](../../releases/RELEASE-0-41-0.md) | build, tooling |
+| [Отменённая задача не даёт закрыть выпуск](OPS-023-cancelled-ticket-blocks-release-close.md) | P2 | Выполнена | Не назначен | release, tooling |
 | [Принятие цикла теряет номер выпуска и падает трассировкой](OPS-024-adopt-drops-the-release-number.md) | P2 | Выполнена | Не назначен | release, tooling |
 | [Монотонный счётчик считался обращением к часам](QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |

@@ -9,7 +9,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
-import { createTag, headCommit, tagExists, workingTreeClean } from './git.mjs';
+import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
 export async function closability(root, { scheme }) {
@@ -67,11 +67,15 @@ function resultLines(receipt, commit, tag) {
   ];
 }
 
-function criteriaLines(receipt, tag, obligations) {
+// REQ-RELEASE-001, REQ-RELEASE-034
+function criteriaLines(receipt, tag, obligations, finishing = null) {
   return [
     `- [x] Набор \`verify\` пройден на выпускаемом коммите — расписка ${receipt.completedAt}, наборы: ${receipt.checks.join(', ')}, прогон \`${receipt.run.command}\``,
     `- [x] Тег выпуска создан на проверенном коммите — \`${tag}\``,
     `- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ${obligations}`,
+    finishing === null
+      ? '- [ ] Завершающий шаг выполнен — развёртывание в производственную среду или публикация артефактов'
+      : `- [x] Завершающий шаг выполнен — ${finishing}`,
   ];
 }
 
@@ -90,11 +94,8 @@ export async function closeRelease(root, { scheme, today }) {
   const { release, commit, receipt, composition, tag } = state;
   const id = release.metadata.get('id');
 
-  let content = replaceMetadata(release.content, {
-    status: 'released',
-    'released-on': today.toISOString().slice(0, 10),
-    commit,
-  });
+  // REQ-RELEASE-001
+  let content = replaceMetadata(release.content, { status: 'in_progress' });
   // REQ-RELEASE-021, REQ-RELEASE-031
   content = replaceSection(content, '## Состав', compositionRows(root, composition.filter(shipsResult)));
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
@@ -113,6 +114,62 @@ export async function closeRelease(root, { scheme, today }) {
     writes.push({ file: ticket.file, content: replaceMetadata(ticket.content, { release: id }) });
   }
 
+  // REQ-RELEASE-005
+  await createTag(root, tag, commit, `Выпуск ${id}`);
+  for (const write of writes) await writeDocument(write.file, write.content);
+
+  return { closed: true, id, tag, commit, composition: composition.map(ticketId) };
+}
+
+// REQ-RELEASE-001, REQ-RELEASE-034
+export async function finishability(root, { scheme }) {
+  const problems = [];
+  const release = await openRelease(root);
+  if (release === null) {
+    return { problems: ['Незавершённого выпуска нет: закройте выпуск командой release close'], release: null };
+  }
+  const id = release.metadata.get('id');
+  const tag = releaseTag(id, scheme);
+  const commit = await tagCommit(root, tag);
+  if (commit === null) {
+    problems.push(`Тега ${tag} нет: сначала выполните первый шаг закрытия командой release close`);
+  }
+  const composition = await compositionTickets(root, id);
+  for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
+    problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')})`);
+  }
+  const state = await readState(root);
+  const { obligations, isCore } = await loadObligations(root);
+  return { problems, release, id, tag, commit, composition, state, obligations, isCore };
+}
+
+export async function finishRelease(root, { scheme, today, note }) {
+  if (!note || !note.trim()) {
+    return { finished: false, problems: ['Завершающий шаг записывается с указанием, чем он выполнен: ключ --note'] };
+  }
+  const state = await finishability(root, { scheme });
+  if (state.problems.length > 0) return { finished: false, problems: state.problems };
+  const { release, id, tag, commit, composition } = state;
+
+  let content = replaceMetadata(release.content, {
+    status: 'released',
+    'released-on': today.toISOString().slice(0, 10),
+    commit,
+  });
+  const closedNow = state.obligations
+    .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id && shipsResult(item)))
+    .map((obligation) => obligation.id);
+  const deferredNow = Object.keys(state.state.deferred ?? {});
+  const receipt = await readReceipt(root, commit);
+  content = replaceSection(
+    content,
+    '## Критерии выхода',
+    receipt === null
+      ? sectionLines(content, '## Критерии выхода')
+        .map((line) => line.startsWith('- [ ] Завершающий шаг') ? `- [x] Завершающий шаг выполнен — ${note.trim()}` : line)
+      : criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore), note.trim()),
+  );
+
   const obligationState_ = state.state;
   obligationState_.releaseCount = (obligationState_.releaseCount ?? 0) + 1;
   obligationState_.closed ??= {};
@@ -125,12 +182,9 @@ export async function closeRelease(root, { scheme, today }) {
       delete obligationState_.deferred?.[obligation.id];
     }
   }
-  // REQ-RELEASE-005
-  await createTag(root, tag, commit, `Выпуск ${id}`);
-  for (const write of writes) await writeDocument(write.file, write.content);
+  await writeDocument(release.file, content);
   await writeState(root, obligationState_);
-
-  return { closed: true, id, tag, commit, composition: composition.map(ticketId) };
+  return { finished: true, id, tag, commit, note: note.trim() };
 }
 
 function obligationTicket(obligation, releaseId, today) {
@@ -366,6 +420,7 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
     '- [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска',
     '- [ ] Тег выпуска создан на проверенном коммите — ставится командой выпуска',
     '- [ ] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной',
+    '- [ ] Завершающий шаг выполнен — развёртывание в производственную среду или публикация артефактов',
     '',
     '## Не входит',
     '',

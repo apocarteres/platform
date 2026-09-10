@@ -25,6 +25,11 @@ export async function tagExists(root, tag) {
   return found === tag;
 }
 
+export async function tagCommit(root, tag) {
+  if (!await tagExists(root, tag)) return null;
+  return git(root, ['rev-list', '-n', '1', tag]);
+}
+
 export async function createTag(root, tag, commit, message) {
   await git(root, ['tag', '-a', tag, commit, '-m', message]);
 }

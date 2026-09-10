@@ -7,7 +7,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, ticketId, unassignedDoneTickets } from '../lib/release/documents.mjs';
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
-import { adoptCycle, cancelRelease, closability, closeRelease, dropFromComposition, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { adoptCycle, cancelRelease, closability, closeRelease, dropFromComposition, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { environmentWithoutGit, headCommit, workingTreeClean } from '../lib/release/git.mjs';
 import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
@@ -180,8 +180,17 @@ test('закрытие записывает состав, коммит и рез
     assert.equal(closed.tag, '2026.09.1');
     assert.deepEqual(closed.composition, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
 
+    // REQ-RELEASE-001
+    const afterTag = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
+    assert.doesNotMatch(afterTag, /status: released/, 'до завершающего шага выпуск не выпущен');
+    assert.match(afterTag, /- \[ \] Завершающий шаг/);
+
+    const finished = await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация артефактов' });
+    assert.equal(finished.finished, true, finished.problems?.join('\n'));
+
     const document = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
     assert.match(document, /status: released/);
+    assert.match(document, /- \[x\] Завершающий шаг выполнен — публикация артефактов/);
     assert.match(document, new RegExp(`commit: ${commit}`));
     assert.match(document, /TICKET-ADOPT-SAMPLE-2026-09-07/);
     assert.match(document, /2026-09-07T10:00:00Z/);
@@ -461,6 +470,8 @@ test('отменённая задача не возвращается в сос�
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
     assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' })).finished, true);
+    assert.equal((await openNext(root, { scheme: 'date', today: NEXT_DAY })).opened, true);
 
     const state = await closability(root, { scheme: 'date' });
     assert.deepEqual(state.composition.map(ticketId), [], 'следующий выпуск отменённую задачу не подбирает');
@@ -505,6 +516,7 @@ test('обязательство переносится, пока его зад�
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
     assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' })).finished, true);
     assert.equal((await openNext(root, { scheme: 'date', today: NEXT_DAY })).opened, true);
 
     const opened = (await openRelease(root)).content;
@@ -573,6 +585,63 @@ test('задача снимается из состава записью с пр
     assert.doesNotMatch(document, /\| \[TICKET-IN-WORK\]/, 'строка состава снята');
     assert.match(document, /- TICKET-IN-WORK — снята из состава: работа отложена до следующего выпуска/);
     assert.match(await readFile(path.join(root, 'docs/tickets/in-work.md'), 'utf8'), /^release: unassigned$/m);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-034
+test('завершающий шаг требует тега и записи о том, чем он выполнен', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+
+    const early = await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'развёрнуто' });
+    assert.equal(early.finished, false, 'без тега завершать нечего');
+    assert.ok(early.problems.some((problem) => problem.includes('release close')), early.problems.join('\n'));
+
+    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+
+    const withoutNote = await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: '  ' });
+    assert.equal(withoutNote.finished, false);
+    assert.ok(withoutNote.problems.some((problem) => problem.includes('--note')));
+
+    const finished = await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'развёртывание в прод' });
+    assert.equal(finished.finished, true, finished.problems?.join('\n'));
+    assert.equal(finished.commit, commit, 'выпущенным записан коммит тега');
+
+    const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
+    assert.equal(state.releaseCount, 1, 'счёт выпусков ведёт завершающий шаг');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-010
+test('после завершения выпуска открытого выпуска нет, и это не отказ', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+    await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' });
+
+    assert.equal(await openRelease(root), null, 'открытого выпуска нет');
+    const state = await closability(root, { scheme: 'date' });
+    assert.ok(state.problems.some((problem) => problem.includes('Открытого выпуска нет')), state.problems.join('\n'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

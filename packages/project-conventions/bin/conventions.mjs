@@ -15,10 +15,10 @@ import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVe
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
-import { headCommit } from '../lib/release/git.mjs';
+import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -265,18 +265,34 @@ async function obligations(root) {
   }
 }
 
+// REQ-RELEASE-010, REQ-RELEASE-034
 async function releaseStatus(root) {
   const config = await readConfig(root);
-  const state = await closability(root, { scheme: releaseScheme(config) });
+  const scheme = releaseScheme(config);
+  const state = await closability(root, { scheme });
   if (state.release === null) {
-    console.error('Открытого выпуска нет: выполните conventions release open');
+    console.log('Открытого выпуска нет: работа идёт по задачам, коммиты ложатся в main.');
+    console.log('Выпуск открывается командой release open --tickets A,B.');
+    return;
+  }
+  const id = state.release.metadata.get('id');
+  console.log(`Открытый выпуск: ${id}, тег при закрытии: ${state.tag}`);
+  console.log(`Задач в составе: ${state.composition.length}`);
+  const tagged = await tagCommit(root, state.tag);
+  if (tagged !== null) {
+    const ready = await finishability(root, { scheme });
+    console.log(`Первый шаг закрытия выполнен: тег ${state.tag} на коммите ${tagged.slice(0, 8)}.`);
+    if (ready.problems.length === 0) {
+      console.log('Недостаёт завершающего шага: release finish --note "<чем выполнен>".');
+      return;
+    }
+    console.error('Завершить выпуск нельзя:');
+    for (const problem of ready.problems) console.error(`- ${problem}`);
     process.exitCode = 1;
     return;
   }
-  console.log(`Открытый выпуск: ${state.release.metadata.get('id')}, тег при закрытии: ${state.tag}`);
-  console.log(`Состав по факту закрытия задач: ${state.composition.length}`);
   if (state.problems.length === 0) {
-    console.log('Выпуск можно закрывать.');
+    console.log('Первый шаг закрытия можно выполнять: release close.');
     return;
   }
   console.error('Выпуск закрыть нельзя:');
@@ -292,14 +308,10 @@ function missingReleaseNumber(scheme, version) {
   return true;
 }
 
-async function releaseClose(root, nextVersion) {
+// REQ-RELEASE-001
+async function releaseClose(root) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
-  if (scheme === 'semver' && !nextVersion) {
-    console.error('Схема semver: номер следующего выпуска задаётся ключом --next-version X.Y.Z');
-    process.exitCode = 2;
-    return;
-  }
   const result = await closeRelease(root, { scheme, today: systemNow() });
   if (!result.closed) {
     console.error('Выпуск закрыть нельзя:');
@@ -307,17 +319,23 @@ async function releaseClose(root, nextVersion) {
     process.exitCode = 1;
     return;
   }
-  console.log(`Выпуск ${result.id} закрыт: коммит ${result.commit.slice(0, 8)}, задач в составе ${result.composition.length}.`);
+  console.log(`Первый шаг закрытия ${result.id} выполнен: коммит ${result.commit.slice(0, 8)}, задач в составе ${result.composition.length}.`);
   console.log(`Тег выпуска: ${result.tag}`);
-  const opened = await openNext(root, { scheme, version: nextVersion, today: systemNow() });
-  if (!opened.opened) {
-    console.error('Следующий выпуск не открыт:');
-    for (const problem of opened.problems) console.error(`- ${problem}`);
+  console.log('Выпуск ещё не закрыт: отметьте завершающий шаг командой release finish --note "<чем выполнен>".');
+}
+
+// REQ-RELEASE-034
+async function releaseFinish(root, note) {
+  const config = await readConfig(root);
+  const result = await finishRelease(root, { scheme: releaseScheme(config), today: systemNow(), note });
+  if (!result.finished) {
+    console.error('Выпуск не завершён:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
     process.exitCode = 1;
     return;
   }
-  console.log(`Открыт выпуск ${opened.id}${opened.created.length > 0 ? `, обязательств в составе: ${opened.created.length}` : ''}.`);
-  for (const ticket of opened.created) console.log(`- ${ticket}`);
+  console.log(`Выпуск ${result.id} закрыт: тег ${result.tag}, коммит ${result.commit.slice(0, 8)}.`);
+  console.log(`Завершающий шаг: ${result.note}`);
 }
 
 // REQ-RELEASE-007
@@ -515,7 +533,8 @@ else if (command === 'naming') await naming(root, rest.find((value) => !value.st
 else if (command === 'release') {
   const [subcommand, ...args] = rest.filter((value) => value !== '--root' && value !== root);
   if (subcommand === 'status') await releaseStatus(root);
-  else if (subcommand === 'close') await releaseClose(root, valueOf('--next-version'));
+  else if (subcommand === 'close') await releaseClose(root);
+  else if (subcommand === 'finish') await releaseFinish(root, valueOf('--note'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'), ticketList(valueOf('--tickets')));
   else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));
   else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
@@ -523,7 +542,7 @@ else if (command === 'release') {
   else if (subcommand === 'drop') await releaseDrop(root, args[0], valueOf('--reason'));
   else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
   else {
-    console.error('conventions release <status|close|open|drop|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--tickets A,B] [--reason "<причина>"] [--ticket <TICKET-ID>]');
+    console.error('conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--tickets A,B] [--note "<чем выполнен>"] [--reason "<причина>"] [--ticket <TICKET-ID>]');
     process.exitCode = 2;
   }
 }

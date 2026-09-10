@@ -61,12 +61,17 @@ description = "Всё, что проверяется локально; расп�
 run = "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify -- mise run check"
 
 [tasks.release]
-description = "Закрыть выпуск: проверки, тег на проверенном коммите, открытие следующего. Аргумент — номер следующей версии"
+description = "Закрыть выпуск: проверки, тег на проверенном коммите, публикация артефактов, отметка завершающего шага"
 run = [
   "mise run verify",
-  "node packages/project-conventions/bin/conventions.mjs release close --next-version {{arg(name=\"version\")}}",
+  "node packages/project-conventions/bin/conventions.mjs release close",
   "mise run install-local",
+  "node packages/project-conventions/bin/conventions.mjs release finish --note \"публикация артефактов ядра: mise run install-local\"",
 ]
+
+[tasks.release-open]
+description = "Открыть выпуск: номер и перечень задач. Пример: mise run release-open 1.2.0 OPS-023,OPS-024"
+run = "node packages/project-conventions/bin/conventions.mjs release open --version {{arg(name=\"version\")}} --tickets {{arg(name=\"tickets\")}}"
 
 [tasks.install-hooks]
 description = "Поставить хук pre-push, выполняющий быстрый шлагбаум"

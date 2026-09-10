@@ -5,7 +5,7 @@ status: done
 scope: release, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-2-0
 related: DOC-001, REQ-RELEASE
 ---
 

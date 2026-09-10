@@ -5,7 +5,7 @@ status: done
 scope: release, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-2-0
 questions: resolved
 related: OPS-023, REQ-RELEASE
 ---

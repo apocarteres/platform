@@ -5,7 +5,7 @@ status: done
 scope: process, release
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-2-0
 questions: resolved
 related: REQ-RELEASE, REQ-PROJECT-PROCESS, REQ-TICKETS
 ---

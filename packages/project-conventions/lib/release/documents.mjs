@@ -62,9 +62,9 @@ export async function unassignedDoneTickets(root) {
 // REQ-RELEASE-007, REQ-RELEASE-008, REQ-RELEASE-031
 export async function compositionTickets(root, releaseId) {
   return (await tickets(root)).filter((ticket) => {
-    if (!shipsResult(ticket)) return false;
     const release = ticket.metadata.get('release') ?? 'unassigned';
-    return release === 'unassigned' || release === releaseId;
+    if (release === releaseId) return true;
+    return release === 'unassigned' && shipsResult(ticket);
   });
 }
 

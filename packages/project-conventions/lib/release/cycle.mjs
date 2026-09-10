@@ -25,6 +25,10 @@ export async function closability(root, { scheme }) {
     ? []
     : await compositionTickets(root, release.metadata.get('id'));
   if (composition.length === 0) problems.push('Состав пуст: нечего выпускать');
+  // REQ-RELEASE-031, REQ-RELEASE-008
+  for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
+    problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}): выполните её либо снимите из состава командой release drop с причиной`);
+  }
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
   for (const entry of overdueObligations(obligations, state, isCore)) {
@@ -91,7 +95,8 @@ export async function closeRelease(root, { scheme, today }) {
     'released-on': today.toISOString().slice(0, 10),
     commit,
   });
-  content = replaceSection(content, '## Состав', compositionRows(root, composition));
+  // REQ-RELEASE-021, REQ-RELEASE-031
+  content = replaceSection(content, '## Состав', compositionRows(root, composition.filter(shipsResult)));
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
   const closedNow = state.obligations
     .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))
@@ -113,7 +118,8 @@ export async function closeRelease(root, { scheme, today }) {
   obligationState_.closed ??= {};
   obligationState_.seen ??= {};
   for (const obligation of state.obligations) {
-    const ticket = composition.find((item) => (item.metadata.get('obligation') ?? '') === obligation.id);
+    // REQ-RELEASE-019
+    const ticket = composition.find((item) => (item.metadata.get('obligation') ?? '') === obligation.id && shipsResult(item));
     if (ticket !== undefined) {
       obligationState_.closed[obligation.id] = { release: id, ticket: ticketId(ticket) };
       delete obligationState_.deferred?.[obligation.id];
@@ -256,7 +262,28 @@ export async function adoptCycle(root, { scheme, version, today }) {
   return { adopted: opened.opened, ...opened, stamped: before.map(ticketId) };
 }
 
-export async function openNext(root, { scheme, version, today }) {
+// REQ-RELEASE-007
+async function namedTickets(root, names) {
+  const all = await tickets(root);
+  const found = [];
+  const problems = [];
+  for (const name of names) {
+    const ticket = all.find((item) => ticketId(item) === name);
+    if (ticket === undefined) {
+      problems.push(`Задачи ${name} в проекте нет: в выпуск указываются существующие задачи`);
+      continue;
+    }
+    const release = ticket.metadata.get('release') ?? 'unassigned';
+    if (release !== 'unassigned') {
+      problems.push(`Задача ${name} уже отнесена к ${release}: в выпуск указывается задача без выпуска`);
+      continue;
+    }
+    found.push(ticket);
+  }
+  return { found, problems };
+}
+
+export async function openNext(root, { scheme, version, today, tickets: names = [] }) {
   const existing = await releases(root);
   const already = await openRelease(root);
   if (already !== null) {
@@ -299,13 +326,18 @@ export async function openNext(root, { scheme, version, today }) {
     created.push({ ...ticket, file, obligation: entry.obligation });
   }
 
+  const named = await namedTickets(root, names);
+  if (named.problems.length > 0) return { opened: false, problems: named.problems };
+
   const planned = [
+    ...named.found.map((ticket) => `| [${ticketId(ticket)}](${ticketLinkTarget(root, ticket)}) | Указана при открытии выпуска |`),
     ...created.map((ticket) => `| [${ticket.id}](../tickets/${path.basename(ticket.file)}) | Обязательство ядра \`${ticket.obligation.id}\`, срок ${ticket.obligation.dueReleases} выпуск(ов) |`),
     ...carried.map((entry) => `| [${ticketId(entry.ticket)}](${ticketLinkTarget(root, entry.ticket)}) | Обязательство ядра \`${entry.obligation.id}\`, перенесено из предыдущего выпуска |`),
   ];
   const rows = planned.length === 0
     ? ['Обязательств ядра к исполнению нет; состав наполняется по факту закрытия задач.']
     : ['| Задача | Причина включения |', '|---|---|', ...planned];
+
 
   const document = [
     '---',
@@ -353,15 +385,60 @@ export async function openNext(root, { scheme, version, today }) {
   }
   await writeFile(file, document);
   for (const ticket of created) await writeFile(ticket.file, ticket.content);
+  // REQ-RELEASE-007
+  for (const ticket of named.found) {
+    await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: id }));
+  }
   for (const entry of carried) {
     await writeDocument(entry.ticket.file, replaceMetadata(entry.ticket.content, { release: id }));
   }
   await writeState(root, state);
   return {
     opened: true, id, tag, file,
+    named: named.found.map(ticketId),
     created: created.map((ticket) => ticket.id),
     carried: carried.map((entry) => ticketId(entry.ticket)),
   };
+}
+
+// REQ-RELEASE-033
+export async function dropFromComposition(root, { ticketId: name, reason }) {
+  if (!reason || !reason.trim()) {
+    return { dropped: false, problems: ['Снятие задачи из состава требует причины: ключ --reason'] };
+  }
+  const release = await openRelease(root);
+  if (release === null) {
+    return { dropped: false, problems: ['Открытого выпуска нет: снимать задачу не из чего'] };
+  }
+  const id = release.metadata.get('id');
+  const ticket = (await tickets(root)).find((item) => ticketId(item) === name);
+  if (ticket === undefined) {
+    return { dropped: false, problems: [`Задачи ${name} в проекте нет`] };
+  }
+  if ((ticket.metadata.get('release') ?? 'unassigned') !== id) {
+    return { dropped: false, problems: [`Задача ${name} не отнесена к ${id}: снимать её из состава нечего`] };
+  }
+  if (ticket.metadata.has('obligation')) {
+    return {
+      dropped: false,
+      problems: [`Задача ${name} материализует обязательство ядра: обязательство переносится командой release defer с причиной (REQ-RELEASE-014)`],
+    };
+  }
+
+  const kept = sectionLines(release.content, '## Состав')
+    .filter((line) => !(line.startsWith('| [') && line.includes(`[${name}]`)));
+  const rows = kept.filter((line) => line.startsWith('| [')).length === 0
+    ? ['Обязательств ядра к исполнению нет; состав наполняется по факту закрытия задач.']
+    : kept;
+  let content = replaceSection(release.content, '## Состав', rows);
+  content = replaceSection(content, '## Не входит', [
+    ...sectionLines(content, '## Не входит').filter((line) => line.trim().length > 0),
+    '',
+    `- ${name} — снята из состава: ${reason.trim()}`,
+  ]);
+  await writeDocument(release.file, content);
+  await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'unassigned' }));
+  return { dropped: true, id, ticket: name };
 }
 
 export { obligationState, readState };

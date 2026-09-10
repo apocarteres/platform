@@ -7,7 +7,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, ticketId, unassignedDoneTickets } from '../lib/release/documents.mjs';
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
-import { adoptCycle, cancelRelease, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { adoptCycle, cancelRelease, closability, closeRelease, dropFromComposition, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { environmentWithoutGit, headCommit, workingTreeClean } from '../lib/release/git.mjs';
 import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
@@ -510,6 +510,69 @@ test('обязательство переносится, пока его зад�
     const opened = (await openRelease(root)).content;
     assert.match(opened, /TICKET-ADOPT-SAMPLE-2026-09-07/, 'обязательство перенесено вместе с задачей');
     assert.match(opened, /перенесено из предыдущего выпуска/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-007
+test('открытие выпуска указывает задачи в состав в любом их состоянии', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/in-work.md'), ticket('TICKET-IN-WORK', 'in_progress'));
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['TICKET-IN-WORK'] });
+    assert.equal(opened.opened, true, opened.problems?.join('\n'));
+    assert.deepEqual(opened.named, ['TICKET-IN-WORK']);
+
+    assert.match(await readFile(path.join(root, 'docs/tickets/in-work.md'), 'utf8'), /^release: RELEASE-2026-09-1$/m);
+    assert.match((await openRelease(root)).content, /\| \[TICKET-IN-WORK\][^|]+\| Указана при открытии выпуска \|/);
+
+    const unknown = await openNext(root, { scheme: 'date', today: NEXT_DAY, tickets: ['TICKET-NONE'] });
+    assert.equal(unknown.opened, false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-031
+test('выпуск не закрывается, пока указанная задача не выполнена', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, 'docs/tickets/in-work.md'), ticket('TICKET-IN-WORK', 'in_progress'));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['TICKET-IN-WORK'] });
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+
+    const refused = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(refused.closed, false);
+    assert.ok(refused.problems.some((problem) => problem.includes('TICKET-IN-WORK состава не выполнена (in_progress)')), refused.problems.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-033
+test('задача снимается из состава записью с причиной', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/in-work.md'), ticket('TICKET-IN-WORK', 'in_progress'));
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['TICKET-IN-WORK'] });
+
+    const withoutReason = await dropFromComposition(root, { ticketId: 'TICKET-IN-WORK', reason: '  ' });
+    assert.equal(withoutReason.dropped, false);
+
+    const dropped = await dropFromComposition(root, { ticketId: 'TICKET-IN-WORK', reason: 'работа отложена до следующего выпуска' });
+    assert.equal(dropped.dropped, true, dropped.problems?.join('\n'));
+
+    const document = (await openRelease(root)).content;
+    assert.doesNotMatch(document, /\| \[TICKET-IN-WORK\]/, 'строка состава снята');
+    assert.match(document, /- TICKET-IN-WORK — снята из состава: работа отложена до следующего выпуска/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/in-work.md'), 'utf8'), /^release: unassigned$/m);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -15,7 +15,7 @@ import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVe
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { adoptCycle, cancelRelease, closeRelease, closability, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
@@ -320,12 +320,17 @@ async function releaseClose(root, nextVersion) {
   for (const ticket of opened.created) console.log(`- ${ticket}`);
 }
 
-async function releaseOpen(root, version) {
+// REQ-RELEASE-007
+function ticketList(value) {
+  return (value ?? '').split(',').map((name) => name.trim()).filter((name) => name.length > 0);
+}
+
+async function releaseOpen(root, version, names) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
   // REQ-RELEASE-030
   if (missingReleaseNumber(scheme, version)) return;
-  const result = await openNext(root, { scheme, version, today: systemNow() });
+  const result = await openNext(root, { scheme, version, today: systemNow(), tickets: names });
   if (!result.opened) {
     console.error('Выпуск не открыт:');
     for (const problem of result.problems) console.error(`- ${problem}`);
@@ -333,7 +338,24 @@ async function releaseOpen(root, version) {
     return;
   }
   console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
+  for (const ticket of result.named ?? []) console.log(`- в состав указана задача ${ticket}`);
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
+}
+
+// REQ-RELEASE-033
+async function releaseDrop(root, name, reason) {
+  if (!name) {
+    console.error('conventions release drop <TICKET-ID> --reason "<причина>"');
+    process.exitCode = 2;
+    return;
+  }
+  const result = await dropFromComposition(root, { ticketId: name, reason });
+  if (!result.dropped) {
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Задача ${result.ticket} снята из состава ${result.id}; причина записана в границы выпуска.`);
 }
 
 // REQ-RELEASE-029
@@ -494,13 +516,14 @@ else if (command === 'release') {
   const [subcommand, ...args] = rest.filter((value) => value !== '--root' && value !== root);
   if (subcommand === 'status') await releaseStatus(root);
   else if (subcommand === 'close') await releaseClose(root, valueOf('--next-version'));
-  else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'));
+  else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'), ticketList(valueOf('--tickets')));
   else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));
   else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
   else if (subcommand === 'adopt') await releaseAdopt(root, valueOf('--version'));
+  else if (subcommand === 'drop') await releaseDrop(root, args[0], valueOf('--reason'));
   else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
   else {
-    console.error('conventions release <status|close|open|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');
+    console.error('conventions release <status|close|open|drop|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--tickets A,B] [--reason "<причина>"] [--ticket <TICKET-ID>]');
     process.exitCode = 2;
   }
 }

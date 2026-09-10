@@ -3,8 +3,12 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 
+export function environmentWithoutGit(environment = process.env) {
+  return Object.fromEntries(Object.entries(environment).filter(([name]) => !name.startsWith('GIT_')));
+}
+
 async function git(root, args) {
-  const { stdout } = await run('git', ['-C', root, ...args]);
+  const { stdout } = await run('git', ['-C', root, ...args], { env: environmentWithoutGit() });
   return stdout.trim();
 }
 

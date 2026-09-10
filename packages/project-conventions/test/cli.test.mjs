@@ -6,8 +6,10 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { environmentWithoutGit } from '../lib/release/git.mjs';
 
 const run = promisify(execFile);
+const git = (...args) => run('git', args, { env: environmentWithoutGit() });
 const cli = path.join(path.dirname(path.dirname(fileURLToPath(import.meta.url))), 'bin', 'conventions.mjs');
 
 async function conventions(root, ...args) {
@@ -174,7 +176,7 @@ test('принятие цикла работает в репозитории б�
     }),
   });
   try {
-    await run('git', ['-C', root, 'init', '--quiet']);
+    await git('-C', root, 'init', '--quiet');
     const adopted = await conventions(root, 'release', 'adopt');
     assert.equal(adopted.code, 0, adopted.output);
     assert.match(adopted.output, /Открыт первый выпуск RELEASE-/);
@@ -232,11 +234,11 @@ test('денежная величина на double и длинный файл �
 
 async function repository() {
   const root = await project({ '.gitignore': 'target/\n' });
-  await run('git', ['-C', root, 'init', '--quiet']);
-  await run('git', ['-C', root, 'config', 'user.email', 'test@example.test']);
-  await run('git', ['-C', root, 'config', 'user.name', 'Test']);
-  await run('git', ['-C', root, 'add', '-A']);
-  await run('git', ['-C', root, 'commit', '--quiet', '-m', 'состояние']);
+  await git('-C', root, 'init', '--quiet');
+  await git('-C', root, 'config', 'user.email', 'test@example.test');
+  await git('-C', root, 'config', 'user.name', 'Test');
+  await git('-C', root, 'add', '-A');
+  await git('-C', root, 'commit', '--quiet', '-m', 'состояние');
   return root;
 }
 

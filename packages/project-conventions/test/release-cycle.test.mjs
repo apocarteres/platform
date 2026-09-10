@@ -9,9 +9,11 @@ import { nextReleaseId, openRelease, releaseTag, unassignedTerminalTickets } fro
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
 import { adoptCycle, cancelRelease, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
+import { environmentWithoutGit, headCommit, workingTreeClean } from '../lib/release/git.mjs';
 import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
 
 const run = promisify(execFile);
+const git = (...args) => run('git', args, { env: environmentWithoutGit() });
 const FIXED_DAY = new Date('2026-09-07T00:00:00Z');
 const RECEIPT = (commit, completedAt) => ({
   commit,
@@ -49,16 +51,16 @@ async function project() {
     JSON.stringify({ obligations: [OBLIGATION] }),
   );
   await writeFile(path.join(root, '.gitignore'), 'target/\nnode_modules/\n');
-  await run('git', ['-C', root, 'init', '--quiet']);
-  await run('git', ['-C', root, 'config', 'user.email', 'test@example.test']);
-  await run('git', ['-C', root, 'config', 'user.name', 'Test']);
+  await git('-C', root, 'init', '--quiet');
+  await git('-C', root, 'config', 'user.email', 'test@example.test');
+  await git('-C', root, 'config', 'user.name', 'Test');
   return root;
 }
 
 async function commitAll(root) {
-  await run('git', ['-C', root, 'add', '-A']);
-  await run('git', ['-C', root, 'commit', '--quiet', '-m', 'состояние']);
-  const { stdout } = await run('git', ['-C', root, 'rev-parse', 'HEAD']);
+  await git('-C', root, 'add', '-A');
+  await git('-C', root, 'commit', '--quiet', '-m', 'состояние');
+  const { stdout } = await git('-C', root, 'rev-parse', 'HEAD');
   return stdout.trim();
 }
 
@@ -178,7 +180,7 @@ test('закрытие записывает состав, коммит и рез
     assert.equal(state.releaseCount, 1);
     assert.equal(state.closed.sample.release, 'RELEASE-2026-09-1');
 
-    const { stdout: tagged } = await run('git', ['-C', root, 'rev-list', '-n', '1', '2026.09.1']);
+    const { stdout: tagged } = await git('-C', root, 'rev-list', '-n', '1', '2026.09.1');
     assert.equal(tagged.trim(), commit, 'тег выпуска стоит на коммите с распиской');
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -194,7 +196,7 @@ test('отказ в закрытии не оставляет тега', async ()
 
     const refused = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(refused.closed, false, 'без расписки закрытие отказывает');
-    const { stdout: tags } = await run('git', ['-C', root, 'tag', '--list']);
+    const { stdout: tags } = await git('-C', root, 'tag', '--list');
     assert.equal(tags.trim(), '', 'тег не ставится при отказе');
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -298,7 +300,7 @@ test('первый выпуск открывается в проекте, где
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [OBLIGATION] }),
     );
-    await run('git', ['-C', root, 'init', '--quiet']);
+    await git('-C', root, 'init', '--quiet');
 
     const adopted = await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(adopted.adopted, true, 'принятие цикла не должно требовать заранее созданных каталогов');
@@ -354,5 +356,28 @@ test('отмена открытого выпуска требует причин
     assert.notEqual(next.id, opened.id, 'номер отменённого выпуска не переиспользуется');
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('команды выпуска действуют на переданный корень, а не на репозиторий из окружения', async () => {
+  const root = await project();
+  const foreign = await project();
+  try {
+    const commit = await commitAll(root);
+    await writeFile(path.join(foreign, 'docs/releases/RELEASE-9-9-9.md'), 'чужой репозиторий\n');
+    const foreignCommit = await commitAll(foreign);
+    assert.notEqual(foreignCommit, commit, 'репозитории должны различаться, иначе проверка ничего не различает');
+    const inherited = process.env.GIT_DIR;
+    process.env.GIT_DIR = path.join(foreign, '.git');
+    try {
+      assert.equal(await headCommit(root), commit);
+      assert.equal(await workingTreeClean(root), true);
+    } finally {
+      if (inherited === undefined) delete process.env.GIT_DIR;
+      else process.env.GIT_DIR = inherited;
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(foreign, { recursive: true, force: true });
   }
 });

@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 32. Включены самостоятельные задачи и этапы планов функций.
+Всего: 33. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -33,6 +33,7 @@ authority: navigation
 | [Подстановка версии и присоединение исходников протекали в потребителя](OPS-016-version-substitution-leaked-into-the-consumer.md) | P1 | Выполнена | [RELEASE-0-33-0](../../releases/RELEASE-0-33-0.md) | build, platform |
 | [Процесс, запущенный исполнителем, мог висеть без предела](OPS-017-bounded-process-runs-for-agents.md) | P1 | Выполнена | [RELEASE-0-38-0](../../releases/RELEASE-0-38-0.md) | process, tooling |
 | [Starter `platform-time`: порт часов](QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
+| [Starter `platform-persistence`: SQL-каталог и условная запись](DATA-001-platform-persistence.md) | P2 | Выполнена | Не назначен | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
 | [Миграция формата задач clanlog](DOC-003-clanlog-ticket-format-migration.md) | P2 | Выполнена | [RELEASE-0-42-0](../../releases/RELEASE-0-42-0.md) | process, documentation |

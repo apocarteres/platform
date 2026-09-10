@@ -47,7 +47,7 @@ legacy-id: TICKET-GITHUB-PACKAGES-PUBLISHING
 
 - Корневой `pom.xml` (`platform-parent`): версия `${revision}` с подстановкой `flatten-maven-plugin`, импорт `spring-boot-dependencies` 4.0.4, `distributionManagement` на GitHub Packages, профиль `release` с `requireReleaseVersion` и `requireReleaseDeps`.
 - `platform-bom` без родителя, чтобы потребитель не наследовал импорт Spring Boot BOM.
-- Первый публикуемый starter — `platform-persistence`; его перенос идёт по [DATA-001](../DATA-001-platform-persistence.md), здесь он нужен как реальный артефакт для проверки канала публикации.
+- Первый публикуемый starter — `platform-persistence`; его перенос идёт по [DATA-001](DATA-001-platform-persistence.md), здесь он нужен как реальный артефакт для проверки канала публикации.
 - Workflow `publish.yml` по тегу `vX.Y.Z`: Maven `deploy` с `-Drevision` и профилем `release`, npm `publish` заглушки `@apocarteres/project-conventions` под той же версией. Workflow `ci.yml`: документация, Java, поиск секретов.
 - Требование [REQ-PUBLISHING](../../requirements/publishing.md) с семью положениями и инструкция [RUN-GITHUB-PACKAGES](../../runbooks/local-publishing.md).
 

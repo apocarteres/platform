@@ -20,5 +20,5 @@ authority: navigation
 |---|---|---|---|---|
 | [Starter `platform-web-errors`: единый контракт ошибок API](API-001-platform-web-errors.md) | P2 | Запланирована | Не назначен | backend, api, frontend |
 | [Исследование: отдельный сервис уведомлений](ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
-| [Шлагбаум перед отправкой не видит отказов проводки](OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Запланирована | Не назначен | quality, operations |
+| [Шлагбаум перед отправкой не видит отказов проводки](OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Запланирована | [RELEASE-1-3-0](../releases/RELEASE-1-3-0.md) | quality, operations |
 | [Шифр секрета повторяется у каждого потребителя](SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Запланирована | Не назначен | backend, security |

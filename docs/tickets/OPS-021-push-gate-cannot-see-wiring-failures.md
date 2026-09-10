@@ -5,7 +5,7 @@ status: backlog
 scope: quality, operations
 authority: supporting
 priority: P3
-release: unassigned
+release: RELEASE-1-3-0
 related: OPS-016
 ---
 

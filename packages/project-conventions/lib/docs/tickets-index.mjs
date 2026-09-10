@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { parseFrontMatter, priorities, terminalStatuses, validateTicket } from './ticket-model.mjs';
+import { parseFrontMatter, priorities, terminalStatuses } from './ticket-model.mjs';
 
 async function collect(directory) {
   const files = [];
@@ -31,7 +31,6 @@ export async function buildTicketIndexes(root) {
       errors.push(`${relative}: ${parsed?.error ?? 'отсутствуют метаданные'}`);
       continue;
     }
-    errors.push(...validateTicket(relative, content, parsed));
     const metadata = parsed.metadata;
     if (metadata.get('type') === 'index') continue;
     const title = /^# (.+)$/m.exec(content)?.[1];

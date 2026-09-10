@@ -5,6 +5,7 @@ import os from 'node:os';
 import test from 'node:test';
 import { parseFrontMatter, validateTicket } from '../lib/docs/ticket-model.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
+import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 
 const ticket = (overrides = {}, body = '# Задача\n') => {
   const fields = { id: 'TICKET-EXAMPLE', type: 'ticket', status: 'backlog', scope: 'testing',
@@ -130,4 +131,30 @@ test('ошибка метаданных и повторный идентифик
     assert((await updateTicketIndexes(root)).some(error => error.includes('статус')));
     assert.equal(await readFile(file, 'utf8'), original);
   });
+});
+
+// REQ-PROJECT-PROCESS-013
+test('сборка сводок сообщает о своём деле и не повторяет проверку документа задачи', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'tickets-index-'));
+  try {
+    await mkdir(path.join(root, 'docs/tickets/closed'), { recursive: true });
+    await writeFile(
+      path.join(root, 'docs/tickets/closed/example.md'),
+      ticket({ status: 'cancelled' }, '# Задача\n'),
+    );
+
+    const summaries = await updateTicketIndexes(root, { check: true });
+    assert.equal(summaries.some((error) => error.includes('Почему не делаем')), false,
+      'правила документа задачи проверяет проверка документации, не сборка сводок');
+    assert.ok(summaries.some((error) => error.includes('сводка устарела')), summaries.join('\n'));
+
+    const documents = await checkDocumentation(root);
+    assert.equal(
+      documents.errors.filter((error) => error.includes('Почему не делаем')).length,
+      1,
+      'отказ по документу задачи ровно один',
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

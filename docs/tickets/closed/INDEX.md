@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 39. Включены самостоятельные задачи и этапы планов функций.
+Всего: 41. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -57,3 +57,5 @@ authority: navigation
 | [План функции из одного файла оставался вне перехода на схему](DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |
 | [Шлагбаум перед отправкой не видит отказов проводки](OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Выполнена | [RELEASE-1-3-0](../../releases/RELEASE-1-3-0.md) | quality, operations |
+| [Задача менеджера окружения объявляет аргументы устаревшим способом](OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | Не назначен | build, tooling |
+| [Отказ по документу задачи печатается дважды](QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | Не назначен | quality, tooling, documentation |

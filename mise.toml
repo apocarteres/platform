@@ -71,7 +71,11 @@ run = [
 
 [tasks.release-open]
 description = "Открыть выпуск: номер и перечень задач. Пример: mise run release-open 1.2.0 OPS-023,OPS-024"
-run = "node packages/project-conventions/bin/conventions.mjs release open --version {{arg(name=\"version\")}} --tickets {{arg(name=\"tickets\")}}"
+usage = """
+arg "<version>" help="Номер выпуска"
+arg "<tickets>" help="Задачи в состав, через запятую"
+"""
+run = "node packages/project-conventions/bin/conventions.mjs release open --version $usage_version --tickets $usage_tickets"
 
 [tasks.install-hooks]
 description = "Поставить хук pre-push, выполняющий быстрый шлагбаум"

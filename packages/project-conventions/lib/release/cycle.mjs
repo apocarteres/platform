@@ -8,11 +8,11 @@ import {
 import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
-import { readReceipt } from './receipt.mjs';
+import { attested, readReceipt } from './receipt.mjs';
 import { terminalStatuses } from '../docs/ticket-model.mjs';
 import { createTag, headCommit, tagExists, workingTreeClean } from './git.mjs';
 
-// REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014
+// REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
 export async function closability(root, { scheme }) {
   const problems = [];
   const release = await openRelease(root);
@@ -21,6 +21,7 @@ export async function closability(root, { scheme }) {
   const commit = await headCommit(root);
   const receipt = await readReceipt(root, commit);
   if (receipt === null) problems.push(`Нет расписки о пройденном verify для ${commit.slice(0, 8)}`);
+  else if (!attested(receipt)) problems.push(`Расписка для ${commit.slice(0, 8)} не содержит признака прогона: наборы заявлены, но не наблюдались`);
   const composition = release === null
     ? []
     : await compositionTickets(root, release.metadata.get('id'));
@@ -57,13 +58,15 @@ function resultLines(receipt, commit, tag) {
     '',
     `Расписка о проверках получена ${receipt.completedAt}; выполненные наборы: ${receipt.checks.join(', ')}.`,
     '',
+    `Прогон наблюдён командой \`${receipt.run.command}\` с кодом возврата ${receipt.run.exitCode}.`,
+    '',
     'Развёртывание выполняется этим тегом: REQ-RELEASE-016.',
   ];
 }
 
 function criteriaLines(receipt, tag, obligations) {
   return [
-    `- [x] Набор \`verify\` пройден на выпускаемом коммите — расписка ${receipt.completedAt}, наборы: ${receipt.checks.join(', ')}`,
+    `- [x] Набор \`verify\` пройден на выпускаемом коммите — расписка ${receipt.completedAt}, наборы: ${receipt.checks.join(', ')}, прогон \`${receipt.run.command}\``,
     `- [x] Тег выпуска создан на проверенном коммите — \`${tag}\``,
     `- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ${obligations}`,
   ];
@@ -208,6 +211,23 @@ export async function satisfyObligation(root, { obligationId, ticketId: evidence
   delete state.deferred?.[obligationId];
   await writeState(root, state);
   return { satisfied: true, removed, evidence: evidenceId };
+}
+
+// REQ-RELEASE-029
+export async function cancelRelease(root, { reason }) {
+  const release = await openRelease(root);
+  if (release === null) return { cancelled: false, problems: ['Открытого выпуска нет: отменять нечего'] };
+  if (reason === undefined || reason.trim() === '') {
+    return { cancelled: false, problems: ['Отмена выпуска требует причины: --reason "<причина>"'] };
+  }
+  const id = release.metadata.get('id');
+  const content = replaceSection(
+    replaceMetadata(release.content, { status: 'cancelled' }),
+    '## Результат',
+    [`Выпуск отменён, ничего не выпущено: ${reason.trim()}`],
+  );
+  await writeDocument(release.file, content);
+  return { cancelled: true, id, file: release.file };
 }
 
 // REQ-RELEASE-020

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +15,7 @@ import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVe
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { adoptCycle, closeRelease, closability, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { adoptCycle, cancelRelease, closeRelease, closability, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
@@ -173,12 +174,67 @@ function releaseScheme(config) {
   return config.release?.scheme ?? 'date';
 }
 
-async function receipt(root, checks) {
-  const commit = await headCommit(root);
+const RECEIPT_USAGE = 'conventions receipt --checks <набор[,набор...]> -- <команда набора>';
+
+function withoutRoot(argv) {
+  const index = argv.indexOf('--root');
+  return index === -1 ? argv : [...argv.slice(0, index), ...argv.slice(index + 2)];
+}
+
+function execute(command, root) {
+  return new Promise((resolve) => {
+    const child = spawn(command[0], command.slice(1), { cwd: root, stdio: 'inherit' });
+    child.on('error', (error) => {
+      console.error(String(error.message ?? error));
+      resolve(1);
+    });
+    child.on('close', (code, signal) => resolve(signal === null ? code ?? 1 : 1));
+  });
+}
+
+function receiptRequest(argv) {
+  const separator = argv.indexOf('--');
+  const options = withoutRoot(separator === -1 ? argv : argv.slice(0, separator));
+  const command = separator === -1 ? [] : argv.slice(separator + 1);
+  const checksAt = options.indexOf('--checks');
+  const unknown = checksAt === -1
+    ? options
+    : options.filter((_, index) => index !== checksAt && index !== checksAt + 1);
+  if (unknown.length > 0) return { error: `неизвестный аргумент: ${unknown[0]}` };
+  const checks = (checksAt === -1 ? '' : options[checksAt + 1] ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value !== '');
+  if (checks.length === 0) return { error: '--checks требует непустой перечень наборов' };
+  if (command.length === 0) return { error: 'команда набора обязательна: перечислите её после --' };
+  return { checks, command };
+}
+
+// REQ-RELEASE-027
+async function receipt(root, argv) {
+  const separator = argv.indexOf('--');
+  if (withoutRoot(separator === -1 ? argv : argv.slice(0, separator)).includes('--help')) {
+    console.log(RECEIPT_USAGE);
+    return;
+  }
+  const request = receiptRequest(argv);
+  if (request.error) {
+    console.error(request.error);
+    console.error(RECEIPT_USAGE);
+    process.exitCode = 2;
+    return;
+  }
+  const exitCode = await execute(request.command, root);
+  if (exitCode !== 0) {
+    console.error(`Набор не пройден: код возврата ${exitCode}. Расписка не записана.`);
+    process.exitCode = exitCode;
+    return;
+  }
   const file = await writeReceipt(root, {
-    commit,
+    commit: await headCommit(root),
     completedAt: systemNow().toISOString(),
-    checks: checks.length > 0 ? checks : ['verify'],
+    checks: request.checks,
+    run: { command: request.command.join(' '), exitCode },
   });
   console.log(`Расписка о проверках записана: ${path.relative(root, file)}`);
 }
@@ -267,6 +323,18 @@ async function releaseOpen(root, version) {
   }
   console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
+}
+
+// REQ-RELEASE-029
+async function releaseCancel(root, reason) {
+  const result = await cancelRelease(root, { reason });
+  if (!result.cancelled) {
+    console.error('Выпуск не отменён:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Выпуск ${result.id} отменён; следующий откройте явным номером: release open --version X.Y.Z.`);
 }
 
 // REQ-AGENT-WORK-018
@@ -405,7 +473,7 @@ const valueOf = (name) => {
 };
 
 if (command === 'check') await check(root);
-else if (command === 'receipt') await receipt(root, rest.filter((value) => !value.startsWith('--') && value !== root));
+else if (command === 'receipt') await receipt(root, rest);
 else if (command === 'obligations') await obligations(root);
 else if (command === 'run') await run(root, rest.filter((value) => value !== '--root' && value !== root));
 else if (command === 'naming') await naming(root, rest.find((value) => !value.startsWith('--') && value !== root), valueOf('--map'));
@@ -414,11 +482,12 @@ else if (command === 'release') {
   if (subcommand === 'status') await releaseStatus(root);
   else if (subcommand === 'close') await releaseClose(root, valueOf('--next-version'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'));
+  else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));
   else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
   else if (subcommand === 'adopt') await releaseAdopt(root);
   else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
   else {
-    console.error('conventions release <status|close|open|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');
+    console.error('conventions release <status|close|open|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');
     process.exitCode = 2;
   }
 }

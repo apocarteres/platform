@@ -15,6 +15,12 @@ export async function writeReceipt(root, receipt) {
   return file;
 }
 
+// REQ-RELEASE-027
+export function attested(receipt) {
+  const run = receipt?.run;
+  return typeof run?.command === 'string' && run.command.trim() !== '' && run.exitCode === 0;
+}
+
 export async function readReceipt(root, commit) {
   try {
     return JSON.parse(await readFile(receiptPath(root, commit), 'utf8'));

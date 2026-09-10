@@ -7,12 +7,18 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, unassignedTerminalTickets } from '../lib/release/documents.mjs';
 import { obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
-import { adoptCycle, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { adoptCycle, cancelRelease, closability, closeRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
 
 const run = promisify(execFile);
 const FIXED_DAY = new Date('2026-09-07T00:00:00Z');
+const RECEIPT = (commit, completedAt) => ({
+  commit,
+  completedAt,
+  checks: ['verify'],
+  run: { command: 'mise run check', exitCode: 0 },
+});
 const NEXT_DAY = new Date('2026-09-08T00:00:00Z');
 
 
@@ -122,7 +128,12 @@ test('выпуск не закрывается без расписки, при �
     const withoutReceipt = await closability(root, { scheme: 'date' });
     assert.ok(withoutReceipt.problems.some((problem) => problem.includes('Нет расписки')));
 
+    // REQ-RELEASE-028
     await writeReceipt(root, { commit, completedAt: '2026-09-07T00:00:00Z', checks: ['verify'] });
+    const claimed = await closability(root, { scheme: 'date' });
+    assert.ok(claimed.problems.some((problem) => problem.includes('не содержит признака прогона')));
+
+    await writeReceipt(root, RECEIPT(commit, '2026-09-07T00:00:00Z'));
     const ready = await closability(root, { scheme: 'date' });
     assert.deepEqual(ready.problems, [], 'с распиской и непустым составом выпуск закрывается');
 
@@ -146,7 +157,7 @@ test('закрытие записывает состав, коммит и рез
       body.replace('status: backlog', 'status: done'),
     );
     const commit = await commitAll(root);
-    await writeReceipt(root, { commit, completedAt: '2026-09-07T10:00:00Z', checks: ['verify'] });
+    await writeReceipt(root, RECEIPT(commit, '2026-09-07T10:00:00Z'));
 
     const closed = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(closed.closed, true);
@@ -311,6 +322,36 @@ test('открытие выпуска с уже занятым номером о
     assert.equal(again.opened, false);
     assert.match(again.problems.join(), /уже существует/);
     assert.equal(await readFile(file, 'utf8'), released, 'закрытый документ не перезаписан');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-029
+test('отмена открытого выпуска требует причины, освобождает цикл и не переиспользует номер', async () => {
+  const root = await project();
+  try {
+    const withoutRelease = await cancelRelease(root, { reason: 'номер сменён' });
+    assert.equal(withoutRelease.cancelled, false);
+    assert.ok(withoutRelease.problems.some((problem) => problem.includes('Открытого выпуска нет')));
+
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(opened.opened, true);
+
+    const withoutReason = await cancelRelease(root, { reason: '  ' });
+    assert.equal(withoutReason.cancelled, false);
+    assert.ok(withoutReason.problems.some((problem) => problem.includes('требует причины')));
+
+    const cancelled = await cancelRelease(root, { reason: 'выпуск несёт несовместимое изменение' });
+    assert.equal(cancelled.cancelled, true);
+    assert.equal(cancelled.id, opened.id);
+    const document = await readFile(cancelled.file, 'utf8');
+    assert.match(document, /status: cancelled/);
+    assert.match(document, /Выпуск отменён, ничего не выпущено: выпуск несёт несовместимое изменение/);
+
+    const next = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(next.opened, true, 'после отмены цикл свободен');
+    assert.notEqual(next.id, opened.id, 'номер отменённого выпуска не переиспользуется');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

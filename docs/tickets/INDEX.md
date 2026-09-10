@@ -14,11 +14,10 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 4. Включены самостоятельные задачи и этапы планов функций.
+Всего: 3. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Starter `platform-web-errors`: единый контракт ошибок API](API-001-platform-web-errors.md) | P2 | Запланирована | Не назначен | backend, api, frontend |
 | [Исследование: отдельный сервис уведомлений](ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](DATA-001-platform-persistence.md) | P2 | В работе | Не назначен | backend, persistence |
-| [Команда расписки подтверждает проверки, которых не было](QUAL-004-receipt-attests-without-checks.md) | P2 | Запланирована | Не назначен | quality, tooling, release |

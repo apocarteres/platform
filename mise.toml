@@ -57,11 +57,8 @@ run = [
 ]
 
 [tasks.verify]
-description = "Всё, что проверяется локально; заканчивается распиской о проверках"
-run = [
-  "mise run check",
-  "node packages/project-conventions/bin/conventions.mjs receipt check verify",
-]
+description = "Всё, что проверяется локально; расписку пишет наблюдавший прогон"
+run = "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify -- mise run check"
 
 [tasks.release]
 description = "Закрыть выпуск: проверки, тег на проверенном коммите, открытие следующего. Аргумент — номер следующей версии"

@@ -77,7 +77,7 @@ export function validateReleases(documents) {
       if (status === 'released' && ticket.metadata.get('status') !== 'done') fail(`задача ${ticketId} не выполнена`);
     }
     // REQ-RELEASE-007, REQ-RELEASE-009
-    if (!members.size && status !== 'draft') fail('состав выпуска не может быть пустым');
+    if (!members.size && !['draft', 'cancelled'].includes(status)) fail('состав выпуска не может быть пустым');
     const criteria = (parts.get('Критерии выхода') ?? '').split('\n').filter(line => line.trim());
     if (!criteria.length || criteria.some(line => !/^- \[[ x]\] \S/.test(line))) fail('критерии выхода должны быть непустым списком проверок - [ ] или - [x]');
     if (status === 'released') {

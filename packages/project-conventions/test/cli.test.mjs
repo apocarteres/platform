@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -225,6 +225,83 @@ test('денежная величина на double и длинный файл �
     await writeFile(path.join(root, 'src', 'Billing.java'), 'class Billing {\n  private double totalPrice;\n  private float feeAmount;\n}\n');
     const grown = await conventions(root, 'check');
     assert.equal(grown.code, 1, 'храповик не даёт нарушениям расти');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+async function repository() {
+  const root = await project({ '.gitignore': 'target/\n' });
+  await run('git', ['-C', root, 'init', '--quiet']);
+  await run('git', ['-C', root, 'config', 'user.email', 'test@example.test']);
+  await run('git', ['-C', root, 'config', 'user.name', 'Test']);
+  await run('git', ['-C', root, 'add', '-A']);
+  await run('git', ['-C', root, 'commit', '--quiet', '-m', 'состояние']);
+  return root;
+}
+
+async function receipt(root, ...args) {
+  try {
+    const { stdout } = await run(process.execPath, [cli, 'receipt', '--root', root, ...args]);
+    return { code: 0, output: stdout };
+  } catch (error) {
+    return { code: error.code, output: `${error.stdout}${error.stderr}` };
+  }
+}
+
+async function receipts(root) {
+  try {
+    return await readdir(path.join(root, 'target', 'verify'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+// REQ-RELEASE-028
+test('расписка не пишется по справке, неизвестному аргументу и пустому перечню наборов', async () => {
+  const root = await repository();
+  try {
+    const helped = await receipt(root, '--help');
+    assert.equal(helped.code, 0, helped.output);
+    assert.match(helped.output, /conventions receipt --checks/);
+    assert.deepEqual(await receipts(root), [], 'справка файлов не создаёт');
+
+    const positional = await receipt(root, 'check', 'verify');
+    assert.equal(positional.code, 2, positional.output);
+    assert.match(positional.output, /неизвестный аргумент: check/);
+
+    const empty = await receipt(root, '--checks', '', '--', process.execPath, '-e', '');
+    assert.equal(empty.code, 2, empty.output);
+    assert.match(empty.output, /--checks требует непустой перечень наборов/);
+
+    const commandless = await receipt(root, '--checks', 'verify');
+    assert.equal(commandless.code, 2, commandless.output);
+    assert.match(commandless.output, /команда набора обязательна/);
+
+    assert.deepEqual(await receipts(root), [], 'ни один отказ файла не создал');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-027
+test('расписка появляется только после наблюдённого прогона и несёт его признак', async () => {
+  const root = await repository();
+  try {
+    const failed = await receipt(root, '--checks', 'check,verify', '--', process.execPath, '-e', 'process.exit(3)');
+    assert.equal(failed.code, 3, failed.output);
+    assert.match(failed.output, /код возврата 3/);
+    assert.deepEqual(await receipts(root), [], 'отказ набора расписки не оставляет');
+
+    const passed = await receipt(root, '--checks', 'check,verify', '--', process.execPath, '-e', '');
+    assert.equal(passed.code, 0, passed.output);
+    const files = await receipts(root);
+    assert.equal(files.length, 1, passed.output);
+    const written = JSON.parse(await readFile(path.join(root, 'target', 'verify', files[0]), 'utf8'));
+    assert.deepEqual(written.checks, ['check', 'verify']);
+    assert.equal(written.run.exitCode, 0);
+    assert.match(written.run.command, /-e/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

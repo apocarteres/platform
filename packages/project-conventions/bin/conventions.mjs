@@ -284,6 +284,14 @@ async function releaseStatus(root) {
   process.exitCode = 1;
 }
 
+// REQ-RELEASE-030
+function missingReleaseNumber(scheme, version) {
+  if (scheme !== 'semver' || version) return false;
+  console.error('Схема semver: номер выпуска задаётся ключом --version X.Y.Z');
+  process.exitCode = 2;
+  return true;
+}
+
 async function releaseClose(root, nextVersion) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
@@ -314,7 +322,10 @@ async function releaseClose(root, nextVersion) {
 
 async function releaseOpen(root, version) {
   const config = await readConfig(root);
-  const result = await openNext(root, { scheme: releaseScheme(config), version, today: systemNow() });
+  const scheme = releaseScheme(config);
+  // REQ-RELEASE-030
+  if (missingReleaseNumber(scheme, version)) return;
+  const result = await openNext(root, { scheme, version, today: systemNow() });
   if (!result.opened) {
     console.error('Выпуск не открыт:');
     for (const problem of result.problems) console.error(`- ${problem}`);
@@ -391,10 +402,12 @@ async function naming(root, subcommand, mapFile) {
   process.exitCode = 2;
 }
 
-async function releaseAdopt(root) {
+async function releaseAdopt(root, version) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
-  const result = await adoptCycle(root, { scheme, today: systemNow() });
+  // REQ-RELEASE-030
+  if (missingReleaseNumber(scheme, version)) return;
+  const result = await adoptCycle(root, { scheme, version, today: systemNow() });
   if (!result.adopted) {
     console.error('Цикл выпусков не принят:');
     for (const problem of result.problems) console.error(`- ${problem}`);
@@ -484,7 +497,7 @@ else if (command === 'release') {
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'));
   else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));
   else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
-  else if (subcommand === 'adopt') await releaseAdopt(root);
+  else if (subcommand === 'adopt') await releaseAdopt(root, valueOf('--version'));
   else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
   else {
     console.error('conventions release <status|close|open|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--next-version X.Y.Z] [--reason "<причина>"] [--ticket <TICKET-ID>]');

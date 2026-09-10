@@ -230,12 +230,20 @@ export async function cancelRelease(root, { reason }) {
   return { cancelled: true, id, file: release.file };
 }
 
-// REQ-RELEASE-020
+// REQ-RELEASE-030
+function releaseNumberProblem(scheme, version) {
+  if (scheme !== 'semver' || version) return null;
+  return 'Схема semver: номер выпуска задаётся ключом --version X.Y.Z';
+}
+
+// REQ-RELEASE-020, REQ-RELEASE-030
 export async function adoptCycle(root, { scheme, version, today }) {
   const existing = await releases(root);
   if (existing.length > 0) {
     return { adopted: false, problems: ['В проекте уже есть выпуски: принятие цикла выполняется один раз'] };
   }
+  const missingNumber = releaseNumberProblem(scheme, version);
+  if (missingNumber !== null) return { adopted: false, problems: [missingNumber] };
   const before = await unassignedTerminalTickets(root);
   for (const ticket of before) {
     await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'before-cycle' }));
@@ -250,6 +258,9 @@ export async function openNext(root, { scheme, version, today }) {
   if (already !== null) {
     return { opened: false, problems: [`Выпуск ${already.metadata.get('id')} уже открыт: открытый выпуск всегда ровно один`] };
   }
+  // REQ-RELEASE-030
+  const missingNumber = releaseNumberProblem(scheme, version);
+  if (missingNumber !== null) return { opened: false, problems: [missingNumber] };
   const { id, tag, number } = nextReleaseId(existing, scheme, today, version);
   // REQ-RELEASE-005
   if (existing.some((release) => release.metadata.get('id') === id)) {

@@ -308,3 +308,77 @@ test('расписка появляется только после наблюд
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-030
+const SEMVER_TICKET = [
+  '---', 'id: QUAL-001', 'type: ticket', 'status: done', 'scope: quality',
+  'authority: supporting', 'priority: P2', 'release: unassigned', '---', '',
+  '# Задача, закрытая до принятия цикла', '', '## Проблема', '', 'Проверка падала.', '',
+  '## Чем подтверждено', '', 'Отказ теста.', '',
+  '## Последствия при сохранении текущего поведения', '', 'Проверка не защищает.', '',
+  '## Ожидаемый результат', '', 'Проверка отказывает названно.', '',
+  '## Критерии приёмки', '', '- Отказ назван.', '',
+].join('\n');
+
+async function semverProject() {
+  const root = await project({
+    '.conventions.json': '{"sources": [], "release": {"scheme": "semver"}}\n',
+    'node_modules/@apocarteres/project-conventions/obligations.json': JSON.stringify({ obligations: [] }),
+    'docs/tickets/closed/QUAL-001-done-before-cycle.md': SEMVER_TICKET,
+  });
+  await git('-C', root, 'init', '--quiet');
+  return root;
+}
+
+async function releaseDocuments(root) {
+  try {
+    return await readdir(path.join(root, 'docs/releases'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+async function ticketRelease(root) {
+  const content = await readFile(path.join(root, 'docs/tickets/closed/QUAL-001-done-before-cycle.md'), 'utf8');
+  return /^release: (.+)$/m.exec(content)[1];
+}
+
+test('принятие цикла на semver без номера отказывает названно и ничего не меняет', async () => {
+  const root = await semverProject();
+  try {
+    const adopted = await conventions(root, 'release', 'adopt');
+    assert.equal(adopted.code, 2, adopted.output);
+    assert.match(adopted.output, /номер выпуска задаётся ключом --version/);
+    assert.doesNotMatch(adopted.output, /at nextReleaseId|Error:/);
+    assert.equal(await ticketRelease(root), 'unassigned', 'отказ не помечает задачу before-cycle');
+    assert.deepEqual(await releaseDocuments(root), [], 'отказ не создаёт документ выпуска');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('принятие цикла на semver с номером открывает первый выпуск', async () => {
+  const root = await semverProject();
+  try {
+    const adopted = await conventions(root, 'release', 'adopt', '--version', '0.1.0');
+    assert.equal(adopted.code, 0, adopted.output);
+    assert.match(adopted.output, /Открыт первый выпуск RELEASE-0-1-0, тег при закрытии: v0\.1\.0/);
+    assert.equal(await ticketRelease(root), 'before-cycle');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('открытие выпуска на semver без номера отказывает названно', async () => {
+  const root = await semverProject();
+  try {
+    assert.equal((await conventions(root, 'release', 'adopt', '--version', '0.1.0')).code, 0);
+    const opened = await conventions(root, 'release', 'open');
+    assert.equal(opened.code, 2, opened.output);
+    assert.match(opened.output, /номер выпуска задаётся ключом --version/);
+    assert.doesNotMatch(opened.output, /at nextReleaseId|Error:/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

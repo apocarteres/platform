@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -55,6 +55,15 @@ async function project() {
   await git('-C', root, 'config', 'user.email', 'test@example.test');
   await git('-C', root, 'config', 'user.name', 'Test');
   return root;
+}
+
+async function releaseDocuments(root) {
+  try {
+    return await readdir(path.join(root, 'docs/releases'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
 }
 
 async function commitAll(root) {
@@ -379,5 +388,21 @@ test('команды выпуска действуют на переданный
   } finally {
     await rm(root, { recursive: true, force: true });
     await rm(foreign, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-030
+test('принятие цикла на semver без номера ничего не меняет', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/closed/QUAL-001-done.md'), ticket('QUAL-001', 'done'));
+    const adopted = await adoptCycle(root, { scheme: 'semver', today: FIXED_DAY });
+    assert.equal(adopted.adopted, false);
+    assert.ok(adopted.problems.some((problem) => problem.includes('--version')), adopted.problems.join('\n'));
+    const kept = await readFile(path.join(root, 'docs/tickets/closed/QUAL-001-done.md'), 'utf8');
+    assert.match(kept, /^release: unassigned$/m);
+    assert.deepEqual(await releaseDocuments(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });

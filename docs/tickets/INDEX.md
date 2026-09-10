@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 7. Включены самостоятельные задачи и этапы планов функций.
+Всего: 6. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -22,6 +22,5 @@ authority: navigation
 | [Исследование: отдельный сервис уведомлений](ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
 | [Между выпусками нет фазы планирования](DOC-009-planning-phase-between-releases.md) | P2 | Запланирована | Не назначен | process, release |
 | [Отменённая задача не даёт закрыть выпуск](OPS-023-cancelled-ticket-blocks-release-close.md) | P2 | Запланирована | Не назначен | release, tooling |
-| [Принятие цикла теряет номер выпуска и падает трассировкой](OPS-024-adopt-drops-the-release-number.md) | P2 | Запланирована | Не назначен | release, tooling |
 | [Шлагбаум перед отправкой не видит отказов проводки](OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Запланирована | Не назначен | quality, operations |
 | [Шифр секрета повторяется у каждого потребителя](SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Запланирована | Не назначен | backend, security |

@@ -50,6 +50,10 @@ export function validateTicket(file, content, parsed) {
   if (status === 'cancelled' && !/^## Почему не делаем\s*$/m.test(body)) {
     fail('отменённая задача должна содержать раздел «Почему не делаем»');
   }
+  // REQ-RELEASE-032
+  if (status === 'cancelled' && metadata.has('obligation')) {
+    fail(`задача обязательства ${metadata.get('obligation')} не отменяется; отказ выражается переносом: release defer с причиной`);
+  }
   const standalone = /^docs\/tickets\/(?:closed\/)?[^/]+\.md$/.test(file);
   if (standalone && terminalStatuses.has(status) !== file.startsWith('docs/tickets/closed/')) {
     fail('расположение задачи должно соответствовать статусу: завершённые — в closed/, открытые — в корне');

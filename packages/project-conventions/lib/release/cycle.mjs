@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  RELEASES_DIR, TICKETS_DIR, compositionTickets, nextReleaseId, openRelease, releaseTag, releases,
+  RELEASES_DIR, TICKETS_DIR, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
   unassignedDoneTickets, writeDocument,
 } from './documents.mjs';
@@ -9,7 +9,6 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
-import { terminalStatuses } from '../docs/ticket-model.mjs';
 import { createTag, headCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -181,13 +180,18 @@ export async function satisfyObligation(root, { obligationId, ticketId: evidence
   if (evidence === undefined) {
     return { satisfied: false, problems: [`Задачи ${evidenceId} в проекте нет: обязательство закрывается ссылкой на существующую задачу`] };
   }
-  if (!terminalStatuses.has(evidence.metadata.get('status'))) {
-    return { satisfied: false, problems: [`Задача ${evidenceId} не завершена: обязательство закрывается только выполненной работой`] };
+  // REQ-RELEASE-019
+  if (!shipsResult(evidence)) {
+    const status = evidence.metadata.get('status');
+    return {
+      satisfied: false,
+      problems: [`Задача ${evidenceId} не выполнена (${status}): обязательство закрывается только выполненной работой`],
+    };
   }
 
   const materialized = all.find((ticket) => ticket.metadata.get('obligation') === obligationId);
   const removed = [];
-  if (materialized !== undefined && !terminalStatuses.has(materialized.metadata.get('status'))) {
+  if (materialized !== undefined && !shipsResult(materialized)) {
     await rm(materialized.file);
     removed.push(ticketId(materialized));
   }
@@ -285,7 +289,7 @@ export async function openNext(root, { scheme, version, today }) {
     const already = obligationTickets.get(entry.obligation.id);
     if (already !== undefined) {
       // REQ-RELEASE-021
-      if (!terminalStatuses.has(already.metadata.get('status'))) {
+      if (!shipsResult(already)) {
         carried.push({ ticket: already, obligation: entry.obligation });
       }
       continue;

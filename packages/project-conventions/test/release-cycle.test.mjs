@@ -469,3 +469,48 @@ test('отменённая задача не возвращается в сос�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-019
+test('обязательство не закрывается отменённой задачей', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/closed/dropped.md'), cancelled('TICKET-DROPPED'));
+    await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
+    const draft = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+
+    const refused = await satisfyObligation(root, { obligationId: 'sample', ticketId: 'TICKET-DROPPED' });
+    assert.equal(refused.satisfied, false);
+    assert.ok(refused.problems.some((problem) => problem.includes('не выполнена (cancelled)')), refused.problems.join('\n'));
+
+    assert.match(await readFile(draft, 'utf8'), /obligation: sample/, 'заготовка остаётся на месте');
+    const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
+    assert.deepEqual(state.closed ?? {}, {}, 'состояние обязательств не меняется');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-021
+test('обязательство переносится, пока его задача не выполнена', async () => {
+  const root = await project();
+  try {
+    await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
+    const draft = path.join(root, 'docs/tickets/closed/adopt-sample-2026-09-07.md');
+    const body = await readFile(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'), 'utf8');
+    await rm(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'));
+    await writeFile(draft, body
+      .replace('status: backlog', 'status: superseded')
+      .replace('release: unassigned', 'release: unassigned\nsuperseded-by: TICKET-SHIPPED'));
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await openNext(root, { scheme: 'date', today: NEXT_DAY })).opened, true);
+
+    const opened = (await openRelease(root)).content;
+    assert.match(opened, /TICKET-ADOPT-SAMPLE-2026-09-07/, 'обязательство перенесено вместе с задачей');
+    assert.match(opened, /перенесено из предыдущего выпуска/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

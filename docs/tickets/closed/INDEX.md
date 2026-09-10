@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 36. Включены самостоятельные задачи и этапы планов функций.
+Всего: 37. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -33,6 +33,7 @@ authority: navigation
 | [Подстановка версии и присоединение исходников протекали в потребителя](OPS-016-version-substitution-leaked-into-the-consumer.md) | P1 | Выполнена | [RELEASE-0-33-0](../../releases/RELEASE-0-33-0.md) | build, platform |
 | [Процесс, запущенный исполнителем, мог висеть без предела](OPS-017-bounded-process-runs-for-agents.md) | P1 | Выполнена | [RELEASE-0-38-0](../../releases/RELEASE-0-38-0.md) | process, tooling |
 | [Команды выпуска действуют на репозиторий из окружения](OPS-022-release-commands-act-on-ambient-repository.md) | P1 | Выполнена | [RELEASE-1-1-0](../../releases/RELEASE-1-1-0.md) | quality, tooling, release |
+| [Обязательство ядра закрывается отказом от работы](OPS-025-obligation-closed-by-declined-work.md) | P1 | Выполнена | Не назначен | release, tooling |
 | [Starter `platform-time`: порт часов](QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |

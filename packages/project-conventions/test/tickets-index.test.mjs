@@ -36,6 +36,18 @@ test('отменённая задача обязана объяснить, по�
   assert.deepEqual(errors({ status: 'cancelled' }, '# Задача\n\n## Почему не делаем\n\nПремисса опровергнута.\n', closed), []);
 });
 
+// REQ-RELEASE-032
+test('задача обязательства не отменяется; отказ выражается переносом', () => {
+  const closed = 'docs/tickets/closed/example.md';
+  const body = '# Задача\n\n## Почему не делаем\n\nРешили не делать.\n';
+  const refused = errors({ status: 'cancelled', obligation: 'observed-receipt' }, body, closed);
+  assert.equal(refused.length, 1, refused.join('\n'));
+  assert.match(refused[0], /задача обязательства observed-receipt не отменяется/);
+  assert.match(refused[0], /release defer/);
+  assert.deepEqual(errors({ status: 'done', obligation: 'observed-receipt' }, '# Задача\n', closed), []);
+  assert.deepEqual(errors({ status: 'cancelled' }, body, closed), [], 'обычную задачу отменять можно');
+});
+
 test('открытые вопросы блокируют выполнение и закрытие, но допускают ожидание', () => {
   const body = '# Задача\n\n## Открытые вопросы\n\nВыбор контракта.\n';
   assert(errors({}, body).length);

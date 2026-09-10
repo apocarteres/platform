@@ -23,7 +23,7 @@
   <properties>
     <!-- Версия задаётся тегом при публикации: mvn -Drevision=0.1.0. Локальное значение никогда не публикуется. -->
     <revision>0.1.0-SNAPSHOT</revision>
-    <maven.compiler.release>21</maven.compiler.release>
+    <maven.compiler.release>25</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>4.0.8</spring-boot.version>

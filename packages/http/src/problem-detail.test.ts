@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest';
 import { problemDetailOf } from './problem-detail';
+import type { ProblemDetail } from './problem-detail';
+import { ApiFailure } from './sanitising-interceptor';
 
 // REQ-API-001
 test('тело с кодом разбирается в ProblemDetail', () => {
@@ -62,4 +64,12 @@ test('поля расширения сохраняются рядом с обя�
 // REQ-API-007
 test('без собственных полей расширения пусты, а не отсутствуют', () => {
   expect(problemDetailOf({ code: 'unexpected' }, 500)?.extensions).toEqual({});
+});
+
+// REQ-PUBLISHING-004
+test('ProblemDetail без расширений остаётся допустимым значением типа', () => {
+  const handmade: ProblemDetail = {
+    type: 'about:blank', title: 'Not Found', status: 404, detail: '', code: 'player-absent',
+  };
+  expect(new ApiFailure(handmade).extensions).toEqual({});
 });

@@ -6,8 +6,8 @@ export interface ProblemDetail {
   readonly detail: string;
   readonly instance?: string;
   readonly code: string;
-  // REQ-API-007
-  readonly extensions: Readonly<Record<string, unknown>>;
+  // REQ-API-007, REQ-PUBLISHING-004
+  readonly extensions?: Readonly<Record<string, unknown>>;
 }
 
 const ABOUT_BLANK = 'about:blank';

@@ -13,7 +13,7 @@ export class ApiFailure extends Error {
 
   // REQ-API-007
   get extensions(): Readonly<Record<string, unknown>> {
-    return this.problem.extensions;
+    return this.problem.extensions ?? {};
   }
 }
 

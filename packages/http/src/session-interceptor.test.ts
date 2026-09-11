@@ -36,7 +36,7 @@ test('401 зовёт обработчик истёкшей сессии и от�
 test('разобранный ApiFailure с 401 тоже считается истёкшей сессией', async () => {
   let called = 0;
   await run(new ApiFailure({
-    type: 'about:blank', title: 'Unauthorized', status: 401, detail: '', code: 'session-expired',
+    type: 'about:blank', title: 'Unauthorized', status: 401, detail: '', code: 'session-expired', extensions: {},
   }), () => { called += 1; });
 
   expect(called).toBe(1);

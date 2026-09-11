@@ -35,10 +35,18 @@ export function areaFor(metadata, file, overrides = {}) {
 
 const LEADING_ID = /^[A-Za-z]{2,6}-\d{2,4}-/;
 
+function quoted(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // REQ-NAMING-005
 // REQ-NAMING-012
-function referenceTo(legacy) {
-  return new RegExp(`(?<![A-Za-z0-9-])${legacy}\\b`, 'g');
+function references(paths, renames) {
+  const parts = [
+    ...[...paths.keys()].map((name) => `(?<![A-Za-z0-9-])${quoted(name)}`),
+    ...[...renames.keys()].map((legacy) => `(?<![A-Za-z0-9-/])${quoted(legacy)}\\b`),
+  ];
+  return parts.length === 0 ? null : new RegExp(parts.join('|'), 'g');
 }
 
 export function slugFor(file) {
@@ -155,17 +163,17 @@ export async function migrate(root, { overrides = {}, areas = TICKET_AREAS, pref
 
   const renames = new Map(moves.map((move) => [move.legacyId, move.id]));
   const paths = new Map(moves.map((move) => [path.posix.basename(move.from), path.posix.basename(move.to)]));
+  // REQ-NAMING-012
+  const substitutions = new Map([...paths, ...renames]);
+  const pattern = references(paths, renames);
   let touched = 0;
   for (const file of await textFiles(root)) {
     const before = await readFile(path.join(root, file), 'utf8');
     // REQ-NAMING-009
     const after = before.split('\n').map((line) => {
       if (line.startsWith('legacy-id:')) return line;
-      let updated = line;
       // REQ-NAMING-012
-      for (const [legacy, id] of renames) updated = updated.replace(referenceTo(legacy), id);
-      for (const [from, to] of paths) updated = updated.replaceAll(from, to);
-      return updated;
+      return pattern === null ? line : line.replace(pattern, (found) => substitutions.get(found) ?? found);
     }).join('\n');
     if (after === before) continue;
     await writeFile(path.join(root, file), after);

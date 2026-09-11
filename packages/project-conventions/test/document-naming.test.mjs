@@ -192,3 +192,43 @@ test('без объявленного префикса миграция рабо
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-NAMING-012
+test('имя файла не получает второго префикса, когда меняется только префикс', async () => {
+  const root = await project({
+    'docs/tickets/closed/OPS-001-npm-runs-under-any-node.md': ticket('OPS-001', 'build'),
+    'docs/tickets/QUAL-001-adopt-observed-receipt.md': `${ticket('QUAL-001', 'quality')}\nСделано в [OPS-001](closed/OPS-001-npm-runs-under-any-node.md).\n`,
+    'docs/tickets/INDEX.md': '# Задачи\n\n| [Npm](closed/OPS-001-npm-runs-under-any-node.md) | Выполнена |\n',
+  });
+  try {
+    const { moves } = await migrate(root, { prefix: 'CL' });
+    assert.deepEqual(moves.map((move) => move.id).sort(), ['CL-OPS-001', 'CL-QUAL-001'], 'номер не меняется, меняется только префикс');
+
+    const index = await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8');
+    assert.doesNotMatch(index, /CL-CL-/, 'имя файла не удваивает префикс');
+    assert.match(index, /closed\/CL-OPS-001-npm-runs-under-any-node\.md/);
+
+    const other = await readFile(path.join(root, 'docs/tickets/CL-QUAL-001-adopt-observed-receipt.md'), 'utf8');
+    assert.doesNotMatch(other, /CL-CL-/, 'ссылка на файл не удваивает префикс');
+    assert.match(other, /\[CL-OPS-001\]\(closed\/CL-OPS-001-npm-runs-under-any-node\.md\)/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-NAMING-012
+test('идентификатор чужого проекта, названный через его имя, префикса не получает', async () => {
+  const root = await project({
+    'docs/tickets/closed/OPS-001-our-work.md': ticket('OPS-001', 'build'),
+    'docs/tickets/QUAL-001-report.md': `${ticket('QUAL-001', 'quality')}\nНаша \`OPS-001\`, ядра \`platform/OPS-001\`, соседняя \`zavpn/OPS-001\`.\n`,
+  });
+  try {
+    await migrate(root, { prefix: 'CL' });
+    const report = await readFile(path.join(root, 'docs/tickets/CL-QUAL-001-report.md'), 'utf8');
+    assert.match(report, /Наша `CL-OPS-001`/);
+    assert.match(report, /ядра `platform\/OPS-001`/, 'чужой идентификатор остаётся прежним');
+    assert.match(report, /соседняя `zavpn\/OPS-001`/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

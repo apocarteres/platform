@@ -5,7 +5,7 @@ status: done
 scope: quality, tooling, documentation
 authority: supporting
 priority: P3
-release: unassigned
+release: RELEASE-1-4-0
 related: REQ-PROJECT-PROCESS
 ---
 

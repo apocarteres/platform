@@ -58,5 +58,5 @@ authority: navigation
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |
 | [Шлагбаум перед отправкой не видит отказов проводки](CORE-OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Выполнена | [RELEASE-1-3-0](../../releases/RELEASE-1-3-0.md) | quality, operations |
-| [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | Не назначен | build, tooling |
-| [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | Не назначен | quality, tooling, documentation |
+| [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |
+| [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | quality, tooling, documentation |

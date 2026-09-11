@@ -9,6 +9,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
+import { readConfig } from '../config.mjs';
 import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -187,9 +188,18 @@ export async function finishRelease(root, { scheme, today, note }) {
   return { finished: true, id, tag, commit, note: note.trim() };
 }
 
-function obligationTicket(obligation, releaseId, today) {
-  const date = today.toISOString().slice(0, 10);
-  const id = `TICKET-${obligation.slug.toUpperCase()}-${date}`;
+// REQ-NAMING-001, REQ-NAMING-003, REQ-NAMING-012
+export function nextTicketId(existing, area, prefix) {
+  const head = prefix ? `${prefix}-${area}` : area;
+  const taken = existing
+    .map((id) => new RegExp(`^${head}-(\\d{3})$`).exec(id))
+    .filter((match) => match !== null)
+    .map((match) => Number(match[1]));
+  const next = taken.length === 0 ? 1 : Math.max(...taken) + 1;
+  return `${head}-${String(next).padStart(3, '0')}`;
+}
+
+function obligationTicket(obligation, releaseId, id) {
   const lines = [
     '---',
     `id: ${id}`,
@@ -226,7 +236,7 @@ function obligationTicket(obligation, releaseId, today) {
     ...obligation.ticket.acceptance.map((item) => `- ${item}`),
     '',
   ];
-  return { id, slug: obligation.slug, date, content: lines.join('\n') };
+  return { id, slug: obligation.slug, content: lines.join('\n') };
 }
 
 // REQ-RELEASE-019
@@ -358,8 +368,12 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
   const { obligations, isCore } = await loadObligations(root);
   const pending = pendingObligations(obligations, state, isCore);
 
+  // REQ-NAMING-012
+  const prefix = (await readConfig(root)).ticketPrefix ?? null;
   // REQ-RELEASE-013
-  const obligationTickets = new Map((await tickets(root))
+  const allTickets = await tickets(root);
+  const takenIds = allTickets.map(ticketId);
+  const obligationTickets = new Map(allTickets
     .filter((ticket) => ticket.metadata.get('obligation') !== undefined)
     .map((ticket) => [ticket.metadata.get('obligation'), ticket]));
   const created = [];
@@ -375,8 +389,11 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
       }
       continue;
     }
-    const ticket = obligationTicket(entry.obligation, id, today);
-    const file = path.join(root, TICKETS_DIR, `${entry.obligation.slug}-${ticket.date}.md`);
+    // REQ-NAMING-005, REQ-NAMING-007, REQ-NAMING-012
+    const ticketId_ = nextTicketId(takenIds, entry.obligation.area ?? 'OPS', prefix);
+    takenIds.push(ticketId_);
+    const ticket = obligationTicket(entry.obligation, id, ticketId_);
+    const file = path.join(root, TICKETS_DIR, `${ticketId_}-${entry.obligation.slug}.md`);
     created.push({ ...ticket, file, obligation: entry.obligation });
   }
 

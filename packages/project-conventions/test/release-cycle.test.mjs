@@ -32,6 +32,7 @@ const OBLIGATION = {
   level: 'директива',
   since: '0.19.0',
   dueReleases: 2,
+  area: 'QUAL',
   slug: 'adopt-sample',
   ticket: {
     scope: 'quality',
@@ -116,8 +117,8 @@ test('открытие выпуска материализует обязате�
     const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(opened.opened, true);
     assert.equal(opened.id, 'RELEASE-2026-09-1');
-    assert.deepEqual(opened.created, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
-    const created = await readFile(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'), 'utf8');
+    assert.deepEqual(opened.created, ['QUAL-001']);
+    const created = await readFile(path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md'), 'utf8');
     assert.match(created, /obligation: sample/);
     assert.match(created, /release: RELEASE-2026-09-1/);
 
@@ -165,11 +166,11 @@ test('закрытие записывает состав, коммит и рез
   const root = await project();
   try {
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    const obligationTicket = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    const obligationTicket = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
     const body = await readFile(obligationTicket, 'utf8');
     await rm(obligationTicket);
     await writeFile(
-      path.join(root, 'docs/tickets/closed/adopt-sample-2026-09-07.md'),
+      path.join(root, 'docs/tickets/closed/QUAL-001-adopt-sample.md'),
       body.replace('status: backlog', 'status: done'),
     );
     const commit = await commitAll(root);
@@ -178,7 +179,7 @@ test('закрытие записывает состав, коммит и рез
     const closed = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(closed.closed, true);
     assert.equal(closed.tag, '2026.09.1');
-    assert.deepEqual(closed.composition, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+    assert.deepEqual(closed.composition, ['QUAL-001']);
 
     // REQ-RELEASE-001
     const afterTag = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
@@ -192,7 +193,7 @@ test('закрытие записывает состав, коммит и рез
     assert.match(document, /status: released/);
     assert.match(document, /- \[x\] Завершающий шаг выполнен — публикация артефактов/);
     assert.match(document, new RegExp(`commit: ${commit}`));
-    assert.match(document, /TICKET-ADOPT-SAMPLE-2026-09-07/);
+    assert.match(document, /QUAL-001/);
     assert.match(document, /2026-09-07T10:00:00Z/);
     assert.match(document, /- \[x\] Тег выпуска создан на проверенном коммите — `2026\.09\.1`/);
     assert.match(document, /- \[x\] Обязательства ядра этого выпуска закрыты[^\n]*закрыты: sample/);
@@ -252,7 +253,7 @@ test('обязательство закрывается ссылкой на уж
   try {
     await writeFile(path.join(root, 'docs/tickets/closed/old-work.md'), ticket('TICKET-OLD-WORK', 'done'));
     await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
-    const draft = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    const draft = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
     assert.match(await readFile(draft, 'utf8'), /obligation: sample/);
 
     const missing = await satisfyObligation(root, { obligationId: 'sample', ticketId: 'TICKET-NONE' });
@@ -260,11 +261,11 @@ test('обязательство закрывается ссылкой на уж
 
     const satisfied = await satisfyObligation(root, { obligationId: 'sample', ticketId: 'TICKET-OLD-WORK' });
     assert.equal(satisfied.satisfied, true);
-    assert.deepEqual(satisfied.removed, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+    assert.deepEqual(satisfied.removed, ['QUAL-001']);
     await assert.rejects(readFile(draft, 'utf8'), 'заготовка удалена: работа уже выполнена');
 
     const release = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
-    assert.equal(release.includes('TICKET-ADOPT-SAMPLE-2026-09-07'), false, 'строка состава снята');
+    assert.equal(release.includes('QUAL-001'), false, 'строка состава снята');
 
     const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
     assert.equal(state.closed.sample.ticket, 'TICKET-OLD-WORK');
@@ -278,9 +279,9 @@ test('ссылки состава следуют за задачей, перее
   const root = await project();
   try {
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    const open = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    const open = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
     const body = await readFile(open, 'utf8');
-    await writeFile(path.join(root, 'docs/tickets/closed/adopt-sample-2026-09-07.md'), body.replace('status: backlog', 'status: done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/QUAL-001-adopt-sample.md'), body.replace('status: backlog', 'status: done'));
     await rm(open);
 
     const stale = await refreshCompositionLinks(root, { check: true });
@@ -288,7 +289,7 @@ test('ссылки состава следуют за задачей, перее
 
     await refreshCompositionLinks(root, { check: false });
     const release = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
-    assert.match(release, /\(\.\.\/tickets\/closed\/adopt-sample-2026-09-07\.md\)/);
+    assert.match(release, /\(\.\.\/tickets\/closed\/QUAL-001-adopt-sample\.md\)/);
     assert.deepEqual(await refreshCompositionLinks(root, { check: true }), []);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -299,7 +300,7 @@ test('невыполненное обязательство переноситс
   const root = await project();
   try {
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    const draft = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    const draft = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
     assert.match(await readFile(draft, 'utf8'), /release: RELEASE-2026-09-1/);
 
     const release = await openRelease(root);
@@ -307,11 +308,11 @@ test('невыполненное обязательство переноситс
     const next = await openNext(root, { scheme: 'date', today: NEXT_DAY });
     assert.equal(next.opened, true);
     assert.deepEqual(next.created, [], 'вторая заготовка не создаётся');
-    assert.deepEqual(next.carried, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+    assert.deepEqual(next.carried, ['QUAL-001']);
 
     assert.match(await readFile(draft, 'utf8'), /release: RELEASE-2026-09-2/);
     const opened = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-2.md'), 'utf8');
-    assert.match(opened, /TICKET-ADOPT-SAMPLE-2026-09-07[^\n]*перенесено из предыдущего выпуска/);
+    assert.match(opened, /QUAL-001[^\n]*перенесено из предыдущего выпуска/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -329,9 +330,9 @@ test('первый выпуск открывается в проекте, где
 
     const adopted = await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(adopted.adopted, true, 'принятие цикла не должно требовать заранее созданных каталогов');
-    assert.deepEqual(adopted.created, ['TICKET-ADOPT-SAMPLE-2026-09-07']);
+    assert.deepEqual(adopted.created, ['QUAL-001']);
     assert.match(await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8'), /status: draft/);
-    assert.match(await readFile(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'), 'utf8'), /obligation: sample/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md'), 'utf8'), /obligation: sample/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -487,7 +488,7 @@ test('обязательство не закрывается отменённо�
   try {
     await writeFile(path.join(root, 'docs/tickets/closed/dropped.md'), cancelled('TICKET-DROPPED'));
     await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
-    const draft = path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md');
+    const draft = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
 
     const refused = await satisfyObligation(root, { obligationId: 'sample', ticketId: 'TICKET-DROPPED' });
     assert.equal(refused.satisfied, false);
@@ -506,9 +507,9 @@ test('обязательство переносится, пока его зад�
   const root = await project();
   try {
     await adoptCycle(root, { scheme: 'date', today: FIXED_DAY });
-    const draft = path.join(root, 'docs/tickets/closed/adopt-sample-2026-09-07.md');
-    const body = await readFile(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'), 'utf8');
-    await rm(path.join(root, 'docs/tickets/adopt-sample-2026-09-07.md'));
+    const draft = path.join(root, 'docs/tickets/closed/QUAL-001-adopt-sample.md');
+    const body = await readFile(path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md'), 'utf8');
+    await rm(path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md'));
     await writeFile(draft, body
       .replace('status: backlog', 'status: superseded')
       .replace('release: unassigned', 'release: unassigned\nsuperseded-by: TICKET-SHIPPED'));
@@ -520,7 +521,7 @@ test('обязательство переносится, пока его зад�
     assert.equal((await openNext(root, { scheme: 'date', today: NEXT_DAY })).opened, true);
 
     const opened = (await openRelease(root)).content;
-    assert.match(opened, /TICKET-ADOPT-SAMPLE-2026-09-07/, 'обязательство перенесено вместе с задачей');
+    assert.match(opened, /QUAL-001/, 'обязательство перенесено вместе с задачей');
     assert.match(opened, /перенесено из предыдущего выпуска/);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -675,6 +676,43 @@ test('проверка правил роняет сборку на просро�
     );
     const closed = await findObligationDebts(root);
     assert.deepEqual(closed, { problems: [], advisories: [] }, 'закрытое обязательство долгом не считается');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-NAMING-012, REQ-NAMING-003
+test('задача обязательства получает имя по правилу именования проекта', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    assert.equal(opened.opened, true, opened.problems?.join('\n'));
+    assert.deepEqual(opened.created, ['ZAVPN-QUAL-008'], 'номер следующий свободный в своей области');
+
+    const file = path.join(root, 'docs/tickets/ZAVPN-QUAL-008-adopt-sample.md');
+    const body = await readFile(file, 'utf8');
+    assert.match(body, /^id: ZAVPN-QUAL-008$/m);
+    assert.match(body, /^obligation: sample$/m);
+    assert.doesNotMatch(body, /TICKET-ADOPT/, 'прежней формы идентификатора не остаётся');
+    assert.doesNotMatch(path.basename(file), /\d{4}-\d{2}-\d{2}/, 'даты в имени файла нет');
+
+    const release = (await openRelease(root)).content;
+    assert.match(release, /\| \[ZAVPN-QUAL-008\]\(\.\.\/tickets\/ZAVPN-QUAL-008-adopt-sample\.md\)/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-NAMING-012
+test('без объявленного префикса задача обязательства именуется областью и номером', async () => {
+  const root = await project();
+  try {
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    assert.deepEqual(opened.created, ['QUAL-001']);
+    assert.match(await readFile(path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md'), 'utf8'), /^id: QUAL-001$/m);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

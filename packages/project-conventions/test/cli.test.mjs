@@ -167,7 +167,8 @@ test('принятие цикла работает в репозитории б�
         level: 'директива',
         since: '0.25.0',
         dueReleases: 1,
-        slug: 'adopt-sample',
+        area: 'QUAL',
+  slug: 'adopt-sample',
         ticket: {
           scope: 'quality', priority: 'P2', problem: 'Проект не соответствует требованию ядра.',
           required: ['Сделать.'], acceptance: ['Сделано.'],
@@ -181,7 +182,7 @@ test('принятие цикла работает в репозитории б�
     assert.equal(adopted.code, 0, adopted.output);
     assert.match(adopted.output, /Открыт первый выпуск RELEASE-/);
     assert.match(await readFile(path.join(root, 'docs/releases/INDEX.md'), 'utf8'), /IDX-RELEASES/);
-    assert.match(await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8'), /adopt-sample-\d{4}-\d{2}-\d{2}\.md/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8'), /QUAL-001-adopt-sample\.md/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

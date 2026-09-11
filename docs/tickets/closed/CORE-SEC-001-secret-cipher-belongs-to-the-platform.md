@@ -5,7 +5,7 @@ status: done
 scope: backend, security
 authority: supporting
 priority: P3
-release: unassigned
+release: RELEASE-1-6-0
 ---
 
 # Шифр секрета повторяется у каждого потребителя

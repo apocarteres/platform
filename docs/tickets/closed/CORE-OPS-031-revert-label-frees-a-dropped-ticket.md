@@ -5,7 +5,7 @@ status: done
 scope: release, process, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-6-0
 related: CORE-OPS-030, REQ-RELEASE, REQ-PROJECT-PROCESS
 ---
 

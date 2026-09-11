@@ -4,7 +4,8 @@
     "platform-time/src",
     "platform-web-errors/src",
     "scripts",
-    "packages/project-conventions"
+    "packages/project-conventions",
+    "packages/http/src"
   ],
   "exclude": [
     "/test/resources/"

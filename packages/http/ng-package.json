@@ -1,0 +1,7 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../target/packages/http",
+  "lib": {
+    "entryFile": "src/index.ts"
+  }
+}

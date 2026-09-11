@@ -33,13 +33,34 @@ log "версия $VERSION"
 log "Maven: установка в локальный репозиторий"
 (cd "$ROOT_DIR" && ./mvnw --batch-mode --no-transfer-progress -Drevision="$VERSION" -Prelease install)
 
-log "npm: сборка архива пакета правил"
-PACKAGE_DIR="$ROOT_DIR/packages/project-conventions"
 DIST_DIR="$ROOT_DIR/target/local-packages"
 mkdir -p "$DIST_DIR"
-(cd "$PACKAGE_DIR" && npm version "$VERSION" --no-git-tag-version --allow-same-version > /dev/null)
-ARCHIVE="$(cd "$PACKAGE_DIR" && npm pack --pack-destination "$DIST_DIR" --silent | tail -1)"
-(cd "$PACKAGE_DIR" && npm version 0.0.0 --no-git-tag-version --allow-same-version > /dev/null)
 
-log "готово: $DIST_DIR/$ARCHIVE"
-log "потребитель ставит его как file:-зависимость или через scripts/platform/install.sh"
+# REQ-PUBLISHING-011: публикуется каждый пакет, объявивший себя публикуемым.
+pack_package() {
+  local source_dir="$1"
+  local name
+  name="$(basename "$source_dir")"
+  local pack_dir="$source_dir"
+
+  if node -e "process.exit(require('$source_dir/package.json').scripts?.build ? 0 : 1)"; then
+    log "npm: сборка пакета $name"
+    (cd "$ROOT_DIR" && scripts/web.sh build > /dev/null)
+    pack_dir="$ROOT_DIR/target/packages/$name"
+  fi
+
+  log "npm: архив пакета $name"
+  (cd "$pack_dir" && npm version "$VERSION" --no-git-tag-version --allow-same-version > /dev/null)
+  local archive
+  archive="$(cd "$pack_dir" && npm pack --pack-destination "$DIST_DIR" --silent | tail -1)"
+  (cd "$pack_dir" && npm version 0.0.0 --no-git-tag-version --allow-same-version > /dev/null)
+  log "готово: $DIST_DIR/$archive"
+}
+
+for manifest in "$ROOT_DIR"/packages/*/package.json; do
+  [ -f "$manifest" ] || continue
+  node -e "process.exit(require('$manifest').publishable === false ? 1 : 0)" || continue
+  pack_package "$(dirname "$manifest")"
+done
+
+log "потребитель ставит архивы как file:-зависимости или через scripts/platform/install.sh"

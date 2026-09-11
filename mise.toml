@@ -35,6 +35,18 @@ description = "Тесты пакета правил"
 dir = "packages/project-conventions"
 run = "node --test test/*.test.mjs"
 
+[tasks.web-test]
+description = "Модульные тесты npm-пакетов ядра"
+run = "scripts/web.sh test"
+
+[tasks.web-typecheck]
+description = "Проверка типов npm-пакетов ядра"
+run = "scripts/web.sh typecheck"
+
+[tasks.web-build]
+description = "Сборка npm-пакетов ядра, которым нужна сборка"
+run = "scripts/web.sh build"
+
 [tasks.java-build]
 description = "Собрать Java-модули без тестов"
 run = "./mvnw --batch-mode --no-transfer-progress -DskipTests package"
@@ -52,13 +64,21 @@ description = "Быстрый шлагбаум перед отправкой: д
 run = [
   "mise run docs-check",
   "mise run conventions-check",
-  "mise run conventions-test",
+  "mise run web-typecheck",
+  "mise run web-test",
   "mise run java-test",
+]
+
+[tasks.verify-set]
+description = "Полный набор: быстрый шлагбаум и сборка npm-пакетов ядра"
+run = [
+  "mise run check",
+  "mise run web-build",
 ]
 
 [tasks.verify]
 description = "Всё, что проверяется локально; расписку пишет наблюдавший прогон"
-run = "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify -- mise run check"
+run = "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify -- mise run verify-set"
 
 [tasks.release]
 description = "Закрыть выпуск: проверки, тег на проверенном коммите, публикация артефактов, отметка завершающего шага"

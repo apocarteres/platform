@@ -1,0 +1,29 @@
+{
+  "name": "@apocarteres/http",
+  "version": "0.0.0",
+  "description": "Контракт ошибок API на клиенте: разбор ProblemDetail с расширением code.",
+  "license": "MIT",
+  "publishable": true,
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0"
+  },
+  "devDependencies": {
+    "@angular/common": "22.1.6",
+    "@angular/compiler": "22.1.6",
+    "@angular/compiler-cli": "22.1.6",
+    "@angular/core": "22.1.6",
+    "@types/node": "22.18.1",
+    "ng-packagr": "22.1.1",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "typescript": "6.0.3",
+    "vitest": "4.0.6",
+    "zone.js": "0.15.1"
+  },
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

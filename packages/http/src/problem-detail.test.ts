@@ -19,6 +19,7 @@ test('тело с кодом разбирается в ProblemDetail', () => {
     detail: 'Not Found',
     instance: '/players/17',
     code: 'player-absent',
+    extensions: {},
   });
 });
 
@@ -34,4 +35,31 @@ test('статус ответа подставляется, когда в тел
   expect(parsed?.status).toBe(500);
   expect(parsed?.type).toBe('about:blank');
   expect(parsed?.instance).toBeUndefined();
+});
+
+// REQ-API-007
+test('поля расширения сохраняются рядом с обязательными', () => {
+  const parsed = problemDetailOf({
+    type: 'about:blank',
+    title: 'Conflict',
+    status: 409,
+    detail: 'Недостаточно остатка',
+    code: 'stock-short',
+    requestedQuantity: 12,
+    availableQuantity: 5,
+    blockedItems: ['a-1', 'a-2'],
+  }, 409);
+
+  expect(parsed?.extensions).toEqual({
+    requestedQuantity: 12,
+    availableQuantity: 5,
+    blockedItems: ['a-1', 'a-2'],
+  });
+  expect(parsed?.code).toBe('stock-short');
+  expect(parsed?.detail).toBe('Недостаточно остатка');
+});
+
+// REQ-API-007
+test('без собственных полей расширения пусты, а не отсутствуют', () => {
+  expect(problemDetailOf({ code: 'unexpected' }, 500)?.extensions).toEqual({});
 });

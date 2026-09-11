@@ -6,9 +6,14 @@ export interface ProblemDetail {
   readonly detail: string;
   readonly instance?: string;
   readonly code: string;
+  // REQ-API-007
+  readonly extensions: Readonly<Record<string, unknown>>;
 }
 
 const ABOUT_BLANK = 'about:blank';
+
+// REQ-API-001
+const CONTRACT_FIELDS = new Set(['type', 'title', 'status', 'detail', 'instance', 'code']);
 
 export function problemDetailOf(body: unknown, status: number): ProblemDetail | null {
   if (body === null || typeof body !== 'object') {
@@ -26,7 +31,20 @@ export function problemDetailOf(body: unknown, status: number): ProblemDetail | 
     detail: textOf(source['detail'], ''),
     instance: typeof source['instance'] === 'string' ? source['instance'] : undefined,
     code,
+    extensions: extensionsOf(source),
   };
+}
+
+// REQ-API-007
+function extensionsOf(source: Record<string, unknown>): Record<string, unknown> {
+  const found: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(source)) {
+    if (CONTRACT_FIELDS.has(name)) {
+      continue;
+    }
+    found[name] = value;
+  }
+  return found;
 }
 
 function textOf(value: unknown, fallback: string): string {

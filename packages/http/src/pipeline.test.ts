@@ -75,3 +75,16 @@ test('успешный ответ конвейер не трогает', async (
   expect(await answer).toEqual({ id: '17' });
   expect(expired).toBe(0);
 });
+
+// REQ-API-007
+test('в собранном конвейере поля расширения доходят до обработчика', async () => {
+  const failure = await failureOf(409, {
+    status: 409,
+    detail: 'Недостаточно остатка',
+    code: 'stock-short',
+    availableQuantity: 5,
+    blockedItems: ['a-1'],
+  }, 'Conflict');
+
+  expect((failure as ApiFailure).extensions).toEqual({ availableQuantity: 5, blockedItems: ['a-1'] });
+});

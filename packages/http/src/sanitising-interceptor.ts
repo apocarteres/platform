@@ -10,6 +10,11 @@ export class ApiFailure extends Error {
     super(problem.code);
     this.name = 'ApiFailure';
   }
+
+  // REQ-API-007
+  get extensions(): Readonly<Record<string, unknown>> {
+    return this.problem.extensions;
+  }
 }
 
 const UNEXPECTED = 'unexpected';
@@ -38,6 +43,7 @@ function opaqueProblem(failure: HttpErrorResponse): ProblemDetail {
     detail: '',
     instance: failure.url ?? undefined,
     code: UNEXPECTED,
+    extensions: {},
   };
 }
 

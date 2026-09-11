@@ -38,7 +38,7 @@ authority: navigation
 | [Открытие выпуска создаёт задачу обязательства с именем, которое отвергает проверка правил](CORE-OPS-027-obligation-ticket-name-fails-naming.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | release, tooling |
 | [Состав выпуска не сверяется с тем, что в него вошло коммитами](CORE-OPS-030-release-verifies-commit-attribution.md) | P1 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | release, process, tooling |
 | [Отменённая работа продолжает удерживать выпуск](CORE-OPS-031-revert-label-frees-a-dropped-ticket.md) | P1 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | release, process, tooling |
-| [Закрытие выпуска требует в состав задачи уже вышедшего выпуска](CORE-OPS-033-release-close-demands-tickets-of-a-shipped-release.md) | P1 | Выполнена | Не назначен | tooling, process |
+| [Закрытие выпуска требует в состав задачи уже вышедшего выпуска](CORE-OPS-033-release-close-demands-tickets-of-a-shipped-release.md) | P1 | Выполнена | [RELEASE-1-8-0](../../releases/RELEASE-1-8-0.md) | tooling, process |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |

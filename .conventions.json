@@ -17,5 +17,6 @@
   "release": {
     "scheme": "semver"
   },
-  "ticketPrefix": "CORE"
+  "ticketPrefix": "CORE",
+  "commitRuleSince": "4eee830"
 }

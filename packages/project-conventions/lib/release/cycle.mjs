@@ -9,12 +9,15 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
+import { commitsInRange, cycleCommit, ticketOf } from './commits.mjs';
+import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
 export async function closability(root, { scheme }) {
   const problems = [];
+  const config = await readConfig(root);
   const release = await openRelease(root);
   if (release === null) problems.push('Открытого выпуска нет: откройте выпуск командой release open');
   if (!await workingTreeClean(root)) problems.push('Рабочее дерево не чисто: тег утверждал бы одно состояние, а помечал другое');
@@ -37,6 +40,8 @@ export async function closability(root, { scheme }) {
   }
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
   if (tag !== null && await tagExists(root, tag)) problems.push(`Тег ${tag} уже существует: номер не переиспользуется`);
+  // REQ-RELEASE-036
+  problems.push(...await commitProblems(root, { scheme, config, composition, existing: await releases(root) }));
   return { problems, release, commit, receipt, composition, state, obligations, isCore, tag };
 }
 
@@ -86,6 +91,49 @@ function obligationsSummary(closed, deferred, isCore) {
   if (closed.length > 0) parts.push(`закрыты: ${closed.join(', ')}`);
   if (deferred.length > 0) parts.push(`перенесены: ${deferred.join(', ')}`);
   return parts.length === 0 ? 'обязательств к исполнению в этом выпуске не было' : parts.join('; ');
+}
+
+// REQ-RELEASE-036
+async function commitProblems(root, { scheme, config, composition, existing }) {
+  const baseline = config.commitRuleSince ?? null;
+  // REQ-RELEASE-036
+  if (baseline === null) return [];
+  const since = await previousReleaseTag(root, existing, scheme);
+  const commits = await commitsInRange(root, since);
+  const beyondBaseline = await withoutOlderThan(root, commits, baseline);
+
+  const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
+  const prefix = config.ticketPrefix ?? null;
+  const members = new Set(composition.map(ticketId));
+  const problems = [];
+  for (const commit of beyondBaseline) {
+    if (cycleCommit(commit)) continue;
+    const ticket = ticketOf(commit, areas, prefix);
+    if (ticket === null) {
+      problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»`);
+      continue;
+    }
+    if (!members.has(ticket)) {
+      problems.push(`Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`);
+    }
+  }
+  return problems;
+}
+
+async function previousReleaseTag(root, existing, scheme) {
+  const released = existing
+    .filter((release) => release.metadata.get('status') === 'released')
+    .map((release) => releaseTag(release.metadata.get('id'), scheme));
+  for (const tag of released.reverse()) {
+    if (await tagExists(root, tag)) return tag;
+  }
+  return null;
+}
+
+async function withoutOlderThan(root, commits, baseline) {
+  const reachable = await commitsInRange(root, baseline);
+  const allowed = new Set(reachable.map((commit) => commit.sha));
+  return commits.filter((commit) => allowed.has(commit.sha));
 }
 
 // REQ-RELEASE-001, REQ-RELEASE-005

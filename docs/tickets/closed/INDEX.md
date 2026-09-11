@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 42. Включены самостоятельные задачи и этапы планов функций.
+Всего: 43. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -42,6 +42,7 @@ authority: navigation
 | [Ссылка на нормативный документ ядра считалась ссылкой в пустоту](CORE-DOC-005-references-to-delivered-core-documents.md) | P2 | Выполнена | [RELEASE-0-22-0](../../releases/RELEASE-0-22-0.md) | documentation |
 | [Имена документов и идентификаторы задавались по-разному в каждом репозитории](CORE-DOC-006-document-naming-scheme.md) | P2 | Выполнена | [RELEASE-0-35-0](../../releases/RELEASE-0-35-0.md) | documentation, process |
 | [Между выпусками нет фазы планирования](CORE-DOC-009-planning-phase-between-releases.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | process, release |
+| [У потребителя нет способа прислать заявку в ядро](CORE-DOC-010-consumer-feedback-channel.md) | P2 | Выполнена | Не назначен | process, documentation |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

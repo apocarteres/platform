@@ -9,7 +9,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
-import { commitsInRange, cycleCommit, ticketOf } from './commits.mjs';
+import { commitsInRange, cycleCommit, revertCommit, ticketOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
@@ -106,6 +106,7 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
   const prefix = config.ticketPrefix ?? null;
   const members = new Set(composition.map(ticketId));
   const problems = [];
+  const outside = new Map();
   for (const commit of beyondBaseline) {
     if (cycleCommit(commit)) continue;
     const ticket = ticketOf(commit, areas, prefix);
@@ -113,7 +114,15 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
       problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»`);
       continue;
     }
-    if (!members.has(ticket)) {
+    if (members.has(ticket)) continue;
+    if (!outside.has(ticket)) outside.set(ticket, []);
+    outside.get(ticket).push(commit);
+  }
+
+  // REQ-RELEASE-037
+  for (const [ticket, commits] of outside) {
+    if (revertCommit(commits[0], areas, prefix)) continue;
+    for (const commit of commits) {
       problems.push(`Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`);
     }
   }

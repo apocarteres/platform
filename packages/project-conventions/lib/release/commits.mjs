@@ -31,6 +31,15 @@ export function cycleCommit(commit) {
   return new RegExp(`^${CYCLE_TRAILER}:\\s*\\S`, 'm').test(commit.body);
 }
 
+// REQ-RELEASE-037
+export const REVERT_LABEL = '!revert';
+
+export function revertCommit(commit, areas, prefix) {
+  const ticket = ticketOf(commit, areas, prefix);
+  if (ticket === null) return false;
+  return new RegExp(`^${ticket}\\s+${REVERT_LABEL.replace('!', '\\!')}\\b`).test(commit.subject);
+}
+
 // REQ-NAMING-001, REQ-NAMING-012
 export function ticketOf(commit, areas, prefix) {
   const head = prefix ? `${prefix}-` : '';

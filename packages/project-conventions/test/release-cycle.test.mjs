@@ -812,3 +812,51 @@ test('снятая из состава задача удерживает вып�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-037
+test('отменённая работа снятой задачи выпуск не удерживает', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-009-work.md'), ticket('ZAVPN-QUAL-009', 'in_progress'));
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['ZAVPN-QUAL-009'] });
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 работа по указанной задаче');
+
+    assert.equal(
+      (await dropFromComposition(root, { ticketId: 'ZAVPN-QUAL-009', reason: 'работа отложена' })).dropped,
+      true,
+    );
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 !revert отмена отложенной работы');
+
+    const commit = await commitAll(root).catch(() => git('-C', root, 'rev-parse', 'HEAD').then((r) => r.stdout.trim()));
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+
+    const reverted = await closability(root, { scheme: 'date' });
+    assert.deepEqual(
+      reverted.problems.filter((problem) => problem.includes('ZAVPN-QUAL-009')),
+      [],
+      reverted.problems.join('\n'),
+    );
+
+    await writeFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-009-work.md'), `${ticket('ZAVPN-QUAL-009', 'in_progress')}\nработа возобновлена\n`);
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 работа после отмены');
+
+    const again = await closability(root, { scheme: 'date' });
+    assert.ok(
+      again.problems.some((problem) => problem.includes('ZAVPN-QUAL-009 вне состава выпуска')),
+      again.problems.join('\n'),
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

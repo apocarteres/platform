@@ -8,6 +8,8 @@ import { ApiFailure } from './sanitising-interceptor';
 export const SESSION_EXPIRED = new InjectionToken<() => void>('apocarteres.http.session-expired');
 
 const UNAUTHORIZED = 401;
+const UNDECLARED = 'Перехватчик истёкшей сессии подключён, но обработчик не объявлен: '
+  + 'объявите провайдер токена SESSION_EXPIRED';
 
 export const sessionExpiredInterceptor: HttpInterceptorFn = (
   request: HttpRequest<unknown>,
@@ -16,9 +18,14 @@ export const sessionExpiredInterceptor: HttpInterceptorFn = (
   const expired = inject(SESSION_EXPIRED, { optional: true });
   return next(request).pipe(
     catchError((failure: unknown) => {
-      if (expired !== null && isUnauthorized(failure)) {
-        expired();
+      if (!isUnauthorized(failure)) {
+        return throwError(() => failure);
       }
+      // REQ-API-002
+      if (expired === null) {
+        return throwError(() => new Error(UNDECLARED));
+      }
+      expired();
       return throwError(() => failure);
     }),
   );

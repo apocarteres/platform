@@ -53,6 +53,24 @@ npm install <ядро>/target/local-packages/apocarteres-http-<версия>.tgz
 import { problemDetailOf } from '@apocarteres/http';
 ```
 
-Версия Angular библиотекой не навязывается: она объявлена одноимённой
-зависимостью `peerDependencies`, и подходящей считается та, что уже стоит у
-потребителя.
+Библиотека объявляет требуемые версии `peerDependencies`: Angular 22 и
+rxjs 7.8. На более раннем Angular установка отказывает: это требование
+библиотеки, а не следствие её кода.
+
+Перехватчики функциональные, поэтому регистрируются через `provideHttpClient`:
+
+```ts
+provideHttpClient(withInterceptors([sanitisingInterceptor, sessionExpiredInterceptor]))
+```
+
+Схема с `HttpClientModule` и `HTTP_INTERCEPTORS` для них не годится, хотя сам
+Angular её ещё поддерживает.
+
+Обработчик истёкшей сессии объявляется провайдером токена:
+
+```ts
+{ provide: SESSION_EXPIRED, useValue: () => router.navigate(['/login']) }
+```
+
+Без него первый же ответ 401 роняет запрос названной ошибкой — перехватчик не
+делает вид, что сессия продлена.

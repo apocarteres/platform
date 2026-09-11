@@ -48,7 +48,14 @@ test('другие статусы обработчик не зовут', async (
   expect(called).toBe(0);
 });
 
-test('без объявленного обработчика перехватчик молчит и отказ пропускает', async () => {
-  const failure = new HttpErrorResponse({ status: 401, error: null });
+// REQ-API-002
+test('без объявленного обработчика 401 роняет запрос названной ошибкой, а не молчит', async () => {
+  const thrown = await run(new HttpErrorResponse({ status: 401, error: null }));
+  expect(thrown).toBeInstanceOf(Error);
+  expect((thrown as Error).message).toContain('SESSION_EXPIRED');
+});
+
+test('не-401 без объявленного обработчика проходит нетронутым', async () => {
+  const failure = new HttpErrorResponse({ status: 500, error: null });
   expect(await run(failure)).toBe(failure);
 });

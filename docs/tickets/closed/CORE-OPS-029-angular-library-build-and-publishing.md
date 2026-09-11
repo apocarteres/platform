@@ -5,7 +5,7 @@ status: done
 scope: build, frontend, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-5-0
 questions: resolved
 related: CORE-API-002, ADR-0001, ADR-0003, REQ-PUBLISHING, REQ-BUILD
 ---

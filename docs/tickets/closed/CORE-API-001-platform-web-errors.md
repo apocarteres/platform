@@ -5,7 +5,7 @@ status: done
 scope: backend, api, frontend
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-5-0
 depends-on: CORE-OPS-007
 related: ADR-0001
 legacy-id: TICKET-PLATFORM-WEB-ERRORS

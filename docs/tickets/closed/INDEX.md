@@ -19,7 +19,7 @@ authority: navigation
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
-| [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | Не назначен | frontend, api, quality |
+| [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |
 | [Версия платформы приложений задавалась дважды и разошлась](CORE-OPS-001-application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](CORE-OPS-002-code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
@@ -35,10 +35,10 @@ authority: navigation
 | [Процесс, запущенный исполнителем, мог висеть без предела](CORE-OPS-017-bounded-process-runs-for-agents.md) | P1 | Выполнена | [RELEASE-0-38-0](../../releases/RELEASE-0-38-0.md) | process, tooling |
 | [Команды выпуска действуют на репозиторий из окружения](CORE-OPS-022-release-commands-act-on-ambient-repository.md) | P1 | Выполнена | [RELEASE-1-1-0](../../releases/RELEASE-1-1-0.md) | quality, tooling, release |
 | [Обязательство ядра закрывается отказом от работы](CORE-OPS-025-obligation-closed-by-declined-work.md) | P1 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | release, tooling |
-| [Открытие выпуска создаёт задачу обязательства с именем, которое отвергает проверка правил](CORE-OPS-027-obligation-ticket-name-fails-naming.md) | P1 | Выполнена | Не назначен | release, tooling |
+| [Открытие выпуска создаёт задачу обязательства с именем, которое отвергает проверка правил](CORE-OPS-027-obligation-ticket-name-fails-naming.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
-| [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | Не назначен | backend, api, frontend |
-| [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | Не назначен | frontend, api |
+| [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
+| [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
@@ -46,7 +46,7 @@ authority: navigation
 | [Ссылка на нормативный документ ядра считалась ссылкой в пустоту](CORE-DOC-005-references-to-delivered-core-documents.md) | P2 | Выполнена | [RELEASE-0-22-0](../../releases/RELEASE-0-22-0.md) | documentation |
 | [Имена документов и идентификаторы задавались по-разному в каждом репозитории](CORE-DOC-006-document-naming-scheme.md) | P2 | Выполнена | [RELEASE-0-35-0](../../releases/RELEASE-0-35-0.md) | documentation, process |
 | [Между выпусками нет фазы планирования](CORE-DOC-009-planning-phase-between-releases.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | process, release |
-| [У потребителя нет способа прислать заявку в ядро](CORE-DOC-010-consumer-feedback-channel.md) | P2 | Выполнена | Не назначен | process, documentation |
+| [У потребителя нет способа прислать заявку в ядро](CORE-DOC-010-consumer-feedback-channel.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | process, documentation |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |
@@ -56,7 +56,7 @@ authority: navigation
 | [Отменённая задача не даёт закрыть выпуск](CORE-OPS-023-cancelled-ticket-blocks-release-close.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | release, tooling |
 | [Принятие цикла теряет номер выпуска и падает трассировкой](CORE-OPS-024-adopt-drops-the-release-number.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | release, tooling |
 | [Ядро переходит на собственный префикс идентификаторов задач](CORE-OPS-028-core-adopts-its-ticket-prefix.md) | P2 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | process, documentation, tooling |
-| [Ядро не умеет собирать и публиковать Angular-библиотеку](CORE-OPS-029-angular-library-build-and-publishing.md) | P2 | Выполнена | Не назначен | build, frontend, tooling |
+| [Ядро не умеет собирать и публиковать Angular-библиотеку](CORE-OPS-029-angular-library-build-and-publishing.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | build, frontend, tooling |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

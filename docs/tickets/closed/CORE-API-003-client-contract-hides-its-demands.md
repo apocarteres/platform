@@ -5,7 +5,7 @@ status: done
 scope: frontend, api, quality
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-5-0
 related: CORE-API-002, REQ-API, REQ-QUALITY
 ---
 

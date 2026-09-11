@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  RELEASES_DIR, TICKETS_DIR, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
+  RELEASES_DIR, TICKETS_DIR, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
   unassignedDoneTickets, writeDocument,
 } from './documents.mjs';
@@ -120,20 +120,37 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
   }
 
   // REQ-RELEASE-037
+  const known = await tickets(root);
   for (const [ticket, commits] of outside) {
     if (revertCommit(commits[0], areas, prefix)) continue;
-    for (const commit of commits) {
-      problems.push(`Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`);
-    }
+    const named = commits.map(
+      (commit) => `Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`,
+    );
+    // REQ-RELEASE-039
+    named.push(wayIntoComposition(ticket, known.find((item) => ticketId(item) === ticket) ?? null));
+    problems.push(named.join('\n  '));
   }
   return problems;
 }
 
+// REQ-RELEASE-039
+function wayIntoComposition(ticket, known) {
+  const assigned = known === null ? 'unassigned' : (known.metadata.get('release') ?? 'unassigned');
+  if (assigned !== 'unassigned') {
+    return `Задача ${ticket} уже отнесена к ${assigned} и в состав этого выпуска не вносится (REQ-RELEASE-007): работа после её выпуска оформляется новой задачей, а ненужная — отменяется коммитом с меткой !revert`;
+  }
+  return `Задача ${ticket} вносится в состав так: доведите её до выполненного состояния — состав подберёт её сам (REQ-RELEASE-007), — либо отмените её коммиты коммитом с меткой !revert`;
+}
+
+// REQ-RELEASE-036
 async function previousReleaseTag(root, existing, scheme) {
   const released = existing
     .filter((release) => release.metadata.get('status') === 'released')
-    .map((release) => releaseTag(release.metadata.get('id'), scheme));
-  for (const tag of released.reverse()) {
+    .map((release) => release.metadata.get('id'))
+    .sort(compareReleaseIds)
+    .reverse();
+  for (const id of released) {
+    const tag = releaseTag(id, scheme);
     if (await tagExists(root, tag)) return tag;
   }
   return null;

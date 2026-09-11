@@ -104,3 +104,24 @@ test('индекс обнаруживает смену статуса без п�
     assert.equal(await readFile(path.join(dir, 'INDEX.md'), 'utf8'), before);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+// REQ-RELEASE-036
+test('сводка выпусков упорядочена номером, а не именем файла', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'platform-releases-'));
+  try {
+    const dir = path.join(root, 'docs/releases');
+    await mkdir(dir, { recursive: true });
+    for (const id of ['RELEASE-1-2-0', 'RELEASE-1-10-0', 'RELEASE-1-9-0']) {
+      await writeFile(
+        path.join(dir, `${id}.md`),
+        `---\nid: ${id}\ntype: release\nstatus: released\nopened-on: 2026-09-05\nreleased-on: 2026-09-06\n---\n# Выпуск ${id}\n`,
+      );
+    }
+    await updateReleaseIndex(root);
+    const index = await readFile(path.join(dir, 'INDEX.md'), 'utf8');
+    assert.deepEqual(
+      index.split('\n').filter((line) => line.startsWith('| [Выпуск')).map((line) => /RELEASE-[\d-]+/.exec(line)[0]),
+      ['RELEASE-1-2-0', 'RELEASE-1-9-0', 'RELEASE-1-10-0'],
+    );
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

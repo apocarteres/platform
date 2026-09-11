@@ -85,6 +85,29 @@ export function nextReleaseId(existing, scheme, today, version) {
   return { id: `${prefix}${ordinal}`, tag: `${year}.${month}.${ordinal}`, number: `${year}.${month}.${ordinal}` };
 }
 
+// REQ-RELEASE-023
+function releaseParts(id) {
+  return id.slice('RELEASE-'.length)
+    .split('-')
+    .map((part) => (/^\d+$/.test(part) ? Number.parseInt(part, 10) : part));
+}
+
+// REQ-RELEASE-036
+export function compareReleaseIds(left, right) {
+  const first = releaseParts(left);
+  const second = releaseParts(right);
+  for (let index = 0; index < Math.max(first.length, second.length); index += 1) {
+    const one = first[index];
+    const other = second[index];
+    if (one === undefined) return -1;
+    if (other === undefined) return 1;
+    if (one === other) continue;
+    if (typeof one === 'number' && typeof other === 'number') return one - other;
+    return String(one) < String(other) ? -1 : 1;
+  }
+  return 0;
+}
+
 export function releaseTag(id, scheme) {
   if (scheme === 'semver') return `v${id.slice('RELEASE-'.length).replaceAll('-', '.')}`;
   const [, year, month, ordinal] = id.split('-');

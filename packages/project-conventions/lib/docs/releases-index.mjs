@@ -38,8 +38,9 @@ export async function refreshCompositionLinks(root, { check = false } = {}) {
 }
 
 export async function updateReleaseIndex(root, { check = false } = {}) {
+  const { compareReleaseIds } = await import('../release/documents.mjs');
   const directory = path.join(root, 'docs/releases');
-  const rows = [];
+  const found = [];
   const labels = { draft: 'Черновик', in_progress: 'В работе', blocked: 'Заблокирован', released: 'Выпущен', cancelled: 'Отменён' };
   for (const name of (await readdir(directory)).sort()) {
     if (!name.endsWith('.md')) continue;
@@ -47,8 +48,13 @@ export async function updateReleaseIndex(root, { check = false } = {}) {
     const metadata = parseFrontMatter(content)?.metadata;
     if (metadata?.get('type') !== 'release') continue;
     const title = /^# (.+)$/m.exec(content)?.[1] ?? metadata.get('id');
-    rows.push(`| [${title.replaceAll('|', '&#124;')}](${encodeURIComponent(name)}) | ${labels[metadata.get('status')]} | ${metadata.get('opened-on')} | ${metadata.get('released-on') ?? '—'} |`);
+    found.push({
+      id: metadata.get('id'),
+      row: `| [${title.replaceAll('|', '&#124;')}](${encodeURIComponent(name)}) | ${labels[metadata.get('status')]} | ${metadata.get('opened-on')} | ${metadata.get('released-on') ?? '—'} |`,
+    });
   }
+  // REQ-RELEASE-036
+  const rows = found.sort((left, right) => compareReleaseIds(left.id, right.id)).map((entry) => entry.row);
   const expected = [
     '---', 'id: IDX-RELEASES', 'type: index', 'status: active', 'scope: planning, release', 'authority: navigation', '---', '',
     '# Выпуски проекта', '',

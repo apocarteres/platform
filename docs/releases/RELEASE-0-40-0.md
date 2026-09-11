@@ -21,7 +21,7 @@ commit: 2d4508436227041e529c9f7b1618d2b2c549552e
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-019](../tickets/closed/OPS-019-old-identifier-stayed-in-the-slug.md) | Закрыта в этом выпуске, приоритет P3 |
+| [CORE-OPS-019](../tickets/closed/CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | Закрыта в этом выпуске, приоритет P3 |
 
 ## Критерии выхода
 

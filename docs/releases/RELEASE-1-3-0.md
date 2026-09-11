@@ -21,7 +21,7 @@ commit: 974a52096a103105fabccd222886a17f3425a488
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-021](../tickets/closed/OPS-021-push-gate-cannot-see-wiring-failures.md) | Закрыта в этом выпуске, приоритет P3 |
+| [CORE-OPS-021](../tickets/closed/CORE-OPS-021-push-gate-cannot-see-wiring-failures.md) | Закрыта в этом выпуске, приоритет P3 |
 
 ## Критерии выхода
 

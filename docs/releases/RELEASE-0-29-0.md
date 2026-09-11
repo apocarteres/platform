@@ -21,8 +21,8 @@ commit: 622e133d51c4dedbb675231e19f4036a9dd3e1ae
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-003](../tickets/closed/OPS-003-conventions-package.md) | Закрыта в этом выпуске, приоритет P1 |
-| [OPS-010](../tickets/closed/OPS-010-release-number-reused-overwrote-a-closed-release.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-003](../tickets/closed/CORE-OPS-003-conventions-package.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-010](../tickets/closed/CORE-OPS-010-release-number-reused-overwrote-a-closed-release.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

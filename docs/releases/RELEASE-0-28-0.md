@@ -21,7 +21,7 @@ commit: fa5bba4a7d1e45b0659c92c6148c74f0bfef68bb
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-014](../tickets/closed/OPS-014-size-rule-knew-only-java-and-js-tests.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-014](../tickets/closed/CORE-OPS-014-size-rule-knew-only-java-and-js-tests.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

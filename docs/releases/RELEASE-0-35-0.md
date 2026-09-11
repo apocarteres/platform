@@ -21,7 +21,7 @@ commit: a59a0da08b4d1b75631aeac44826c0aadde98470
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-006](../tickets/closed/DOC-006-document-naming-scheme.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-DOC-006](../tickets/closed/CORE-DOC-006-document-naming-scheme.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

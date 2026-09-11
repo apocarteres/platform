@@ -21,7 +21,7 @@ commit: 4e6203e602c83e3ef5c9d38ba037b73e7039b208
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-004](../tickets/closed/OPS-004-core-owns-application-platform-versions.md) | Закрыта в этом выпуске, приоритет P0 |
+| [CORE-OPS-004](../tickets/closed/CORE-OPS-004-core-owns-application-platform-versions.md) | Закрыта в этом выпуске, приоритет P0 |
 
 ## Критерии выхода
 

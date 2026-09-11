@@ -21,7 +21,7 @@ commit: 5bac817a021dedb423932d8c96d7b31ae7b6a0e1
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-016](../tickets/closed/OPS-016-version-substitution-leaked-into-the-consumer.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-016](../tickets/closed/CORE-OPS-016-version-substitution-leaked-into-the-consumer.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

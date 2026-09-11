@@ -70,7 +70,7 @@ run = [
 ]
 
 [tasks.release-open]
-description = "Открыть выпуск: номер и перечень задач. Пример: mise run release-open 1.2.0 OPS-023,OPS-024"
+description = "Открыть выпуск: номер и перечень задач. Пример: mise run release-open 1.2.0 CORE-OPS-023,CORE-OPS-024"
 usage = """
 arg "<version>" help="Номер выпуска"
 arg "<tickets>" help="Задачи в состав, через запятую"

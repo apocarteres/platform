@@ -21,7 +21,7 @@ commit: c170103d59562be67a92f110892d8483590145f3
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-009](../tickets/closed/OPS-009-release-cycle-adoption.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-009](../tickets/closed/CORE-OPS-009-release-cycle-adoption.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

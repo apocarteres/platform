@@ -5,7 +5,7 @@ status: accepted
 scope: build, publishing, deployment
 authority: normative
 supersedes: ADR-0001
-related: REQ-PUBLISHING, OPS-003
+related: REQ-PUBLISHING, CORE-OPS-003
 ---
 
 # ADR-0003: артефакты ядра публикуются локально, GitHub — только хранилище репозитория

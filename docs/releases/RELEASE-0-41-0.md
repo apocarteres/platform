@@ -21,7 +21,7 @@ commit: 9799a2298cd3a380edec205bf341e44c3736c844
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-020](../tickets/closed/OPS-020-dependency-rule-fired-outside-its-scope.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-020](../tickets/closed/CORE-OPS-020-dependency-rule-fired-outside-its-scope.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

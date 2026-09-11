@@ -21,7 +21,7 @@ commit: 142630518f8fed5e9444d6c127c2b23d1ea3a212
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-006](../tickets/closed/OPS-006-four-checks-from-a-second-consumer.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-006](../tickets/closed/CORE-OPS-006-four-checks-from-a-second-consumer.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

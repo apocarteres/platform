@@ -21,7 +21,7 @@ commit: 5f163b0de465ef8fcee7ce1ca3cd476939c916a5
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-002](../tickets/closed/DOC-002-catalog-rules-into-the-core.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-DOC-002](../tickets/closed/CORE-DOC-002-catalog-rules-into-the-core.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

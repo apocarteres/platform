@@ -21,7 +21,7 @@ commit: 56f08ce43a2b54caf23084f24232b178927377b5
 
 | Задача | Причина включения |
 |---|---|
-| [QUAL-002](../tickets/closed/QUAL-002-monotonic-timer-counted-as-a-clock.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-QUAL-002](../tickets/closed/CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

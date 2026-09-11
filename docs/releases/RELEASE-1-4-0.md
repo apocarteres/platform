@@ -19,7 +19,7 @@ opened-on: 2026-09-11
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-028](../tickets/OPS-028-core-adopts-its-ticket-prefix.md) | Указана при открытии выпуска |
+| [CORE-OPS-028](../tickets/closed/CORE-OPS-028-core-adopts-its-ticket-prefix.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

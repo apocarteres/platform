@@ -21,7 +21,7 @@ commit: cd7d0215d9e80509156b3ddd0550ba4159869fb7
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-022](../tickets/closed/OPS-022-release-commands-act-on-ambient-repository.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-022](../tickets/closed/CORE-OPS-022-release-commands-act-on-ambient-repository.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

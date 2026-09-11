@@ -21,7 +21,7 @@ commit: 3d74c412a5402ec353b8c8ea5317badb02cecd1c
 
 | Задача | Причина включения |
 |---|---|
-| [QUAL-003](../tickets/closed/QUAL-003-clock-hidden-in-a-template-string.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-QUAL-003](../tickets/closed/CORE-QUAL-003-clock-hidden-in-a-template-string.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

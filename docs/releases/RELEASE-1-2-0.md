@@ -21,10 +21,10 @@ commit: 7ba4b91700f2c4af26918fa72051f3500c0a7b32
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-009](../tickets/closed/DOC-009-planning-phase-between-releases.md) | Закрыта в этом выпуске, приоритет P2 |
-| [OPS-023](../tickets/closed/OPS-023-cancelled-ticket-blocks-release-close.md) | Закрыта в этом выпуске, приоритет P2 |
-| [OPS-024](../tickets/closed/OPS-024-adopt-drops-the-release-number.md) | Закрыта в этом выпуске, приоритет P2 |
-| [OPS-025](../tickets/closed/OPS-025-obligation-closed-by-declined-work.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-DOC-009](../tickets/closed/CORE-DOC-009-planning-phase-between-releases.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-023](../tickets/closed/CORE-OPS-023-cancelled-ticket-blocks-release-close.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-024](../tickets/closed/CORE-OPS-024-adopt-drops-the-release-number.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-025](../tickets/closed/CORE-OPS-025-obligation-closed-by-declined-work.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

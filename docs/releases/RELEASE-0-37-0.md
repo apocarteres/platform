@@ -21,7 +21,7 @@ commit: 6d6353da07f0a6c617928cd48149711e0807c4c7
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-008](../tickets/closed/DOC-008-single-file-feature-plans.md) | Закрыта в этом выпуске, приоритет P3 |
+| [CORE-DOC-008](../tickets/closed/CORE-DOC-008-single-file-feature-plans.md) | Закрыта в этом выпуске, приоритет P3 |
 
 ## Критерии выхода
 

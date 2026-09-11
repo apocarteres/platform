@@ -21,7 +21,7 @@ commit: d681370c8e9ca46636ce9f00f972538649a30a3e
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-007](../tickets/closed/DOC-007-feature-plan-stage-names.md) | Закрыта в этом выпуске, приоритет P3 |
+| [CORE-DOC-007](../tickets/closed/CORE-DOC-007-feature-plan-stage-names.md) | Закрыта в этом выпуске, приоритет P3 |
 
 ## Критерии выхода
 

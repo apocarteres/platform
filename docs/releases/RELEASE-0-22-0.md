@@ -21,8 +21,8 @@ commit: 62ea99057b7ce4ed973ae5fb6185f99dae85a7b4
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-005](../tickets/closed/OPS-005-docs-checks-unaware-of-release-cycle.md) | Закрыта в этом выпуске, приоритет P1 |
-| [DOC-005](../tickets/closed/DOC-005-references-to-delivered-core-documents.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-005](../tickets/closed/CORE-OPS-005-docs-checks-unaware-of-release-cycle.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-DOC-005](../tickets/closed/CORE-DOC-005-references-to-delivered-core-documents.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

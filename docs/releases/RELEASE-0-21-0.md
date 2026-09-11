@@ -21,8 +21,8 @@ commit: 0c90ec1ec489169764fdc6398ded45f5cf4e5856
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-008](../tickets/closed/OPS-008-release-composition-misses-planned-obligations.md) | Закрыта в этом выпуске, приоритет P1 |
-| [OPS-011](../tickets/closed/OPS-011-satisfied-obligation-leaves-draft-ticket.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-008](../tickets/closed/CORE-OPS-008-release-composition-misses-planned-obligations.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-011](../tickets/closed/CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

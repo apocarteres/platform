@@ -21,7 +21,7 @@ commit: ab743894d7d9b8f54547511e8afbed069b37b696
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-017](../tickets/closed/OPS-017-bounded-process-runs-for-agents.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-017](../tickets/closed/CORE-OPS-017-bounded-process-runs-for-agents.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

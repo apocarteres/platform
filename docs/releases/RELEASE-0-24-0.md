@@ -21,7 +21,7 @@ commit: 0e2946ccaa117ac30e5671457986e497976e1762
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-004](../tickets/closed/DOC-004-core-adoption-rules.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-DOC-004](../tickets/closed/CORE-DOC-004-core-adoption-rules.md) | Закрыта в этом выпуске, приоритет P1 |
 
 ## Критерии выхода
 

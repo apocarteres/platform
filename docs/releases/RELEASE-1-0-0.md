@@ -42,8 +42,8 @@ commit: 29245063893595ed07840be506767e97d8c833b7
 
 | Задача | Причина включения |
 |---|---|
-| [DATA-001](../tickets/closed/DATA-001-platform-persistence.md) | Закрыта в этом выпуске, приоритет P2 |
-| [QUAL-004](../tickets/closed/QUAL-004-receipt-attests-without-checks.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-DATA-001](../tickets/closed/CORE-DATA-001-platform-persistence.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-QUAL-004](../tickets/closed/CORE-QUAL-004-receipt-attests-without-checks.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

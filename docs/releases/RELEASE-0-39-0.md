@@ -21,7 +21,7 @@ commit: 86e7757ee72ddf91ee870da2509e5dfe298d0568
 
 | Задача | Причина включения |
 |---|---|
-| [OPS-018](../tickets/closed/OPS-018-migration-kept-areas-outside-the-list.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-018](../tickets/closed/CORE-OPS-018-migration-kept-areas-outside-the-list.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

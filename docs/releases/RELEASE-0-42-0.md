@@ -21,7 +21,7 @@ commit: ce0c800d29b2be690776325431441ab6847c351a
 
 | Задача | Причина включения |
 |---|---|
-| [DOC-003](../tickets/closed/DOC-003-clanlog-ticket-format-migration.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-DOC-003](../tickets/closed/CORE-DOC-003-clanlog-ticket-format-migration.md) | Закрыта в этом выпуске, приоритет P2 |
 
 ## Критерии выхода
 

@@ -5,7 +5,7 @@ status: backlog
 scope: process, documentation, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-4-0
 questions: resolved
 related: OPS-027, REQ-NAMING, REQ-RELEASE
 ---

@@ -11,6 +11,7 @@ export const DELIVERED_DOCUMENTS = [
   'api-errors.md',
   'code-design.md',
   'configuration.md',
+  'secret-storage.md',
   'compatibility.md',
   'agent-work.md',
   'code-comments.md',

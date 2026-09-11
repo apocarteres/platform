@@ -127,3 +127,22 @@ test('идентификатор с областью вне перечня пе�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-NAMING-012
+test('префикс проекта входит в идентификатор и имя файла задачи', () => {
+  const withPrefix = metadata({ id: 'CORE-OPS-027', type: 'ticket' });
+  assert.equal(nameIssue('docs/tickets/CORE-OPS-027-thing.md', withPrefix, TICKET_AREAS, 'CORE'), null);
+  assert.match(
+    nameIssue('docs/tickets/OPS-027-thing.md', metadata({ id: 'OPS-027', type: 'ticket' }), TICKET_AREAS, 'CORE'),
+    /имя файла задачи должно быть CORE-<ОБЛАСТЬ>-<NNN>-<слаг>\.md/,
+  );
+  assert.match(
+    nameIssue('docs/tickets/CORE-OPS-027-thing.md', metadata({ id: 'OPS-027', type: 'ticket' }), TICKET_AREAS, 'CORE'),
+    /ожидается CORE-OPS-027/,
+  );
+  assert.equal(
+    nameIssue('docs/tickets/OPS-027-thing.md', metadata({ id: 'OPS-027', type: 'ticket' }), TICKET_AREAS),
+    null,
+    'без объявленного префикса прежняя форма принимается',
+  );
+});

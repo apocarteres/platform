@@ -29,7 +29,13 @@ export async function documents(root, directory = 'docs') {
 }
 
 // REQ-NAMING-005, REQ-NAMING-006
-export function nameIssue(file, metadata, areas) {
+// REQ-NAMING-012
+export function ticketIdPattern(areas, prefix) {
+  const head = prefix ? `${prefix}-` : '';
+  return { head, shape: `${head}<ОБЛАСТЬ>-<NNN>` };
+}
+
+export function nameIssue(file, metadata, areas, prefix = null) {
   const name = path.posix.basename(file);
   const id = metadata.get('id') ?? '';
   const type = metadata.get('type') ?? '';
@@ -46,12 +52,14 @@ export function nameIssue(file, metadata, areas) {
   }
 
   if (type === 'ticket') {
-    const expected = new RegExp(`^(${areas.join('|')})-(\\d{3})-${SLUG}\\.md$`);
+    // REQ-NAMING-012
+    const { head, shape } = ticketIdPattern(areas, prefix);
+    const expected = new RegExp(`^${head}(${areas.join('|')})-(\\d{3})-${SLUG}\\.md$`);
     const match = expected.exec(name);
     if (match === null) {
-      return `имя файла задачи должно быть <ОБЛАСТЬ>-<NNN>-<слаг>.md, область из перечня: ${areas.join(', ')}`;
+      return `имя файла задачи должно быть ${shape}-<слаг>.md, область из перечня: ${areas.join(', ')}`;
     }
-    const expectedId = `${match[1]}-${match[2]}`;
+    const expectedId = `${head}${match[1]}-${match[2]}`;
     if (id !== expectedId) return `идентификатор ${id} не совпадает с именем файла: ожидается ${expectedId}`;
     return null;
   }
@@ -83,11 +91,13 @@ export function nameIssue(file, metadata, areas) {
 
 export async function findNamingIssues(root, config) {
   const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
+  // REQ-NAMING-012
+  const prefix = config.ticketPrefix ?? null;
   const violations = new Map();
   for (const file of await documents(root)) {
     const parsed = parseFrontMatter(await readFile(path.join(root, file), 'utf8'));
     if (parsed?.metadata === undefined) continue;
-    const issue = nameIssue(file, parsed.metadata, areas);
+    const issue = nameIssue(file, parsed.metadata, areas, prefix);
     if (issue !== null) violations.set(file, [{ line: 1, text: issue }]);
   }
   return violations;

@@ -383,3 +383,43 @@ test('открытие выпуска на semver без номера отказ
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-038
+test('показ состояния завершается нулём, пока состояние удалось прочитать', async () => {
+  const root = await repository();
+  try {
+    const empty = await conventions(root, 'release', 'status');
+    assert.equal(empty.code, 0, empty.output);
+    assert.match(empty.output, /Открытого выпуска нет/);
+
+    assert.equal((await conventions(root, 'release', 'open')).code, 0);
+    const unready = await conventions(root, 'release', 'status');
+    assert.equal(unready.code, 0, unready.output);
+    assert.match(unready.output, /Выпуск закрыть нельзя/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-038
+test('непрочитанное состояние выпуска остаётся отказом с названной причиной', async () => {
+  const root = await repository();
+  try {
+    assert.equal((await conventions(root, 'release', 'open')).code, 0);
+    const opened = (await readdir(path.join(root, 'docs/releases'))).find((name) => name.startsWith('RELEASE-'));
+    const second = opened.replace(/-(\d+)\.md$/, '-9.md');
+    assert.notEqual(second, opened, 'второй документ выпуска должен получить своё имя');
+    await writeFile(
+      path.join(root, 'docs/releases', second),
+      (await readFile(path.join(root, 'docs/releases', opened), 'utf8'))
+        .replace(/^id: .+$/m, `id: ${second.replace('.md', '')}`),
+    );
+
+    const broken = await conventions(root, 'release', 'status');
+    assert.equal(broken.code, 1, broken.output);
+    assert.match(broken.output, /прочитать не удалось/);
+    assert.match(broken.output, /больше одного/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

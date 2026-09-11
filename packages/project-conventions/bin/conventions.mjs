@@ -270,8 +270,17 @@ async function obligations(root) {
   }
 }
 
-// REQ-RELEASE-010, REQ-RELEASE-034
+// REQ-RELEASE-010, REQ-RELEASE-034, REQ-RELEASE-038
 async function releaseStatus(root) {
+  try {
+    await reportReleaseStatus(root);
+  } catch (failure) {
+    console.error(`Состояние выпуска прочитать не удалось: ${failure.message}`);
+    process.exitCode = 1;
+  }
+}
+
+async function reportReleaseStatus(root) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
   const state = await closability(root, { scheme });
@@ -291,18 +300,16 @@ async function releaseStatus(root) {
       console.log('Недостаёт завершающего шага: release finish --note "<чем выполнен>".');
       return;
     }
-    console.error('Завершить выпуск нельзя:');
-    for (const problem of ready.problems) console.error(`- ${problem}`);
-    process.exitCode = 1;
+    console.log('Завершить выпуск нельзя:');
+    for (const problem of ready.problems) console.log(`- ${problem}`);
     return;
   }
   if (state.problems.length === 0) {
     console.log('Первый шаг закрытия можно выполнять: release close.');
     return;
   }
-  console.error('Выпуск закрыть нельзя:');
-  for (const problem of state.problems) console.error(`- ${problem}`);
-  process.exitCode = 1;
+  console.log('Выпуск закрыть нельзя:');
+  for (const problem of state.problems) console.log(`- ${problem}`);
 }
 
 // REQ-RELEASE-030

@@ -146,3 +146,49 @@ test('префикс проекта входит в идентификатор �
     'без объявленного префикса прежняя форма принимается',
   );
 });
+
+// REQ-NAMING-012
+test('миграция приводит идентификаторы к объявленному префиксу проекта', async () => {
+  const root = await project({
+    'docs/tickets/closed/OPS-012-old-work.md': ticket('OPS-012', 'build'),
+    'docs/tickets/OPS-013-other-work.md': `${ticket('OPS-013', 'build')}\nСсылка на \`OPS-012\` рядом.\n`,
+    'docs/tickets/ZAVPN-QUAL-001-ready.md': `${ticket('ZAVPN-QUAL-001', 'quality')}\nСсылка на \`OPS-013\` рядом.\n`,
+    'docs/tickets/ZAVPN-OPS-013-migrated-earlier.md': `${ticket('ZAVPN-OPS-013', 'build')}\nПереименована прошлым прогоном.\n`,
+  });
+  try {
+    const moves = await plan(root, { prefix: 'ZAVPN' });
+    assert.deepEqual(moves.map((move) => move.id), ['ZAVPN-OPS-014', 'ZAVPN-OPS-015']);
+    assert.equal(moves[0].to, 'docs/tickets/closed/ZAVPN-OPS-014-old-work.md');
+
+    const { moves: applied } = await migrate(root, { prefix: 'ZAVPN' });
+    assert.equal(applied.length, 2);
+
+    const other = await readFile(path.join(root, 'docs/tickets/ZAVPN-OPS-015-other-work.md'), 'utf8');
+    assert.match(other, /^id: ZAVPN-OPS-015$/m);
+    assert.match(other, /^legacy-id: OPS-013$/m);
+    assert.match(other, /Ссылка на `ZAVPN-OPS-014` рядом/);
+
+    const ready = await readFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-001-ready.md'), 'utf8');
+    assert.match(ready, /^id: ZAVPN-QUAL-001$/m, 'задача с префиксом остаётся на месте');
+    assert.match(ready, /Ссылка на `ZAVPN-OPS-015` рядом/);
+
+    const earlier = await readFile(path.join(root, 'docs/tickets/ZAVPN-OPS-013-migrated-earlier.md'), 'utf8');
+    assert.match(earlier, /^id: ZAVPN-OPS-013$/m, 'переименованная прежде задача не трогается');
+    assert.doesNotMatch(earlier, /ZAVPN-ZAVPN/, 'идентификатор прежнего прогона не получает второго префикса');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-NAMING-012
+test('без объявленного префикса миграция работает как прежде', async () => {
+  const root = await project({
+    'docs/tickets/closed/OPS-012-old-work.md': ticket('OPS-012', 'build'),
+    'docs/tickets/first-build-break.md': ticket('TICKET-FIRST-BUILD-BREAK', 'build'),
+  });
+  try {
+    assert.deepEqual((await plan(root, {})).map((move) => move.id), ['OPS-013']);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

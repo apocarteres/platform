@@ -436,16 +436,18 @@ async function run(root, argv) {
 async function naming(root, subcommand, mapFile) {
   const config = await readConfig(root);
   const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
+  // REQ-NAMING-012
+  const prefix = config.ticketPrefix ?? null;
   let overrides = {};
   if (mapFile) overrides = JSON.parse(await readFile(path.join(root, mapFile), 'utf8'));
   if (subcommand === 'plan') {
-    const moves = await plan(root, { overrides, areas });
+    const moves = await plan(root, { overrides, areas, prefix });
     console.log(`Переименований: ${moves.length}`);
     for (const move of moves) console.log(`- ${move.legacyId} -> ${move.id}: ${move.to}`);
     return;
   }
   if (subcommand === 'migrate') {
-    const { moves, touched } = await migrate(root, { overrides, areas });
+    const { moves, touched } = await migrate(root, { overrides, areas, prefix });
     console.log(`Переименовано задач: ${moves.length}, файлов со ссылками поправлено: ${touched ?? 0}`);
     for (const move of moves) console.log(`- ${move.legacyId} -> ${move.id}`);
     return;

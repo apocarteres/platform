@@ -36,6 +36,11 @@ export function areaFor(metadata, file, overrides = {}) {
 const LEADING_ID = /^[A-Za-z]{2,6}-\d{2,4}-/;
 
 // REQ-NAMING-005
+// REQ-NAMING-012
+function referenceTo(legacy) {
+  return new RegExp(`(?<![A-Za-z0-9-])${legacy}\\b`, 'g');
+}
+
 export function slugFor(file) {
   const stem = path.posix.basename(file, '.md');
   const withoutDate = stem.replace(DATE, '').replace(LEADING_ID, '');
@@ -75,7 +80,10 @@ async function featurePlans(root) {
   return found;
 }
 
-export async function plan(root, { overrides = {}, areas = TICKET_AREAS } = {}) {
+// REQ-NAMING-012
+export async function plan(root, { overrides = {}, areas = TICKET_AREAS, prefix = null } = {}) {
+  const head = prefix ? `${prefix}-` : '';
+  const correct = new RegExp(`^${head}(${areas.join('|')})-(\\d{3})$`);
   const all = [...await tickets(root), ...await featurePlans(root)];
   const decided = all.map((ticket) => ({
     ticket,
@@ -83,25 +91,22 @@ export async function plan(root, { overrides = {}, areas = TICKET_AREAS } = {}) 
     area: areaFor(ticket.metadata, path.relative(root, ticket.file), overrides),
   }));
   const taken = new Map();
-  for (const entry of decided) {
-    const current = /^([A-Z]+)-(\d{3})$/.exec(ticketId(entry.ticket));
-    // REQ-NAMING-002
-    if (current === null || !areas.includes(current[1])) continue;
-    taken.set(ticketId(entry.ticket), entry);
-    entry.keep = true;
-  }
   const counters = new Map();
   for (const area of areas) counters.set(area, 0);
-  for (const [id] of taken) {
-    const [area, number] = id.split('-');
-    counters.set(area, Math.max(counters.get(area) ?? 0, Number(number)));
+  for (const entry of decided) {
+    // REQ-NAMING-002, REQ-NAMING-012
+    const current = correct.exec(ticketId(entry.ticket));
+    if (current === null) continue;
+    taken.set(ticketId(entry.ticket), entry);
+    entry.keep = true;
+    counters.set(current[1], Math.max(counters.get(current[1]) ?? 0, Number(current[2])));
   }
   const moves = [];
   for (const entry of decided.filter((item) => item.keep !== true)
     .sort((left, right) => sortKey(left.file, left.ticket.metadata).localeCompare(sortKey(right.file, right.ticket.metadata)))) {
     const next = (counters.get(entry.area) ?? 0) + 1;
     counters.set(entry.area, next);
-    const id = `${entry.area}-${String(next).padStart(3, '0')}`;
+    const id = `${head}${entry.area}-${String(next).padStart(3, '0')}`;
     const directory = path.posix.dirname(entry.file);
     moves.push({
       legacyId: ticketId(entry.ticket),
@@ -138,8 +143,8 @@ async function textFiles(root) {
 }
 
 // REQ-NAMING-009
-export async function migrate(root, { overrides = {}, areas = TICKET_AREAS } = {}) {
-  const moves = await plan(root, { overrides, areas });
+export async function migrate(root, { overrides = {}, areas = TICKET_AREAS, prefix = null } = {}) {
+  const moves = await plan(root, { overrides, areas, prefix });
   if (moves.length === 0) return { moves };
 
   for (const move of moves) {
@@ -157,7 +162,8 @@ export async function migrate(root, { overrides = {}, areas = TICKET_AREAS } = {
     const after = before.split('\n').map((line) => {
       if (line.startsWith('legacy-id:')) return line;
       let updated = line;
-      for (const [legacy, id] of renames) updated = updated.replaceAll(legacy, id);
+      // REQ-NAMING-012
+      for (const [legacy, id] of renames) updated = updated.replace(referenceTo(legacy), id);
       for (const [from, to] of paths) updated = updated.replaceAll(from, to);
       return updated;
     }).join('\n');

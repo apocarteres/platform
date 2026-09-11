@@ -1,6 +1,8 @@
 package io.github.apocarteres.platform.web.errors.internal;
 
 import io.github.apocarteres.platform.web.errors.ErrorCodeResolver;
+import io.github.apocarteres.platform.web.errors.ErrorExtensions;
+import io.github.apocarteres.platform.web.errors.ErrorHeaders;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Optional;
@@ -37,9 +39,17 @@ public class WebErrorsAutoConfiguration {
   ApiErrorAdvice apiErrorAdvice(
     ErrorCodeResolver codes,
     ErrorMessages messages,
+    ObjectProvider<ErrorExtensions> extensions,
+    ObjectProvider<ErrorHeaders> headers,
     ObjectProvider<ErrorMetrics> metrics
   ) {
-    return new ApiErrorAdvice(codes, messages, Optional.ofNullable(metrics.getIfAvailable()));
+    return new ApiErrorAdvice(
+      codes,
+      messages,
+      Optional.ofNullable(extensions.getIfAvailable()),
+      Optional.ofNullable(headers.getIfAvailable()),
+      Optional.ofNullable(metrics.getIfAvailable())
+    );
   }
 
   @Configuration(proxyBeanMethods = false)

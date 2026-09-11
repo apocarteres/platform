@@ -2,13 +2,19 @@ package io.github.apocarteres.platform.web.errors.internal;
 
 import io.github.apocarteres.platform.web.errors.ErrorCode;
 import io.github.apocarteres.platform.web.errors.ErrorCodeResolver;
+import io.github.apocarteres.platform.web.errors.ErrorExtensions;
+import io.github.apocarteres.platform.web.errors.ErrorHeaders;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Map;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -21,24 +27,54 @@ class ApiErrorAdvice {
 
   private final ErrorCodeResolver codes;
   private final ErrorMessages messages;
+  private final Optional<ErrorExtensions> extensions;
+  private final Optional<ErrorHeaders> headers;
   private final Optional<ErrorMetrics> metrics;
 
-  ApiErrorAdvice(ErrorCodeResolver codes, ErrorMessages messages, Optional<ErrorMetrics> metrics) {
+  ApiErrorAdvice(
+    ErrorCodeResolver codes,
+    ErrorMessages messages,
+    Optional<ErrorExtensions> extensions,
+    Optional<ErrorHeaders> headers,
+    Optional<ErrorMetrics> metrics
+  ) {
     this.codes = codes;
     this.messages = messages;
+    this.extensions = extensions;
+    this.headers = headers;
     this.metrics = metrics;
   }
 
   @ExceptionHandler(Throwable.class)
-  ProblemDetail onFailure(Throwable failure, WebRequest request) {
+  ResponseEntity<ProblemDetail> onFailure(Throwable failure, WebRequest request) {
     ErrorCode code = codes.resolve(failure).orElseGet(() -> fallbackFor(failure));
     ProblemDetail detail = ProblemDetail.forStatus(code.status());
     detail.setTitle(code.status().getReasonPhrase());
     detail.setDetail(messages.detailFor(code, localeOf(request)));
     detail.setProperty("code", code.value());
+    // REQ-API-007
+    extensionsFor(failure, code).forEach(detail::setProperty);
     instanceOf(request).ifPresent(detail::setInstance);
     metrics.ifPresent(counter -> counter.record(code, servletRequestOf(request)));
-    return detail;
+    return ResponseEntity.status(code.status())
+      .headers(headersFor(failure, code))
+      .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+      .body(detail);
+  }
+
+  // REQ-API-007
+  private Map<String, Object> extensionsFor(Throwable failure, ErrorCode code) {
+    return extensions.map(port -> port.forFailure(failure, code)).orElseGet(Map::of);
+  }
+
+  // REQ-API-008
+  private HttpHeaders headersFor(Throwable failure, ErrorCode code) {
+    HttpHeaders collected = new HttpHeaders();
+    if (failure instanceof ErrorResponse response) {
+      collected.putAll(response.getHeaders());
+    }
+    headers.ifPresent(port -> collected.putAll(port.forFailure(failure, code)));
+    return collected;
   }
 
   // REQ-API-002

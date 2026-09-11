@@ -5,7 +5,7 @@ status: done
 scope: api, backend
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-7-0
 related: CORE-API-001
 ---
 

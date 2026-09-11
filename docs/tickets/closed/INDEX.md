@@ -41,9 +41,9 @@ authority: navigation
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
-| [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | Не назначен | api, backend |
-| [Обработчик истёкшей сессии не отличает её от неудачного входа](CORE-API-005-session-handler-cannot-tell-a-failed-login.md) | P2 | Выполнена | Не назначен | frontend, api |
-| [Ответ об ошибке не может нести заголовки](CORE-API-006-error-response-cannot-carry-headers.md) | P2 | Выполнена | Не назначен | backend, api |
+| [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |
+| [Обработчик истёкшей сессии не отличает её от неудачного входа](CORE-API-005-session-handler-cannot-tell-a-failed-login.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | frontend, api |
+| [Ответ об ошибке не может нести заголовки](CORE-API-006-error-response-cannot-carry-headers.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | backend, api |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
@@ -62,11 +62,11 @@ authority: navigation
 | [Принятие цикла теряет номер выпуска и падает трассировкой](CORE-OPS-024-adopt-drops-the-release-number.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | release, tooling |
 | [Ядро переходит на собственный префикс идентификаторов задач](CORE-OPS-028-core-adopts-its-ticket-prefix.md) | P2 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | process, documentation, tooling |
 | [Ядро не умеет собирать и публиковать Angular-библиотеку](CORE-OPS-029-angular-library-build-and-publishing.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | build, frontend, tooling |
-| [Миграция имён не проставляет префикс проекта](CORE-OPS-032-name-migration-does-not-apply-the-project-prefix.md) | P2 | Выполнена | Не назначен | tooling, process |
+| [Миграция имён не проставляет префикс проекта](CORE-OPS-032-name-migration-does-not-apply-the-project-prefix.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | tooling, process |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |
-| [Показ состояния выпуска отказывает на обычном состоянии](CORE-QUAL-006-release-status-fails-on-a-normal-state.md) | P2 | Выполнена | Не назначен | release, tooling |
+| [Показ состояния выпуска отказывает на обычном состоянии](CORE-QUAL-006-release-status-fails-on-a-normal-state.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | release, tooling |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |

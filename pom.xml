@@ -18,6 +18,7 @@
     <module>platform-service-parent</module>
     <module>platform-persistence</module>
     <module>platform-time</module>
+    <module>platform-web-errors</module>
   </modules>
 
   <properties>

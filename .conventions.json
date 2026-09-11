@@ -2,6 +2,7 @@
   "sources": [
     "platform-persistence/src",
     "platform-time/src",
+    "platform-web-errors/src",
     "scripts",
     "packages/project-conventions"
   ],

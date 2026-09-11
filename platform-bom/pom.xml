@@ -31,6 +31,11 @@
         <artifactId>platform-time</artifactId>
         <version>${revision}</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-web-errors</artifactId>
+        <version>${revision}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

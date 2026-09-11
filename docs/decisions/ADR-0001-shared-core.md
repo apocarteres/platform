@@ -53,7 +53,7 @@ related: CORE-OPS-003, CORE-DATA-001, CORE-API-001, CORE-ARC-001, CORE-OPS-002
 1. **Формат метаданных документов.** YAML front matter либо строки шапки в свободном виде.
    Решение владельца, 2026-09-06: **YAML front matter.** Типизирован, проверяется тестами, поддерживает `depends-on`, `related`, `superseded-by`. Отменённая задача обязана содержать раздел «Почему не делаем», что проверяется.
 2. **Контракт ошибок API.** RFC 9457 `ProblemDetail` с расширением `code` либо собственная пара «код и сообщение».
-   Решение владельца, 2026-09-06: **`ProblemDetail`.** Реализация — [CORE-API-001](../tickets/CORE-API-001-platform-web-errors.md).
+   Решение владельца, 2026-09-06: **`ProblemDetail`.** Реализация — [CORE-API-001](../tickets/closed/CORE-API-001-platform-web-errors.md).
 3. **Где рендерятся уведомления.** Сервер, сборка из клиентского кода либо отдельный сервис.
    Решение владельца, 2026-09-06: **отдельный сервис**, потребители становятся его клиентами. Заведено [исследование](../tickets/CORE-ARC-001-notification-service-research.md).
 4. **Имена и registry.** Решение владельца, 2026-09-06: groupId `io.github.apocarteres.platform`, npm scope `@apocarteres`, публикация в GitHub Packages. Настройка — [CORE-OPS-007](../tickets/closed/CORE-OPS-007-github-packages-publishing.md). Часть про registry заменена решением [ADR-0003](ADR-0003-local-artifact-publishing.md): публикация выполняется локально, координаты артефактов не изменились.

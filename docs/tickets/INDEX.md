@@ -18,6 +18,6 @@ authority: navigation
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
-| [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Запланирована | Не назначен | backend, api, frontend |
+| [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Запланирована | Не назначен | frontend, api |
 | [Исследование: отдельный сервис уведомлений](CORE-ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
 | [Шифр секрета повторяется у каждого потребителя](CORE-SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Запланирована | Не назначен | backend, security |

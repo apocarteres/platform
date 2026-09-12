@@ -17,6 +17,7 @@ export const DELIVERED_DOCUMENTS = [
   'code-comments.md',
   'code-clock.md',
   'java-clock.md',
+  'java-modules.md',
   'java-naming.md',
   'typescript-clock.md',
   'project-rules.md',

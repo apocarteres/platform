@@ -46,6 +46,7 @@ authority: normative
 
 - [Java: порт часов](requirements/java-clock.md) — `java.time.Clock` как порт, реализация в `platform-time`, вывод значений, управляемые часы в тестах.
 - [Java: имена типов и суффикс -er](requirements/java-naming.md) — рекомендация: перечни имён образцов и доменных существительных, что проверяется.
+- [Java: модульность и граф связей](requirements/java-modules.md) — модуль экспортирует контракты, граф связей ациклический, циклы запрещены.
 
 ### Код: TypeScript
 

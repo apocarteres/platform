@@ -13,6 +13,7 @@ import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 import { feedbackChannel, feedbackLine } from '../lib/feedback.mjs';
+import { collisions, dictionary } from '../lib/terms.mjs';
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
@@ -68,6 +69,8 @@ async function check(root) {
 
   // REQ-BUILD-010
   problems.push(...await findToolchainMismatches(root));
+  // REQ-TERMS-003
+  problems.push(...collisions(await dictionary(root)));
 
   // REQ-ADOPTION-009
   const scanned = await collectSourceFiles(root, config);
@@ -108,9 +111,9 @@ async function check(root) {
     return;
   }
   if (improvedTotal > 0) {
-    console.log(`Нарушений стало меньше в файлах: ${improvedTotal}. Опустите храповик: conventions baseline`);
+    console.log(`Нарушений стало меньше в файлах: ${improvedTotal}. Опустите ограничитель: conventions baseline`);
   }
-  console.log(`Правила соблюдены. Файлов под храповиком: ${tracked}.`);
+  console.log(`Правила соблюдены. Файлов под ограничителем: ${tracked}.`);
 }
 
 async function baseline(root, allowGrowth) {

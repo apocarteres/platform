@@ -3,10 +3,12 @@ import { copyFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DELIVERED_DOCUMENTS } from '../lib/documents.mjs';
+import { ALIAS_FILE, DEFINITIONS_FILE, TERMS_DIR } from '../lib/terms.mjs';
 import { RULES } from '../lib/rules.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const source = path.resolve(packageRoot, '..', '..', 'docs', 'requirements');
+const terms = path.resolve(packageRoot, '..', '..', TERMS_DIR);
 const target = path.join(packageRoot, 'docs');
 
 await rm(target, { recursive: true, force: true });
@@ -19,5 +21,10 @@ if (missing.length > 0) {
   for (const document of DELIVERED_DOCUMENTS) {
     await copyFile(path.join(source, document), path.join(target, document));
   }
-  console.log(`Нормативные тексты собраны: ${DELIVERED_DOCUMENTS.length}.`);
+  // REQ-TERMS-001
+  await mkdir(path.join(target, 'terms'), { recursive: true });
+  for (const document of ['RULES.md', DEFINITIONS_FILE, ALIAS_FILE]) {
+    await copyFile(path.join(terms, document), path.join(target, 'terms', document));
+  }
+  console.log(`Нормативные тексты собраны: ${DELIVERED_DOCUMENTS.length}, словарь доставлен.`);
 }

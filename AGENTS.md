@@ -6,6 +6,7 @@ apply: always
 ## Правила кода
 
 Тексты: `docs/requirements`. Прочитать перед правкой кода.
+Словарь терминов и запрещённых слов: `docs/terms`.
 Проверка: `mise run conventions-check`.
 <!-- conventions:end -->
 

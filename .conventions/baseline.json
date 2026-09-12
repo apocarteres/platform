@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "rules": {
+    "clock": {},
+    "comments": {},
+    "config-secrets": {},
+    "dependency-versions": {},
+    "document-naming": {},
+    "file-size": {},
+    "money-types": {},
+    "naming-er": {},
+    "terms-alias": {
+      "docs/REQUIREMENTS.md": 4,
+      "docs/requirements/adoption.md": 1,
+      "docs/requirements/code-clock.md": 1,
+      "docs/requirements/code-comments.md": 4,
+      "docs/requirements/code-design.md": 1,
+      "docs/requirements/java-naming.md": 1,
+      "docs/requirements/naming.md": 2,
+      "docs/requirements/project-rules.md": 4,
+      "docs/requirements/quality-checks.md": 1,
+      "docs/tickets/closed/CORE-DOC-003-clanlog-ticket-format-migration.md": 3,
+      "docs/tickets/closed/CORE-DOC-006-document-naming-scheme.md": 2,
+      "docs/tickets/closed/CORE-DOC-008-single-file-feature-plans.md": 1,
+      "docs/tickets/closed/CORE-OPS-002-code-comments-rule.md": 12,
+      "docs/tickets/closed/CORE-OPS-003-conventions-package.md": 6,
+      "docs/tickets/closed/CORE-OPS-006-four-checks-from-a-second-consumer.md": 6,
+      "docs/tickets/closed/CORE-OPS-014-size-rule-knew-only-java-and-js-tests.md": 1,
+      "docs/tickets/closed/CORE-OPS-018-migration-kept-areas-outside-the-list.md": 2,
+      "docs/tickets/closed/CORE-OPS-020-dependency-rule-fired-outside-its-scope.md": 1,
+      "docs/tickets/closed/CORE-OPS-027-obligation-ticket-name-fails-naming.md": 1,
+      "docs/tickets/closed/CORE-OPS-028-core-adopts-its-ticket-prefix.md": 1,
+      "docs/tickets/closed/CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md": 2,
+      "docs/tickets/closed/CORE-QUAL-003-clock-hidden-in-a-template-string.md": 1,
+      "docs/tickets/CORE-DOC-011-terminology-is-not-fixed.md": 7
+    },
+    "terms-preferred": {}
+  }
+}

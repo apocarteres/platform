@@ -62,7 +62,7 @@ test('новый пояснительный комментарий отклон�
   }
 });
 
-test('храповик фиксирует существующие комментарии и не даёт им расти', async () => {
+test('ограничитель фиксирует существующие комментарии и не даёт им расти', async () => {
   const root = await project({ 'AGENTS.md': '---\na: b\n---\n', 'src/A.java': '// Старое пояснение\nclass A {}\n' });
   try {
     await conventions(root, 'sync');
@@ -227,7 +227,7 @@ test('денежная величина на double и длинный файл �
 
     await writeFile(path.join(root, 'src', 'Billing.java'), 'class Billing {\n  private double totalPrice;\n  private float feeAmount;\n}\n');
     const grown = await conventions(root, 'check');
-    assert.equal(grown.code, 1, 'храповик не даёт нарушениям расти');
+    assert.equal(grown.code, 1, 'ограничитель не даёт нарушениям расти');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -37,3 +37,16 @@ test('правила проекта упоминаются только когд
   const withProject = manifest('1.0.0', 'docs/requirements', [{ project: true, file: 'x.md' }]);
   assert.match(withProject, /\.conventions\.json/);
 });
+
+// REQ-TERMS-001, REQ-TERMS-002
+test('блок называет словарь: у ядра свой каталог, у потребителя — доставленный и свой', async () => {
+  const { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, manifest } = await import('../lib/agents.mjs');
+
+  const core = manifest('1.16.0', SOURCE_DOCS_PATH, []);
+  assert.match(core, /Словарь терминов и запрещённых слов: `docs\/terms`\./);
+  assert.doesNotMatch(core, /свой —/, 'у ядра словарь один');
+
+  const consumer = manifest('1.16.0', INSTALLED_DOCS_PATH, []);
+  assert.match(consumer, new RegExp(`${INSTALLED_DOCS_PATH}/terms`));
+  assert.match(consumer, /свой — `docs\/terms`/);
+});

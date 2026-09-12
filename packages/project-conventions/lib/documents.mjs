@@ -23,6 +23,7 @@ export const DELIVERED_DOCUMENTS = [
   'typescript-clock.md',
   'project-rules.md',
   'rule-distribution.md',
+  'terminology.md',
 ];
 
 // REQ-ADOPTION-016

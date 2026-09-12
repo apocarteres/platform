@@ -11,6 +11,13 @@ export function markerVersion(version) {
 
 export const INSTALLED_DOCS_PATH = 'node_modules/@apocarteres/project-conventions/docs';
 export const SOURCE_DOCS_PATH = 'docs/requirements';
+export const TERMS_PATH = 'docs/terms';
+
+// REQ-TERMS-001, REQ-TERMS-002
+function termsLine(docsPath) {
+  if (docsPath === SOURCE_DOCS_PATH) return `Словарь терминов и запрещённых слов: \`${TERMS_PATH}\`.`;
+  return `Словарь терминов и запрещённых слов: \`${docsPath}/terms\`, свой — \`${TERMS_PATH}\`.`;
+}
 
 export function manifest(version, docsPath = INSTALLED_DOCS_PATH, rules = RULES) {
   const project = rules.filter((rule) => rule.project);
@@ -20,6 +27,8 @@ export function manifest(version, docsPath = INSTALLED_DOCS_PATH, rules = RULES)
     '## Правила кода',
     '',
     `Тексты: ${sources.join(', ')}. Прочитать перед правкой кода.`,
+    // REQ-TERMS-001
+    termsLine(docsPath),
     'Проверка: `mise run conventions-check`.',
   ].join('\n');
 }

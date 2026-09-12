@@ -7,11 +7,30 @@ import { findOversizedFiles } from './filesize.mjs';
 import { findConfigSecrets } from './secrets.mjs';
 import { findDependencyIssues } from './dependencies.mjs';
 import { findNamingIssues } from './document-naming.mjs';
+import { findForbiddenWords, findLongWordings } from './terms.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 
 export { DIRECTIVE, LEVELS, RECOMMENDATION } from './levels.mjs';
 
 export const RULES = [
+  {
+    id: 'terms-alias',
+    level: DIRECTIVE,
+    document: 'REQ-TERMS',
+    file: 'terminology.md',
+    summary: 'Слово из подстановок словаря в текстах не употребляется',
+    title: 'запрещённых словарём слов',
+    find: findForbiddenWords,
+  },
+  {
+    id: 'terms-preferred',
+    level: RECOMMENDATION,
+    document: 'REQ-TERMS',
+    file: 'terminology.md',
+    summary: 'Вместо длинного оборота употребляется термин словаря',
+    title: 'длинных оборотов вместо термина',
+    find: findLongWordings,
+  },
   {
     id: 'comments',
     level: DIRECTIVE,

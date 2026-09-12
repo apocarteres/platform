@@ -288,7 +288,7 @@
       "title": "Доступ к данным: без ORM, простой DAO, транзакция в прикладном слое",
       "requirement": "REQ-DATA-ACCESS-002",
       "level": "директива",
-      "since": "1.9.0",
+      "since": "1.11.0",
       "dueReleases": 3,
       "slug": "adopt-data-access",
       "area": "DATA",

@@ -17,14 +17,19 @@ async function git(root, args) {
 
 export async function commitsInRange(root, since) {
   const range = since === null ? 'HEAD' : `${since}..HEAD`;
-  const output = await git(root, ['log', `--format=%H${FIELD}%s${FIELD}%b${RECORD}`, range]);
+  const output = await git(root, ['log', `--format=%H${FIELD}%s${FIELD}%P${FIELD}%b${RECORD}`, range]);
   return output.split(RECORD)
     .map((entry) => entry.replace(/^\s+/, ''))
     .filter((entry) => entry.length > 0)
     .map((entry) => {
-      const [sha, subject, body] = entry.split(FIELD);
-      return { sha, subject, body: body ?? '' };
+      const [sha, subject, parents, body] = entry.split(FIELD);
+      return { sha, subject, body: body ?? '', parents: (parents ?? '').trim().split(/\s+/).filter(Boolean) };
     });
+}
+
+// REQ-RELEASE-036
+export function mergeCommit(commit) {
+  return (commit.parents ?? []).length > 1;
 }
 
 export function cycleCommit(commit) {

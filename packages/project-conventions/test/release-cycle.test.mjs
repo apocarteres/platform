@@ -946,3 +946,42 @@ test('отказ называет способ внести задачу в со
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-036
+test('коммит слияния задачи не называет и закрытие не роняет', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
+
+    await git('-C', root, 'checkout', '--quiet', '-b', 'side');
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче состава');
+    await git('-C', root, 'checkout', '--quiet', '-');
+    await mkdir(path.join(root, 'docs/tickets/closed'), { recursive: true });
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-008-other.md'), ticket('ZAVPN-QUAL-008', 'done'));
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-008 работа рядом');
+    await git('-C', root, 'merge', '--quiet', '--no-ff', '--no-edit', 'side');
+
+    const head = await git('-C', root, 'rev-parse', 'HEAD');
+    await writeReceipt(root, RECEIPT(head.stdout.trim(), FIXED_DAY));
+
+    const state = await closability(root, { scheme: 'date' });
+    assert.deepEqual(
+      state.problems.filter((problem) => problem.includes('Коммит')),
+      [],
+      state.problems.join('\n'),
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

@@ -9,7 +9,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
-import { commitsInRange, cycleCommit, revertCommit, ticketOf } from './commits.mjs';
+import { commitsInRange, cycleCommit, mergeCommit, revertCommit, ticketOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
@@ -108,7 +108,8 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
   const problems = [];
   const outside = new Map();
   for (const commit of beyondBaseline) {
-    if (cycleCommit(commit)) continue;
+    // REQ-RELEASE-036
+    if (cycleCommit(commit) || mergeCommit(commit)) continue;
     const ticket = ticketOf(commit, areas, prefix);
     if (ticket === null) {
       problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»`);

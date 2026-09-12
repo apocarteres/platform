@@ -20,8 +20,8 @@ authority: navigation
 |---|---|---|---|---|
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
-| [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | Не назначен | frontend, api |
-| [Подключение ядра сняло границу вокруг каталога запросов](CORE-DATA-002-core-package-escapes-the-module-model.md) | P1 | Выполнена | Не назначен | backend, java, persistence |
+| [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
+| [Подключение ядра сняло границу вокруг каталога запросов](CORE-DATA-002-core-package-escapes-the-module-model.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, java, persistence |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |
 | [Версия платформы приложений задавалась дважды и разошлась](CORE-OPS-001-application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](CORE-OPS-002-code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
@@ -41,17 +41,17 @@ authority: navigation
 | [Состав выпуска не сверяется с тем, что в него вошло коммитами](CORE-OPS-030-release-verifies-commit-attribution.md) | P1 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | release, process, tooling |
 | [Отменённая работа продолжает удерживать выпуск](CORE-OPS-031-revert-label-frees-a-dropped-ticket.md) | P1 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | release, process, tooling |
 | [Закрытие выпуска требует в состав задачи уже вышедшего выпуска](CORE-OPS-033-release-close-demands-tickets-of-a-shipped-release.md) | P1 | Выполнена | [RELEASE-1-8-0](../../releases/RELEASE-1-8-0.md) | tooling, process |
-| [Миграция имён удваивает префикс в именах файлов и присваивает его чужим задачам](CORE-OPS-034-name-migration-doubles-the-prefix-in-file-names.md) | P1 | Выполнена | Не назначен | tooling, process |
-| [У правила модульности нет исполняемой проверки](CORE-OPS-036-module-graph-has-no-executable-check.md) | P1 | Выполнена | Не назначен | backend, java, tooling |
+| [Миграция имён удваивает префикс в именах файлов и присваивает его чужим задачам](CORE-OPS-034-name-migration-doubles-the-prefix-in-file-names.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | tooling, process |
+| [У правила модульности нет исполняемой проверки](CORE-OPS-036-module-graph-has-no-executable-check.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, java, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |
 | [Обработчик истёкшей сессии не отличает её от неудачного входа](CORE-API-005-session-handler-cannot-tell-a-failed-login.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | frontend, api |
 | [Ответ об ошибке не может нести заголовки](CORE-API-006-error-response-cannot-carry-headers.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | backend, api |
-| [Исследование: единообразное поведение модалок — контракт и код](CORE-ARC-002-shared-modal-behaviour-research.md) | P2 | Выполнена | Не назначен | frontend, architecture, research |
-| [Исследование: поведение кнопки, ждущей удалённого вызова](CORE-ARC-003-async-action-button-behaviour-research.md) | P2 | Выполнена | Не назначен | frontend, architecture, research |
-| [Исследование: здоровье и метрики как контракт ядра](CORE-ARC-004-health-and-metrics-contracts-research.md) | P2 | Выполнена | Не назначен | backend, architecture, observability, research |
+| [Исследование: единообразное поведение модалок — контракт и код](CORE-ARC-002-shared-modal-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
+| [Исследование: поведение кнопки, ждущей удалённого вызова](CORE-ARC-003-async-action-button-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
+| [Исследование: здоровье и метрики как контракт ядра](CORE-ARC-004-health-and-metrics-contracts-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, architecture, observability, research |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |

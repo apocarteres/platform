@@ -5,7 +5,7 @@ status: done
 scope: backend, architecture, observability, research
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-9-0
 questions: resolved
 related: CORE-ARC-002, CORE-ARC-003, REQ-API, REQ-ADOPTION
 ---

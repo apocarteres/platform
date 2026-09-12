@@ -5,7 +5,7 @@ status: done
 scope: backend, java, persistence
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-9-0
 related: CORE-OPS-036, REQ-PERSISTENCE, REQ-JAVA-MODULES
 ---
 

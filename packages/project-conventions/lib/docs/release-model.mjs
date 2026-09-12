@@ -65,9 +65,14 @@ export function validateReleases(documents) {
       if (!reason.trim()) fail(`у ${ticketId} не указана причина включения`);
       if (members.has(ticketId)) fail(`задача ${ticketId} повторяется в составе`);
       members.add(ticketId);
-      const target = path.posix.normalize(path.posix.join(path.posix.dirname(file), href));
+      // REQ-RELEASE-024, REQ-TICKETS-013
       const ticket = tickets.get(ticketId);
-      if (!ticket || byFile.get(target) !== ticket) { fail(`ссылка ${ticketId} не указывает на соответствующую задачу`); continue; }
+      if (!ticket) { fail(`ссылка ${ticketId} не указывает на соответствующую задачу`); continue; }
+      const target = path.posix.normalize(path.posix.join(path.posix.dirname(file), href));
+      if (byFile.get(target) !== ticket && status === 'released') {
+        fail(`ссылка ${ticketId} не указывает на соответствующую задачу`);
+        continue;
+      }
       if (ticket.metadata.get('release') !== id) fail(`у ${ticketId} указан другой выпуск или выпуск не назначен`);
       if (membership.has(ticketId) && membership.get(ticketId) !== id) fail(`задача ${ticketId} включена в несколько выпусков`);
       membership.set(ticketId, id);
@@ -90,11 +95,13 @@ export function validateReleases(documents) {
       if (metadata.has('released-on') || metadata.has('commit')) fail('released-on и commit допустимы только для выпущенного релиза');
     }
   }
+  // REQ-RELEASE-007, REQ-RELEASE-031
   for (const [id, ticket] of tickets) {
     const release = ticket.metadata.get('release');
     if (release === 'unassigned' || release === 'before-cycle') continue;
-    if (!release || !releases.has(release)) errors.push(`${ticket.file}: назначенный выпуск не существует`);
-    else if (membership.get(id) !== release) errors.push(`${ticket.file}: задача отсутствует в составе назначенного выпуска`);
+    if (!release || !releases.has(release)) { errors.push(`${ticket.file}: назначенный выпуск не существует`); continue; }
+    if (releases.get(release).metadata.get('status') !== 'released') continue;
+    if (membership.get(id) !== release) errors.push(`${ticket.file}: задача отсутствует в составе назначенного выпуска`);
   }
   return errors;
 }

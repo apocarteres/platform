@@ -35,7 +35,7 @@ class JsonSqlCommandWriterTest {
   record Moment(OffsetDateTime at) {
   }
 
-  record Holder(Object value) {
+  record Single(Object value) {
   }
 
   @Test
@@ -63,13 +63,13 @@ class JsonSqlCommandWriterTest {
   @Test
   @DisplayName("Отсутствующее значение записывается как null")
   void writesAbsentValueAsNull() {
-    assertThat(writer.write(new Holder(null))).isEqualTo("{\"value\":null}");
+    assertThat(writer.write(new Single(null))).isEqualTo("{\"value\":null}");
   }
 
   @Test
   @DisplayName("Кавычки, косые черты и управляющие знаки экранируются")
   void escapesQuotesAndControlCharacters() {
-    String json = writer.write(new Holder("он сказал \"да\"\\нет\n\u0001"));
+    String json = writer.write(new Single("он сказал \"да\"\\нет\n\u0001"));
 
     assertThat(json).isEqualTo("{\"value\":\"он сказал \\\"да\\\"\\\\нет\\n\\u0001\"}");
   }
@@ -77,16 +77,16 @@ class JsonSqlCommandWriterTest {
   @Test
   @DisplayName("Ключи отображения записываются как имена полей")
   void writesMapKeysAsFieldNames() {
-    assertThat(writer.write(new Holder(Map.of("одно", 1)))).isEqualTo("{\"value\":{\"одно\":1}}");
+    assertThat(writer.write(new Single(Map.of("одно", 1)))).isEqualTo("{\"value\":{\"одно\":1}}");
   }
 
   // REQ-PERSISTENCE-010
   @Test
   @DisplayName("Неподдерживаемое значение отказывает с указанием команды и типа")
   void refusesAnUnsupportedValue() {
-    assertThatThrownBy(() -> writer.write(new Holder(new Object())))
+    assertThatThrownBy(() -> writer.write(new Single(new Object())))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Holder")
+      .hasMessageContaining("Single")
       .hasMessageContaining("java.lang.Object");
   }
 
@@ -95,6 +95,6 @@ class JsonSqlCommandWriterTest {
   @DisplayName("Сериализация не требует чужой библиотеки на classpath")
   void needsNoForeignLibrary() {
     assertThat(getClass().getClassLoader().getResource("com/fasterxml/jackson/databind/ObjectMapper.class")).isNull();
-    assertThat(writer.write(new Holder("значение"))).isEqualTo("{\"value\":\"значение\"}");
+    assertThat(writer.write(new Single("значение"))).isEqualTo("{\"value\":\"значение\"}");
   }
 }

@@ -14,7 +14,8 @@ export async function refreshCompositionLinks(root, { check = false } = {}) {
     const file = path.join(directory, name);
     const content = await readFile(file, 'utf8');
     const metadata = parseFrontMatter(content)?.metadata;
-    if (metadata?.get('type') !== 'release' || metadata.get('status') === 'released') continue;
+    // REQ-RELEASE-026
+    if (metadata?.get('type') !== 'release') continue;
     let changed = false;
     const rows = sectionLines(content, '## Состав').map((line) => {
       const match = /^\|\s*\[([A-Z][A-Z0-9-]*)\]\(([^)\s]+)\)\s*\|(.*)$/.exec(line);

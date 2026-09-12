@@ -10,6 +10,7 @@ export const DELIVERED_DOCUMENTS = [
   'release-cycle.md',
   'api-errors.md',
   'code-design.md',
+  'data-access.md',
   'configuration.md',
   'secret-storage.md',
   'compatibility.md',

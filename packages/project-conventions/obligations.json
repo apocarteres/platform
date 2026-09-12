@@ -286,7 +286,7 @@
     {
       "id": "data-access",
       "title": "Доступ к данным: без ORM, простой DAO, транзакция в прикладном слое",
-      "requirement": "REQ-PERSISTENCE-017",
+      "requirement": "REQ-DATA-ACCESS-002",
       "level": "директива",
       "since": "1.9.0",
       "dueReleases": 3,

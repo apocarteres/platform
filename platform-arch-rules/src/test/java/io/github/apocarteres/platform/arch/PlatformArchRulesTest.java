@@ -44,7 +44,7 @@ class PlatformArchRulesTest {
       .hasMessageContaining("Cycle");
   }
 
-  // REQ-PERSISTENCE-018
+  // REQ-DATA-ACCESS-003
   @Test
   void refusesATransactionOutsideTheApplicationLayer() {
     ArchRule rule = PlatformArchRules.transactionsAreDeclaredOnlyIn(applicationLayer());
@@ -53,7 +53,7 @@ class PlatformArchRulesTest {
       .hasMessageContaining("BookDao");
   }
 
-  // REQ-PERSISTENCE-019
+  // REQ-DATA-ACCESS-004
   @Test
   void takesTheLayerFromTheDeclarationAndNotFromTheName() {
     DescribedPredicate<JavaClass> daoIsApplication =
@@ -74,7 +74,7 @@ class PlatformArchRulesTest {
     PlatformArchRules.transactionsAreDeclaredOnlyIn(everything).check(layers);
   }
 
-  // REQ-PERSISTENCE-020
+  // REQ-DATA-ACCESS-005
   @Test
   void refusesTheCatalogueOutsideTheDataAccessLayer() {
     ArchRule rule = PlatformArchRules.packageIsUsedOnlyBy(
@@ -86,7 +86,7 @@ class PlatformArchRulesTest {
       .hasMessageContaining("BookCatalogue");
   }
 
-  // REQ-PERSISTENCE-016
+  // REQ-DATA-ACCESS-001
   @Test
   void acceptsCodeWithoutObjectRelationalMapping() {
     PlatformArchRules.objectRelationalMappingIsNotUsed().check(layers);

@@ -117,3 +117,29 @@ test('каждый документ требований либо доставл
     assert(!DELIVERED_DOCUMENTS.includes(document), `${document}: не может быть и внутренним, и доставляемым`);
   }
 });
+
+// REQ-ADOPTION-016, REQ-RELEASE-012
+test('обязательство ссылается на положение доставляемого документа', async () => {
+  const { readFile, readdir } = await import('node:fs/promises');
+  const { fileURLToPath } = await import('node:url');
+  const path = (await import('node:path')).default;
+  const { DELIVERED_DOCUMENTS } = await import('../lib/documents.mjs');
+
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const requirements = path.resolve(here, '../../../docs/requirements');
+  const delivered = new Set();
+  for (const name of await readdir(requirements)) {
+    if (!DELIVERED_DOCUMENTS.includes(name)) continue;
+    const text = await readFile(path.join(requirements, name), 'utf8');
+    for (const found of text.matchAll(/<a id="(REQ-[A-Z-]+-\d+)">/g)) delivered.add(found[1]);
+  }
+  assert(delivered.size > 0, 'доставляемые положения не найдены');
+
+  const catalogue = JSON.parse(await readFile(path.resolve(here, '../obligations.json'), 'utf8'));
+  for (const obligation of catalogue.obligations) {
+    assert(
+      delivered.has(obligation.requirement),
+      `${obligation.id}: требование ${obligation.requirement} не доставляется потребителю, исполнить обязательство нечем`,
+    );
+  }
+});

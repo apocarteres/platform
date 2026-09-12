@@ -52,19 +52,19 @@ public final class PlatformArchRules {
       .allowEmptyShould(true);
   }
 
-  // REQ-PERSISTENCE-016
+  // REQ-DATA-ACCESS-001
   public static ArchRule objectRelationalMappingIsNotUsed() {
     return noClasses()
       .should().dependOnClassesThat().resideInAnyPackage(MAPPING_LIBRARIES)
       .because("каталог запросов имеет смысл ровно потому, что другого пути к данным нет");
   }
 
-  // REQ-PERSISTENCE-020, REQ-PERSISTENCE-019
+  // REQ-DATA-ACCESS-005, REQ-DATA-ACCESS-004
   public static ArchRule sqlCatalogueIsUsedOnlyBy(DescribedPredicate<? super JavaClass> dataAccessLayer) {
     return packageIsUsedOnlyBy(SQL_CATALOGUE, dataAccessLayer);
   }
 
-  // REQ-PERSISTENCE-020
+  // REQ-DATA-ACCESS-005
   public static ArchRule packageIsUsedOnlyBy(String packageIdentifier, DescribedPredicate<? super JavaClass> allowed) {
     return noClasses()
       .that(DescribedPredicate.not(allowed))
@@ -74,7 +74,7 @@ public final class PlatformArchRules {
       .allowEmptyShould(true);
   }
 
-  // REQ-PERSISTENCE-018, REQ-PERSISTENCE-019
+  // REQ-DATA-ACCESS-003, REQ-DATA-ACCESS-004
   public static ArchRule transactionsAreDeclaredOnlyIn(DescribedPredicate<? super JavaClass> applicationLayer) {
     return noClasses()
       .that(DescribedPredicate.not(applicationLayer))

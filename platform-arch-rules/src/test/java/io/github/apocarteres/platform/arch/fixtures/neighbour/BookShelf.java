@@ -1,4 +1,4 @@
-package io.github.apocarteres.platform.arch.fixtures.layers;
+package io.github.apocarteres.platform.arch.fixtures.neighbour;
 
 import io.github.apocarteres.platform.arch.fixtures.storage.WriteResult;
 

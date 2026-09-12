@@ -36,6 +36,12 @@ class PlatformArchRulesTest {
 
   // REQ-JAVA-MODULES-006
   @Test
+  void passesOnSubmodulesWithOneDirection() {
+    PlatformArchRules.submodulesAreFreeOfCycles(FIXTURES + ".chain").check(chain);
+  }
+
+  // REQ-JAVA-MODULES-006
+  @Test
   void findsACycleOneLevelDown() {
     ArchRule top = PlatformArchRules.modulesAreFreeOfCycles(FIXTURES);
     top.check(ring);
@@ -76,16 +82,54 @@ class PlatformArchRulesTest {
 
   // REQ-DATA-ACCESS-006
   @Test
-  void looksAtTheNamedTypesAndNotAtTheirPackage() {
-    String[] catalogue = { FIXTURES + ".storage.Statements" };
-    ArchRule rule = PlatformArchRules.typesAreUsedOnlyBy(
-      catalogue,
+  void refusesTheNamedTypeOutsideTheLayer() {
+    assertThat(violationsOf(namedTypeRule(), layers)).contains("BookCatalogue");
+  }
+
+  // REQ-DATA-ACCESS-006
+  @Test
+  void passesOnANeighbourTypeOfTheSamePackage() {
+    namedTypeRule().check(classesOf(FIXTURES + ".neighbour"));
+  }
+
+  // REQ-DATA-ACCESS-001
+  @Test
+  void refusesObjectRelationalMapping() {
+    ArchRule rule = PlatformArchRules.objectRelationalMappingIsNotUsed();
+
+    assertThatThrownBy(() -> rule.check(classesOf(FIXTURES + ".mapped"))).hasMessageContaining("MappedBook");
+  }
+
+  // REQ-DATA-ACCESS-003
+  @Test
+  void passesOnATransactionInsideTheApplicationLayer() {
+    PlatformArchRules.transactionsAreDeclaredOnlyIn(
+      DescribedPredicate.describe("прикладной слой", type -> type.getPackageName().endsWith(".application"))
+    ).check(classesOf(FIXTURES + ".application"));
+  }
+
+  // REQ-DATA-ACCESS-004
+  @Test
+  void passesWhenTheDeclarationCoversTheClassThatDeclaresTransactions() {
+    PlatformArchRules.transactionsAreDeclaredOnlyIn(
+      DescribedPredicate.describe("объявлено проектом", type -> true)
+    ).check(layers);
+  }
+
+  // REQ-DATA-ACCESS-005
+  @Test
+  void passesOnTheCatalogueInsideTheDataAccessLayer() {
+    PlatformArchRules.packageIsUsedOnlyBy(
+      FIXTURES + ".storage..",
+      DescribedPredicate.describe("слой доступа", type -> type.getPackageName().startsWith(FIXTURES))
+    ).check(layers);
+  }
+
+  private static ArchRule namedTypeRule() {
+    return PlatformArchRules.typesAreUsedOnlyBy(
+      new String[] { FIXTURES + ".storage.Statements" },
       DescribedPredicate.describe("слой доступа", type -> type.getSimpleName().equals("Statements"))
     );
-
-    String refusal = violationsOf(rule, layers);
-    assertThat(refusal).contains("BookCatalogue");
-    assertThat(refusal).doesNotContain("BookShelf");
   }
 
   // REQ-DATA-ACCESS-005
@@ -103,13 +147,21 @@ class PlatformArchRulesTest {
   // REQ-DATA-ACCESS-001
   @Test
   void acceptsCodeWithoutObjectRelationalMapping() {
-    PlatformArchRules.objectRelationalMappingIsNotUsed().check(layers);
+    PlatformArchRules.objectRelationalMappingIsNotUsed().check(classesOf(FIXTURES + ".layers"));
+  }
+
+  // REQ-JAVA-MODULES-007
+  @Test
+  void refusesLazyInjectionThatHidesACycle() {
+    ArchRule rule = PlatformArchRules.cyclesAreNotHidden();
+
+    assertThatThrownBy(() -> rule.check(classesOf(FIXTURES + ".hidden"))).hasMessageContaining("HiddenRing");
   }
 
   // REQ-JAVA-MODULES-007
   @Test
   void acceptsCodeWithoutLazyInjection() {
-    PlatformArchRules.cyclesAreNotHidden().check(layers);
+    PlatformArchRules.cyclesAreNotHidden().check(classesOf(FIXTURES + ".layers"));
   }
 
   // REQ-JAVA-MODULES-001

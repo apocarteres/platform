@@ -23,6 +23,11 @@
     <dependencies>
       <dependency>
         <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-arch-rules</artifactId>
+        <version>${revision}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
         <artifactId>platform-persistence</artifactId>
         <version>${revision}</version>
       </dependency>

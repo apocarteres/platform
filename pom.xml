@@ -16,6 +16,7 @@
   <modules>
     <module>platform-bom</module>
     <module>platform-service-parent</module>
+    <module>platform-arch-rules</module>
     <module>platform-persistence</module>
     <module>platform-time</module>
     <module>platform-web-errors</module>
@@ -31,6 +32,7 @@
     <!-- REQ-DEPS-005 -->
     <tomcat.version>11.0.25</tomcat.version>
     <spring-modulith.version>2.0.7</spring-modulith.version>
+    <archunit.version>1.4.1</archunit.version>
   </properties>
 
   <dependencyManagement>

@@ -11,47 +11,34 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>platform-web-errors</artifactId>
-  <name>platform-web-errors</name>
-  <description>Единый контракт ошибок API: ProblemDetail по RFC 9457 с кодом ошибки, порты сопоставления исключений и текстов, метрики ошибок. Автоконфигурация Spring Boot.</description>
+  <artifactId>platform-arch-rules</artifactId>
+  <name>platform-arch-rules</name>
+  <description>Готовые архитектурные правила ядра: ациклический граф модулей, границы внутренних пакетов, каталог запросов только из слоя доступа, транзакция только в прикладном слое.</description>
 
   <dependencies>
     <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>jakarta.servlet</groupId>
-      <artifactId>jakarta.servlet-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.micrometer</groupId>
-      <artifactId>micrometer-core</artifactId>
-      <optional>true</optional>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit</artifactId>
+      <version>${archunit.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.github.apocarteres.platform</groupId>
-      <artifactId>platform-arch-rules</artifactId>
-      <version>${revision}</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>

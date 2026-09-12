@@ -14,13 +14,14 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 59. Включены самостоятельные задачи и этапы планов функций.
+Всего: 61. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | Не назначен | frontend, api |
+| [Подключение ядра сняло границу вокруг каталога запросов](CORE-DATA-002-core-package-escapes-the-module-model.md) | P1 | Выполнена | Не назначен | backend, java, persistence |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |
 | [Версия платформы приложений задавалась дважды и разошлась](CORE-OPS-001-application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](CORE-OPS-002-code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
@@ -41,6 +42,7 @@ authority: navigation
 | [Отменённая работа продолжает удерживать выпуск](CORE-OPS-031-revert-label-frees-a-dropped-ticket.md) | P1 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | release, process, tooling |
 | [Закрытие выпуска требует в состав задачи уже вышедшего выпуска](CORE-OPS-033-release-close-demands-tickets-of-a-shipped-release.md) | P1 | Выполнена | [RELEASE-1-8-0](../../releases/RELEASE-1-8-0.md) | tooling, process |
 | [Миграция имён удваивает префикс в именах файлов и присваивает его чужим задачам](CORE-OPS-034-name-migration-doubles-the-prefix-in-file-names.md) | P1 | Выполнена | Не назначен | tooling, process |
+| [У правила модульности нет исполняемой проверки](CORE-OPS-036-module-graph-has-no-executable-check.md) | P1 | Выполнена | Не назначен | backend, java, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |

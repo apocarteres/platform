@@ -41,6 +41,12 @@
     </dependency>
 
     <dependency>
+      <groupId>io.github.apocarteres.platform</groupId>
+      <artifactId>platform-arch-rules</artifactId>
+      <version>${revision}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>

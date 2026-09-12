@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-036
 type: ticket
-status: backlog
+status: done
 scope: backend, java, tooling
 authority: supporting
 priority: P1
@@ -72,3 +72,26 @@ related: REQ-JAVA-MODULES, REQ-ADOPTION
 
 Внесение `REQ-JAVA-MODULES` 2026-09-12: правило зафиксировано раньше, чем
 появилась его проверка, и разрыв записан сразу, а не оставлен незамеченным.
+
+## Что сделано
+
+Ядро поставляет модуль `platform-arch-rules` — готовые архитектурные правила,
+которые применяет и к себе, и предлагает потребителю:
+
+- `modulesAreFreeOfCycles` и `submodulesAreFreeOfCycles` — граф срезов пакетов
+  без колец, на любом уровне вложенности;
+- `innerPackagesStayInside` — реализация модуля не используется снаружи;
+- `cyclesAreNotHidden` — запрет отложенного внедрения, которым цикл делают
+  работоспособным вместо устранения.
+
+Java-модули ядра проверяют себя этими же правилами: `ModuleBoundaryTest` в
+`platform-persistence`, `platform-time` и `platform-web-errors` входит в `check`.
+Проверка называет нарушителя поимённо — метод и строку.
+
+Различающая сила проверена пробой: класс вне `internal`, обратившийся к
+`TimeAutoConfiguration`, уронил `implementationStaysInside` с указанием
+`Probe.java:7`; проба удалена.
+
+Правила закреплены десятью тестами на подставных пакетах: кольцо из двух
+пакетов, однонаправленная цепочка, кольцо уровнем ниже, транзакция вне
+прикладного слоя, выбор слоя объявлением, а не именем.

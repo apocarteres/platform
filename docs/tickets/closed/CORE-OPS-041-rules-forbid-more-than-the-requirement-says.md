@@ -6,7 +6,7 @@ scope: backend, java, tooling
 authority: supporting
 priority: P1
 related: CORE-OPS-040, REQ-DATA-ACCESS
-release: unassigned
+release: RELEASE-1-15-0
 ---
 
 # Готовые правила запрещают шире, чем сказано в требовании

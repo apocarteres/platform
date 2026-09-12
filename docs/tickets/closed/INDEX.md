@@ -49,7 +49,7 @@ authority: navigation
 | [Коммит слияния удерживает выпуск](CORE-OPS-038-merge-commit-holds-the-release.md) | P1 | Выполнена | [RELEASE-1-11-0](../../releases/RELEASE-1-11-0.md) | tooling, process |
 | [Запись решения по незавершённой задаче удерживает закрытие выпуска](CORE-OPS-039-decision-record-holds-the-release.md) | P1 | Выполнена | [RELEASE-1-12-0](../../releases/RELEASE-1-12-0.md) | tooling, process |
 | [Готовое правило строже требования, которое проверяет](CORE-OPS-040-inner-package-rule-is-stricter-than-the-requirement.md) | P1 | Выполнена | [RELEASE-1-13-0](../../releases/RELEASE-1-13-0.md) | backend, java, tooling |
-| [Готовые правила запрещают шире, чем сказано в требовании](CORE-OPS-041-rules-forbid-more-than-the-requirement-says.md) | P1 | Выполнена | Не назначен | backend, java, tooling |
+| [Готовые правила запрещают шире, чем сказано в требовании](CORE-OPS-041-rules-forbid-more-than-the-requirement-says.md) | P1 | Выполнена | [RELEASE-1-15-0](../../releases/RELEASE-1-15-0.md) | backend, java, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |

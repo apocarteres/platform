@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 71. Включены самостоятельные задачи и этапы планов функций.
+Всего: 72. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -78,6 +78,7 @@ authority: navigation
 | [Ядро переходит на собственный префикс идентификаторов задач](CORE-OPS-028-core-adopts-its-ticket-prefix.md) | P2 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | process, documentation, tooling |
 | [Ядро не умеет собирать и публиковать Angular-библиотеку](CORE-OPS-029-angular-library-build-and-publishing.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | build, frontend, tooling |
 | [Миграция имён не проставляет префикс проекта](CORE-OPS-032-name-migration-does-not-apply-the-project-prefix.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | tooling, process |
+| [Отказ ядра не называет дверь в ядро](CORE-OPS-035-refusals-do-not-name-the-door-into-the-core.md) | P2 | Выполнена | Не назначен | tooling, process |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

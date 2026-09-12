@@ -12,6 +12,7 @@ import { DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, report, runWithLimits } fr
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
+import { feedbackChannel, feedbackLine } from '../lib/feedback.mjs';
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
@@ -30,6 +31,12 @@ async function docsPath(root) {
   } catch {
     return INSTALLED_DOCS_PATH;
   }
+}
+
+// REQ-ADOPTION-019
+async function nameTheDoor(root) {
+  const line = feedbackLine(await feedbackChannel(root));
+  if (line !== null) console.error(line);
 }
 
 async function packageVersion() {
@@ -95,6 +102,8 @@ async function check(root) {
   if (problems.length > 0) {
     console.error('Проверка правил не пройдена:');
     for (const problem of problems) console.error(`- ${problem}`);
+    // REQ-ADOPTION-019
+    await nameTheDoor(root);
     process.exitCode = 1;
     return;
   }
@@ -328,6 +337,8 @@ async function releaseClose(root) {
   if (!result.closed) {
     console.error('Выпуск закрыть нельзя:');
     for (const problem of result.problems) console.error(`- ${problem}`);
+    // REQ-ADOPTION-019
+    await nameTheDoor(root);
     process.exitCode = 1;
     return;
   }

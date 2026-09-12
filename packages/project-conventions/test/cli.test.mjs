@@ -423,3 +423,23 @@ test('непрочитанное состояние выпуска остаёт�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-ADOPTION-019
+test('отказ проверки правил называет дверь в ядро', async () => {
+  const clause = '19. <a id="REQ-ADOPTION-019"></a> **REQ-ADOPTION-019** — Потребитель сообщает ядру о дефекте'
+    + ' заявкой в issue репозитория ядра `https://github.com/example/core`.\n';
+  const root = await project({
+    '.conventions.json': JSON.stringify({ sources: ['src'] }),
+    'node_modules/@apocarteres/project-conventions/docs/adoption.md': `---\nid: REQ-ADOPTION\n---\n\n${clause}`,
+    'src/Broken.java': '// TODO: сделать позже\nclass Broken {}\n',
+  });
+  try {
+    const result = await conventions(root, 'check');
+
+    assert.notEqual(result.code, 0, result.output);
+    assert.match(result.output, /Проверка правил не пройдена/);
+    assert.match(result.output, /заявка в ядро: https:\/\/github\.com\/example\/core \(REQ-ADOPTION-019\)/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

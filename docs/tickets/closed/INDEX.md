@@ -46,7 +46,7 @@ authority: navigation
 | [У правила модульности нет исполняемой проверки](CORE-OPS-036-module-graph-has-no-executable-check.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, java, tooling |
 | [Обязательство data-access ссылается на недоставляемый документ](CORE-OPS-037-data-access-obligation-points-at-an-undelivered-document.md) | P1 | Выполнена | [RELEASE-1-11-0](../../releases/RELEASE-1-11-0.md) | tooling, process, adoption |
 | [Коммит слияния удерживает выпуск](CORE-OPS-038-merge-commit-holds-the-release.md) | P1 | Выполнена | [RELEASE-1-11-0](../../releases/RELEASE-1-11-0.md) | tooling, process |
-| [Запись решения по незавершённой задаче удерживает закрытие выпуска](CORE-OPS-039-decision-record-holds-the-release.md) | P1 | Выполнена | Не назначен | tooling, process |
+| [Запись решения по незавершённой задаче удерживает закрытие выпуска](CORE-OPS-039-decision-record-holds-the-release.md) | P1 | Выполнена | [RELEASE-1-12-0](../../releases/RELEASE-1-12-0.md) | tooling, process |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |

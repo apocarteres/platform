@@ -100,8 +100,31 @@ class PlatformArchRulesTest {
 
   // REQ-JAVA-MODULES-001
   @Test
-  void keepsInnerPackagesInside() {
-    assertThat(PlatformArchRules.innerPackagesStayInside("io.github.apocarteres.platform", "internal")).isNotNull();
+  void letsAModuleUseItsOwnImplementation() {
+    JavaClasses alpha = classesOf(FIXTURES + ".modules.alpha");
+
+    PlatformArchRules.innerPackagesStayInside(FIXTURES + ".modules", "internal").check(alpha);
+  }
+
+  // REQ-JAVA-MODULES-001
+  @Test
+  void refusesTheImplementationOfAnotherModule() {
+    JavaClasses modules = classesOf(FIXTURES + ".modules");
+    ArchRule rule = PlatformArchRules.innerPackagesStayInside(FIXTURES + ".modules", "internal");
+
+    assertThatThrownBy(() -> rule.check(modules))
+      .hasMessageContaining("BetaContract")
+      .hasMessageContaining("AlphaWorker");
+    assertThat(violationsOf(rule, modules)).doesNotContain("AlphaContract");
+  }
+
+  private static String violationsOf(ArchRule rule, JavaClasses classes) {
+    try {
+      rule.check(classes);
+      return "";
+    } catch (AssertionError refusal) {
+      return refusal.getMessage();
+    }
   }
 
   private static DescribedPredicate<JavaClass> applicationLayer() {

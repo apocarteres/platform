@@ -4,8 +4,12 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 
 // REQ-JAVA-MODULES-005, REQ-ADOPTION-021
 public final class PlatformArchRules {
@@ -43,13 +47,52 @@ public final class PlatformArchRules {
 
   // REQ-JAVA-MODULES-001
   public static ArchRule innerPackagesStayInside(String rootPackage, String innerSegment) {
-    String inner = String.format("%s..%s..", rootPackage, innerSegment);
     return noClasses()
-      .that().resideOutsideOfPackage(inner)
-      .should().dependOnClassesThat().resideInAPackage(inner)
-      .because("реализация модуля лежит во внутренних подпакетах и снаружи не используется")
+      .should(useImplementationOfAnotherModule(rootPackage, innerSegment))
+      .because("реализация модуля лежит во внутренних подпакетах и за пределами своего модуля не используется")
       // REQ-ADOPTION-022
       .allowEmptyShould(true);
+  }
+
+  // REQ-JAVA-MODULES-001
+  private static ArchCondition<JavaClass> useImplementationOfAnotherModule(String rootPackage, String innerSegment) {
+    String description = String.format("обращаться к подпакету %s чужого модуля", innerSegment);
+    return new ArchCondition<>(description) {
+      @Override
+      public void check(JavaClass item, ConditionEvents events) {
+        for (Dependency dependency : item.getDirectDependenciesFromSelf()) {
+          String target = dependency.getTargetClass().getPackageName();
+          if (!implementationPackage(rootPackage, innerSegment, target)) {
+            continue;
+          }
+          String module = moduleOf(rootPackage, target);
+          String origin = dependency.getOriginClass().getPackageName();
+          if (origin.equals(module) || origin.startsWith(module + ".")) {
+            continue;
+          }
+          events.add(SimpleConditionEvent.satisfied(dependency, dependency.getDescription()));
+        }
+      }
+    };
+  }
+
+  private static boolean implementationPackage(String rootPackage, String innerSegment, String target) {
+    if (!target.startsWith(rootPackage + ".")) {
+      return false;
+    }
+    String[] parts = target.substring(rootPackage.length() + 1).split("\\.");
+    for (int index = 1; index < parts.length; index += 1) {
+      if (parts[index].equals(innerSegment)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static String moduleOf(String rootPackage, String target) {
+    String rest = target.substring(rootPackage.length() + 1);
+    int dot = rest.indexOf('.');
+    return rootPackage + "." + (dot == -1 ? rest : rest.substring(0, dot));
   }
 
   // REQ-DATA-ACCESS-001

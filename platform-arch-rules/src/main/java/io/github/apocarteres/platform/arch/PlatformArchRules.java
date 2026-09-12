@@ -14,10 +14,18 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 // REQ-JAVA-MODULES-005, REQ-ADOPTION-021
 public final class PlatformArchRules {
 
-  private static final String SQL_CATALOGUE = "io.github.apocarteres.platform.persistence..";
+  private static final String[] SQL_CATALOGUE = {
+    "io.github.apocarteres.platform.persistence.SqlCatalog",
+    "io.github.apocarteres.platform.persistence.SqlStatements",
+  };
   private static final String LAZY = "org.springframework.context.annotation.Lazy";
-  private static final String TRANSACTIONAL = "org.springframework.transaction.annotation.Transactional";
-  private static final String PROGRAMMATIC_TRANSACTIONS = "org.springframework.transaction..";
+  private static final String[] TRANSACTION_CONTROL = {
+    "org.springframework.transaction.annotation.Transactional",
+    "org.springframework.transaction.support.TransactionTemplate",
+    "org.springframework.transaction.support.TransactionOperations",
+    "org.springframework.transaction.PlatformTransactionManager",
+    "org.springframework.transaction.TransactionManager",
+  };
   private static final String[] MAPPING_LIBRARIES = {
     "jakarta.persistence..", "javax.persistence..", "org.hibernate..", "org.springframework.data.jpa..",
   };
@@ -104,7 +112,31 @@ public final class PlatformArchRules {
 
   // REQ-DATA-ACCESS-005, REQ-DATA-ACCESS-004
   public static ArchRule sqlCatalogueIsUsedOnlyBy(DescribedPredicate<? super JavaClass> dataAccessLayer) {
-    return packageIsUsedOnlyBy(SQL_CATALOGUE, dataAccessLayer);
+    return typesAreUsedOnlyBy(SQL_CATALOGUE, dataAccessLayer);
+  }
+
+  // REQ-DATA-ACCESS-006
+  public static ArchRule typesAreUsedOnlyBy(String[] types, DescribedPredicate<? super JavaClass> allowed) {
+    return noClasses()
+      .that(DescribedPredicate.not(allowed))
+      .should().dependOnClassesThat(named(types))
+      .because("правило утверждает требование дословно: названные типы, а не пакет, в котором они лежат")
+      // REQ-ADOPTION-022
+      .allowEmptyShould(true);
+  }
+
+  private static DescribedPredicate<JavaClass> named(String[] types) {
+    return DescribedPredicate.describe(
+      "имеют одно из имён " + String.join(", ", types),
+      type -> {
+        for (String name : types) {
+          if (type.getFullName().equals(name)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    );
   }
 
   // REQ-DATA-ACCESS-005
@@ -121,8 +153,7 @@ public final class PlatformArchRules {
   public static ArchRule transactionsAreDeclaredOnlyIn(DescribedPredicate<? super JavaClass> applicationLayer) {
     return noClasses()
       .that(DescribedPredicate.not(applicationLayer))
-      .should().dependOnClassesThat().haveFullyQualifiedName(TRANSACTIONAL)
-      .orShould().dependOnClassesThat().resideInAPackage(PROGRAMMATIC_TRANSACTIONS)
+      .should().dependOnClassesThat(named(TRANSACTION_CONTROL))
       .because("транзакция принадлежит деловой операции, а не способу её вызова")
       // REQ-ADOPTION-022
       .allowEmptyShould(true);

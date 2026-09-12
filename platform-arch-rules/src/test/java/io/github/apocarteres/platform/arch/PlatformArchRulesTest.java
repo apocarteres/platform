@@ -74,6 +74,20 @@ class PlatformArchRulesTest {
     PlatformArchRules.transactionsAreDeclaredOnlyIn(everything).check(layers);
   }
 
+  // REQ-DATA-ACCESS-006
+  @Test
+  void looksAtTheNamedTypesAndNotAtTheirPackage() {
+    String[] catalogue = { FIXTURES + ".storage.Statements" };
+    ArchRule rule = PlatformArchRules.typesAreUsedOnlyBy(
+      catalogue,
+      DescribedPredicate.describe("слой доступа", type -> type.getSimpleName().equals("Statements"))
+    );
+
+    String refusal = violationsOf(rule, layers);
+    assertThat(refusal).contains("BookCatalogue");
+    assertThat(refusal).doesNotContain("BookShelf");
+  }
+
   // REQ-DATA-ACCESS-005
   @Test
   void refusesTheCatalogueOutsideTheDataAccessLayer() {

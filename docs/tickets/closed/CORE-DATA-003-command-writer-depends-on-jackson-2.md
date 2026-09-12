@@ -5,7 +5,7 @@ status: done
 scope: backend, java, persistence
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-10-0
 related: CORE-DATA-002, REQ-PERSISTENCE, ADR-0002
 ---
 

@@ -5,7 +5,7 @@ status: done
 scope: process, tooling, architecture, research
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-14-0
 questions: resolved
 related: CORE-OPS-040, CORE-OPS-037, CORE-OPS-033, REQ-ADOPTION
 ---

@@ -14,13 +14,14 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 70. Включены самостоятельные задачи и этапы планов функций.
+Всего: 71. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
+| [Исследование: правила ядра проверяются только на ядре](CORE-ARC-005-rules-are-verified-only-on-the-core.md) | P1 | Выполнена | Не назначен | process, tooling, architecture, research |
 | [Подключение ядра сняло границу вокруг каталога запросов](CORE-DATA-002-core-package-escapes-the-module-model.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, java, persistence |
 | [Сериализатор команд требует Jackson 2, которого в платформе приложений уже нет](CORE-DATA-003-command-writer-depends-on-jackson-2.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | backend, java, persistence |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |

@@ -5,7 +5,7 @@ status: done
 scope: documentation, process
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-17-0
 questions: resolved
 related: CORE-DOC-011, REQ-AGENT-WORK, REQ-PUBLISHING
 ---

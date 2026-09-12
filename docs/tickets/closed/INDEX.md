@@ -22,7 +22,7 @@ authority: navigation
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
 | [Исследование: правила ядра проверяются только на ядре](CORE-ARC-005-rules-are-verified-only-on-the-core.md) | P1 | Выполнена | [RELEASE-1-14-0](../../releases/RELEASE-1-14-0.md) | process, tooling, architecture, research |
-| [Исследование: правило запрещает шире, чем сказано в требовании](CORE-ARC-006-rules-wider-than-the-requirement.md) | P1 | Выполнена | Не назначен | process, tooling, architecture, research |
+| [Исследование: правило запрещает шире, чем сказано в требовании](CORE-ARC-006-rules-wider-than-the-requirement.md) | P1 | Выполнена | [RELEASE-1-17-0](../../releases/RELEASE-1-17-0.md) | process, tooling, architecture, research |
 | [Подключение ядра сняло границу вокруг каталога запросов](CORE-DATA-002-core-package-escapes-the-module-model.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, java, persistence |
 | [Сериализатор команд требует Jackson 2, которого в платформе приложений уже нет](CORE-DATA-003-command-writer-depends-on-jackson-2.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | backend, java, persistence |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |
@@ -70,7 +70,7 @@ authority: navigation
 | [Имена документов и идентификаторы задавались по-разному в каждом репозитории](CORE-DOC-006-document-naming-scheme.md) | P2 | Выполнена | [RELEASE-0-35-0](../../releases/RELEASE-0-35-0.md) | documentation, process |
 | [Между выпусками нет фазы планирования](CORE-DOC-009-planning-phase-between-releases.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | process, release |
 | [У потребителя нет способа прислать заявку в ядро](CORE-DOC-010-consumer-feedback-channel.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | process, documentation |
-| [Исполнитель останавливается без повода](CORE-DOC-012-executor-stops-without-a-reason.md) | P2 | Выполнена | Не назначен | documentation, process |
+| [Исполнитель останавливается без повода](CORE-DOC-012-executor-stops-without-a-reason.md) | P2 | Выполнена | [RELEASE-1-17-0](../../releases/RELEASE-1-17-0.md) | documentation, process |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

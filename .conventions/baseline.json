@@ -31,8 +31,7 @@
       "docs/tickets/closed/CORE-OPS-027-obligation-ticket-name-fails-naming.md": 1,
       "docs/tickets/closed/CORE-OPS-028-core-adopts-its-ticket-prefix.md": 1,
       "docs/tickets/closed/CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md": 2,
-      "docs/tickets/closed/CORE-QUAL-003-clock-hidden-in-a-template-string.md": 1,
-      "docs/tickets/CORE-DOC-011-terminology-is-not-fixed.md": 7
+      "docs/tickets/closed/CORE-QUAL-003-clock-hidden-in-a-template-string.md": 1
     },
     "terms-preferred": {}
   }

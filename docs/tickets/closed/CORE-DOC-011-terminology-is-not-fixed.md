@@ -5,7 +5,7 @@ status: done
 scope: documentation, process
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-16-0
 questions: resolved
 related: CORE-ARC-006, REQ-NAMING, REQ-PROJECT-RULES
 ---

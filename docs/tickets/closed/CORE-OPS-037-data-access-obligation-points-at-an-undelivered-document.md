@@ -5,7 +5,7 @@ status: done
 scope: tooling, process, adoption
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-11-0
 related: CORE-DATA-002, REQ-ADOPTION, REQ-PERSISTENCE
 ---
 

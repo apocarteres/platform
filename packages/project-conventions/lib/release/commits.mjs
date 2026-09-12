@@ -17,14 +17,30 @@ async function git(root, args) {
 
 export async function commitsInRange(root, since) {
   const range = since === null ? 'HEAD' : `${since}..HEAD`;
-  const output = await git(root, ['log', `--format=%H${FIELD}%s${FIELD}%P${FIELD}%b${RECORD}`, range]);
+  const format = `${RECORD}%H${FIELD}%s${FIELD}%P${FIELD}%b${FIELD}`;
+  const output = await git(root, ['log', '--name-only', `--format=${format}`, range]);
   return output.split(RECORD)
-    .map((entry) => entry.replace(/^\s+/, ''))
-    .filter((entry) => entry.length > 0)
+    .filter((entry) => entry.trim().length > 0)
     .map((entry) => {
-      const [sha, subject, parents, body] = entry.split(FIELD);
-      return { sha, subject, body: body ?? '', parents: (parents ?? '').trim().split(/\s+/).filter(Boolean) };
+      const [sha, subject, parents, body, files] = entry.split(FIELD);
+      return {
+        sha,
+        subject,
+        body: body ?? '',
+        parents: (parents ?? '').trim().split(/\s+/).filter(Boolean),
+        // REQ-RELEASE-040
+        files: (files ?? '').split('\n').map((line) => line.trim()).filter((line) => line.length > 0),
+      };
     });
+}
+
+// REQ-RELEASE-040
+export const TICKETS_PATH = 'docs/tickets/';
+
+// REQ-RELEASE-040
+export function recordCommit(commit) {
+  const files = commit.files ?? [];
+  return files.length > 0 && files.every((file) => file.startsWith(TICKETS_PATH));
 }
 
 // REQ-RELEASE-036

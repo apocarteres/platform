@@ -9,7 +9,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
-import { commitsInRange, cycleCommit, mergeCommit, revertCommit, ticketOf } from './commits.mjs';
+import { commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
@@ -116,6 +116,8 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
       continue;
     }
     if (members.has(ticket)) continue;
+    // REQ-RELEASE-040
+    if (recordCommit(commit)) continue;
     if (!outside.has(ticket)) outside.set(ticket, []);
     outside.get(ticket).push(commit);
   }

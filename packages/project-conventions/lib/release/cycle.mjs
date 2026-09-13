@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  RELEASES_DIR, TICKETS_DIR, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
+  RELEASES_DIR, STAGE_ID, TICKETS_DIR, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
   unassignedDoneTickets, writeDocument,
 } from './documents.mjs';
@@ -130,12 +130,15 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
   const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
   const prefix = config.ticketPrefix ?? null;
   const members = new Set(composition.map(ticketId));
+  // REQ-NAMING-011
+  const known = await tickets(root);
+  const stages = new Set(known.map(ticketId).filter((id) => STAGE_ID.test(id ?? '')));
   const problems = [];
   const outside = new Map();
   for (const commit of beyondBaseline) {
     // REQ-RELEASE-036
     if (cycleCommit(commit) || mergeCommit(commit)) continue;
-    const ticket = ticketOf(commit, areas, prefix);
+    const ticket = ticketOf(commit, areas, prefix, stages);
     if (ticket === null) {
       // REQ-RELEASE-039
       problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»\n  `
@@ -150,9 +153,8 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
   }
 
   // REQ-RELEASE-037
-  const known = await tickets(root);
   for (const [ticket, commits] of outside) {
-    if (revertCommit(commits[0], areas, prefix)) continue;
+    if (revertCommit(commits[0], areas, prefix, stages)) continue;
     const named = commits.map(
       (commit) => `Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`,
     );

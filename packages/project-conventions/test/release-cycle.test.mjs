@@ -1124,3 +1124,70 @@ test('отказы контура выпуска называют выход, а
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-NAMING-011
+async function planStage(root, id, status) {
+  const directory = path.join(root, 'docs/tickets/features/caps');
+  await mkdir(directory, { recursive: true });
+  await writeFile(path.join(directory, 'INDEX.md'),
+    '---\nid: PLAN-CAPS\ntype: index\nstatus: active\nscope: planning\nauthority: navigation\n---\n\n# План\n');
+  await writeFile(path.join(directory, `${id.split('-')[1]}-first.md`),
+    `---\nid: ${id}\ntype: ticket\nstatus: ${status}\nscope: quality\nauthority: supporting\n`
+    + 'priority: P2\nrelease: unassigned\n---\n\n# Этап плана\n');
+}
+
+// REQ-NAMING-011
+test('этапом плана называют коммит, и выполненный этап входит в состав', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await planStage(root, 'CAPS-01', 'done');
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'CAPS-01 работа по этапу плана');
+
+    const state = await closability(root, { scheme: 'date' });
+
+    assert.ok(
+      !state.problems.some((problem) => problem.includes('CAPS-01')),
+      state.problems.join('\n'),
+    );
+    assert.deepEqual(state.composition.map((item) => item.metadata.get('id')), ['CAPS-01']);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-NAMING-011
+test('идентификатор вида этапа без такого этапа коммита не называет', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await planStage(root, 'CAPS-01', 'done');
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'CAPS-09 этапа с таким номером нет');
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'NOPE-01 плана с таким именем нет');
+
+    const state = await closability(root, { scheme: 'date' });
+
+    for (const subject of ['CAPS-09', 'NOPE-01']) {
+      const refusal = state.problems.find((problem) => problem.includes(subject));
+      assert.ok(refusal, `${subject}: ${state.problems.join('\n')}`);
+      assert.match(refusal, /не называет задачу/,
+        `${subject} принят за идентификатор: отказ должен быть «не называет задачу», а не о составе`);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

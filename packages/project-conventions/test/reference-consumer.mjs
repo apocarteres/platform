@@ -90,6 +90,18 @@ export async function referenceConsumer() {
   await writeFile(path.join(root, 'docs/runbooks/INDEX.md'),
     '---\nid: IDX-RUNBOOKS\ntype: index\nstatus: active\nscope: operations\nauthority: navigation\n---\n\n'
     + '# Эксплуатационные инструкции\n\nИнструкций пока нет.\n');
+
+  // REQ-NAMING-011
+  await mkdir(path.join(root, 'docs/tickets/features/caps'), { recursive: true });
+  await writeFile(path.join(root, 'docs/tickets/features/INDEX.md'),
+    '---\nid: IDX-FEATURES\ntype: index\nstatus: active\nscope: planning\nauthority: navigation\n---\n\n'
+    + '# Планы функций\n\n- [Ограничение по объёму](caps/INDEX.md)\n');
+  await writeFile(path.join(root, 'docs/tickets/features/caps/INDEX.md'),
+    '---\nid: PLAN-CAPS\ntype: index\nstatus: active\nscope: planning\nauthority: navigation\n---\n\n'
+    + '# Ограничение по объёму\n\n## Этапы\n\n- [Первый этап](01-first-cap.md)\n');
+  await writeFile(path.join(root, 'docs/tickets/features/caps/01-first-cap.md'),
+    '---\nid: CAPS-01\ntype: ticket\nstatus: done\nscope: quality\nauthority: supporting\n'
+    + 'priority: P2\nrelease: unassigned\n---\n\n# Первый этап\n\nРабота этапа плана.\n');
   await git(root, 'init', '--quiet');
   await git(root, 'config', 'user.email', 'consumer@example.test');
   await git(root, 'config', 'user.name', 'Consumer');
@@ -118,6 +130,8 @@ export async function referenceConsumer() {
     await git(root, 'commit', '--quiet', '-m', `Выпущен 2026.09.${ordinal}\n\nRelease-cycle: RELEASE-2026-09-${ordinal}`);
     await git(root, 'tag', '-a', `2026.09.${ordinal}`, '-m', `Выпуск 2026.09.${ordinal}`);
   }
+  // REQ-NAMING-011
+  await git(root, 'commit', '--quiet', '--allow-empty', '-m', 'CAPS-01 работа по этапу плана');
   await refreshIndexes(root);
   await git(root, 'add', '-A');
   await git(root, 'commit', '--quiet', '-m', 'Сводки проекта\n\nRelease-cycle: RELEASE-2026-09-10');

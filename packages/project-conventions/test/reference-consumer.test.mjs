@@ -35,6 +35,13 @@ test('эталонный потребитель несёт свойства фо
 
     const contract = await readFile(path.join(consumer.root, 'src/main/java/net/example/inventory/InventoryContract.java'), 'utf8');
     assert.match(contract, /internal\.InventoryStore/, 'корневой пакет модуля пользуется своей реализацией');
+
+    // REQ-NAMING-011
+    const stage = await readFile(path.join(consumer.root, 'docs/tickets/features/caps/01-first-cap.md'), 'utf8');
+    assert.match(stage, /^id: CAPS-01$/m, 'проект несёт план функции с этапом');
+    const { stdout: subjects } = await consumer.git('log', '--format=%s');
+    assert.ok(subjects.split('\n').includes('CAPS-01 работа по этапу плана'),
+      'этап назван в коммите: без такого коммита проверка состава этой формы не видит');
   } finally {
     await rm(consumer.root, { recursive: true, force: true });
   }

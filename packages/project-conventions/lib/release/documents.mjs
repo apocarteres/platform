@@ -45,7 +45,29 @@ export async function tickets(root) {
   return [
     ...await documents(root, TICKETS_DIR, 'ticket'),
     ...await documents(root, `${TICKETS_DIR}/closed`, 'ticket'),
+    // REQ-NAMING-011
+    ...await planStages(root),
   ];
+}
+
+// REQ-NAMING-011
+export const STAGE_ID = /^[A-Z]{2,5}-\d{2}$/;
+
+// REQ-NAMING-011
+async function planStages(root) {
+  const features = path.join(root, TICKETS_DIR, 'features');
+  let entries;
+  try {
+    entries = await readdir(features, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+  const found = [];
+  for (const entry of entries.filter((item) => item.isDirectory())) {
+    found.push(...await documents(root, `${TICKETS_DIR}/features/${entry.name}`, 'ticket'));
+  }
+  return found;
 }
 
 // REQ-RELEASE-031

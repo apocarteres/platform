@@ -55,15 +55,18 @@ export function cycleCommit(commit) {
 // REQ-RELEASE-037
 export const REVERT_LABEL = '!revert';
 
-export function revertCommit(commit, areas, prefix) {
-  const ticket = ticketOf(commit, areas, prefix);
+export function revertCommit(commit, areas, prefix, stages) {
+  const ticket = ticketOf(commit, areas, prefix, stages);
   if (ticket === null) return false;
   return new RegExp(`^${ticket}\\s+${REVERT_LABEL.replace('!', '\\!')}\\b`).test(commit.subject);
 }
 
-// REQ-NAMING-001, REQ-NAMING-012
-export function ticketOf(commit, areas, prefix) {
+// REQ-NAMING-001, REQ-NAMING-011, REQ-NAMING-012
+export function ticketOf(commit, areas, prefix, stages = new Set()) {
   const head = prefix ? `${prefix}-` : '';
   const match = new RegExp(`^(${head}(?:${areas.join('|')})-\\d{3})\\b`).exec(commit.subject);
-  return match === null ? null : match[1];
+  if (match !== null) return match[1];
+  // REQ-NAMING-011
+  const stage = /^([A-Z]{2,5}-\d{2})\b/.exec(commit.subject);
+  return stage !== null && stages.has(stage[1]) ? stage[1] : null;
 }

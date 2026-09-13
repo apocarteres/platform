@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 81. Включены самостоятельные задачи и этапы планов функций.
+Всего: 82. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -55,6 +55,7 @@ authority: navigation
 | [Обязательство, исполненное задачей вне открытия выпуска, не закрывается](CORE-OPS-042-obligation-closed-by-a-ticket-declaring-it.md) | P1 | Выполнена | [RELEASE-1-18-0](../../releases/RELEASE-1-18-0.md) | tooling, process |
 | [Правило вложенных модулей было псевдонимом соседнего](CORE-OPS-043-submodule-rule-was-an-alias.md) | P1 | Выполнена | [RELEASE-1-18-0](../../releases/RELEASE-1-18-0.md) | backend, java, tooling |
 | [Запрос справки открывает выпуск](CORE-OPS-044-help-opens-a-release.md) | P1 | Выполнена | [RELEASE-1-19-0](../../releases/RELEASE-1-19-0.md) | tooling |
+| [Этапом плана нельзя назвать коммит](CORE-OPS-045-plan-stage-cannot-name-a-commit.md) | P1 | Выполнена | [RELEASE-1-19-0](../../releases/RELEASE-1-19-0.md) | tooling |
 | [Отказ коммиту без задачи не называет выхода](CORE-OPS-046-refusal-without-a-way-out.md) | P1 | Выполнена | [RELEASE-1-19-0](../../releases/RELEASE-1-19-0.md) | tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |

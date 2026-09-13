@@ -455,6 +455,7 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
     .map((ticket) => [ticket.metadata.get('obligation'), ticket]));
   const created = [];
   const carried = [];
+  const unclaimed = [];
   state.seen ??= {};
   for (const entry of pending) {
     if (state.seen[entry.obligation.id] === undefined) state.seen[entry.obligation.id] = state.releaseCount ?? 0;
@@ -465,6 +466,11 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
         carried.push({ ticket: already, obligation: entry.obligation });
       }
       continue;
+    }
+    // REQ-RELEASE-019
+    const bySlug = allTickets.find((ticket) => ticket.file.endsWith(`-${entry.obligation.slug}.md`));
+    if (bySlug !== undefined) {
+      unclaimed.push({ ticket: bySlug, obligation: entry.obligation });
     }
     // REQ-NAMING-005, REQ-NAMING-007, REQ-NAMING-012
     const ticketId_ = nextTicketId(takenIds, entry.obligation.area ?? 'OPS', prefix);
@@ -547,6 +553,8 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
     named: named.found.map(ticketId),
     created: created.map((ticket) => ticket.id),
     carried: carried.map((entry) => ticketId(entry.ticket)),
+    // REQ-RELEASE-019
+    unclaimed: unclaimed.map((entry) => ({ ticket: ticketId(entry.ticket), obligation: entry.obligation.id })),
   };
 }
 

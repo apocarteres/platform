@@ -279,6 +279,11 @@ async function obligations(root) {
         ? 'ещё не попадало в выпуск'
         : `${current.status === 'overdue' ? 'просрочено' : 'в работе'}, прошло выпусков: ${current.elapsed} из ${obligation.dueReleases}${current.deferral ? `, отсрочка: ${current.deferral.reason}` : ''}`;
     console.log(`- ${obligation.id} (${obligation.level}, ${obligation.requirement}): ${detail}`);
+    // REQ-RELEASE-019
+    if (current.status !== 'closed') {
+      console.log(`  закрывается задачей с полем obligation: ${obligation.id}`
+        + ` либо командой conventions release satisfy ${obligation.id} --ticket <ID>`);
+    }
   }
 }
 
@@ -384,6 +389,11 @@ async function releaseOpen(root, version, names) {
   console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
   for (const ticket of result.named ?? []) console.log(`- в состав указана задача ${ticket}`);
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
+  // REQ-RELEASE-019
+  for (const entry of result.unclaimed ?? []) {
+    console.log(`- задача ${entry.ticket} названа как работа по обязательству ${entry.obligation}, но его не объявляет:`
+      + ` добавьте поле obligation: ${entry.obligation} либо закройте командой release satisfy`);
+  }
 }
 
 // REQ-RELEASE-033

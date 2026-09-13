@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 76. Включены самостоятельные задачи и этапы планов функций.
+Всего: 78. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -52,6 +52,8 @@ authority: navigation
 | [Запись решения по незавершённой задаче удерживает закрытие выпуска](CORE-OPS-039-decision-record-holds-the-release.md) | P1 | Выполнена | [RELEASE-1-12-0](../../releases/RELEASE-1-12-0.md) | tooling, process |
 | [Готовое правило строже требования, которое проверяет](CORE-OPS-040-inner-package-rule-is-stricter-than-the-requirement.md) | P1 | Выполнена | [RELEASE-1-13-0](../../releases/RELEASE-1-13-0.md) | backend, java, tooling |
 | [Готовые правила запрещают шире, чем сказано в требовании](CORE-OPS-041-rules-forbid-more-than-the-requirement-says.md) | P1 | Выполнена | [RELEASE-1-15-0](../../releases/RELEASE-1-15-0.md) | backend, java, tooling |
+| [Обязательство, исполненное задачей вне открытия выпуска, не закрывается](CORE-OPS-042-obligation-closed-by-a-ticket-declaring-it.md) | P1 | Выполнена | Не назначен | tooling, process |
+| [Правило вложенных модулей было псевдонимом соседнего](CORE-OPS-043-submodule-rule-was-an-alias.md) | P1 | Выполнена | Не назначен | backend, java, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |

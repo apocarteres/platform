@@ -1038,3 +1038,42 @@ test('запись решения в документе задачи закры�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-019
+test('задача, объявившая обязательство, закрывает его и второй не заводится', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'docs/tickets/closed/QUAL-100-adopt-sample.md'),
+      `${ticket('QUAL-100', 'done')}`.replace('release: unassigned', 'release: unassigned\nobligation: sample'),
+    );
+
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    assert.deepEqual(opened.created, [], 'вторая задача на то же обязательство не заводится');
+
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
+    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' })).finished, true);
+
+    const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
+    assert.equal(state.closed.sample.ticket, 'QUAL-100', JSON.stringify(state));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-019
+test('задача с тем же слагом, не объявившая обязательство, названа при открытии', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'docs/tickets/closed/QUAL-100-adopt-sample.md'), ticket('QUAL-100', 'done'));
+
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+
+    assert.deepEqual(opened.created, ['QUAL-101'], 'заготовка всё же заводится: связь не объявлена');
+    assert.deepEqual(opened.unclaimed, [{ ticket: 'QUAL-100', obligation: 'sample' }]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

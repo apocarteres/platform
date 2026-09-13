@@ -36,6 +36,17 @@ class PlatformArchRulesTest {
 
   // REQ-JAVA-MODULES-006
   @Test
+  void findsARingTwoLevelsBelowTheGivenRoot() {
+    JavaClasses deep = classesOf(FIXTURES + ".deep");
+    ArchRule rule = PlatformArchRules.submodulesAreFreeOfCycles(FIXTURES + ".deep");
+
+    assertThatThrownBy(() -> rule.check(deep))
+      .hasMessageContaining("alpha")
+      .hasMessageContaining("gamma");
+  }
+
+  // REQ-JAVA-MODULES-006
+  @Test
   void passesOnSubmodulesWithOneDirection() {
     PlatformArchRules.submodulesAreFreeOfCycles(FIXTURES + ".chain").check(chain);
   }

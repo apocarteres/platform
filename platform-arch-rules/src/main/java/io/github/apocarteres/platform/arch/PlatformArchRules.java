@@ -7,7 +7,12 @@ import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.CompositeArchRule;
+import com.tngtech.archunit.lang.EvaluationResult;
+import java.util.ArrayList;
+import java.util.List;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 
@@ -30,6 +35,9 @@ public final class PlatformArchRules {
     "jakarta.persistence..", "javax.persistence..", "org.hibernate..", "org.springframework.data.jpa..",
   };
 
+  private static final String DEEP_DESCRIPTION =
+    "пакеты каждого уровня вложенности свободны от колец";
+
   private PlatformArchRules() {
   }
 
@@ -42,8 +50,78 @@ public final class PlatformArchRules {
   }
 
   // REQ-JAVA-MODULES-006
-  public static ArchRule submodulesAreFreeOfCycles(String modulePackage) {
-    return modulesAreFreeOfCycles(modulePackage);
+  public static ArchRule submodulesAreFreeOfCycles(String rootPackage) {
+    return new EveryLevelFreeOfCycles(rootPackage, DEEP_DESCRIPTION);
+  }
+
+  // REQ-JAVA-MODULES-006
+  private static final class EveryLevelFreeOfCycles implements ArchRule {
+
+    private final String rootPackage;
+    private final String description;
+
+    private EveryLevelFreeOfCycles(String rootPackage, String description) {
+      this.rootPackage = rootPackage;
+      this.description = description;
+    }
+
+    @Override
+    public void check(JavaClasses classes) {
+      levels(classes).check(classes);
+    }
+
+    @Override
+    public EvaluationResult evaluate(JavaClasses classes) {
+      return levels(classes).evaluate(classes);
+    }
+
+    @Override
+    public ArchRule because(String reason) {
+      return new EveryLevelFreeOfCycles(rootPackage, description + ", потому что " + reason);
+    }
+
+    @Override
+    public ArchRule as(String newDescription) {
+      return new EveryLevelFreeOfCycles(rootPackage, newDescription);
+    }
+
+    @Override
+    public ArchRule allowEmptyShould(boolean allow) {
+      return this;
+    }
+
+    @Override
+    public String getDescription() {
+      return description;
+    }
+
+    private ArchRule levels(JavaClasses classes) {
+      List<ArchRule> rules = new ArrayList<>();
+      for (int depth = 1; depth <= depthOf(classes); depth += 1) {
+        rules.add(slices().matching(pattern(depth)).should().beFreeOfCycles().allowEmptyShould(true));
+      }
+      return CompositeArchRule.of(rules).as(description).allowEmptyShould(true);
+    }
+
+    private String pattern(int depth) {
+      StringBuilder pattern = new StringBuilder(rootPackage);
+      for (int level = 0; level < depth; level += 1) {
+        pattern.append(".(*)");
+      }
+      return pattern.append("..").toString();
+    }
+
+    private int depthOf(JavaClasses classes) {
+      int deepest = 1;
+      for (JavaClass type : classes) {
+        String name = type.getPackageName();
+        if (!name.startsWith(rootPackage + ".")) {
+          continue;
+        }
+        deepest = Math.max(deepest, name.substring(rootPackage.length() + 1).split("\\.").length);
+      }
+      return deepest;
+    }
   }
 
   // REQ-JAVA-MODULES-007

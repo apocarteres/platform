@@ -5,7 +5,7 @@ status: done
 scope: documentation
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-1-18-0
 related: CORE-DOC-011, REQ-TERMS
 ---
 

@@ -52,8 +52,8 @@ authority: navigation
 | [Запись решения по незавершённой задаче удерживает закрытие выпуска](CORE-OPS-039-decision-record-holds-the-release.md) | P1 | Выполнена | [RELEASE-1-12-0](../../releases/RELEASE-1-12-0.md) | tooling, process |
 | [Готовое правило строже требования, которое проверяет](CORE-OPS-040-inner-package-rule-is-stricter-than-the-requirement.md) | P1 | Выполнена | [RELEASE-1-13-0](../../releases/RELEASE-1-13-0.md) | backend, java, tooling |
 | [Готовые правила запрещают шире, чем сказано в требовании](CORE-OPS-041-rules-forbid-more-than-the-requirement-says.md) | P1 | Выполнена | [RELEASE-1-15-0](../../releases/RELEASE-1-15-0.md) | backend, java, tooling |
-| [Обязательство, исполненное задачей вне открытия выпуска, не закрывается](CORE-OPS-042-obligation-closed-by-a-ticket-declaring-it.md) | P1 | Выполнена | Не назначен | tooling, process |
-| [Правило вложенных модулей было псевдонимом соседнего](CORE-OPS-043-submodule-rule-was-an-alias.md) | P1 | Выполнена | Не назначен | backend, java, tooling |
+| [Обязательство, исполненное задачей вне открытия выпуска, не закрывается](CORE-OPS-042-obligation-closed-by-a-ticket-declaring-it.md) | P1 | Выполнена | [RELEASE-1-18-0](../../releases/RELEASE-1-18-0.md) | tooling, process |
+| [Правило вложенных модулей было псевдонимом соседнего](CORE-OPS-043-submodule-rule-was-an-alias.md) | P1 | Выполнена | [RELEASE-1-18-0](../../releases/RELEASE-1-18-0.md) | backend, java, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
@@ -73,7 +73,7 @@ authority: navigation
 | [Между выпусками нет фазы планирования](CORE-DOC-009-planning-phase-between-releases.md) | P2 | Выполнена | [RELEASE-1-2-0](../../releases/RELEASE-1-2-0.md) | process, release |
 | [У потребителя нет способа прислать заявку в ядро](CORE-DOC-010-consumer-feedback-channel.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | process, documentation |
 | [Исполнитель останавливается без повода](CORE-DOC-012-executor-stops-without-a-reason.md) | P2 | Выполнена | [RELEASE-1-17-0](../../releases/RELEASE-1-17-0.md) | documentation, process |
-| [Три образа вместо терминов](CORE-DOC-013-three-images-instead-of-terms.md) | P2 | Выполнена | Не назначен | documentation |
+| [Три образа вместо терминов](CORE-DOC-013-three-images-instead-of-terms.md) | P2 | Выполнена | [RELEASE-1-18-0](../../releases/RELEASE-1-18-0.md) | documentation |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

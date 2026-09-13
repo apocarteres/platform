@@ -5,7 +5,7 @@ status: done
 scope: backend, java, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-18-0
 related: CORE-OPS-040, CORE-ARC-006, REQ-JAVA-MODULES
 ---
 

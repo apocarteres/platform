@@ -9,7 +9,7 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, readReceipt } from './receipt.mjs';
-import { commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf } from './commits.mjs';
+import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
@@ -20,15 +20,29 @@ export async function closability(root, { scheme }) {
   const config = await readConfig(root);
   const release = await openRelease(root);
   if (release === null) problems.push('Открытого выпуска нет: откройте выпуск командой release open');
-  if (!await workingTreeClean(root)) problems.push('Рабочее дерево не чисто: тег утверждал бы одно состояние, а помечал другое');
+  // REQ-RELEASE-039
+  if (!await workingTreeClean(root)) {
+    problems.push('Рабочее дерево не чисто: тег утверждал бы одно состояние, а помечал другое.'
+      + ' Зафиксируйте изменения коммитом своей задачи либо отбросьте их');
+  }
   const commit = await headCommit(root);
   const receipt = await readReceipt(root, commit);
-  if (receipt === null) problems.push(`Нет расписки о пройденном verify для ${commit.slice(0, 8)}`);
-  else if (!attested(receipt)) problems.push(`Расписка для ${commit.slice(0, 8)} не содержит признака прогона: наборы заявлены, но не наблюдались`);
+  // REQ-RELEASE-039
+  if (receipt === null) {
+    problems.push(`Нет расписки о пройденном verify для ${commit.slice(0, 8)}:`
+      + ' запишите её командой conventions receipt --checks verify -- <команда набора>');
+  } else if (!attested(receipt)) {
+    problems.push(`Расписка для ${commit.slice(0, 8)} не содержит признака прогона: наборы заявлены, но не наблюдались.`
+      + ' Перезапишите её командой conventions receipt: заявить набор вручную контур выпуска не позволяет');
+  }
   const composition = release === null
     ? []
     : await compositionTickets(root, release.metadata.get('id'));
-  if (composition.length === 0) problems.push('Состав пуст: нечего выпускать');
+  // REQ-RELEASE-039
+  if (composition.length === 0) {
+    problems.push('Состав пуст: нечего выпускать.'
+      + ' Состав подбирает выполненные задачи без выпуска сам — доведите задачу до выполненного состояния');
+  }
   // REQ-RELEASE-031, REQ-RELEASE-008
   for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
     problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}): выполните её либо снимите из состава командой release drop с причиной`);
@@ -36,12 +50,23 @@ export async function closability(root, { scheme }) {
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
   for (const entry of overdueObligations(obligations, state, isCore)) {
-    problems.push(`Обязательство ${entry.obligation.id} просрочено: срок ${entry.obligation.dueReleases} выпуск(ов), прошло ${entry.state.elapsed}`);
+    // REQ-RELEASE-039
+    problems.push(`Обязательство ${entry.obligation.id} просрочено: срок ${entry.obligation.dueReleases} выпуск(ов),`
+      + ` прошло ${entry.state.elapsed}. Закрывается задачей с полем obligation: ${entry.obligation.id}`
+      + ` либо командой release satisfy ${entry.obligation.id} --ticket <ID>; перенести просроченное нельзя`);
   }
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
-  if (tag !== null && await tagExists(root, tag)) problems.push(`Тег ${tag} уже существует: номер не переиспользуется`);
+  // REQ-RELEASE-039
+  if (tag !== null && await tagExists(root, tag)) {
+    problems.push(`Тег ${tag} уже существует: номер не переиспользуется.`
+      + ' Либо первый шаг закрытия уже выполнен — тогда завершите выпуск командой release finish,'
+      + ' — либо номер занят прежним выпуском и следующий открывается с другим номером');
+  }
   // REQ-RELEASE-036
-  problems.push(...await commitProblems(root, { scheme, config, composition, existing: await releases(root) }));
+  problems.push(...await commitProblems(root, {
+    scheme, config, composition, existing: await releases(root),
+    releaseId: release === null ? null : release.metadata.get('id'),
+  }));
   return { problems, release, commit, receipt, composition, state, obligations, isCore, tag };
 }
 
@@ -94,7 +119,7 @@ function obligationsSummary(closed, deferred, isCore) {
 }
 
 // REQ-RELEASE-036
-async function commitProblems(root, { scheme, config, composition, existing }) {
+async function commitProblems(root, { scheme, config, composition, existing, releaseId }) {
   const baseline = config.commitRuleSince ?? null;
   // REQ-RELEASE-036
   if (baseline === null) return [];
@@ -112,7 +137,9 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
     if (cycleCommit(commit) || mergeCommit(commit)) continue;
     const ticket = ticketOf(commit, areas, prefix);
     if (ticket === null) {
-      problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»`);
+      // REQ-RELEASE-039
+      problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»\n  `
+        + wayOutOfAnUnnamedCommit(releaseId, prefix));
       continue;
     }
     if (members.has(ticket)) continue;
@@ -134,6 +161,15 @@ async function commitProblems(root, { scheme, config, composition, existing }) {
     problems.push(named.join('\n  '));
   }
   return problems;
+}
+
+// REQ-RELEASE-039
+function wayOutOfAnUnnamedCommit(releaseId, prefix) {
+  const example = prefix ? `${prefix}-OPS-001` : 'OPS-001';
+  return `Выхода три: назовите задачу идентификатором в начале заголовка (${example} ...);`
+    + ` если коммит обслуживает сам выпуск — поставьте в тело строку ${CYCLE_TRAILER}: ${releaseId}`
+    + ' (именно в тело, заголовок для этого не годится);'
+    + ` если коммит отменяет прежнюю работу — метку ${REVERT_LABEL} сразу после идентификатора задачи`;
 }
 
 // REQ-RELEASE-039
@@ -214,7 +250,9 @@ export async function finishability(root, { scheme }) {
   }
   const composition = await compositionTickets(root, id);
   for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
-    problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')})`);
+    // REQ-RELEASE-039
+    problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}):`
+      + ' выполните её либо снимите из состава командой release drop с причиной');
   }
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
@@ -416,7 +454,9 @@ async function namedTickets(root, names) {
     }
     const release = ticket.metadata.get('release') ?? 'unassigned';
     if (release !== 'unassigned') {
-      problems.push(`Задача ${name} уже отнесена к ${release}: в выпуск указывается задача без выпуска`);
+      // REQ-RELEASE-039
+      problems.push(`Задача ${name} уже отнесена к ${release}: в выпуск указывается задача без выпуска.`
+        + ' Работа после выпуска задачи оформляется новой задачей');
       continue;
     }
     found.push(ticket);

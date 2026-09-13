@@ -21,7 +21,7 @@ opened-on: 2026-09-13
 |---|---|
 | [CORE-OPS-044](../tickets/closed/CORE-OPS-044-help-opens-a-release.md) | Указана при открытии выпуска |
 | [CORE-OPS-045](../tickets/CORE-OPS-045-plan-stage-cannot-name-a-commit.md) | Указана при открытии выпуска |
-| [CORE-OPS-046](../tickets/CORE-OPS-046-refusal-without-a-way-out.md) | Указана при открытии выпуска |
+| [CORE-OPS-046](../tickets/closed/CORE-OPS-046-refusal-without-a-way-out.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

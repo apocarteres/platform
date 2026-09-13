@@ -1077,3 +1077,50 @@ test('задача с тем же слагом, не объявившая обя
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-039
+test('отказ коммиту без задачи называет все три выхода и форму признака цикла', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'Rebuild the release index');
+
+    const state = await closability(root, { scheme: 'date' });
+
+    const refusal = state.problems.find((problem) => problem.includes('не называет задачу'));
+    assert.ok(refusal, state.problems.join('\n'));
+    assert.match(refusal, /идентификатором в начале заголовка \(ZAVPN-OPS-001/);
+    assert.match(refusal, /Release-cycle: RELEASE-2026-09-1\b/);
+    assert.match(refusal, /именно в тело, заголовок для этого не годится/);
+    assert.match(refusal, /!revert/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-039
+test('отказы контура выпуска называют выход, а не одно нарушение', async () => {
+  const root = await project();
+  try {
+    await commitAll(root);
+
+    const state = await closability(root, { scheme: 'date' });
+
+    const receipt = state.problems.find((problem) => problem.includes('Нет расписки'));
+    assert.ok(receipt, state.problems.join('\n'));
+    assert.match(receipt, /conventions receipt --checks verify/);
+    for (const problem of state.problems) {
+      assert.match(problem, /release (close|finish|drop|open|satisfy)|conventions receipt|доведите|Зафиксируйте/,
+        `отказ не называет выхода: ${problem}`);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

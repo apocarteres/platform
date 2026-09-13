@@ -443,3 +443,76 @@ test('отказ проверки правил называет дверь в я
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-028
+test('справка подкоманды выпуска печатается и выпуска не открывает', async () => {
+  const root = await repository();
+  try {
+    const before = await releaseDocuments(root);
+
+    const help = await conventions(root, 'release', 'open', '--help');
+
+    assert.equal(help.code, 0, help.output);
+    assert.match(help.output, /conventions release open \[--version X\.Y\.Z\] \[--tickets A,B\]/);
+    assert.deepEqual(await releaseDocuments(root), before,
+      'запрос справки не создаёт документа выпуска');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-028
+test('подкоманда выпуска отвергает неизвестный ключ и выпуска не открывает', async () => {
+  const root = await repository();
+  try {
+    const before = await releaseDocuments(root);
+
+    const refused = await conventions(root, 'release', 'open', '--typo');
+
+    assert.equal(refused.code, 2, refused.output);
+    assert.match(refused.output, /неизвестный ключ: --typo/);
+    assert.match(refused.output, /conventions release open/);
+    assert.deepEqual(await releaseDocuments(root), before,
+      'отказ не создаёт документа выпуска');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-028
+test('команда выпуска отвергает ключ без значения, лишний аргумент и чужую подкоманду', async () => {
+  const root = await repository();
+  try {
+    const withoutValue = await conventions(root, 'release', 'open', '--version');
+    assert.equal(withoutValue.code, 2, withoutValue.output);
+    assert.match(withoutValue.output, /ключ --version требует значения/);
+
+    const extra = await conventions(root, 'release', 'status', 'лишнее');
+    assert.equal(extra.code, 2, extra.output);
+    assert.match(extra.output, /лишний аргумент: лишнее/);
+
+    const unknown = await conventions(root, 'release', 'opne');
+    assert.equal(unknown.code, 2, unknown.output);
+    assert.match(unknown.output, /неизвестная подкоманда выпуска: opne/);
+
+    const foreign = await conventions(root, 'nosuch');
+    assert.equal(foreign.code, 2, foreign.output);
+    assert.match(foreign.output, /неизвестная команда: nosuch/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-028
+test('выпуск открывается по-прежнему, когда аргументы знакомы', async () => {
+  const root = await repository();
+  try {
+    const opened = await conventions(root, 'release', 'open');
+
+    assert.equal(opened.code, 0, opened.output);
+    assert.match(opened.output, /Открыт выпуск RELEASE-/);
+    assert.ok((await readdir(path.join(root, 'docs/releases'))).some((name) => name.startsWith('RELEASE-')));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

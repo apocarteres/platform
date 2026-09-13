@@ -22,6 +22,7 @@ import { declaredObligations, findObligationDebts, loadObligations, obligationSt
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
+import { parseArguments } from '../lib/cli/arguments.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
@@ -554,42 +555,144 @@ async function sync(root) {
   console.log(`AGENTS.md: блок правил v${markerVersion(version)} записан.`);
 }
 
-const [command, ...rest] = process.argv.slice(2);
-const rootOption = rest.indexOf('--root');
-const root = path.resolve(rootOption === -1 ? process.cwd() : rest[rootOption + 1]);
+// REQ-RELEASE-028
+const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
+  + '|baseline|receipt|run|naming|obligations|release> [--root <path>]';
 
-const valueOf = (name) => {
-  const index = rest.indexOf(name);
-  return index === -1 ? undefined : rest[index + 1];
+// REQ-RELEASE-028
+const USAGE = {
+  check: 'conventions check [--root <path>]',
+  'docs-check': 'conventions docs-check [--root <path>]',
+  'tickets-index': 'conventions tickets-index [--root <path>]',
+  'releases-index': 'conventions releases-index [--root <path>]',
+  sync: 'conventions sync [--root <path>]',
+  obligations: 'conventions obligations [--root <path>]',
+  baseline: 'conventions baseline [--allow-growth] [--root <path>]',
+  naming: 'conventions naming <plan|apply> [--map <файл>] [--root <path>]',
+  receipt: RECEIPT_USAGE,
+  run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
+  release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy> [--root <path>]',
 };
 
-if (command === 'check') await check(root);
-else if (command === 'receipt') await receipt(root, rest);
-else if (command === 'obligations') await obligations(root);
-else if (command === 'run') await run(root, rest.filter((value) => value !== '--root' && value !== root));
-else if (command === 'naming') await naming(root, rest.find((value) => !value.startsWith('--') && value !== root), valueOf('--map'));
-else if (command === 'release') {
-  const [subcommand, ...args] = rest.filter((value) => value !== '--root' && value !== root);
+// REQ-RELEASE-028
+const RELEASE_USAGE = {
+  status: 'conventions release status [--root <path>]',
+  close: 'conventions release close [--root <path>]',
+  finish: 'conventions release finish --note "<чем выполнен>" [--root <path>]',
+  open: 'conventions release open [--version X.Y.Z] [--tickets A,B] [--root <path>]',
+  drop: 'conventions release drop <TICKET-ID> --reason "<причина>" [--root <path>]',
+  cancel: 'conventions release cancel --reason "<причина>" [--root <path>]',
+  adopt: 'conventions release adopt [--version X.Y.Z] [--root <path>]',
+  defer: 'conventions release defer <обязательство> --reason "<причина>" [--root <path>]',
+  satisfy: 'conventions release satisfy <обязательство> --ticket <TICKET-ID> [--root <path>]',
+};
+
+// REQ-RELEASE-028
+const RELEASE_SPEC = {
+  status: {},
+  close: {},
+  finish: { values: ['--note'] },
+  open: { values: ['--version', '--tickets'] },
+  drop: { values: ['--reason'], positional: 1 },
+  cancel: { values: ['--reason'] },
+  adopt: { values: ['--version'] },
+  defer: { values: ['--reason'], positional: 1 },
+  satisfy: { values: ['--ticket'], positional: 1 },
+};
+
+// REQ-RELEASE-028
+const SPEC = {
+  check: {},
+  'docs-check': {},
+  'tickets-index': {},
+  'releases-index': {},
+  sync: {},
+  obligations: {},
+  baseline: { flags: ['--allow-growth'] },
+  naming: { values: ['--map'], positional: 1 },
+};
+
+// REQ-RELEASE-028
+function rootOf(argv) {
+  const index = argv.indexOf('--root');
+  return path.resolve(index === -1 ? process.cwd() : argv[index + 1] ?? '.');
+}
+
+// REQ-RELEASE-028
+function refuse(usage, message) {
+  if (message) console.error(message);
+  console.error(usage);
+  process.exitCode = 2;
+}
+
+const [command, ...argv] = process.argv.slice(2);
+
+// REQ-RELEASE-028
+if (command === undefined || command === '--help') {
+  console.log(COMMANDS);
+  for (const line of Object.values(USAGE)) console.log(`  ${line}`);
+} else if (!Object.hasOwn(USAGE, command)) {
+  refuse(COMMANDS, `неизвестная команда: ${command}`);
+} else if (command === 'receipt' || command === 'run') {
+  // REQ-RELEASE-027, REQ-RELEASE-028
+  const separator = argv.indexOf('--');
+  const options = withoutRoot(separator === -1 ? argv : argv.slice(0, separator));
+  if (options.includes('--help')) console.log(USAGE[command]);
+  else if (command === 'receipt') await receipt(rootOf(argv), argv);
+  else await run(rootOf(argv), withoutRoot(argv));
+} else if (command === 'release') {
+  await release(argv);
+} else {
+  const spec = SPEC[command];
+  const parsed = parseArguments(argv, { ...spec, values: ['--root', ...(spec.values ?? [])] });
+  if (parsed.help) console.log(USAGE[command]);
+  else if (parsed.error) refuse(USAGE[command], parsed.error);
+  else {
+    const root = path.resolve(parsed.values.get('--root') ?? process.cwd());
+    if (command === 'check') await check(root);
+    else if (command === 'docs-check') await docsCheck(root);
+    else if (command === 'tickets-index') await ticketsIndex(root);
+    else if (command === 'releases-index') await releasesIndex(root);
+    else if (command === 'sync') await sync(root);
+    else if (command === 'obligations') await obligations(root);
+    else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
+    else await naming(root, parsed.positional[0], parsed.values.get('--map'));
+  }
+}
+
+// REQ-RELEASE-028
+async function release(argv) {
+  const [subcommand, ...rest] = argv;
+  if (subcommand === undefined || subcommand === '--help') {
+    console.log(USAGE.release);
+    for (const line of Object.values(RELEASE_USAGE)) console.log(`  ${line}`);
+    return;
+  }
+  if (!Object.hasOwn(RELEASE_SPEC, subcommand)) {
+    refuse(USAGE.release, `неизвестная подкоманда выпуска: ${subcommand}`);
+    return;
+  }
+  const usage = RELEASE_USAGE[subcommand];
+  const spec = RELEASE_SPEC[subcommand];
+  const parsed = parseArguments(rest, { ...spec, values: ['--root', ...(spec.values ?? [])] });
+  if (parsed.help) {
+    console.log(usage);
+    return;
+  }
+  if (parsed.error) {
+    refuse(usage, parsed.error);
+    return;
+  }
+  const root = path.resolve(parsed.values.get('--root') ?? process.cwd());
+  const valueOf = (name) => parsed.values.get(name);
+  const first = parsed.positional[0];
   if (subcommand === 'status') await releaseStatus(root);
   else if (subcommand === 'close') await releaseClose(root);
   else if (subcommand === 'finish') await releaseFinish(root, valueOf('--note'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'), ticketList(valueOf('--tickets')));
   else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));
-  else if (subcommand === 'defer') await releaseDefer(root, args[0], valueOf('--reason'));
+  else if (subcommand === 'defer') await releaseDefer(root, first, valueOf('--reason'));
   else if (subcommand === 'adopt') await releaseAdopt(root, valueOf('--version'));
-  else if (subcommand === 'drop') await releaseDrop(root, args[0], valueOf('--reason'));
-  else if (subcommand === 'satisfy') await releaseSatisfy(root, args[0], valueOf('--ticket'));
-  else {
-    console.error('conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy> [--version X.Y.Z] [--tickets A,B] [--note "<чем выполнен>"] [--reason "<причина>"] [--ticket <TICKET-ID>]');
-    process.exitCode = 2;
-  }
-}
-else if (command === 'docs-check') await docsCheck(root);
-else if (command === 'tickets-index') await ticketsIndex(root);
-else if (command === 'releases-index') await releasesIndex(root);
-else if (command === 'baseline') await baseline(root, rest.includes('--allow-growth'));
-else if (command === 'sync') await sync(root);
-else {
-  console.error('conventions <check|docs-check|tickets-index|releases-index|sync|baseline|receipt|obligations|release> [--root <path>] [--allow-growth]');
-  process.exitCode = 2;
+  else if (subcommand === 'drop') await releaseDrop(root, first, valueOf('--reason'));
+  else await releaseSatisfy(root, first, valueOf('--ticket'));
 }

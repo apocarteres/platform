@@ -19,7 +19,7 @@ opened-on: 2026-09-16
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-008](../tickets/CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | Указана при открытии выпуска |
+| [CORE-QUAL-008](../tickets/closed/CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | Указана при открытии выпуска |
 | [CORE-QUAL-009](../tickets/CORE-QUAL-009-test-relaxation-is-not-an-exception.md) | Указана при открытии выпуска |
 | [CORE-QUAL-011](../tickets/CORE-QUAL-011-core-does-not-do-what-it-requires.md) | Указана при открытии выпуска |
 | [CORE-QUAL-010](../tickets/CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | Указана при открытии выпуска |

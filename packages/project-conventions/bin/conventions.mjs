@@ -10,7 +10,7 @@ import { TICKET_AREAS } from '../lib/document-naming.mjs';
 import { migrate, plan } from '../lib/naming-migration.mjs';
 import { DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, report, runWithLimits } from '../lib/run.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
-import { BASELINE_FILE, baselineExists, compare, counts, readBaseline, writeBaseline } from '../lib/baseline.mjs';
+import { BASELINE_FILE, baselineExists, compare, counts, grewOver, readBaseline, sizeOf, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 import { feedbackChannel, feedbackLine } from '../lib/feedback.mjs';
 import { collisions, dictionary } from '../lib/terms.mjs';
@@ -91,7 +91,8 @@ async function check(root) {
   for (const rule of rules) {
     const violations = await rule.find(root, config);
     tracked += violations.size;
-    const { exceeded, improved } = compare(violations, baseline[rule.id] ?? {});
+    // REQ-QUALITY-007
+    const { exceeded, improved } = compare(violations, baseline[rule.id] ?? {}, rule.unit);
     improvedTotal += improved.length;
     const target = rule.level === RECOMMENDATION ? advisories : problems;
     for (const entry of exceeded) {
@@ -130,12 +131,18 @@ async function baseline(root, allowGrowth) {
   const current = {};
   const grown = [];
   for (const rule of rules) {
-    current[rule.id] = counts(await rule.find(root, config));
+    // REQ-QUALITY-007
+    current[rule.id] = counts(await rule.find(root, config), rule.unit);
     const adopted = previous[rule.id] === undefined;
     if (adopted) continue;
     const before = previous[rule.id];
-    for (const [file, count] of Object.entries(current[rule.id])) {
-      if (count > (before[file] ?? 0)) grown.push(`${rule.id} ${file}: ${before[file] ?? 0} -> ${count}`);
+    // REQ-QUALITY-007
+    for (const [file, entry] of Object.entries(current[rule.id])) {
+      const growth = grewOver(entry, before[file]);
+      if (growth === true) grown.push(`${rule.id} ${file}: ${sizeOf(before[file])} -> ${entry}`);
+      else if (Array.isArray(growth) && growth.length > 0) {
+        grown.push(`${rule.id} ${file}: новые послабления ${growth.join(', ')}`);
+      }
     }
   }
   if (grown.length > 0 && !allowGrowth && !seeding) {
@@ -145,7 +152,8 @@ async function baseline(root, allowGrowth) {
     return;
   }
   await writeBaseline(root, current);
-  const summary = rules.map((rule) => `${rule.id} ${Object.values(current[rule.id]).reduce((sum, count) => sum + count, 0)}`).join(', ');
+  // REQ-QUALITY-007
+  const summary = rules.map((rule) => `${rule.id} ${Object.values(current[rule.id]).reduce((sum, entry) => sum + sizeOf(entry), 0)}`).join(', ');
   console.log(`${BASELINE_FILE} ${seeding ? 'создан' : 'обновлён'}: ${summary}.`);
 }
 

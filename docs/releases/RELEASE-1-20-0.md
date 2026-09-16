@@ -23,7 +23,7 @@ opened-on: 2026-09-16
 | [CORE-QUAL-009](../tickets/closed/CORE-QUAL-009-test-relaxation-is-not-an-exception.md) | Указана при открытии выпуска |
 | [CORE-QUAL-011](../tickets/closed/CORE-QUAL-011-core-does-not-do-what-it-requires.md) | Указана при открытии выпуска |
 | [CORE-QUAL-010](../tickets/closed/CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | Указана при открытии выпуска |
-| [CORE-OPS-047](../tickets/CORE-OPS-047-nothing-checks-that-analysis-exists.md) | Указана при открытии выпуска |
+| [CORE-OPS-047](../tickets/closed/CORE-OPS-047-nothing-checks-that-analysis-exists.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

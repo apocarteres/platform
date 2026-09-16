@@ -29,8 +29,8 @@ function assertedClauses(source) {
 // REQ-PUBLISHING-012
 function casesByClause(source) {
   const cases = new Map();
-  const blocks = source.split(/\n  @Test\n/).slice(1);
-  const comments = [...source.matchAll(/\n(\s*\/\/ REQ-[^\n]*)\n  @Test\n/g)].map((found) => found[1]);
+  const blocks = source.split(/\n {2}@Test\n/).slice(1);
+  const comments = [...source.matchAll(/\n(\s*\/\/ REQ-[^\n]*)\n {2}@Test\n/g)].map((found) => found[1]);
   blocks.forEach((block, index) => {
     const body = block.split('\n  }')[0];
     const kind = REFUSAL.test(body) ? 'refuses' : 'passes';

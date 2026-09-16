@@ -24,6 +24,12 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "prepack": "node scripts/collect-docs.mjs"
+    "prepack": "node scripts/collect-docs.mjs",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0"
   }
 }

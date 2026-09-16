@@ -84,7 +84,7 @@ test('выпуск с двузначным номером закрывается
     await writeReceipt(root, receiptFor(await head(consumer)));
     const state = await closability(root, { scheme: 'date' });
     assert.deepEqual(state.problems, [], state.problems.join('\n'));
-    assert.equal((await closeRelease(root, { scheme: 'date', today: DAY })).closed, true);
+    assert.equal((await closeRelease(root, { scheme: 'date' })).closed, true);
     assert.equal((await finishRelease(root, { scheme: 'date', today: DAY, note: 'развёртывание' })).finished, true);
   } finally {
     await rm(root, { recursive: true, force: true });

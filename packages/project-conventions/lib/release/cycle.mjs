@@ -204,7 +204,7 @@ async function withoutOlderThan(root, commits, baseline) {
 }
 
 // REQ-RELEASE-001, REQ-RELEASE-005
-export async function closeRelease(root, { scheme, today }) {
+export async function closeRelease(root, { scheme }) {
   const state = await closability(root, { scheme });
   if (state.problems.length > 0) return { closed: false, problems: state.problems };
   const { release, commit, receipt, composition, tag } = state;

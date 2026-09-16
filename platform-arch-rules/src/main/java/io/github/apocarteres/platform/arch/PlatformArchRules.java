@@ -166,7 +166,7 @@ public final class PlatformArchRules {
     if (!target.startsWith(rootPackage + ".")) {
       return false;
     }
-    String[] parts = target.substring(rootPackage.length() + 1).split("\\.");
+    String[] parts = target.substring(rootPackage.length() + 1).split("\\.", -1);
     for (int index = 1; index < parts.length; index += 1) {
       if (parts[index].equals(innerSegment)) {
         return true;

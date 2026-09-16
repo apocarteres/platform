@@ -43,6 +43,11 @@ run = "scripts/web.sh test"
 description = "Проверка типов npm-пакетов ядра"
 run = "scripts/web.sh typecheck"
 
+# REQ-QUALITY-002
+[tasks.web-lint]
+description = "Статический разбор npm-пакетов ядра: отказ на предупреждениях"
+run = "scripts/web.sh lint"
+
 [tasks.web-build]
 description = "Сборка npm-пакетов ядра, которым нужна сборка"
 run = "scripts/web.sh build"
@@ -65,6 +70,7 @@ run = [
   "mise run docs-check",
   "mise run conventions-check",
   "mise run web-typecheck",
+  "mise run web-lint",
   "mise run web-test",
   "mise run java-test",
 ]

@@ -32,7 +32,7 @@ test('определение проверяется: поля, регулярн�
   assert.match(validate([{ level: 'директива', document: 'D', text: 't', message: 'm', forbid: 'x' }], builtIn).join(), /требуется id/);
 });
 
-test('пара where и require ловит объявление без обязательного признака', async (t) => {
+test('пара where и require ловит объявление без обязательного признака', async () => {
   const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises');
   const os = await import('node:os');
   const path = await import('node:path');

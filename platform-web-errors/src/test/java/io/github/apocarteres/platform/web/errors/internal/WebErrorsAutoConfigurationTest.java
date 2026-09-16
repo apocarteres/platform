@@ -33,8 +33,8 @@ class WebErrorsAutoConfigurationTest {
       assertThat(context).hasSingleBean(ErrorMessages.class);
       assertThat(context.getBean(ErrorCodeResolver.class).resolve(new IllegalStateException())).isEmpty();
       assertThat(context.getBean(ErrorMessages.class)
-        .detailFor(ErrorCode.of("teapot", HttpStatus.I_AM_A_TEAPOT), Locale.ROOT))
-        .isEqualTo("I'm a teapot");
+        .detailFor(ErrorCode.of("gone", HttpStatus.GONE), Locale.ROOT))
+        .isEqualTo("Gone");
     });
   }
 

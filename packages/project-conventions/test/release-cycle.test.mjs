@@ -176,7 +176,7 @@ test('закрытие записывает состав, коммит и рез
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, '2026-09-07T10:00:00Z'));
 
-    const closed = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    const closed = await closeRelease(root, { scheme: 'date' });
     assert.equal(closed.closed, true);
     assert.equal(closed.tag, '2026.09.1');
     assert.deepEqual(closed.composition, ['QUAL-001']);
@@ -218,7 +218,7 @@ test('отказ в закрытии не оставляет тега', async ()
     await writeFile(path.join(root, 'docs/tickets/closed/done-one.md'), ticket('TICKET-DONE-ONE', 'done'));
     await commitAll(root);
 
-    const refused = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    const refused = await closeRelease(root, { scheme: 'date' });
     assert.equal(refused.closed, false, 'без расписки закрытие отказывает');
     const { stdout: tags } = await git('-C', root, 'tag', '--list');
     assert.equal(tags.trim(), '', 'тег не ставится при отказе');
@@ -438,7 +438,7 @@ test('отменённая задача не попадает в состав и
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
 
-    const closed = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    const closed = await closeRelease(root, { scheme: 'date' });
     assert.equal(closed.closed, true, closed.problems?.join('\n'));
     assert.deepEqual(closed.composition, ['TICKET-SHIPPED']);
 
@@ -470,7 +470,7 @@ test('отменённая задача не возвращается в сос�
     await writeFile(path.join(root, 'docs/tickets/closed/dropped.md'), cancelled('TICKET-DROPPED'));
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
-    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await closeRelease(root, { scheme: 'date' })).closed, true);
     assert.equal((await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' })).finished, true);
     assert.equal((await openNext(root, { scheme: 'date', today: NEXT_DAY })).opened, true);
 
@@ -516,7 +516,7 @@ test('обязательство переносится, пока его зад�
     await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
-    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await closeRelease(root, { scheme: 'date' })).closed, true);
     assert.equal((await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' })).finished, true);
     assert.equal((await openNext(root, { scheme: 'date', today: NEXT_DAY })).opened, true);
 
@@ -560,7 +560,7 @@ test('выпуск не закрывается, пока указанная за
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
 
-    const refused = await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    const refused = await closeRelease(root, { scheme: 'date' });
     assert.equal(refused.closed, false);
     assert.ok(refused.problems.some((problem) => problem.includes('TICKET-IN-WORK состава не выполнена (in_progress)')), refused.problems.join('\n'));
   } finally {
@@ -608,7 +608,7 @@ test('завершающий шаг требует тега и записи о �
     assert.equal(early.finished, false, 'без тега завершать нечего');
     assert.ok(early.problems.some((problem) => problem.includes('release close')), early.problems.join('\n'));
 
-    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await closeRelease(root, { scheme: 'date' })).closed, true);
 
     const withoutNote = await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: '  ' });
     assert.equal(withoutNote.finished, false);
@@ -637,7 +637,7 @@ test('после завершения выпуска открытого выпу
     await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
-    await closeRelease(root, { scheme: 'date', today: FIXED_DAY });
+    await closeRelease(root, { scheme: 'date' });
     await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' });
 
     assert.equal(await openRelease(root), null, 'открытого выпуска нет');
@@ -885,7 +885,7 @@ test('закрытие не требует задач выпуска, вышед
       await git('-C', root, 'commit', '--quiet', '-m', `${id} работа по задаче состава`);
       const { stdout } = await git('-C', root, 'rev-parse', 'HEAD');
       await writeReceipt(root, RECEIPT(stdout.trim(), FIXED_DAY));
-      assert.equal((await closeRelease(root, { scheme: 'semver', today: FIXED_DAY })).closed, true);
+      assert.equal((await closeRelease(root, { scheme: 'semver' })).closed, true);
       assert.equal((await finishRelease(root, { scheme: 'semver', today: FIXED_DAY, note: 'публикация' })).finished, true);
       await git('-C', root, 'add', '-A');
       await git('-C', root, 'commit', '--quiet', '-m', `Выпущен ${version}\n\nRelease-cycle: RELEASE-${version.replaceAll('.', '-')}`);
@@ -1053,7 +1053,7 @@ test('задача, объявившая обязательство, закры�
 
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
-    assert.equal((await closeRelease(root, { scheme: 'date', today: FIXED_DAY })).closed, true);
+    assert.equal((await closeRelease(root, { scheme: 'date' })).closed, true);
     assert.equal((await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'публикация' })).finished, true);
 
     const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));

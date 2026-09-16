@@ -350,7 +350,7 @@ function missingReleaseNumber(scheme, version) {
 async function releaseClose(root) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
-  const result = await closeRelease(root, { scheme, today: systemNow() });
+  const result = await closeRelease(root, { scheme });
   if (!result.closed) {
     console.error('Выпуск закрыть нельзя:');
     for (const problem of result.problems) console.error(`- ${problem}`);

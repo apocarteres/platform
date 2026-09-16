@@ -62,7 +62,7 @@ export function slugFor(file) {
   return limited.join('-') || 'ticket';
 }
 
-export function sortKey(file, metadata) {
+export function sortKey(file) {
   const stem = path.posix.basename(file, '.md');
   const date = DATE.exec(stem)?.[1] ?? '9999-99-99';
   return `${date} ${stem}`;
@@ -111,7 +111,7 @@ export async function plan(root, { overrides = {}, areas = TICKET_AREAS, prefix 
   }
   const moves = [];
   for (const entry of decided.filter((item) => item.keep !== true)
-    .sort((left, right) => sortKey(left.file, left.ticket.metadata).localeCompare(sortKey(right.file, right.ticket.metadata)))) {
+    .sort((left, right) => sortKey(left.file).localeCompare(sortKey(right.file)))) {
     const next = (counters.get(entry.area) ?? 0) + 1;
     counters.set(entry.area, next);
     const id = `${head}${entry.area}-${String(next).padStart(3, '0')}`;

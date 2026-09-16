@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 83. Включены самостоятельные задачи и этапы планов функций.
+Всего: 84. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -94,6 +94,7 @@ authority: navigation
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |
 | [Показ состояния выпуска отказывает на обычном состоянии](CORE-QUAL-006-release-status-fails-on-a-normal-state.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | release, tooling |
+| [Послабление для тестов оформляется исключением, которое некогда снять](CORE-QUAL-009-test-relaxation-is-not-an-exception.md) | P2 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |

@@ -1,10 +1,12 @@
 ---
 id: RELEASE-1-20-0
 type: release
-status: draft
+status: released
 scope: release
 authority: supporting
 opened-on: 2026-09-16
+released-on: 2026-09-16
+commit: 57131f41820d4bf2b141b77d7374cdcd00593e65
 ---
 
 # Выпуск 1.20.0
@@ -19,18 +21,18 @@ opened-on: 2026-09-16
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-008](../tickets/closed/CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | Указана при открытии выпуска |
-| [CORE-QUAL-009](../tickets/closed/CORE-QUAL-009-test-relaxation-is-not-an-exception.md) | Указана при открытии выпуска |
-| [CORE-QUAL-011](../tickets/closed/CORE-QUAL-011-core-does-not-do-what-it-requires.md) | Указана при открытии выпуска |
-| [CORE-QUAL-010](../tickets/closed/CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | Указана при открытии выпуска |
-| [CORE-OPS-047](../tickets/closed/CORE-OPS-047-nothing-checks-that-analysis-exists.md) | Указана при открытии выпуска |
+| [CORE-OPS-047](../tickets/closed/CORE-OPS-047-nothing-checks-that-analysis-exists.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-QUAL-008](../tickets/closed/CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-QUAL-009](../tickets/closed/CORE-QUAL-009-test-relaxation-is-not-an-exception.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-QUAL-010](../tickets/closed/CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-QUAL-011](../tickets/closed/CORE-QUAL-011-core-does-not-do-what-it-requires.md) | Закрыта в этом выпуске, приоритет P0 |
 
 ## Критерии выхода
 
-- [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска
-- [ ] Тег выпуска создан на проверенном коммите — ставится командой выпуска
-- [ ] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной
-- [ ] Завершающий шаг выполнен — развёртывание в производственную среду или публикация артефактов
+- [x] Набор `verify` пройден на выпускаемом коммите — расписка 2026-09-16T09:49:27.388Z, наборы: verify, прогон `mise run verify-set`
+- [x] Тег выпуска создан на проверенном коммите — `v1.20.0`
+- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ядро не объявляет обязательств самому себе
+- [x] Завершающий шаг выполнен — статический разбор внедрён в ядре и доставляется потребителю; Rust поддержан
 
 ## Не входит
 
@@ -38,4 +40,10 @@ opened-on: 2026-09-16
 
 ## Результат
 
-Заполняется при закрытии из расписки о проверках.
+Выпущено с коммита `57131f41820d4bf2b141b77d7374cdcd00593e65`, тег `v1.20.0`.
+
+Расписка о проверках получена 2026-09-16T09:49:27.388Z; выполненные наборы: verify.
+
+Прогон наблюдён командой `mise run verify-set` с кодом возврата 0.
+
+Развёртывание выполняется этим тегом: REQ-RELEASE-016.

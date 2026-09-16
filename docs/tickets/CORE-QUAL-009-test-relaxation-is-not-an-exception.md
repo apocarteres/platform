@@ -6,7 +6,7 @@ scope: quality
 authority: supporting
 priority: P2
 related: REQ-QUALITY
-release: unassigned
+release: RELEASE-1-20-0
 ---
 
 # Послабление для тестов оформляется исключением, которое некогда снять

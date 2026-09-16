@@ -5,7 +5,7 @@ status: backlog
 scope: quality, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-1-20-0
 related: REQ-QUALITY
 ---
 

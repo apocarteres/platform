@@ -1,4 +1,4 @@
-import { cp, mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
@@ -24,6 +24,26 @@ async function deliverRules(root) {
   for (const name of DELIVERED_DOCUMENTS) {
     await cp(path.join(CORE, 'docs/requirements', name), path.join(target, name));
   }
+}
+
+// REQ-QUALITY-002
+export const RUST_CRATE = 'agent';
+
+// REQ-QUALITY-002
+async function deliverRustCrate(root) {
+  const crate = path.join(root, RUST_CRATE);
+  await mkdir(path.join(crate, 'src'), { recursive: true });
+  const lints = await readFile(path.join(CORE, 'packages/project-conventions/configs/cargo-lints.toml'), 'utf8');
+  await cp(
+    path.join(CORE, 'packages/project-conventions/configs/clippy.toml'),
+    path.join(crate, 'clippy.toml'),
+  );
+  await writeFile(path.join(crate, 'Cargo.toml'),
+    `[package]\nname = "agent"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\n\n${lints}`);
+  await writeFile(path.join(crate, 'src/lib.rs'),
+    '//! REQ-QUALITY-002\n\n/// Возвращает имя узла, если оно задано.\n'
+    + 'pub fn node_name(configured: Option<&str>) -> &str {\n'
+    + '    match configured {\n        Some(name) => name,\n        None => "неизвестный",\n    }\n}\n');
 }
 
 export async function refreshIndexes(root) {
@@ -90,6 +110,9 @@ export async function referenceConsumer() {
   await writeFile(path.join(root, 'docs/runbooks/INDEX.md'),
     '---\nid: IDX-RUNBOOKS\ntype: index\nstatus: active\nscope: operations\nauthority: navigation\n---\n\n'
     + '# Эксплуатационные инструкции\n\nИнструкций пока нет.\n');
+
+  // REQ-QUALITY-002
+  await deliverRustCrate(root);
 
   // REQ-NAMING-011
   await mkdir(path.join(root, 'docs/tickets/features/caps'), { recursive: true });

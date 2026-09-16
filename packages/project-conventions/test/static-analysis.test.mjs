@@ -42,8 +42,40 @@ test('у каждого npm-пакета ядра объявлен разбор,
 
 // REQ-QUALITY-002
 test('разбор TypeScript пользуется типами, а не только текстом', async () => {
-  const config = await read('packages/http/eslint.config.mjs');
+  const base = await read('packages/project-conventions/configs/eslint.base.mjs');
 
-  assert.match(config, /recommendedTypeChecked/, 'разбор с типами включён');
-  assert.match(config, /projectService/, 'разбору выдан проект, иначе типовые правила молчат');
+  assert.match(base, /recommendedTypeChecked/, 'разбор с типами включён в доставляемой настройке');
+  assert.match(base, /projectService/, 'разбору выдан проект, иначе типовые правила молчат');
+});
+
+// REQ-QUALITY-002
+test('настройки разбора доставляются пакетом правил, а не переписываются потребителем', async () => {
+  const manifest = JSON.parse(await read('packages/project-conventions/package.json'));
+
+  assert.ok(manifest.files.includes('configs'), 'каталог настроек входит в поставку');
+  for (const name of ['./configs/eslint', './configs/clippy', './configs/cargo-lints', './configs/spotbugs-exclude']) {
+    assert.ok(manifest.exports[name], `${name}: настройка названа в exports, иначе потребителю её не достать`);
+    await read(path.join('packages/project-conventions', manifest.exports[name]));
+  }
+});
+
+// REQ-QUALITY-002, REQ-DATA-ACCESS
+test('исключение для свода запросов раздаёт ядро, потому что ядро же и обязало так писать', async () => {
+  const exclusion = await read('packages/project-conventions/configs/spotbugs-exclude.xml');
+
+  assert.match(exclusion, /SQL_INJECTION_SPRING_JDBC/, 'исключение названо');
+  assert.match(exclusion, /REQ-DATA-ACCESS/, 'названо требование, породившее исключение');
+});
+
+// REQ-QUALITY-002
+test('ядро пользуется той же настройкой разбора, что раздаёт', async () => {
+  const consumed = await Promise.all([
+    read('packages/http/eslint.config.mjs'),
+    read('packages/project-conventions/eslint.config.mjs'),
+  ]);
+
+  for (const config of consumed) {
+    assert.match(config, /configs\/eslint\.base\.mjs/,
+      'настройка пакета собрана из доставляемой, иначе ядро раздаёт непроверенное');
+  }
 });

@@ -2,10 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import path from 'node:path';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { PREFIX, SEEDED_RELEASES, referenceConsumer, refreshIndexes } from './reference-consumer.mjs';
+import { PREFIX, RUST_CRATE, SEEDED_RELEASES, referenceConsumer, refreshIndexes } from './reference-consumer.mjs';
 import { closability, closeRelease, finishRelease, openNext } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
 import { DELIVERED_DOCUMENTS } from '../lib/documents.mjs';
 
 const DAY = new Date('2026-09-12T00:00:00Z');
@@ -117,5 +121,34 @@ test('проверка документов проходит, пока зада�
     assert.deepEqual(moved.errors, [], 'переезд в закрытые при открытом выпуске документы не ломает');
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-002
+async function clippy(crate) {
+  try {
+    await run('cargo', ['clippy', '--offline', '--quiet', '--all-targets'], { cwd: crate });
+    return { failed: false, output: '' };
+  } catch (failure) {
+    return { failed: true, output: `${failure.stdout ?? ''}${failure.stderr ?? ''}` };
+  }
+}
+
+// REQ-QUALITY-002
+test('доставленная ядром настройка Rust роняет сборку на находке и пропускает чистый крейт', async () => {
+  const consumer = await referenceConsumer();
+  const crate = path.join(consumer.root, RUST_CRATE);
+  try {
+    const clean = await clippy(crate);
+    assert.equal(clean.failed, false, `чистый крейт должен проходить:\n${clean.output}`);
+
+    await writeFile(path.join(crate, 'src/lib.rs'),
+      '//! Проба.\n\n/// Берёт значение без проверки.\npub fn probe(value: Option<&str>) -> &str {\n    value.unwrap()\n}\n');
+    const dirty = await clippy(crate);
+
+    assert.equal(dirty.failed, true, 'находка обязана ронять сборку');
+    assert.match(dirty.output, /unwrap/, 'отказ называет находку');
+  } finally {
+    await rm(consumer.root, { recursive: true, force: true });
   }
 });

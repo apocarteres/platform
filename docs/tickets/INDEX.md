@@ -19,5 +19,5 @@ authority: navigation
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Наличие статического разбора не проверяется ничем](CORE-OPS-047-nothing-checks-that-analysis-exists.md) | P1 | Запланирована | [RELEASE-1-20-0](../releases/RELEASE-1-20-0.md) | tooling, quality |
-| [Статический разбор назван и доставляется, а не выводится каждым заново](CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | P1 | Запланирована | [RELEASE-1-20-0](../releases/RELEASE-1-20-0.md) | quality, build |
 | [Исследование: отдельный сервис уведомлений](CORE-ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
+| [У Rust нет языковых документов, которые есть у Java и TypeScript](CORE-QUAL-012-rust-has-no-language-documents.md) | P2 | Запланирована | Не назначен | documentation, rust |

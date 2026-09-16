@@ -15,6 +15,53 @@ related: REQ-QUALITY
 Нормативная часть — `REQ-QUALITY`; здесь только то, что нужно знать при
 настройке и о чём инструменты молчат.
 
+## Как подключить доставленное
+
+### Java
+
+Настройка приходит наследованием: `platform-service-parent` наследует
+`platform-parent`, где объявлены `-Xlint:all`, `-Werror` и разбор исходников.
+Отдельных действий не требуется, кроме одного — файла `.mvn/jvm.config` в корне
+проекта: Java 25 требует открыть внутренности компилятора, и наследованием файл
+не передаётся.
+
+### TypeScript и JavaScript
+
+Настройка приезжает пакетом правил. В `eslint.config.mjs` проекта:
+
+```js
+import globals from 'globals';
+import typescriptEslint from 'typescript-eslint';
+import { javascript, typescript } from '@apocarteres/project-conventions/configs/eslint';
+
+export default typescriptEslint.config(
+  ...javascript({ globals: globals.node }),
+  ...typescript(typescriptEslint, { globals: globals.browser }),
+);
+```
+
+Ядро пользуется этой же настройкой для собственных пакетов: раздаваемое и
+проверяемое — один файл.
+
+### Rust
+
+У Cargo нет наследования настройки из удалённого родителя, как у Maven, поэтому
+настройка приезжает файлом. Раздел из
+`@apocarteres/project-conventions/configs/cargo-lints` вносится в `Cargo.toml`
+крейта или рабочего пространства, а `configs/clippy.toml` кладётся рядом.
+
+Набор — пол, а не потолок. `pedantic` в него намеренно не входит: вместе с
+`warnings = "deny"` он делает отказом обычный код, например требует `#[must_use]`
+у всякой чистой функции. Проект волен включить его сверх набора, засеяв находки
+ограничителем.
+
+### Разбор байт-кода
+
+Ядром он не предписан. Проекту, который добавил его сверх набора, ядро раздаёт
+файл исключений `@apocarteres/project-conventions/configs/spotbugs-exclude`: он
+снимает сообщения о внедрении SQL на вызовах свода запросов — вид кода,
+предписанный `REQ-DATA-ACCESS`.
+
 ## Автоматическая правка не применяется без разбора
 
 Автоправка разбора — предложение, а не исправление. Из трёх семейств, где

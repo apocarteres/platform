@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 89. Включены самостоятельные задачи и этапы планов функций.
+Всего: 92. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -60,6 +60,7 @@ authority: navigation
 | [Этапом плана нельзя назвать коммит](CORE-OPS-045-plan-stage-cannot-name-a-commit.md) | P1 | Выполнена | [RELEASE-1-19-0](../../releases/RELEASE-1-19-0.md) | tooling |
 | [Отказ коммиту без задачи не называет выхода](CORE-OPS-046-refusal-without-a-way-out.md) | P1 | Выполнена | [RELEASE-1-19-0](../../releases/RELEASE-1-19-0.md) | tooling |
 | [Наличие статического разбора не проверяется ничем](CORE-OPS-047-nothing-checks-that-analysis-exists.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | tooling, quality |
+| [Замена компонента шла без описи его поведений](CORE-OPS-049-component-replacement-without-an-inventory.md) | P1 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | process, documentation |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
@@ -95,6 +96,7 @@ authority: navigation
 | [Ядро не умеет собирать и публиковать Angular-библиотеку](CORE-OPS-029-angular-library-build-and-publishing.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | build, frontend, tooling |
 | [Миграция имён не проставляет префикс проекта](CORE-OPS-032-name-migration-does-not-apply-the-project-prefix.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | tooling, process |
 | [Отказ ядра не называет дверь в ядро](CORE-OPS-035-refusals-do-not-name-the-door-into-the-core.md) | P2 | Выполнена | [RELEASE-1-14-0](../../releases/RELEASE-1-14-0.md) | tooling, process |
+| [Ядро собирает артефакт и молчит о том, чем его запускать](CORE-OPS-050-core-builds-the-artifact-but-says-nothing-about-launching-it.md) | P2 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment, build |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |
@@ -105,5 +107,6 @@ authority: navigation
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |
 | [Шлагбаум перед отправкой не видит отказов проводки](CORE-OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Выполнена | [RELEASE-1-3-0](../../releases/RELEASE-1-3-0.md) | quality, operations |
 | [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |
+| [Кеш AOT: сказать положением, а не молчанием](CORE-OPS-051-aot-cache-as-a-recommendation.md) | P3 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment |
 | [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | quality, tooling, documentation |
 | [Шифр секрета повторяется у каждого потребителя](CORE-SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | backend, security |

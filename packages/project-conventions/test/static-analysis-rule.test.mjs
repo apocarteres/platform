@@ -3,7 +3,12 @@ import test from 'node:test';
 import os from 'node:os';
 import path from 'node:path';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { findSourceSetsWithoutAnalysis } from '../lib/static-analysis.mjs';
+import { environmentWithoutGit } from '../lib/release/git.mjs';
+
+const run = promisify(execFile);
 
 async function project(files) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'static-analysis-'));
@@ -133,6 +138,47 @@ test('правило ловит форму, на которой попались
 
     assert.equal(found.length, 1, `назван ровно молчащий набор:\n${found.join('\n')}`);
     assert.match(found[0], /^web\/package\.json:/, 'назван тот набор, у которого разбора нет');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-002
+test('правило не заходит в пути, которые репозиторий игнорирует', async () => {
+  const clean = '[package]\nname = "agent"\n\n[lints.rust]\nwarnings = "deny"\n\n[lints.clippy]\nall = "deny"\n';
+  const root = await project({
+    'Cargo.toml': clean,
+    'sandbox/old/Cargo.toml': '[package]\nname = "agent"\n',
+    '.gitignore': 'sandbox/\n',
+  });
+  try {
+    const beforeGit = await problems(root);
+    assert.equal(beforeGit.length, 1,
+      'каталог назван sandbox, а не .claude: иначе проверка прошла бы умолчанием, не спросив репозиторий');
+
+    await run('git', ['-C', root, 'init', '--quiet'], { env: environmentWithoutGit() });
+    await run('git', ['-C', root, 'add', '-A'], { env: environmentWithoutGit() });
+
+    assert.deepEqual(await problems(root), [],
+      'репозиторий знает, что игнорирует: соседняя рабочая копия — чужое состояние, а не набор проекта');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-002
+test('вне репозитория правило слушается поля exclude и умолчаний', async () => {
+  const root = await project({
+    'vendor/agent/Cargo.toml': '[package]\nname = "vendored"\n',
+    'node_modules/thing/package.json': JSON.stringify({ scripts: { test: 'x' } }),
+  });
+  try {
+    const all = await problems(root);
+    assert.equal(all.length, 1, `умолчания снимают node_modules:\n${all.join('\n')}`);
+    assert.match(all[0], /^vendor\/agent\/Cargo\.toml:/);
+
+    const excluded = [...(await findSourceSetsWithoutAnalysis(root, { exclude: ['/vendor/'] }))];
+    assert.deepEqual(excluded, [], 'объявленное исключение действует');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -1,8 +1,14 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { DEFAULT_EXCLUDE } from './comments.mjs';
+import { environmentWithoutGit } from './release/git.mjs';
+
+const run = promisify(execFile);
 
 // REQ-QUALITY-002
-const SKIPPED = new Set(['node_modules', 'target', 'dist', 'build', '.git', '.mvn']);
+const MANIFESTS = ['pom.xml', 'package.json', 'Cargo.toml'];
 
 // REQ-QUALITY-002
 const PLATFORM_PARENTS = ['platform-parent', 'platform-service-parent'];
@@ -17,20 +23,42 @@ async function entriesOf(directory) {
 }
 
 // REQ-QUALITY-002
-async function manifests(root) {
+async function tracked(root) {
+  try {
+    const { stdout } = await run('git', ['-C', root, 'ls-files', '-z', ...MANIFESTS.map((name) => `*${name}`)],
+      { env: environmentWithoutGit() });
+    return stdout.split('\0').filter((line) => line.length > 0);
+  } catch {
+    return null;
+  }
+}
+
+// REQ-QUALITY-002
+async function walked(root, excludes) {
   const found = [];
   const walk = async (relative) => {
     for (const entry of await entriesOf(path.join(root, relative))) {
       const next = relative === '' ? entry.name : `${relative}/${entry.name}`;
+      if (excludes.some((pattern) => `/${next}/`.includes(pattern))) continue;
       if (entry.isDirectory()) {
-        if (!SKIPPED.has(entry.name)) await walk(next);
+        await walk(next);
         continue;
       }
-      if (['pom.xml', 'package.json', 'Cargo.toml'].includes(entry.name)) found.push(next);
+      if (MANIFESTS.includes(entry.name)) found.push(next);
     }
   };
   await walk('');
-  return found.sort();
+  return found;
+}
+
+// REQ-QUALITY-002
+export async function manifests(root, { exclude = [] } = {}) {
+  const excludes = [...DEFAULT_EXCLUDE, ...exclude];
+  const found = await tracked(root) ?? await walked(root, excludes);
+  return found
+    .filter((file) => MANIFESTS.includes(path.posix.basename(file)))
+    .filter((file) => !excludes.some((pattern) => `/${file}`.includes(pattern)))
+    .sort();
 }
 
 // REQ-QUALITY-002
@@ -99,7 +127,7 @@ const CHECKS = {
 export async function findSourceSetsWithoutAnalysis(root, config) {
   if (config.staticAnalysis === 'declared-elsewhere') return new Map();
   const violations = new Map();
-  for (const file of await manifests(root)) {
+  for (const file of await manifests(root, config)) {
     const name = path.posix.basename(file);
     // REQ-QUALITY-002
     if (name === 'pom.xml' && !await compilesJava(root, file)) continue;

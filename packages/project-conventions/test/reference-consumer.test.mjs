@@ -152,3 +152,34 @@ test('доставленная ядром настройка Rust роняет �
     await rm(consumer.root, { recursive: true, force: true });
   }
 });
+
+// REQ-QUALITY-002
+test('обоснованный unsafe проходит с объявленным послаблением по месту', async () => {
+  const consumer = await referenceConsumer();
+  const crate = path.join(consumer.root, RUST_CRATE);
+  try {
+    const source = [
+      '//! Проба.',
+      '',
+      '/// Читает заранее проверенные байты.',
+      'PLACEHOLDER',
+      'pub fn text(bytes: &[u8]) -> &str {',
+      '    unsafe { core::str::from_utf8_unchecked(bytes) }',
+      '}',
+      '',
+    ].join('\n');
+
+    await writeFile(path.join(crate, 'src/lib.rs'), source.replace('PLACEHOLDER\n', ''));
+    const bare = await clippy(crate);
+    assert.equal(bare.failed, true, 'необъявленный unsafe роняет сборку');
+    assert.match(bare.output, /unsafe/);
+
+    await writeFile(path.join(crate, 'src/lib.rs'), source.replace('PLACEHOLDER', '#[allow(unsafe_code)]'));
+    const declared = await clippy(crate);
+
+    assert.equal(declared.failed, false,
+      `объявленное послабление по месту обязано сниматься: forbid этого не даёт\n${declared.output}`);
+  } finally {
+    await rm(consumer.root, { recursive: true, force: true });
+  }
+});

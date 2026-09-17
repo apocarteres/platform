@@ -4,6 +4,8 @@ import path from 'node:path';
 export const SOURCE_EXTENSIONS = new Set(['.java', '.ts', '.mjs', '.js']);
 export const DEFAULT_EXCLUDE = [
   '/node_modules/', '/target/', '/dist/', '/build/', '/coverage/', '/.git/', '/generated/',
+  // REQ-QUALITY-002
+  '/.claude/',
 ];
 
 const DIRECTIVE = /^(noinspection|eslint-|prettier-ignore|@ts-|\/\s*<reference|globals\s|istanbul\s|c8\s|v8\s|language=|nosemgrep|checkstyle|@formatter)/i;

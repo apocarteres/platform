@@ -1294,3 +1294,56 @@ test('сверка диапазона называет только его ко�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-042
+test('коммит принадлежит составу по любой из названных задач, а не по первой', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-081-done.md'), ticket('ZAVPN-QUAL-081', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-080-cancelled.md'), cancelled('ZAVPN-QUAL-080'));
+    await commitAll(root);
+    await git('-C', root, 'commit', '--allow-empty', '--quiet',
+      '-m', 'ZAVPN-QUAL-080 ZAVPN-QUAL-081 отмена по замеру и работа по соседней задаче');
+
+    const state = await closability(root, { scheme: 'date' });
+
+    assert.ok(!state.problems.some((problem) => problem.includes('ZAVPN-QUAL-080')),
+      `порядок задач в заголовке судьбу выпуска решать не должен:\n${state.problems.join('\n')}`);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-031, REQ-RELEASE-042
+test('коммит отменённой задачи закрытие не держит: в состав она попасть не может', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-080-cancelled.md'), cancelled('ZAVPN-QUAL-080'));
+    await commitAll(root);
+    await git('-C', root, 'commit', '--allow-empty', '--quiet',
+      '-m', 'ZAVPN-QUAL-080 замер опроверг постановку, работа снята');
+
+    const state = await closability(root, { scheme: 'date' });
+
+    assert.ok(!state.problems.some((problem) => problem.includes('ZAVPN-QUAL-080')),
+      `REQ-RELEASE-031 запрещает вносить отменённую задачу в состав; требовать этого нельзя:\n${state.problems.join('\n')}`);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

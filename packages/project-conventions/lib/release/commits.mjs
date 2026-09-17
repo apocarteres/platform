@@ -16,7 +16,8 @@ async function git(root, args) {
 }
 
 export async function commitsInRange(root, since) {
-  const range = since === null ? 'HEAD' : `${since}..HEAD`;
+  // REQ-QUALITY-004
+  const range = since === null ? 'HEAD' : (since.includes('..') ? since : `${since}..HEAD`);
   const format = `${RECORD}%H${FIELD}%s${FIELD}%P${FIELD}%b${FIELD}`;
   const output = await git(root, ['log', '--name-only', `--format=${format}`, range]);
   return output.split(RECORD)

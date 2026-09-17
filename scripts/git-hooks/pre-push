@@ -4,5 +4,22 @@ set -euo pipefail
 # REQ-QUALITY-004: шлагбаум перед отправкой изменений.
 # Полный набор: mise run verify. Обход в исключительном случае: git push --no-verify.
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+EMPTY="0000000000000000000000000000000000000000"
+
+# REQ-QUALITY-004, REQ-RELEASE-041: сверяется отправляемый диапазон, а не вся
+# история. Сверка всей истории не дала бы отправить ничего проекту, у которого
+# такой коммит уже отправлен: он исправляется вперёд, а не отказом на отправке.
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = "$EMPTY" ] && continue
+  if [ "$remote_sha" = "$EMPTY" ]; then
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  printf '[pre-push] conventions commits --range %s\n' "$range"
+  node "$ROOT_DIR/packages/project-conventions/bin/conventions.mjs" commits --range "$range" --root "$ROOT_DIR"
+done
+
 printf '[pre-push] mise run check\n'
 exec mise run check

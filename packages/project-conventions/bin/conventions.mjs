@@ -17,7 +17,7 @@ import { collisions, dictionary } from '../lib/terms.mjs';
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { accountCommit, adoptCycle, cancelRelease, closeRelease, closability, commitsWithoutATicket, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, findObligationDebts, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
@@ -551,6 +551,40 @@ async function releaseDefer(root, id, reason) {
   console.log(`Обязательство ${id} перенесено: ${reason}`);
 }
 
+// REQ-QUALITY-004
+async function commits(root, range) {
+  let found;
+  try {
+    found = await commitsWithoutATicket(root, range);
+  } catch (failure) {
+    console.error(`Коммиты прочитать не удалось: ${failure.message}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (found.length === 0) {
+    console.log(range === null ? 'Все коммиты называют задачу.' : `Все коммиты диапазона ${range} называют задачу.`);
+    return;
+  }
+  console.error('Коммиты, не называющие задачу:');
+  for (const commit of found) console.error(`- ${commit.sha.slice(0, 8)}: «${commit.subject}»`);
+  // REQ-RELEASE-039
+  console.error('Пока коммит не отправлен, сообщение правится: git commit --amend либо интерактивное перебазирование.');
+  console.error('После отправки правка сообщения переписала бы общую историю: такой коммит учитывается');
+  console.error('в открытом выпуске командой release account <хеш> --reason "<причина>" (REQ-RELEASE-041).');
+  process.exitCode = 1;
+}
+
+// REQ-RELEASE-041
+async function releaseAccount(root, sha, reason) {
+  const result = await accountCommit(root, { sha, reason });
+  if (!result.accounted) {
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Коммит ${result.sha} учтён в выпуске ${result.release}: закрытие он больше не держит`);
+}
+
 async function sync(root) {
   const version = await packageVersion();
   let agents = '';
@@ -565,7 +599,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -579,7 +613,8 @@ const USAGE = {
   naming: 'conventions naming <plan|apply> [--map <файл>] [--root <path>]',
   receipt: RECEIPT_USAGE,
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
-  release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy> [--root <path>]',
+  commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
+  release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
 };
 
 // REQ-RELEASE-028
@@ -593,6 +628,7 @@ const RELEASE_USAGE = {
   adopt: 'conventions release adopt [--version X.Y.Z] [--root <path>]',
   defer: 'conventions release defer <обязательство> --reason "<причина>" [--root <path>]',
   satisfy: 'conventions release satisfy <обязательство> --ticket <TICKET-ID> [--root <path>]',
+  account: 'conventions release account <хеш коммита> --reason "<причина>" [--root <path>]',
 };
 
 // REQ-RELEASE-028
@@ -606,6 +642,7 @@ const RELEASE_SPEC = {
   adopt: { values: ['--version'] },
   defer: { values: ['--reason'], positional: 1 },
   satisfy: { values: ['--ticket'], positional: 1 },
+  account: { values: ['--reason'], positional: 1 },
 };
 
 // REQ-RELEASE-028
@@ -618,6 +655,7 @@ const SPEC = {
   obligations: {},
   baseline: { flags: ['--allow-growth'] },
   naming: { values: ['--map'], positional: 1 },
+  commits: { values: ['--range'] },
 };
 
 // REQ-RELEASE-028
@@ -664,6 +702,7 @@ if (command === undefined || command === '--help') {
     else if (command === 'sync') await sync(root);
     else if (command === 'obligations') await obligations(root);
     else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
+    else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);
     else await naming(root, parsed.positional[0], parsed.values.get('--map'));
   }
 }
@@ -702,5 +741,6 @@ async function release(argv) {
   else if (subcommand === 'defer') await releaseDefer(root, first, valueOf('--reason'));
   else if (subcommand === 'adopt') await releaseAdopt(root, valueOf('--version'));
   else if (subcommand === 'drop') await releaseDrop(root, first, valueOf('--reason'));
-  else await releaseSatisfy(root, first, valueOf('--ticket'));
+  else if (subcommand === 'satisfy') await releaseSatisfy(root, first, valueOf('--ticket'));
+  else await releaseAccount(root, first, valueOf('--reason'));
 }

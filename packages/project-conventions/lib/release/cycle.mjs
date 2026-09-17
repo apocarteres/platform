@@ -1,9 +1,9 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  RELEASES_DIR, STAGE_ID, TICKETS_DIR, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
+  ACCOUNTED_SECTION, RELEASES_DIR, STAGE_ID, TICKETS_DIR, accountedCommits, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
-  unassignedDoneTickets, writeDocument,
+  unassignedDoneTickets, withSection, writeDocument,
 } from './documents.mjs';
 import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
@@ -66,6 +66,8 @@ export async function closability(root, { scheme }) {
   problems.push(...await commitProblems(root, {
     scheme, config, composition, existing: await releases(root),
     releaseId: release === null ? null : release.metadata.get('id'),
+    // REQ-RELEASE-041
+    open: release,
   }));
   return { problems, release, commit, receipt, composition, state, obligations, isCore, tag };
 }
@@ -119,7 +121,7 @@ function obligationsSummary(closed, deferred, isCore) {
 }
 
 // REQ-RELEASE-036
-async function commitProblems(root, { scheme, config, composition, existing, releaseId }) {
+async function commitProblems(root, { scheme, config, composition, existing, releaseId, open = null }) {
   const baseline = config.commitRuleSince ?? null;
   // REQ-RELEASE-036
   if (baseline === null) return [];
@@ -135,14 +137,18 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
   const stages = new Set(known.map(ticketId).filter((id) => STAGE_ID.test(id ?? '')));
   const problems = [];
   const outside = new Map();
+  // REQ-RELEASE-041
+  const accounted = accountedCommits(open?.content ?? '').map((row) => row.sha);
   for (const commit of beyondBaseline) {
     // REQ-RELEASE-036
     if (cycleCommit(commit) || mergeCommit(commit)) continue;
+    // REQ-RELEASE-041
+    if (accounted.some((sha) => commit.sha.startsWith(sha))) continue;
     const ticket = ticketOf(commit, areas, prefix, stages);
     if (ticket === null) {
       // REQ-RELEASE-039
       problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»\n  `
-        + wayOutOfAnUnnamedCommit(releaseId, prefix));
+        + wayOutOfAnUnnamedCommit(releaseId, prefix, commit.sha.slice(0, 8)));
       continue;
     }
     if (members.has(ticket)) continue;
@@ -165,13 +171,76 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
   return problems;
 }
 
+// REQ-QUALITY-004
+export async function commitsWithoutATicket(root, range) {
+  const config = await readConfig(root);
+  const baseline = config.commitRuleSince ?? null;
+  // REQ-RELEASE-036
+  if (baseline === null) return [];
+  const commits = await commitsInRange(root, range);
+  const beyondBaseline = await withoutOlderThan(root, commits, baseline);
+  const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
+  const prefix = config.ticketPrefix ?? null;
+  const known = await tickets(root);
+  const stages = new Set(known.map(ticketId).filter((id) => STAGE_ID.test(id ?? '')));
+  const open = await openRelease(root);
+  const accounted = accountedCommits(open?.content ?? '').map((row) => row.sha);
+  return beyondBaseline.filter((commit) => {
+    if (cycleCommit(commit) || mergeCommit(commit) || recordCommit(commit)) return false;
+    if (accounted.some((sha) => commit.sha.startsWith(sha))) return false;
+    return ticketOf(commit, areas, prefix, stages) === null;
+  });
+}
+
+// REQ-RELEASE-041
+export async function accountCommit(root, { sha, reason }) {
+  if (!sha) return { accounted: false, problems: ['Учёт коммита требует его хеша'] };
+  if (!reason) return { accounted: false, problems: ['Учёт коммита требует причины: ключ --reason'] };
+  const release = await openRelease(root);
+  if (release === null) {
+    return { accounted: false, problems: ['Открытого выпуска нет: коммит учитывается в том выпуске, в чей диапазон он попал'] };
+  }
+  const config = await readConfig(root);
+  const scheme = config.release?.scheme ?? 'date';
+  const since = await previousReleaseTag(root, await releases(root), scheme);
+  const found = (await commitsInRange(root, since)).find((commit) => commit.sha.startsWith(sha));
+  if (found === undefined) {
+    return { accounted: false, problems: [`Коммита ${sha} нет в диапазоне выпуска: учитываются коммиты, которые держат его закрытие`] };
+  }
+  const areas = [...TICKET_AREAS, ...(config.ticketAreas ?? [])];
+  const named = ticketOf(found, areas, config.ticketPrefix ?? null);
+  if (named !== null) {
+    return {
+      accounted: false,
+      problems: [`Коммит ${found.sha.slice(0, 8)} называет задачу ${named}: учёт нужен коммиту без задачи, а этот вносится составом`],
+    };
+  }
+  if (cycleCommit(found)) {
+    return { accounted: false, problems: [`Коммит ${found.sha.slice(0, 8)} уже несёт признак цикла: учёт ему не нужен`] };
+  }
+  const already = accountedCommits(release.content);
+  if (already.some((row) => found.sha.startsWith(row.sha))) {
+    return { accounted: false, problems: [`Коммит ${found.sha.slice(0, 8)} уже учтён`] };
+  }
+  const rows = [
+    '| Коммит | Заголовок | Причина |',
+    '|---|---|---|',
+    ...already.map((row) => `| ${row.sha} | ${row.subject} | ${row.reason} |`),
+    `| ${found.sha.slice(0, 8)} | ${found.subject.replaceAll('|', '&#124;')} | ${reason.replaceAll('|', '&#124;')} |`,
+  ];
+  await writeDocument(release.file, withSection(release.content, ACCOUNTED_SECTION, rows, '## Состав'));
+  return { accounted: true, sha: found.sha.slice(0, 8), release: release.metadata.get('id') };
+}
+
 // REQ-RELEASE-039
-function wayOutOfAnUnnamedCommit(releaseId, prefix) {
+function wayOutOfAnUnnamedCommit(releaseId, prefix, sha) {
   const example = prefix ? `${prefix}-OPS-001` : 'OPS-001';
-  return `Выхода три: назовите задачу идентификатором в начале заголовка (${example} ...);`
+  return `Выхода четыре. Коммит ещё не отправлен: назовите задачу идентификатором в начале заголовка (${example} ...);`
     + ` если коммит обслуживает сам выпуск — поставьте в тело строку ${CYCLE_TRAILER}: ${releaseId}`
     + ' (именно в тело, заголовок для этого не годится);'
-    + ` если коммит отменяет прежнюю работу — метку ${REVERT_LABEL} сразу после идентификатора задачи`;
+    + ` если коммит отменяет прежнюю работу — метку ${REVERT_LABEL} сразу после идентификатора задачи.`
+    + ` Коммит уже отправлен: учтите его в выпуске командой release account ${sha} --reason "<причина>"`
+    + ' — это единственный выход, не переписывающий общую историю (REQ-RELEASE-041)';
 }
 
 // REQ-RELEASE-039

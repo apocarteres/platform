@@ -192,3 +192,37 @@ export function ticketTitle(ticket) {
 export function ticketLinkTarget(root, ticket) {
   return path.relative(path.join(root, RELEASES_DIR), ticket.file);
 }
+
+// REQ-RELEASE-041
+export const ACCOUNTED_SECTION = '## Учтённые коммиты';
+
+// REQ-RELEASE-041
+export function accountedCommits(content) {
+  const lines = content.split('\n');
+  const start = lines.findIndex((line) => line.trim() === ACCOUNTED_SECTION);
+  if (start === -1) return [];
+  const rows = [];
+  for (let index = start + 1; index < lines.length; index += 1) {
+    if (lines[index].startsWith('## ')) break;
+    const cells = lines[index].split('|').map((cell) => cell.trim());
+    if (cells.length < 4 || !/^[0-9a-f]{7,40}$/.test(cells[1])) continue;
+    rows.push({ sha: cells[1], subject: cells[2], reason: cells[3] });
+  }
+  return rows;
+}
+
+// REQ-RELEASE-041
+export function withSection(content, heading, body, afterHeading) {
+  const lines = content.split('\n');
+  if (lines.some((line) => line.trim() === heading)) return replaceSection(content, heading, body);
+  const anchor = lines.findIndex((line) => line.trim() === afterHeading);
+  if (anchor === -1) throw new Error(`В документе нет раздела ${afterHeading}`);
+  let end = lines.length;
+  for (let index = anchor + 1; index < lines.length; index += 1) {
+    if (lines[index].startsWith('## ')) {
+      end = index;
+      break;
+    }
+  }
+  return [...lines.slice(0, end), heading, '', ...body, '', ...lines.slice(end)].join('\n');
+}

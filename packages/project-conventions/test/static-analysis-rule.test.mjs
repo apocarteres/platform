@@ -22,6 +22,19 @@ async function project(files) {
 const problems = async (root) => [...(await findSourceSetsWithoutAnalysis(root, {}))]
   .map(([file, items]) => `${file}: ${items[0].text}`);
 
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+const CRATE = '[package]\nname = "agent"\n\n[lints.rust]\nwarnings = "deny"\n\n[lints.clippy]\nall = "deny"\n';
+const CLIPPY = [
+  'disallowed-methods = [',
+  '  { path = "std::time::SystemTime::now", reason = "REQ-RUST-CLOCK-004" },',
+  '  { path = "chrono::Utc::now", reason = "REQ-RUST-CLOCK-004" },',
+  '  { path = "chrono::Local::now", reason = "REQ-RUST-CLOCK-004" },',
+  '  { path = "time::OffsetDateTime::now_utc", reason = "REQ-RUST-CLOCK-004" },',
+  '  { path = "time::OffsetDateTime::now_local", reason = "REQ-RUST-CLOCK-004" },',
+  ']',
+  '',
+].join('\n');
+
 const JAVA_SOURCE = { 'src/main/java/net/example/App.java': 'package net.example;\n\nclass App {\n}\n' };
 const WITH_ANALYSIS = '<project><build><plugins><plugin>'
   + '<artifactId>maven-compiler-plugin</artifactId>'
@@ -100,9 +113,7 @@ test('npm-пакет с командами и без lint назван, с lint 
 test('крейт Rust без разбора и с разбором различаются', async () => {
   const without = await project({ 'Cargo.toml': '[package]\nname = "agent"\n' });
   const lenient = await project({ 'Cargo.toml': '[package]\nname = "agent"\n\n[lints.rust]\nwarnings = "warn"\n' });
-  const complete = await project({
-    'Cargo.toml': '[package]\nname = "agent"\n\n[lints.rust]\nwarnings = "deny"\n\n[lints.clippy]\nall = "deny"\n',
-  });
+  const complete = await project({ 'Cargo.toml': CRATE, 'clippy.toml': CLIPPY });
   try {
     assert.match((await problems(without))[0], /не объявляет \[lints\.rust\]/);
     assert.match((await problems(lenient))[0], /без warnings = "deny"/);
@@ -116,6 +127,7 @@ test('крейт Rust без разбора и с разбором различ�
 test('раздел разбора последним в файле читается целиком, а не как пустой', async () => {
   const root = await project({
     'Cargo.toml': '[package]\nname = "agent"\n\n[lints.clippy]\nall = "deny"\n\n[lints.rust]\nwarnings = "deny"\n',
+    'clippy.toml': CLIPPY,
   });
   try {
     assert.deepEqual(await problems(root), [],
@@ -131,7 +143,8 @@ test('правило ловит форму, на которой попались
     'backend/pom.xml': WITH_ANALYSIS,
     'backend/src/main/java/net/example/App.java': 'package net.example;\n\nclass App {\n}\n',
     'web/package.json': JSON.stringify({ scripts: { test: 'vitest' } }),
-    'agent/Cargo.toml': '[package]\nname = "agent"\n\n[lints.rust]\nwarnings = "deny"\n\n[lints.clippy]\nall = "deny"\n',
+    'agent/Cargo.toml': CRATE,
+    'clippy.toml': CLIPPY,
   });
   try {
     const found = await problems(root);
@@ -148,6 +161,7 @@ test('правило не заходит в пути, которые репоз�
   const clean = '[package]\nname = "agent"\n\n[lints.rust]\nwarnings = "deny"\n\n[lints.clippy]\nall = "deny"\n';
   const root = await project({
     'Cargo.toml': clean,
+    'clippy.toml': CLIPPY,
     'sandbox/old/Cargo.toml': '[package]\nname = "agent"\n',
     '.gitignore': 'sandbox/\n',
   });
@@ -179,6 +193,52 @@ test('вне репозитория правило слушается поля e
 
     const excluded = [...(await findSourceSetsWithoutAnalysis(root, { exclude: ['/vendor/'] }))];
     assert.deepEqual(excluded, [], 'объявленное исключение действует');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+test('крейт без настройки clippy и с выпотрошенной названы поимённо', async () => {
+  const without = await project({ 'Cargo.toml': CRATE });
+  const gutted = await project({
+    'Cargo.toml': CRATE,
+    'clippy.toml': CLIPPY.replace('  { path = "chrono::Utc::now", reason = "REQ-RUST-CLOCK-004" },\n', ''),
+  });
+  try {
+    assert.match((await problems(without))[0], /нет clippy\.toml/);
+
+    const partial = await problems(gutted);
+    assert.equal(partial.length, 1, partial.join('\n'));
+    assert.match(partial[0], /не объявляет запретов ядра: chrono::Utc::now/,
+      'назван недостающий запрет, а не факт расхождения');
+  } finally {
+    for (const root of [without, gutted]) await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+test('настройка рабочего пространства годится крейту, лежащему ниже', async () => {
+  const root = await project({
+    'clippy.toml': CLIPPY,
+    'agent/Cargo.toml': CRATE,
+  });
+  try {
+    assert.deepEqual(await problems(root), [],
+      'у рабочего пространства настройка одна на всех: искать её только рядом значило бы отказывать верному устройству');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+test('свои запреты сверх обязательных отказа не дают', async () => {
+  const root = await project({
+    'Cargo.toml': CRATE,
+    'clippy.toml': CLIPPY.replace(']', '  { path = "std::process::exit", reason = "своё правило проекта" },\n]'),
+  });
+  try {
+    assert.deepEqual(await problems(root), [], 'сверяется наличие обязательных, а не совпадение файла целиком');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

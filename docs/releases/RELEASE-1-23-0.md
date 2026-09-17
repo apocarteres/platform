@@ -21,7 +21,7 @@ opened-on: 2026-09-17
 |---|---|
 | [CORE-QUAL-014](../tickets/closed/CORE-QUAL-014-rust-clock.md) | Указана при открытии выпуска |
 | [CORE-QUAL-015](../tickets/closed/CORE-QUAL-015-rust-modules.md) | Указана при открытии выпуска |
-| [CORE-OPS-052](../tickets/CORE-OPS-052-rule-does-not-look-inside-clippy-config.md) | Указана при открытии выпуска |
+| [CORE-OPS-052](../tickets/closed/CORE-OPS-052-rule-does-not-look-inside-clippy-config.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

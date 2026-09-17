@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 94. Включены самостоятельные задачи и этапы планов функций.
+Всего: 95. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -61,6 +61,7 @@ authority: navigation
 | [Отказ коммиту без задачи не называет выхода](CORE-OPS-046-refusal-without-a-way-out.md) | P1 | Выполнена | [RELEASE-1-19-0](../../releases/RELEASE-1-19-0.md) | tooling |
 | [Наличие статического разбора не проверяется ничем](CORE-OPS-047-nothing-checks-that-analysis-exists.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | tooling, quality |
 | [Замена компонента шла без описи его поведений](CORE-OPS-049-component-replacement-without-an-inventory.md) | P1 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | process, documentation |
+| [Правило не смотрит внутрь настройки clippy](CORE-OPS-052-rule-does-not-look-inside-clippy-config.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | tooling, quality |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

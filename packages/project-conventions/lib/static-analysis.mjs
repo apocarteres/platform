@@ -1,5 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { DEFAULT_EXCLUDE } from './comments.mjs';
@@ -104,6 +105,44 @@ function sectionOf(content, header) {
   return next === -1 ? rest : rest.slice(0, next);
 }
 
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+const DELIVERED_CLIPPY = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../configs/clippy.toml');
+
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+function disallowedPaths(content) {
+  const section = sectionOf(content, 'disallowed-methods = [');
+  return [...section.matchAll(/path\s*=\s*"([^"]+)"/g)].map((found) => found[1]);
+}
+
+// REQ-QUALITY-002
+async function siblingConfig(root, file, name) {
+  let directory = path.posix.dirname(file);
+  for (;;) {
+    const candidate = directory === '.' ? name : `${directory}/${name}`;
+    try {
+      return await readFile(path.join(root, candidate), 'utf8');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    if (directory === '.') return null;
+    directory = path.posix.dirname(directory);
+  }
+}
+
+// REQ-QUALITY-002, REQ-RUST-CLOCK-006
+async function clippyProblem(root, file) {
+  const delivered = disallowedPaths(await readFile(DELIVERED_CLIPPY, 'utf8'));
+  if (delivered.length === 0) return null;
+  const own = await siblingConfig(root, file, 'clippy.toml');
+  if (own === null) return 'рядом с крейтом нет clippy.toml: запреты ядра не объявлены';
+  const declared = new Set(disallowedPaths(own));
+  const missing = delivered.filter((entry) => !declared.has(entry));
+  if (missing.length > 0) {
+    return `clippy.toml не объявляет запретов ядра: ${missing.join(', ')}`;
+  }
+  return null;
+}
+
 // REQ-QUALITY-002
 function rustProblem(content) {
   if (!/^\[package\]/m.test(content) && !/^\[workspace\]/m.test(content)) return null;
@@ -131,7 +170,10 @@ export async function findSourceSetsWithoutAnalysis(root, config) {
     const name = path.posix.basename(file);
     // REQ-QUALITY-002
     if (name === 'pom.xml' && !await compilesJava(root, file)) continue;
-    const problem = CHECKS[name](await readFile(path.join(root, file), 'utf8'));
+    const content = await readFile(path.join(root, file), 'utf8');
+    const problem = CHECKS[name](content)
+      // REQ-RUST-CLOCK-006
+      ?? (name === 'Cargo.toml' && /^\[package\]/m.test(content) ? await clippyProblem(root, file) : null);
     if (problem !== null) violations.set(file, [{ line: 1, text: problem }]);
   }
   return violations;

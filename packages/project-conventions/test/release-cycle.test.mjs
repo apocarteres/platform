@@ -1308,15 +1308,17 @@ test('коммит принадлежит составу по любой из н
     await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-081-done.md'), ticket('ZAVPN-QUAL-081', 'done'));
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-080-cancelled.md'), cancelled('ZAVPN-QUAL-080'));
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-070-shipped.md'),
+      ticket('ZAVPN-QUAL-070', 'done', 'RELEASE-2026-09-0'));
     await commitAll(root);
     await git('-C', root, 'commit', '--allow-empty', '--quiet',
-      '-m', 'ZAVPN-QUAL-080 ZAVPN-QUAL-081 отмена по замеру и работа по соседней задаче');
+      '-m', 'ZAVPN-QUAL-070 ZAVPN-QUAL-081 работа, закрывшая обе задачи');
 
     const state = await closability(root, { scheme: 'date' });
 
-    assert.ok(!state.problems.some((problem) => problem.includes('ZAVPN-QUAL-080')),
-      `порядок задач в заголовке судьбу выпуска решать не должен:\n${state.problems.join('\n')}`);
+    assert.ok(!state.problems.some((problem) => problem.includes('ZAVPN-QUAL-070')),
+      'первая названная задача вышла в прошлом выпуске, вторая — в составе: судьбу решать должна вторая, '
+      + `а не порядок слов:\n${state.problems.join('\n')}`);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

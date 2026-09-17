@@ -19,9 +19,9 @@ opened-on: 2026-09-17
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-055](../tickets/CORE-OPS-055-only-the-first-named-ticket-counted.md) | Указана при открытии выпуска |
-| [CORE-OPS-056](../tickets/CORE-OPS-056-cancelled-ticket-held-the-release.md) | Указана при открытии выпуска |
-| [CORE-OPS-057](../tickets/CORE-OPS-057-accounting-was-narrowed-to-unnamed-commits.md) | Указана при открытии выпуска |
+| [CORE-OPS-055](../tickets/closed/CORE-OPS-055-only-the-first-named-ticket-counted.md) | Указана при открытии выпуска |
+| [CORE-OPS-056](../tickets/closed/CORE-OPS-056-cancelled-ticket-held-the-release.md) | Указана при открытии выпуска |
+| [CORE-OPS-057](../tickets/closed/CORE-OPS-057-accounting-was-narrowed-to-unnamed-commits.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

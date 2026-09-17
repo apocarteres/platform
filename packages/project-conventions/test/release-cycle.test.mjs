@@ -1234,7 +1234,7 @@ test('учтённый коммит закрытие не держит, и за�
 });
 
 // REQ-RELEASE-041
-test('учёт отвергает коммит с задачей, с признаком цикла, чужой хеш и повтор', async () => {
+test('учёт принимает держащий закрытие коммит и отвергает не держащий', async () => {
   const root = await project();
   try {
     const sha = await releaseWithUnnamedCommit(root);
@@ -1246,13 +1246,15 @@ test('учёт отвергает коммит с задачей, с призн�
     assert.match((await accountCommit(root, { sha })).problems[0], /требует причины/);
     assert.match((await accountCommit(root, { reason: 'x' })).problems[0], /требует его хеша/);
     assert.match((await accountCommit(root, { sha: 'deadbee', reason: 'x' })).problems[0], /нет в диапазоне выпуска/);
-    assert.match((await accountCommit(root, { sha: named.trim().slice(0, 8), reason: 'x' })).problems[0],
-      /называет задачу ZAVPN-QUAL-007/);
+    // REQ-RELEASE-042
+    assert.equal((await accountCommit(root, { sha: named.trim().slice(0, 8), reason: 'задача снята' })).accounted, true,
+      'коммит с задачей вне состава закрытие держит, значит учёт ему положен');
     assert.match((await accountCommit(root, { sha: cycle.trim().slice(0, 8), reason: 'x' })).problems[0],
-      /уже несёт признак цикла/);
+      /закрытия не держит: обслуживает выпуск/);
 
     assert.equal((await accountCommit(root, { sha, reason: 'причина' })).accounted, true);
-    assert.match((await accountCommit(root, { sha, reason: 'причина' })).problems[0], /уже учтён/);
+    assert.match((await accountCommit(root, { sha, reason: 'причина' })).problems[0],
+      /закрытия не держит: учтён в выпуске/, 'повтор объясняется тем же понятием, а не отдельным случаем');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

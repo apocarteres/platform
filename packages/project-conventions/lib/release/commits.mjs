@@ -56,18 +56,38 @@ export function cycleCommit(commit) {
 // REQ-RELEASE-037
 export const REVERT_LABEL = '!revert';
 
+// REQ-RELEASE-037, REQ-RELEASE-042
 export function revertCommit(commit, areas, prefix, stages) {
-  const ticket = ticketOf(commit, areas, prefix, stages);
-  if (ticket === null) return false;
-  return new RegExp(`^${ticket}\\s+${REVERT_LABEL.replace('!', '\\!')}\\b`).test(commit.subject);
+  const named = ticketsOf(commit, areas, prefix, stages);
+  if (named.length === 0) return false;
+  const head = named.join('\\s+');
+  return new RegExp(`^${head}\\s+${REVERT_LABEL.replace('!', '\\!')}\\b`).test(commit.subject);
+}
+
+// REQ-NAMING-001, REQ-NAMING-011, REQ-NAMING-012
+function leadingTicket(subject, areas, prefix, stages) {
+  const head = prefix ? `${prefix}-` : '';
+  const match = new RegExp(`^(${head}(?:${areas.join('|')})-\\d{3})\\b`).exec(subject);
+  if (match !== null) return match[1];
+  // REQ-NAMING-011
+  const stage = /^([A-Z]{2,5}-\d{2})\b/.exec(subject);
+  return stage !== null && stages.has(stage[1]) ? stage[1] : null;
+}
+
+// REQ-RELEASE-042
+export function ticketsOf(commit, areas, prefix, stages = new Set()) {
+  const found = [];
+  let rest = commit.subject;
+  for (;;) {
+    const one = leadingTicket(rest, areas, prefix, stages);
+    if (one === null) break;
+    found.push(one);
+    rest = rest.slice(one.length).replace(/^\s+/, '');
+  }
+  return found;
 }
 
 // REQ-NAMING-001, REQ-NAMING-011, REQ-NAMING-012
 export function ticketOf(commit, areas, prefix, stages = new Set()) {
-  const head = prefix ? `${prefix}-` : '';
-  const match = new RegExp(`^(${head}(?:${areas.join('|')})-\\d{3})\\b`).exec(commit.subject);
-  if (match !== null) return match[1];
-  // REQ-NAMING-011
-  const stage = /^([A-Z]{2,5}-\d{2})\b/.exec(commit.subject);
-  return stage !== null && stages.has(stage[1]) ? stage[1] : null;
+  return ticketsOf(commit, areas, prefix, stages)[0] ?? null;
 }

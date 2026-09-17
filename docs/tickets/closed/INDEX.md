@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 92. Включены самостоятельные задачи и этапы планов функций.
+Всего: 93. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -66,6 +66,7 @@ authority: navigation
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
 | [Статический разбор назван и доставляется, а не выводится каждым заново](CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Запрет без права на послабление делал обоснованный код непроходимым](CORE-QUAL-013-forbid-leaves-no-way-to-declare-an-exemption.md) | P1 | Выполнена | [RELEASE-1-21-0](../../releases/RELEASE-1-21-0.md) | quality, rust |
+| [Часы в Rust ядром не нормированы и не проверяются](CORE-QUAL-014-rust-clock.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | rust, quality |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |

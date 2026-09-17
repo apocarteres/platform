@@ -183,3 +183,32 @@ test('обоснованный unsafe проходит с объявленным
     await rm(consumer.root, { recursive: true, force: true });
   }
 });
+
+// REQ-RUST-CLOCK-004, REQ-RUST-CLOCK-005, REQ-RUST-CLOCK-006
+test('запрет часов различает стенные часы, монотонный счётчик и упоминание в строке', async () => {
+  const consumer = await referenceConsumer();
+  const crate = path.join(consumer.root, RUST_CRATE);
+  const body = (source) => `//! Проба.\n\n/// Проба.\n#[must_use]\n${source}`;
+  try {
+    await writeFile(path.join(crate, 'src/lib.rs'),
+      body('pub fn stamp() -> std::time::SystemTime {\n    std::time::SystemTime::now()\n}\n'));
+    const wall = await clippy(crate);
+    assert.equal(wall.failed, true, 'стенные часы мимо порта роняют сборку');
+    assert.match(wall.output, /disallowed method `std::time::SystemTime::now`/);
+    assert.match(wall.output, /REQ-RUST-CLOCK-004/, 'отказ называет требование, а не только имя вызова');
+
+    await writeFile(path.join(crate, 'src/lib.rs'),
+      body('pub fn spent() -> std::time::Duration {\n    let from = std::time::Instant::now();\n    from.elapsed()\n}\n'));
+    const monotonic = await clippy(crate);
+    assert.equal(monotonic.failed, false,
+      `Instant в Rust — монотонный счётчик, а не часы; запрет по имени типа из Java запретил бы его\n${monotonic.output}`);
+
+    await writeFile(path.join(crate, 'src/lib.rs'),
+      body('pub fn mention() -> &\'static str {\n    "std::time::SystemTime::now"\n}\n'));
+    const literal = await clippy(crate);
+    assert.equal(literal.failed, false,
+      `разбор пользуется разрешением имён: упоминание в строке вызовом не является\n${literal.output}`);
+  } finally {
+    await rm(consumer.root, { recursive: true, force: true });
+  }
+});

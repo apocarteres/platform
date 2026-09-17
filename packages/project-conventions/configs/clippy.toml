@@ -11,3 +11,14 @@ type-complexity-threshold = 250
 # REQ-CODE-COMMENTS: пояснительный текст в документации к элементу не заменяет
 # ссылки на документ требований, но и не запрещён — проверку ведёт правило ядра.
 missing-docs-in-crate-items = false
+
+# REQ-RUST-CLOCK-004: стенные часы берутся только через порт.
+# REQ-RUST-CLOCK-005: std::time::Instant здесь намеренно отсутствует — в Rust это
+# монотонный счётчик, а не часы, и он законен.
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "время берётся через порт часов, REQ-RUST-CLOCK-004" },
+  { path = "chrono::Utc::now", reason = "время берётся через порт часов, REQ-RUST-CLOCK-004" },
+  { path = "chrono::Local::now", reason = "время берётся через порт часов, REQ-RUST-CLOCK-004" },
+  { path = "time::OffsetDateTime::now_utc", reason = "время берётся через порт часов, REQ-RUST-CLOCK-004" },
+  { path = "time::OffsetDateTime::now_local", reason = "время берётся через порт часов, REQ-RUST-CLOCK-004" },
+]

@@ -7,7 +7,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { nextReleaseId, openRelease, releaseTag, ticketId, unassignedDoneTickets } from '../lib/release/documents.mjs';
 import { findObligationDebts, obligationState, overdueObligations, pendingObligations } from '../lib/release/obligations.mjs';
-import { adoptCycle, cancelRelease, closability, closeRelease, dropFromComposition, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { accountCommit, adoptCycle, cancelRelease, closability, closeRelease, commitsWithoutATicket, dropFromComposition, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { environmentWithoutGit, headCommit, workingTreeClean } from '../lib/release/git.mjs';
 import { refreshCompositionLinks } from '../lib/docs/releases-index.mjs';
@@ -1187,6 +1187,107 @@ test('идентификатор вида этапа без такого эта�
       assert.match(refusal, /не называет задачу/,
         `${subject} принят за идентификатор: отказ должен быть «не называет задачу», а не о составе`);
     }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-041
+async function releaseWithUnnamedCommit(root) {
+  await writeFile(
+    path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+    JSON.stringify({ obligations: [] }),
+  );
+  await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+  const baseline = await commitAll(root);
+  await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+  await openNext(root, { scheme: 'date', today: FIXED_DAY });
+  await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'Record the composition of the previous release');
+  const { stdout } = await git('-C', root, 'rev-parse', 'HEAD');
+  return stdout.trim().slice(0, 8);
+}
+
+const holdsTheRelease = (state, sha) => state.problems.some(
+  (problem) => problem.includes('не называет задачу') && problem.includes(sha),
+);
+
+// REQ-RELEASE-041
+test('учтённый коммит закрытие не держит, и запись остаётся в документе выпуска', async () => {
+  const root = await project();
+  try {
+    const sha = await releaseWithUnnamedCommit(root);
+    assert.equal(holdsTheRelease(await closability(root, { scheme: 'date' }), sha), true, 'до учёта держит');
+
+    const result = await accountCommit(root, { sha, reason: 'служебный коммит прошлого выпуска, строка признака забыта' });
+
+    assert.equal(result.accounted, true, result.problems?.join('\n'));
+    assert.equal(holdsTheRelease(await closability(root, { scheme: 'date' }), sha), false,
+      'после учёта не держит: это и есть выход вперёд, не переписывающий историю');
+
+    const document = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
+    assert.match(document, /## Учтённые коммиты/);
+    assert.match(document, new RegExp(`\\| ${sha} \\| Record the composition[^|]*\\| служебный коммит`),
+      'запись лежит там, где читают состав выпуска, а не в теле другого коммита');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-041
+test('учёт отвергает коммит с задачей, с признаком цикла, чужой хеш и повтор', async () => {
+  const root = await project();
+  try {
+    const sha = await releaseWithUnnamedCommit(root);
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче');
+    const { stdout: named } = await git('-C', root, 'rev-parse', 'HEAD');
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'Служебный', '-m', 'Release-cycle: RELEASE-2026-09-1');
+    const { stdout: cycle } = await git('-C', root, 'rev-parse', 'HEAD');
+
+    assert.match((await accountCommit(root, { sha })).problems[0], /требует причины/);
+    assert.match((await accountCommit(root, { reason: 'x' })).problems[0], /требует его хеша/);
+    assert.match((await accountCommit(root, { sha: 'deadbee', reason: 'x' })).problems[0], /нет в диапазоне выпуска/);
+    assert.match((await accountCommit(root, { sha: named.trim().slice(0, 8), reason: 'x' })).problems[0],
+      /называет задачу ZAVPN-QUAL-007/);
+    assert.match((await accountCommit(root, { sha: cycle.trim().slice(0, 8), reason: 'x' })).problems[0],
+      /уже несёт признак цикла/);
+
+    assert.equal((await accountCommit(root, { sha, reason: 'причина' })).accounted, true);
+    assert.match((await accountCommit(root, { sha, reason: 'причина' })).problems[0], /уже учтён/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-039, REQ-RELEASE-041
+test('отказ называет выход, не переписывающий историю, и подставляет хеш', async () => {
+  const root = await project();
+  try {
+    const sha = await releaseWithUnnamedCommit(root);
+
+    const refusal = (await closability(root, { scheme: 'date' })).problems
+      .find((problem) => problem.includes('не называет задачу'));
+
+    assert.ok(refusal);
+    assert.match(refusal, new RegExp(`release account ${sha} --reason`), 'хеш подставлен: строку можно скопировать');
+    assert.match(refusal, /единственный выход, не переписывающий общую историю/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-QUALITY-004
+test('сверка диапазона называет только его коммиты, а прошлое не трогает', async () => {
+  const root = await project();
+  try {
+    const sha = await releaseWithUnnamedCommit(root);
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче');
+
+    const whole = await commitsWithoutATicket(root, null);
+    assert.deepEqual(whole.map((commit) => commit.sha.slice(0, 8)), [sha]);
+
+    const pushed = await commitsWithoutATicket(root, 'HEAD~1..HEAD');
+    assert.deepEqual(pushed, [],
+      'отправляется только названный коммит: проект с прежней бедой в истории обязан суметь отправить работу');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

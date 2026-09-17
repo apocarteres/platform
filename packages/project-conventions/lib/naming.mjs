@@ -34,6 +34,7 @@ export function findNamingIssues(source) {
 export async function findNamingViolations(root, config) {
   const violations = new Map();
   for (const file of await collectSourceFiles(root, config)) {
+    // REQ-JAVA-NAMING-001, REQ-RUST-NAMING-002
     if (path.extname(file) !== '.java') continue;
     const issues = findNamingIssues(await readFile(path.join(root, file), 'utf8'));
     if (issues.length > 0) violations.set(file, issues);

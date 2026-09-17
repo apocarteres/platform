@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-export const SOURCE_EXTENSIONS = new Set(['.java', '.ts', '.mjs', '.js']);
+export const SOURCE_EXTENSIONS = new Set(['.java', '.ts', '.mjs', '.js', '.rs']);
 export const DEFAULT_EXCLUDE = [
   '/node_modules/', '/target/', '/dist/', '/build/', '/coverage/', '/.git/', '/generated/',
   // REQ-QUALITY-002
@@ -46,7 +46,10 @@ function skipRegex(source, index) {
   return index + 1;
 }
 
-export function extractComments(source) {
+// REQ-CODE-COMMENTS-001
+export const DOCUMENTED_LANGUAGES = new Set(['.rs']);
+
+export function extractComments(source, { documented = false } = {}) {
   const comments = [];
   let index = 0;
   let line = 1;
@@ -89,7 +92,9 @@ export function extractComments(source) {
         text += source[index];
         index += 1;
       }
-      comments.push({ line: start, endLine: start, text: text.trim(), kind: 'line' });
+      // REQ-CODE-COMMENTS-001
+      const documentation = documented && (text.startsWith('/') || text.startsWith('!'));
+      comments.push({ line: start, endLine: start, text: text.trim(), kind: 'line', documentation });
     } else if (current === '/' && source[index + 1] === '*') {
       const start = line;
       let text = '';
@@ -100,7 +105,9 @@ export function extractComments(source) {
         index += 1;
       }
       index += 2;
-      comments.push({ line: start, endLine: line, text, kind: 'block' });
+      // REQ-CODE-COMMENTS-001
+      const documentation = documented && (text.startsWith('*') || text.startsWith('!'));
+      comments.push({ line: start, endLine: line, text, kind: 'block', documentation });
     } else {
       index += 1;
     }
@@ -169,7 +176,10 @@ export async function findProseComments(root, config) {
   const violations = new Map();
   for (const file of await collectSourceFiles(root, config)) {
     const source = await readFile(path.join(root, file), 'utf8');
-    const prose = extractComments(source)
+    // REQ-CODE-COMMENTS-001
+    const documented = DOCUMENTED_LANGUAGES.has(path.extname(file));
+    const prose = extractComments(source, { documented })
+      .filter((comment) => !comment.documentation)
       .filter((comment) => classify(comment.text) === 'prose')
       .map((comment) => ({ line: comment.line, text: comment.text.replace(/\s+/g, ' ').trim().slice(0, 70) }));
     if (prose.length > 0) violations.set(file, prose);

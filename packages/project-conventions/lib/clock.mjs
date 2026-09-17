@@ -76,7 +76,9 @@ export function codeLines(source) {
   return lines;
 }
 
+// REQ-RUST-CLOCK-006
 export function findClockCalls(source, extension) {
+  if (extension === '.rs') return [];
   const calls = extension === '.java' ? JAVA_CALLS : SCRIPT_CALLS;
   const found = [];
   for (const [offset, line] of codeLines(source).entries()) {

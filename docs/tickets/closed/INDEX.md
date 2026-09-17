@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 95. Включены самостоятельные задачи и этапы планов функций.
+Всего: 98. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -68,6 +68,7 @@ authority: navigation
 | [Статический разбор назван и доставляется, а не выводится каждым заново](CORE-QUAL-010-static-analysis-is-named-and-delivered.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Запрет без права на послабление делал обоснованный код непроходимым](CORE-QUAL-013-forbid-leaves-no-way-to-declare-an-exemption.md) | P1 | Выполнена | [RELEASE-1-21-0](../../releases/RELEASE-1-21-0.md) | quality, rust |
 | [Часы в Rust ядром не нормированы и не проверяются](CORE-QUAL-014-rust-clock.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | rust, quality |
+| [Правило комментариев воевало бы с документацией Rust](CORE-QUAL-016-comments-rule-would-fight-rust-docs.md) | P1 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, quality |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |
@@ -105,6 +106,8 @@ authority: navigation
 | [Показ состояния выпуска отказывает на обычном состоянии](CORE-QUAL-006-release-status-fails-on-a-normal-state.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | release, tooling |
 | [Послабление для тестов оформляется исключением, которое некогда снять](CORE-QUAL-009-test-relaxation-is-not-an-exception.md) | P2 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality |
 | [Модульность Rust: сказать, что даёт язык и где остаётся дыра](CORE-QUAL-015-rust-modules.md) | P2 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | rust, architecture |
+| [Правило денежных величин слепо к Rust](CORE-QUAL-017-money-rule-is-blind-to-rust.md) | P2 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, quality |
+| [Именование Rust: сказать, чего ядро не требует, и почему](CORE-QUAL-018-rust-naming-is-not-java-naming.md) | P2 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, documentation |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |

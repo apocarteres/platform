@@ -23,6 +23,7 @@ export const DELIVERED_DOCUMENTS = [
   'java-naming.md',
   'rust-clock.md',
   'rust-modules.md',
+  'rust-naming.md',
   'typescript-clock.md',
   'project-rules.md',
   'rule-distribution.md',

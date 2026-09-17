@@ -19,9 +19,9 @@ opened-on: 2026-09-17
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-016](../tickets/CORE-QUAL-016-comments-rule-would-fight-rust-docs.md) | Указана при открытии выпуска |
-| [CORE-QUAL-017](../tickets/CORE-QUAL-017-money-rule-is-blind-to-rust.md) | Указана при открытии выпуска |
-| [CORE-QUAL-018](../tickets/CORE-QUAL-018-rust-naming-is-not-java-naming.md) | Указана при открытии выпуска |
+| [CORE-QUAL-016](../tickets/closed/CORE-QUAL-016-comments-rule-would-fight-rust-docs.md) | Указана при открытии выпуска |
+| [CORE-QUAL-017](../tickets/closed/CORE-QUAL-017-money-rule-is-blind-to-rust.md) | Указана при открытии выпуска |
+| [CORE-QUAL-018](../tickets/closed/CORE-QUAL-018-rust-naming-is-not-java-naming.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

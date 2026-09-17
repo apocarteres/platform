@@ -19,8 +19,8 @@ opened-on: 2026-09-17
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-053](../tickets/CORE-OPS-053-forgotten-cycle-line-forces-a-rewrite.md) | Указана при открытии выпуска |
-| [CORE-OPS-054](../tickets/CORE-OPS-054-commit-rule-fires-after-the-push.md) | Указана при открытии выпуска |
+| [CORE-OPS-053](../tickets/closed/CORE-OPS-053-forgotten-cycle-line-forces-a-rewrite.md) | Указана при открытии выпуска |
+| [CORE-OPS-054](../tickets/closed/CORE-OPS-054-commit-rule-fires-after-the-push.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

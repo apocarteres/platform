@@ -14,12 +14,13 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 98. Включены самостоятельные задачи и этапы планов функций.
+Всего: 100. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
 | [Правило разбирало чужие рабочие копии](CORE-OPS-048-rule-reads-a-neighbours-working-copy.md) | P0 | Выполнена | [RELEASE-1-21-0](../../releases/RELEASE-1-21-0.md) | tooling, quality |
+| [Забытая строка признака цикла исправлялась только перезаписью истории](CORE-OPS-053-forgotten-cycle-line-forces-a-rewrite.md) | P0 | Выполнена | [RELEASE-1-25-0](../../releases/RELEASE-1-25-0.md) | tooling, release |
 | [Ядро не исполняет собственного требования о статическом разборе](CORE-QUAL-011-core-does-not-do-what-it-requires.md) | P0 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
@@ -62,6 +63,7 @@ authority: navigation
 | [Наличие статического разбора не проверяется ничем](CORE-OPS-047-nothing-checks-that-analysis-exists.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | tooling, quality |
 | [Замена компонента шла без описи его поведений](CORE-OPS-049-component-replacement-without-an-inventory.md) | P1 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | process, documentation |
 | [Правило не смотрит внутрь настройки clippy](CORE-OPS-052-rule-does-not-look-inside-clippy-config.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | tooling, quality |
+| [Сверка коммитов срабатывала после отправки, а не до](CORE-OPS-054-commit-rule-fires-after-the-push.md) | P1 | Выполнена | [RELEASE-1-25-0](../../releases/RELEASE-1-25-0.md) | tooling, release |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

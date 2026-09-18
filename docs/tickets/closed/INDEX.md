@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 106. Включены самостоятельные задачи и этапы планов функций.
+Всего: 108. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -34,6 +34,7 @@ authority: navigation
 | [Сериализатор команд требует Jackson 2, которого в платформе приложений уже нет](CORE-DATA-003-command-writer-depends-on-jackson-2.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | backend, java, persistence |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |
 | [Терминология ядра не закреплена](CORE-DOC-011-terminology-is-not-fixed.md) | P1 | Выполнена | [RELEASE-1-16-0](../../releases/RELEASE-1-16-0.md) | documentation, process |
+| [Продолжение закрытой заявки теряется](CORE-DOC-014-a-closed-report-swallows-its-continuation.md) | P1 | Выполнена | [RELEASE-1-28-0](../../releases/RELEASE-1-28-0.md) | process, documentation |
 | [Версия платформы приложений задавалась дважды и разошлась](CORE-OPS-001-application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](CORE-OPS-002-code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
 | [Пакет процессных правил и инструментов документации](CORE-OPS-003-conventions-package.md) | P1 | Выполнена | [RELEASE-0-29-0](../../releases/RELEASE-0-29-0.md) | process, documentation, tooling |
@@ -69,6 +70,7 @@ authority: navigation
 | [Правило не смотрит внутрь настройки clippy](CORE-OPS-052-rule-does-not-look-inside-clippy-config.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | tooling, quality |
 | [Сверка коммитов срабатывала после отправки, а не до](CORE-OPS-054-commit-rule-fires-after-the-push.md) | P1 | Выполнена | [RELEASE-1-25-0](../../releases/RELEASE-1-25-0.md) | tooling, release |
 | [Учёт коммита был сужен до безымянных без основания](CORE-OPS-057-accounting-was-narrowed-to-unnamed-commits.md) | P1 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
+| [У кеша AOT две тихих ловушки, и одна из них не покрыта прежним текстом](CORE-OPS-059-aot-cache-has-two-silent-traps.md) | P1 | Выполнена | [RELEASE-1-28-0](../../releases/RELEASE-1-28-0.md) | deployment |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

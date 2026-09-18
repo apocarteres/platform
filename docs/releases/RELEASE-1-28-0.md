@@ -19,8 +19,8 @@ opened-on: 2026-09-18
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-059](../tickets/CORE-OPS-059-aot-cache-has-two-silent-traps.md) | Указана при открытии выпуска |
-| [CORE-DOC-014](../tickets/CORE-DOC-014-a-closed-report-swallows-its-continuation.md) | Указана при открытии выпуска |
+| [CORE-OPS-059](../tickets/closed/CORE-OPS-059-aot-cache-has-two-silent-traps.md) | Указана при открытии выпуска |
+| [CORE-DOC-014](../tickets/closed/CORE-DOC-014-a-closed-report-swallows-its-continuation.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

@@ -19,9 +19,9 @@ opened-on: 2026-09-18
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-019](../tickets/CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | Указана при открытии выпуска |
-| [CORE-QUAL-020](../tickets/CORE-QUAL-020-rust-has-no-seeding-mechanism.md) | Указана при открытии выпуска |
-| [CORE-OPS-058](../tickets/CORE-OPS-058-two-requirements-exclude-each-other.md) | Указана при открытии выпуска |
+| [CORE-QUAL-019](../tickets/closed/CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | Указана при открытии выпуска |
+| [CORE-QUAL-020](../tickets/closed/CORE-QUAL-020-rust-has-no-seeding-mechanism.md) | Указана при открытии выпуска |
+| [CORE-OPS-058](../tickets/closed/CORE-OPS-058-two-requirements-exclude-each-other.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

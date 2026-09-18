@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 103. Включены самостоятельные задачи и этапы планов функций.
+Всего: 106. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -23,7 +23,9 @@ authority: navigation
 | [Забытая строка признака цикла исправлялась только перезаписью истории](CORE-OPS-053-forgotten-cycle-line-forces-a-rewrite.md) | P0 | Выполнена | [RELEASE-1-25-0](../../releases/RELEASE-1-25-0.md) | tooling, release |
 | [Судьба выпуска зависела от порядка задач в заголовке](CORE-OPS-055-only-the-first-named-ticket-counted.md) | P0 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
 | [Отменённая задача держала закрытие выпуска](CORE-OPS-056-cancelled-ticket-held-the-release.md) | P0 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
+| [Два требования одной поставки исключали друг друга](CORE-OPS-058-two-requirements-exclude-each-other.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | deployment |
 | [Ядро не исполняет собственного требования о статическом разборе](CORE-QUAL-011-core-does-not-do-what-it-requires.md) | P0 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
+| [Доставленная настройка полагалась на состав группы, а не объявляла правило](CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
 | [Исследование: правила ядра проверяются только на ядре](CORE-ARC-005-rules-are-verified-only-on-the-core.md) | P1 | Выполнена | [RELEASE-1-14-0](../../releases/RELEASE-1-14-0.md) | process, tooling, architecture, research |
@@ -74,6 +76,7 @@ authority: navigation
 | [Запрет без права на послабление делал обоснованный код непроходимым](CORE-QUAL-013-forbid-leaves-no-way-to-declare-an-exemption.md) | P1 | Выполнена | [RELEASE-1-21-0](../../releases/RELEASE-1-21-0.md) | quality, rust |
 | [Часы в Rust ядром не нормированы и не проверяются](CORE-QUAL-014-rust-clock.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | rust, quality |
 | [Правило комментариев воевало бы с документацией Rust](CORE-QUAL-016-comments-rule-would-fight-rust-docs.md) | P1 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, quality |
+| [У Rust нет средства засева, хотя правило его разрешает](CORE-QUAL-020-rust-has-no-seeding-mechanism.md) | P1 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |

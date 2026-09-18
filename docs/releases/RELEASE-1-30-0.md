@@ -19,7 +19,7 @@ opened-on: 2026-09-18
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-DOC-016](../tickets/CORE-DOC-016-where-the-inventory-lives.md) | Указана при открытии выпуска |
+| [CORE-DOC-016](../tickets/closed/CORE-DOC-016-where-the-inventory-lives.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

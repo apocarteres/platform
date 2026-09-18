@@ -19,7 +19,7 @@ opened-on: 2026-09-18
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-DOC-015](../tickets/CORE-DOC-015-closed-report-accepts-no-comments.md) | Указана при открытии выпуска |
+| [CORE-DOC-015](../tickets/closed/CORE-DOC-015-closed-report-accepts-no-comments.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

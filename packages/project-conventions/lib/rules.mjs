@@ -9,7 +9,9 @@ import { findDependencyIssues } from './dependencies.mjs';
 import { findNamingIssues } from './document-naming.mjs';
 import { findForbiddenWords, findLongWordings } from './terms.mjs';
 import { findSourceSetsWithoutAnalysis } from './static-analysis.mjs';
+import { findRustExemptions } from './rust-exemptions.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
+import { SET } from './baseline.mjs';
 
 export { DIRECTIVE, LEVELS, RECOMMENDATION } from './levels.mjs';
 
@@ -103,6 +105,16 @@ export const RULES = [
     summary: 'Каждый набор исходников несёт статический разбор, роняющий сборку на предупреждениях',
     title: 'наборов исходников без статического разбора',
     find: findSourceSetsWithoutAnalysis,
+  },
+  {
+    id: 'rust-exemptions',
+    level: DIRECTIVE,
+    document: 'REQ-QUALITY',
+    file: 'quality-checks.md',
+    summary: 'Объявленные в коде послабления разбора Rust ведутся ограничителем множеством и могут только убывать',
+    title: 'объявленных послаблений разбора',
+    unit: SET,
+    find: findRustExemptions,
   },
   {
     id: 'naming-er',

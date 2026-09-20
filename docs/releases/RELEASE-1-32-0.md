@@ -19,7 +19,7 @@ opened-on: 2026-09-20
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-060](../tickets/CORE-OPS-060-health-check-confirmed-nothing.md) | Указана при открытии выпуска |
+| [CORE-OPS-060](../tickets/closed/CORE-OPS-060-health-check-confirmed-nothing.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

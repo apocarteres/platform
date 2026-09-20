@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 111. Включены самостоятельные задачи и этапы планов функций.
+Всего: 112. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -24,6 +24,7 @@ authority: navigation
 | [Судьба выпуска зависела от порядка задач в заголовке](CORE-OPS-055-only-the-first-named-ticket-counted.md) | P0 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
 | [Отменённая задача держала закрытие выпуска](CORE-OPS-056-cancelled-ticket-held-the-release.md) | P0 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
 | [Два требования одной поставки исключали друг друга](CORE-OPS-058-two-requirements-exclude-each-other.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | deployment |
+| [Проверка работоспособности соответствовала требованию и не проверяла ничего](CORE-OPS-060-health-check-confirmed-nothing.md) | P0 | Выполнена | [RELEASE-1-32-0](../../releases/RELEASE-1-32-0.md) | deployment, tooling |
 | [Ядро не исполняет собственного требования о статическом разборе](CORE-QUAL-011-core-does-not-do-what-it-requires.md) | P0 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Доставленная настройка полагалась на состав группы, а не объявляла правило](CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Аннотация времени жизни ослепляет разбор Rust](CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | P0 | Выполнена | [RELEASE-1-31-0](../../releases/RELEASE-1-31-0.md) | rust, quality |

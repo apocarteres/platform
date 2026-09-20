@@ -22,6 +22,7 @@ import { declaredObligations, findObligationDebts, loadObligations, obligationSt
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
+import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../lib/health.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -551,6 +552,29 @@ async function releaseDefer(root, id, reason) {
   console.log(`Обязательство ${id} перенесено: ${reason}`);
 }
 
+// REQ-DEPLOYMENT-006
+async function health(url, timeout) {
+  if (!url) {
+    refuse(USAGE.health, 'проверка работоспособности требует адреса: ключ --url');
+    return;
+  }
+  const seconds = timeout === undefined ? DEFAULT_TIMEOUT_SECONDS : Number(timeout);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    refuse(USAGE.health, `предел ожидания должен быть положительным числом секунд: ${timeout}`);
+    return;
+  }
+  const answer = await askTheService(url, { timeoutSeconds: seconds });
+  if (!answer.healthy) {
+    console.error(`Сервис работоспособность не подтвердил: ${answer.reason}`);
+    console.error(`Адрес: ${url}`);
+    // REQ-QUALITY-014
+    console.error('Проверку принимают заведомым отказом: остановите сервис и убедитесь, что шаг падает.');
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Сервис подтвердил работоспособность: ${answer.status}`);
+}
+
 // REQ-QUALITY-004
 async function commits(root, range) {
   let found;
@@ -599,7 +623,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -614,6 +638,7 @@ const USAGE = {
   receipt: RECEIPT_USAGE,
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
+  health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
   release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
 };
 
@@ -656,6 +681,7 @@ const SPEC = {
   baseline: { flags: ['--allow-growth'] },
   naming: { values: ['--map'], positional: 1 },
   commits: { values: ['--range'] },
+  health: { values: ['--url', '--timeout'] },
 };
 
 // REQ-RELEASE-028
@@ -703,6 +729,7 @@ if (command === undefined || command === '--help') {
     else if (command === 'obligations') await obligations(root);
     else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
     else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);
+    else if (command === 'health') await health(parsed.values.get('--url'), parsed.values.get('--timeout'));
     else await naming(root, parsed.positional[0], parsed.values.get('--map'));
   }
 }

@@ -12,7 +12,8 @@ const LINT = /(?:clippy::)?[a-z][a-z0-9_]*/g;
 // REQ-QUALITY-007
 export function findDeclaredExemptions(source) {
   const found = [];
-  for (const [offset, line] of codeLines(source).entries()) {
+  // REQ-QUALITY-013
+  for (const [offset, line] of codeLines(source, { lifetimes: true }).entries()) {
     for (const declaration of line.matchAll(DECLARATION)) {
       for (const lint of declaration[1].match(LINT) ?? []) {
         if (lint === 'reason') continue;

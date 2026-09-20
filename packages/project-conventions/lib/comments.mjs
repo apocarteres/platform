@@ -2,6 +2,16 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export const SOURCE_EXTENSIONS = new Set(['.java', '.ts', '.mjs', '.js', '.rs']);
+
+// REQ-QUALITY-013
+export const LIFETIME_LANGUAGES = new Set(['.rs']);
+
+// REQ-QUALITY-013
+export function lifetimeAt(source, index) {
+  if (source[index] !== "'") return false;
+  if (source[index + 1] === '\\') return false;
+  return source[index + 2] !== "'";
+}
 export const DEFAULT_EXCLUDE = [
   '/node_modules/', '/target/', '/dist/', '/build/', '/coverage/', '/.git/', '/generated/',
   // REQ-QUALITY-002
@@ -49,7 +59,7 @@ function skipRegex(source, index) {
 // REQ-CODE-COMMENTS-001
 export const DOCUMENTED_LANGUAGES = new Set(['.rs']);
 
-export function extractComments(source, { documented = false } = {}) {
+export function extractComments(source, { documented = false, lifetimes = false } = {}) {
   const comments = [];
   let index = 0;
   let line = 1;
@@ -65,6 +75,9 @@ export function extractComments(source, { documented = false } = {}) {
         index += 1;
       }
       index += 3;
+    // REQ-QUALITY-013
+    } else if (lifetimes && current === "'" && lifetimeAt(source, index)) {
+      index += 1;
     } else if (current === '"' || current === "'" || current === '`') {
       const quote = current;
       index += 1;
@@ -178,7 +191,9 @@ export async function findProseComments(root, config) {
     const source = await readFile(path.join(root, file), 'utf8');
     // REQ-CODE-COMMENTS-001
     const documented = DOCUMENTED_LANGUAGES.has(path.extname(file));
-    const prose = extractComments(source, { documented })
+    // REQ-QUALITY-013
+    const lifetimes = LIFETIME_LANGUAGES.has(path.extname(file));
+    const prose = extractComments(source, { documented, lifetimes })
       .filter((comment) => !comment.documentation)
       .filter((comment) => classify(comment.text) === 'prose')
       .map((comment) => ({ line: comment.line, text: comment.text.replace(/\s+/g, ' ').trim().slice(0, 70) }));

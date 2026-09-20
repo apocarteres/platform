@@ -127,3 +127,30 @@ test('свой разбор часов в Rust не лезет: там рабо�
     'иначе к .rs применился бы набор вызовов JavaScript и правило проверяло бы не то');
   assert.equal(findClockCalls('Instant.now();', '.java').length, 1, 'Java по-прежнему проверяется');
 });
+
+// REQ-QUALITY-013
+test('время жизни не ослепляет правило денежных величин и правило комментариев', async () => {
+  const money = 'pub fn name<\'a>(v: &\'a str) -> &\'a str {\n    v\n}\n\npub struct Order {\n    pub price: f64,\n}\n';
+  assert.equal(findMoneyFloats(money, undefined, '.rs').length, 1,
+    'объявление после нечётного числа кавычек обязано быть видно');
+
+  const root = await project({
+    'src/lib.rs': [
+      '//! Проба.',
+      '',
+      '/// Отдаёт имя.',
+      "pub fn name(v: &'static str) -> &'static str {",
+      '    // здесь мы берём значение как есть, потому что иначе не собирается',
+      '    v',
+      '}',
+    ].join('\n'),
+  });
+  try {
+    const found = [...await findProseComments(root, { sources: ['.'] })];
+
+    assert.equal(found.length, 1, 'пояснение после времени жизни обязано быть видно');
+    assert.match(found[0][1][0].text, /берём значение как есть/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

@@ -24,7 +24,8 @@ export function findMoneyFloats(source, names = MONEY_NAMES, extension = '.java'
   // REQ-CODE-DESIGN-008
   const pattern = extension === '.rs' ? RUST_BINARY_TYPES : BINARY_TYPES;
   const found = [];
-  for (const [offset, line] of codeLines(source).entries()) {
+  // REQ-QUALITY-013
+  for (const [offset, line] of codeLines(source, { lifetimes: extension === '.rs' }).entries()) {
     for (const match of line.matchAll(pattern)) {
       if (moneyName(match[1], names)) found.push({ line: offset + 1, text: match[0].trim() });
     }

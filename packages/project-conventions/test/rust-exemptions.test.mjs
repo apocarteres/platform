@@ -80,3 +80,54 @@ test('счёт этой работы не выражает, поэтому ед�
   assert.equal(compare(after, counts(before, SET), SET).exceeded.length, 1,
     'по множеству подмена видна: clippy::c не засеивался');
 });
+
+// REQ-QUALITY-013
+test('аннотация времени жизни разбор не ослепляет', () => {
+  const source = [
+    "fn borrow<'a>(value: &'a str) -> &'a str {",
+    '    value',
+    '}',
+    '',
+    '#[allow(clippy::too_many_arguments)]',
+    'pub fn wide() {}',
+  ].join('\n');
+
+  assert.deepEqual(findDeclaredExemptions(source).map((item) => item.text), ['clippy::too_many_arguments'],
+    'одиночная кавычка в Rust — время жизни, а не начало литерала');
+});
+
+// REQ-QUALITY-013
+test('символьный литерал остаётся литералом, а объявление внутри него не считается', () => {
+  const cases = {
+    "let c = '#';\n#[allow(clippy::unwrap_used)]\nfn a() {}": ['clippy::unwrap_used'],
+    "let n = '\\n';\n#[allow(clippy::panic)]\nfn a() {}": ['clippy::panic'],
+    "let s = \"#[allow(clippy::dbg_macro)]\";\nfn a() {}": [],
+  };
+
+  for (const [source, expected] of Object.entries(cases)) {
+    assert.deepEqual(findDeclaredExemptions(source).map((item) => item.text), expected, source);
+  }
+});
+
+// REQ-QUALITY-013
+test('нечётное число кавычек выше не прячет послабления до конца файла', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'lifetime-'));
+  await mkdir(path.join(root, 'src'), { recursive: true });
+  await writeFile(path.join(root, 'src/lib.rs'), [
+    "pub struct Holder { pub name: &'static str }",
+    '',
+    '#[allow(clippy::unwrap_used)]',
+    'pub fn one() {}',
+    '',
+    '#[allow(clippy::panic)]',
+    'pub fn two() {}',
+  ].join('\n'));
+  try {
+    const found = await findRustExemptions(root, { sources: ['src'] });
+
+    assert.deepEqual(found.get('src/lib.rs').map((item) => item.text), ['clippy::unwrap_used', 'clippy::panic'],
+      'у потребителя так терялись 7 послаблений из 25, и ограничитель оставался зелёным');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

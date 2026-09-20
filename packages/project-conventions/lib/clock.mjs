@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { collectSourceFiles } from './comments.mjs';
+import { LIFETIME_LANGUAGES, collectSourceFiles, lifetimeAt } from './comments.mjs';
 
 const JAVA_CALLS = [
   'Instant.now(', 'LocalDate.now(', 'LocalDateTime.now(', 'LocalTime.now(',
@@ -14,7 +14,7 @@ const BARE_DATE = /(^|[^.\w])new Date\s*\(\s*\)/;
 // REQ-CODE-CLOCK-006
 const LITERAL = '_';
 
-export function codeLines(source) {
+export function codeLines(source, { lifetimes = false } = {}) {
   const lines = [''];
   let index = 0;
   const push = (character) => {
@@ -31,6 +31,10 @@ export function codeLines(source) {
         index += 1;
       }
       index += 3;
+    // REQ-QUALITY-013
+    } else if (lifetimes && current === "'" && lifetimeAt(source, index)) {
+      push(current);
+      index += 1;
     } else if (current === '"' || current === "'" || current === '`') {
       const quote = current;
       push(LITERAL);
@@ -81,7 +85,8 @@ export function findClockCalls(source, extension) {
   if (extension === '.rs') return [];
   const calls = extension === '.java' ? JAVA_CALLS : SCRIPT_CALLS;
   const found = [];
-  for (const [offset, line] of codeLines(source).entries()) {
+  // REQ-QUALITY-013
+  for (const [offset, line] of codeLines(source, { lifetimes: LIFETIME_LANGUAGES.has(extension) }).entries()) {
     for (const call of calls) {
       if (line.includes(call)) found.push({ line: offset + 1, text: call.slice(0, -1) });
     }

@@ -19,7 +19,7 @@ opened-on: 2026-09-20
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-021](../tickets/CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | Указана при открытии выпуска |
+| [CORE-QUAL-021](../tickets/closed/CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

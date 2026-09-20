@@ -19,7 +19,7 @@ opened-on: 2026-09-20
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-061](../tickets/CORE-OPS-061-second-pinning-in-the-build-image.md) | Указана при открытии выпуска |
+| [CORE-OPS-061](../tickets/closed/CORE-OPS-061-second-pinning-in-the-build-image.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

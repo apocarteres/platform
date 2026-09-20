@@ -75,6 +75,38 @@ export function javaTargets(source) {
   return declared;
 }
 
+// REQ-BUILD-004
+async function entriesOf(directory) {
+  try {
+    return await readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return [];
+    throw error;
+  }
+}
+
+// REQ-BUILD-004
+export async function toolingFiles(root) {
+  const found = [];
+  const walk = async (directory, depth) => {
+    for (const entry of await entriesOf(directory)) {
+      const relative = path.relative(root, path.join(directory, entry.name));
+      if (entry.isFile() && /^(?:Dockerfile[^/]*|[^/]+\.dockerfile)$/.test(entry.name)) found.push(relative);
+      if (entry.isDirectory() && depth < DEPTH && !SKIP.has(entry.name) && !entry.name.startsWith('.')) {
+        await walk(path.join(directory, entry.name), depth + 1);
+      }
+    }
+  };
+  await walk(root, 0);
+  for (const entry of await entriesOf(path.join(root, '.github/workflows'))) {
+    if (entry.isFile() && /\.ya?ml$/.test(entry.name)) found.push(`.github/workflows/${entry.name}`);
+  }
+  for (const name of ['.gitlab-ci.yml']) {
+    if ((await entriesOf(root)).some((entry) => entry.isFile() && entry.name === name)) found.push(name);
+  }
+  return found.sort();
+}
+
 async function manifests(root, name) {
   const found = [];
   const walk = async (directory, depth) => {
@@ -94,6 +126,25 @@ async function manifests(root, name) {
   };
   await walk(root, 0);
   return found.sort();
+}
+
+// REQ-BUILD-004
+function pinnedHere(line, version) {
+  const escaped = version.replaceAll('.', '\\.');
+  return new RegExp(`[=:@]\\s*["']?${escaped}(?=["'\\s:,;)\\-_]|$)`).test(line);
+}
+
+// REQ-BUILD-004
+export function secondPinnings(content, tools) {
+  const found = [];
+  for (const [offset, line] of content.split('\n').entries()) {
+    const code = line.split('#')[0];
+    for (const [tool, version] of tools) {
+      if (!pinnedHere(code, version)) continue;
+      found.push({ line: offset + 1, tool, version, text: line.trim().slice(0, 60) });
+    }
+  }
+  return found;
 }
 
 export async function findToolchainMismatches(root) {
@@ -121,6 +172,14 @@ export async function findToolchainMismatches(root) {
       if (pinned !== undefined && pinned !== version) {
         problems.push(`.tool-versions: ${tool} ${version} против ${tool} = ${pinned} в ${MISE_FILE}`);
       }
+    }
+  }
+
+  // REQ-BUILD-004
+  for (const file of await toolingFiles(root)) {
+    for (const pinning of secondPinnings(await read(root, file), tools)) {
+      problems.push(`${file}:${pinning.line}: ${pinning.tool} ${pinning.version} закреплена вторым местом`
+        + ` — версию берут из ${MISE_FILE} доводом сборки: «${pinning.text}»`);
     }
   }
 

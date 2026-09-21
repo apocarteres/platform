@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 113. Включены самостоятельные задачи и этапы планов функций.
+Всего: 114. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -75,6 +75,7 @@ authority: navigation
 | [Учёт коммита был сужен до безымянных без основания](CORE-OPS-057-accounting-was-narrowed-to-unnamed-commits.md) | P1 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
 | [У кеша AOT две тихих ловушки, и одна из них не покрыта прежним текстом](CORE-OPS-059-aot-cache-has-two-silent-traps.md) | P1 | Выполнена | [RELEASE-1-28-0](../../releases/RELEASE-1-28-0.md) | deployment |
 | [Повторное закрепление версии в сборочном образе ничем не ловилось](CORE-OPS-061-second-pinning-in-the-build-image.md) | P1 | Выполнена | [RELEASE-1-33-0](../../releases/RELEASE-1-33-0.md) | build, tooling |
+| [Дерево сборки без истории роняет проверки непонятным отказом](CORE-OPS-062-build-tree-without-history.md) | P1 | Выполнена | [RELEASE-1-34-0](../../releases/RELEASE-1-34-0.md) | build, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

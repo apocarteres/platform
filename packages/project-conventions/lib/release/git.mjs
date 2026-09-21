@@ -12,6 +12,21 @@ async function git(root, args) {
   return stdout.trim();
 }
 
+// REQ-BUILD-012
+export const NOT_A_REPOSITORY = 'Дерево сборки не репозиторий: истории в нём нет.'
+  + ' Проверки, читающие историю, на таком дереве отказать обязаны, и это не их дефект.'
+  + ' Дерево сборки загружается репозиторием — например git bundle, — а не распакованным архивом';
+
+// REQ-BUILD-012
+export async function repositoryAt(root) {
+  try {
+    await run('git', ['-C', root, 'rev-parse', '--git-dir'], { env: environmentWithoutGit() });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function headCommit(root) {
   return git(root, ['rev-parse', 'HEAD']);
 }

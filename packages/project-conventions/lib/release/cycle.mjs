@@ -12,7 +12,7 @@ import { attested, readReceipt } from './receipt.mjs';
 import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
-import { createTag, headCommit, tagCommit, tagExists, workingTreeClean } from './git.mjs';
+import { NOT_A_REPOSITORY, createTag, headCommit, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
 export async function closability(root, { scheme }) {
@@ -199,6 +199,8 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
 
 // REQ-QUALITY-004
 export async function commitsWithoutATicket(root, range) {
+  // REQ-BUILD-012
+  if (!await repositoryAt(root)) throw new Error(NOT_A_REPOSITORY);
   const config = await readConfig(root);
   const baseline = config.commitRuleSince ?? null;
   // REQ-RELEASE-036

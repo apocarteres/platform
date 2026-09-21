@@ -19,7 +19,7 @@ opened-on: 2026-09-21
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-063](../tickets/CORE-OPS-063-step-contract-and-dependency-fingerprint.md) | Указана при открытии выпуска |
+| [CORE-OPS-063](../tickets/closed/CORE-OPS-063-step-contract-and-dependency-fingerprint.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

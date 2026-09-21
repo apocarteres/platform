@@ -17,12 +17,12 @@ import { collisions, dictionary } from '../lib/terms.mjs';
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { accountCommit, adoptCycle, cancelRelease, closeRelease, closability, commitsWithoutATicket, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import { accountCommit, adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, findObligationDebts, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
-import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../lib/health.mjs';
+import { commits, deps, health } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -552,51 +552,8 @@ async function releaseDefer(root, id, reason) {
   console.log(`Обязательство ${id} перенесено: ${reason}`);
 }
 
-// REQ-DEPLOYMENT-006
-async function health(url, timeout) {
-  if (!url) {
-    refuse(USAGE.health, 'проверка работоспособности требует адреса: ключ --url');
-    return;
-  }
-  const seconds = timeout === undefined ? DEFAULT_TIMEOUT_SECONDS : Number(timeout);
-  if (!Number.isFinite(seconds) || seconds <= 0) {
-    refuse(USAGE.health, `предел ожидания должен быть положительным числом секунд: ${timeout}`);
-    return;
-  }
-  const answer = await askTheService(url, { timeoutSeconds: seconds });
-  if (!answer.healthy) {
-    console.error(`Сервис работоспособность не подтвердил: ${answer.reason}`);
-    console.error(`Адрес: ${url}`);
-    // REQ-QUALITY-014
-    console.error('Проверку принимают заведомым отказом: остановите сервис и убедитесь, что шаг падает.');
-    process.exitCode = 1;
-    return;
-  }
-  console.log(`Сервис подтвердил работоспособность: ${answer.status}`);
-}
 
-// REQ-QUALITY-004
-async function commits(root, range) {
-  let found;
-  try {
-    found = await commitsWithoutATicket(root, range);
-  } catch (failure) {
-    console.error(`Коммиты прочитать не удалось: ${failure.message}`);
-    process.exitCode = 1;
-    return;
-  }
-  if (found.length === 0) {
-    console.log(range === null ? 'Все коммиты называют задачу.' : `Все коммиты диапазона ${range} называют задачу.`);
-    return;
-  }
-  console.error('Коммиты, не называющие задачу:');
-  for (const commit of found) console.error(`- ${commit.sha.slice(0, 8)}: «${commit.subject}»`);
-  // REQ-RELEASE-039
-  console.error('Пока коммит не отправлен, сообщение правится: git commit --amend либо интерактивное перебазирование.');
-  console.error('После отправки правка сообщения переписала бы общую историю: такой коммит учитывается');
-  console.error('в открытом выпуске командой release account <хеш> --reason "<причина>" (REQ-RELEASE-041).');
-  process.exitCode = 1;
-}
+
 
 // REQ-RELEASE-041
 async function releaseAccount(root, sha, reason) {
@@ -623,7 +580,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|deps|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -639,6 +596,8 @@ const USAGE = {
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
+  deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
+    + '\n  Код 0 — зависимости не менялись, ставить нечего; код 1 — изменились.',
   release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
 };
 
@@ -682,6 +641,7 @@ const SPEC = {
   naming: { values: ['--map'], positional: 1 },
   commits: { values: ['--range'] },
   health: { values: ['--url', '--timeout'] },
+  deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
 };
 
 // REQ-RELEASE-028
@@ -729,7 +689,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'obligations') await obligations(root);
     else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
     else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);
-    else if (command === 'health') await health(parsed.values.get('--url'), parsed.values.get('--timeout'));
+    else if (command === 'health') await health(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
+    else if (command === 'deps') await deps(root, parsed, { usage: USAGE, refuse });
     else await naming(root, parsed.positional[0], parsed.values.get('--map'));
   }
 }

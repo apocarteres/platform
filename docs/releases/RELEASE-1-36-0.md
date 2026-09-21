@@ -19,7 +19,7 @@ opened-on: 2026-09-21
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-064](../tickets/CORE-OPS-064-deployment-target-is-proved-not-trusted.md) | Указана при открытии выпуска |
+| [CORE-OPS-064](../tickets/closed/CORE-OPS-064-deployment-target-is-proved-not-trusted.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

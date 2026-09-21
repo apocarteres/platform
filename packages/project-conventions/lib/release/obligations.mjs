@@ -9,6 +9,32 @@ export const DIRECTIVE = 'директива';
 const packageRoot = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 
 // REQ-RELEASE-012
+// REQ-RELEASE-013
+const OBLIGATION_FIELDS = ['id', 'title', 'requirement', 'level', 'since', 'dueReleases', 'slug', 'area'];
+
+// REQ-RELEASE-013
+const TICKET_FIELDS = ['scope', 'priority', 'problem', 'required', 'acceptance'];
+
+// REQ-RELEASE-013
+export function catalogueProblems(obligations) {
+  if (!Array.isArray(obligations)) return ['каталог обязательств не перечень'];
+  const problems = [];
+  for (const [index, one] of obligations.entries()) {
+    const named = one?.id ?? `обязательство ${index + 1}`;
+    for (const field of OBLIGATION_FIELDS) {
+      if (one?.[field] === undefined) problems.push(`${named}: нет поля ${field}`);
+    }
+    for (const field of TICKET_FIELDS) {
+      if (one?.ticket?.[field] === undefined) problems.push(`${named}: нет поля ticket.${field}`);
+    }
+    for (const field of ['required', 'acceptance']) {
+      const value = one?.ticket?.[field];
+      if (value !== undefined && !Array.isArray(value)) problems.push(`${named}: ticket.${field} не перечень`);
+    }
+  }
+  return problems;
+}
+
 export async function loadObligations(root) {
   const candidates = [
     { file: path.join(root, 'packages/project-conventions/obligations.json'), core: true },
@@ -18,6 +44,11 @@ export async function loadObligations(root) {
   for (const candidate of candidates) {
     try {
       const parsed = JSON.parse(await readFile(candidate.file, 'utf8'));
+      // REQ-RELEASE-013
+      const problems = catalogueProblems(parsed.obligations);
+      if (problems.length > 0) {
+        throw new Error(`Каталог обязательств ${candidate.file} не принят:\n- ${problems.join('\n- ')}`);
+      }
       return { obligations: parsed.obligations, isCore: candidate.core };
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;

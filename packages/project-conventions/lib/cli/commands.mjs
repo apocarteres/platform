@@ -5,6 +5,7 @@ import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
 import { deployment } from '../components.mjs';
 import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
+import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
 
 // REQ-BUILD-013
 export async function deps(root, parsed, { usage, refuse }) {
@@ -128,4 +129,28 @@ export async function deployed(root, parsed, { usage, refuse }) {
     return;
   }
   console.log(`Развёрнуто собранное: ${answer.value.slice(0, 12)}`);
+}
+
+// REQ-DEPLOYMENT-002
+export async function manifest(root, parsed, { usage, refuse }) {
+  const environment = parsed.values.get('--env');
+  if (!environment) {
+    refuse(usage.manifest, 'манифест требует имени среды: ключ --env');
+    return;
+  }
+  const only = parsed.values.get('--only')?.split(',').map((one) => one.trim()).filter(Boolean) ?? null;
+  const built = await buildManifest(root, await readConfig(root), {
+    environment,
+    only,
+    reason: parsed.values.get('--untagged-reason') ?? null,
+  });
+  if (!built.written) {
+    console.error(`Манифест не записан: ${built.reason}`);
+    process.exitCode = 1;
+    return;
+  }
+  const file = await writeManifest(root, built.manifest, parsed.values.get('--file') ?? MANIFEST);
+  console.log(`Манифест записан: ${file}`);
+  const journal = parsed.values.get('--journal');
+  if (journal !== undefined) console.log(`Журнал дополнен: ${await appendJournal(journal, built.manifest)}`);
 }

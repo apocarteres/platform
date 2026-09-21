@@ -35,6 +35,17 @@ export async function workingTreeClean(root) {
   return (await git(root, ['status', '--porcelain'])) === '';
 }
 
+// REQ-DEPLOYMENT-002
+export async function tagOfHead(root) {
+  try {
+    const { stdout } = await run('git', ['-C', root, 'tag', '--points-at', 'HEAD'], { env: environmentWithoutGit() });
+    const tags = stdout.split('\n').map((line) => line.trim()).filter(Boolean);
+    return tags.length === 0 ? null : tags[0];
+  } catch {
+    return null;
+  }
+}
+
 export async function tagExists(root, tag) {
   const found = await git(root, ['tag', '--list', tag]);
   return found === tag;

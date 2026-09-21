@@ -505,7 +505,12 @@ export async function cancelRelease(root, { reason }) {
     [`Выпуск отменён, ничего не выпущено: ${reason.trim()}`],
   );
   await writeDocument(release.file, content);
-  return { cancelled: true, id, file: release.file };
+  // REQ-RELEASE-044
+  const composition = (await tickets(root)).filter((ticket) => ticket.metadata.get('release') === id);
+  for (const ticket of composition) {
+    await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'unassigned' }));
+  }
+  return { cancelled: true, id, file: release.file, released: composition.map(ticketId) };
 }
 
 // REQ-RELEASE-030

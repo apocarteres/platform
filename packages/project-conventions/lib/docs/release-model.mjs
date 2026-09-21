@@ -73,9 +73,12 @@ export function validateReleases(documents) {
         fail(`ссылка ${ticketId} не указывает на соответствующую задачу`);
         continue;
       }
-      if (ticket.metadata.get('release') !== id) fail(`у ${ticketId} указан другой выпуск или выпуск не назначен`);
-      if (membership.has(ticketId) && membership.get(ticketId) !== id) fail(`задача ${ticketId} включена в несколько выпусков`);
-      membership.set(ticketId, id);
+      // REQ-RELEASE-044
+      if (status !== 'cancelled') {
+        if (ticket.metadata.get('release') !== id) fail(`у ${ticketId} указан другой выпуск или выпуск не назначен`);
+        if (membership.has(ticketId) && membership.get(ticketId) !== id) fail(`задача ${ticketId} включена в несколько выпусков`);
+        membership.set(ticketId, id);
+      }
       if (['in_progress', 'released'].includes(status) && ticket.metadata.get('questions') === 'open') {
         fail(`у ${ticketId} остаются открытые вопросы`);
       }

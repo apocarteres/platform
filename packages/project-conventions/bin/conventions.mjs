@@ -432,6 +432,8 @@ async function releaseCancel(root, reason) {
     return;
   }
   console.log(`Выпуск ${result.id} отменён; следующий откройте явным номером: release open --version X.Y.Z.`);
+  // REQ-RELEASE-044
+  for (const ticket of result.released) console.log(`- задача ${ticket} вновь без выпуска: следующий выпуск подберёт её сам`);
 }
 
 // REQ-AGENT-WORK-018
@@ -505,8 +507,20 @@ async function releaseAdopt(root, version) {
   console.log(`Закрытых задач помечено как выпущенные до цикла: ${result.stamped.length}`);
   console.log(`Открыт первый выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
-  await updateTicketIndexes(root, { check: false });
-  await updateReleaseIndex(root, { check: false });
+}
+
+// REQ-RELEASE-043
+async function summariesAfterTheCycle(root) {
+  const problems = [
+    ...await updateTicketIndexes(root, { check: false }),
+    ...await refreshCompositionLinks(root, { check: false }),
+    ...await updateReleaseIndex(root, { check: false }),
+  ];
+  for (const problem of problems) console.error(`- ${problem}`);
+  if (problems.length > 0) {
+    process.exitCode = 1;
+    return;
+  }
   console.log('Сводки задач и выпусков собраны.');
 }
 
@@ -633,6 +647,9 @@ const RELEASE_SPEC = {
   account: { values: ['--reason'], positional: 1 },
 };
 
+// REQ-RELEASE-043
+const RELEASE_READS = new Set(['status']);
+
 // REQ-RELEASE-028
 const SPEC = {
   check: {},
@@ -741,4 +758,6 @@ async function release(argv) {
   else if (subcommand === 'drop') await releaseDrop(root, first, valueOf('--reason'));
   else if (subcommand === 'satisfy') await releaseSatisfy(root, first, valueOf('--ticket'));
   else await releaseAccount(root, first, valueOf('--reason'));
+  // REQ-RELEASE-043
+  if (!RELEASE_READS.has(subcommand) && !process.exitCode) await summariesAfterTheCycle(root);
 }

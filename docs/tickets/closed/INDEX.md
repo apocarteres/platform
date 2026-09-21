@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 123. Включены самостоятельные задачи и этапы планов функций.
+Всего: 124. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -84,6 +84,7 @@ authority: navigation
 | [Развёрнутое ничем не доказывает, что оно — собранное](CORE-OPS-066-deployed-proves-it-is-what-was-built.md) | P1 | Выполнена | [RELEASE-1-38-0](../../releases/RELEASE-1-38-0.md) | deployment, tooling |
 | [Манифест и журнал развёртывания написаны дважды](CORE-OPS-067-manifest-and-journal-from-the-declaration.md) | P1 | Выполнена | [RELEASE-1-39-0](../../releases/RELEASE-1-39-0.md) | deployment, tooling |
 | [Команды цикла правят задачи и оставляют сводки устаревшими](CORE-OPS-068-cycle-commands-leave-summaries-stale.md) | P1 | Выполнена | [RELEASE-1-41-0](../../releases/RELEASE-1-41-0.md) | release, tooling |
+| [Неизвестный адрес отвечает рабочей страницей](CORE-OPS-071-unknown-address-answers-as-a-working-page.md) | P1 | Выполнена | [RELEASE-1-42-0](../../releases/RELEASE-1-42-0.md) | deployment, client |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

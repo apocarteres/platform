@@ -1,17 +1,61 @@
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 
-// REQ-DEPLOYMENT-016
-export async function checksum(file) {
+// REQ-DEPLOYMENT-017
+async function fileSum(file) {
+  return createHash('sha256').update(await readFile(file)).digest('hex');
+}
+
+// REQ-DEPLOYMENT-017
+async function treeEntries(directory) {
+  const found = await readdir(directory, { recursive: true, withFileTypes: true });
+  const files = [];
+  const strange = [];
+  for (const entry of found) {
+    const name = path.relative(directory, path.join(entry.parentPath, entry.name));
+    if (entry.isFile()) files.push(name);
+    else if (!entry.isDirectory()) strange.push(name);
+  }
+  return { files, strange: strange.sort() };
+}
+
+// REQ-DEPLOYMENT-017
+export function sumOfTree(entries) {
+  const hash = createHash('sha256');
+  const ordered = [...entries].sort((one, other) => (one.name < other.name ? -1 : 1));
+  for (const { name, sum } of ordered) hash.update(`${name}\u0000${sum}\n`);
+  return hash.digest('hex');
+}
+
+// REQ-DEPLOYMENT-017
+async function treeSum(directory) {
+  const { files, strange } = await treeEntries(directory);
+  if (strange.length > 0) {
+    return { error: `в дереве ${directory} есть не файл и не каталог: ${strange.join(', ')};`
+      + ' сумма такого содержимого ничего не доказывает' };
+  }
+  if (files.length === 0) {
+    return { error: `артефакт пуст: ${directory};`
+      + ' у любых двух пустых каталогов сумма одна и та же, и сверка бы прошла, ничего не доказав' };
+  }
+  const entries = [];
+  for (const file of files) entries.push({ name: file, sum: await fileSum(path.join(directory, file)) });
+  return { value: sumOfTree(entries) };
+}
+
+// REQ-DEPLOYMENT-016, REQ-DEPLOYMENT-017
+export async function checksum(artifact) {
   try {
-    return { value: createHash('sha256').update(await readFile(file)).digest('hex') };
+    const about = await stat(artifact);
+    if (about.isDirectory()) return await treeSum(artifact);
+    return { value: await fileSum(artifact) };
   } catch (failure) {
-    if (failure.code === 'ENOENT') return { error: `артефакта нет: ${file}` };
+    if (failure.code === 'ENOENT') return { error: `артефакта нет: ${artifact}` };
     throw failure;
   }
 }

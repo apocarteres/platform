@@ -19,9 +19,9 @@ opened-on: 2026-09-21
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-068](../tickets/CORE-OPS-068-cycle-commands-leave-summaries-stale.md) | Указана при открытии выпуска |
-| [CORE-OPS-069](../tickets/CORE-OPS-069-cancel-locks-tickets-in-a-cancelled-release.md) | Указана при открытии выпуска |
-| [CORE-OPS-070](../tickets/CORE-OPS-070-artifact-may-be-a-directory.md) | Указана при открытии выпуска |
+| [CORE-OPS-068](../tickets/closed/CORE-OPS-068-cycle-commands-leave-summaries-stale.md) | Указана при открытии выпуска |
+| [CORE-OPS-069](../tickets/closed/CORE-OPS-069-cancel-locks-tickets-in-a-cancelled-release.md) | Указана при открытии выпуска |
+| [CORE-OPS-070](../tickets/closed/CORE-OPS-070-artifact-may-be-a-directory.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-070
 type: ticket
-status: backlog
+status: done
 scope: deployment, tooling
 authority: supporting
 priority: P0

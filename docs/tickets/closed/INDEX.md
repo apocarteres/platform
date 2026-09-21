@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 120. Включены самостоятельные задачи и этапы планов функций.
+Всего: 123. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -25,6 +25,8 @@ authority: navigation
 | [Отменённая задача держала закрытие выпуска](CORE-OPS-056-cancelled-ticket-held-the-release.md) | P0 | Выполнена | [RELEASE-1-26-0](../../releases/RELEASE-1-26-0.md) | tooling, release |
 | [Два требования одной поставки исключали друг друга](CORE-OPS-058-two-requirements-exclude-each-other.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | deployment |
 | [Проверка работоспособности соответствовала требованию и не проверяла ничего](CORE-OPS-060-health-check-confirmed-nothing.md) | P0 | Выполнена | [RELEASE-1-32-0](../../releases/RELEASE-1-32-0.md) | deployment, tooling |
+| [Отмена выпуска запирает задачи состава навсегда](CORE-OPS-069-cancel-locks-tickets-in-a-cancelled-release.md) | P0 | Выполнена | [RELEASE-1-41-0](../../releases/RELEASE-1-41-0.md) | release, tooling |
+| [Артефакт составляющей может быть каталогом, а сумма считалась только с файла](CORE-OPS-070-artifact-may-be-a-directory.md) | P0 | Выполнена | [RELEASE-1-41-0](../../releases/RELEASE-1-41-0.md) | deployment, tooling |
 | [Ядро не исполняет собственного требования о статическом разборе](CORE-QUAL-011-core-does-not-do-what-it-requires.md) | P0 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Доставленная настройка полагалась на состав группы, а не объявляла правило](CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Аннотация времени жизни ослепляет разбор Rust](CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | P0 | Выполнена | [RELEASE-1-31-0](../../releases/RELEASE-1-31-0.md) | rust, quality |
@@ -81,6 +83,7 @@ authority: navigation
 | [У развёртывания нет общего интерфейса](CORE-OPS-065-deployment-interface.md) | P1 | Выполнена | [RELEASE-1-37-0](../../releases/RELEASE-1-37-0.md) | deployment, tooling |
 | [Развёрнутое ничем не доказывает, что оно — собранное](CORE-OPS-066-deployed-proves-it-is-what-was-built.md) | P1 | Выполнена | [RELEASE-1-38-0](../../releases/RELEASE-1-38-0.md) | deployment, tooling |
 | [Манифест и журнал развёртывания написаны дважды](CORE-OPS-067-manifest-and-journal-from-the-declaration.md) | P1 | Выполнена | [RELEASE-1-39-0](../../releases/RELEASE-1-39-0.md) | deployment, tooling |
+| [Команды цикла правят задачи и оставляют сводки устаревшими](CORE-OPS-068-cycle-commands-leave-summaries-stale.md) | P1 | Выполнена | [RELEASE-1-41-0](../../releases/RELEASE-1-41-0.md) | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

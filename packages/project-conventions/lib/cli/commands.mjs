@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../health.mjs';
+import { DEFAULT_TIMEOUT_SECONDS as ABSENT_TIMEOUT_SECONDS, askForAbsent } from '../unknown-path.mjs';
 import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dependencies-state.mjs';
 import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
@@ -58,6 +59,30 @@ export async function health(url, timeout, { usage, refuse }) {
     return;
   }
   console.log(`Сервис подтвердил работоспособность: ${answer.status}`);
+}
+
+// REQ-DEPLOYMENT-018
+export async function unknown(url, timeout, { usage, refuse }) {
+  if (!url) {
+    refuse(usage.unknown, 'проверка неизвестного адреса требует адреса сайта: ключ --url');
+    return;
+  }
+  const seconds = timeout === undefined ? ABSENT_TIMEOUT_SECONDS : Number(timeout);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    refuse(usage.unknown, `предел ожидания должен быть положительным числом секунд: ${timeout}`);
+    return;
+  }
+  const answer = await askForAbsent(url, { timeoutSeconds: seconds });
+  if (!answer.proved) {
+    console.error('Неизвестный адрес отвечает не как неизвестный:');
+    for (const reason of answer.reasons) console.error(`- ${reason}`);
+    // REQ-DEPLOYMENT-018
+    console.error('Правило по расширению ставят после префиксов API с признаком точного совпадения:'
+      + ' совпавшее регулярное выражение побеждает обычный префикс');
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Неизвестный адрес отвечает как неизвестный: спрошено адресов ${answer.asked}`);
 }
 
 // REQ-QUALITY-004

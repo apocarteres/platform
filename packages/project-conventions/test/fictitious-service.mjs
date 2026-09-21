@@ -28,10 +28,19 @@ export async function fictitiousService({ ready = true } = {}) {
   return { ...service, readiness: service.url(READINESS), stop: service.stop, halt: () => { up = false; } };
 }
 
-// REQ-DEPLOYMENT-006
-export async function frontendProxy() {
+// REQ-DEPLOYMENT-018
+const LOOKS_LIKE_A_FILE = /\.[A-Za-z0-9]+$/;
+
+// REQ-DEPLOYMENT-006, REQ-DEPLOYMENT-018
+export async function frontendProxy({ masksUnknown = true } = {}) {
   // REQ-DEPLOYMENT-006
   const proxy = await listening((request, response) => {
+    // REQ-DEPLOYMENT-018
+    if (!masksUnknown && LOOKS_LIKE_A_FILE.test(new URL(request.url, 'http://proxy').pathname)) {
+      response.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
+      response.end('<!doctype html><html><body>не найдено</body></html>');
+      return;
+    }
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     response.end('<!doctype html><html><body>приложение</body></html>');
   });

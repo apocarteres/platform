@@ -12,7 +12,7 @@ related: REQ-PUBLISHING
 
 ## Что публикуется
 
-Ядро отдаёт потребителю Java-артефакты (`platform-bom`, `platform-persistence`, `platform-time`, `platform-web-errors`) и npm-пакеты: правила `@apocarteres/project-conventions` и библиотеки для клиента, например `@apocarteres/http`. Registry не используется: артефакты попадают в локальный репозиторий Maven, npm-пакет собирается архивом. Координаты и версии не изменились: версия берётся из тега, `REQ-PUBLISHING-002`.
+Ядро отдаёт потребителю Java-артефакты (`platform-bom`, `platform-persistence`, `platform-time`, `platform-web-errors`) и npm-пакеты: правила `@apocarteres/project-conventions` и библиотеки для клиента — `@apocarteres/http`, `@apocarteres/routing`. Registry не используется: артефакты попадают в локальный репозиторий Maven, npm-пакет собирается архивом. Координаты и версии не изменились: версия берётся из тега, `REQ-PUBLISHING-002`.
 
 ## Публикация
 

@@ -22,7 +22,7 @@ import { declaredObligations, findObligationDebts, loadObligations, obligationSt
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
-import { commits, components, deployed, deps, health, manifest as deployManifest } from '../lib/cli/commands.mjs';
+import { commits, components, deployed, deps, health, manifest as deployManifest, unknown } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -594,7 +594,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|deps|components|deployed|manifest|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|deps|components|deployed|manifest|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -610,6 +610,7 @@ const USAGE = {
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
+  unknown: 'conventions unknown --url <адрес сайта> [--timeout <с>]',
   manifest: 'conventions manifest --env <среда> [--only a,b] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
   components: 'conventions components [--environments] [--root <path>]'
@@ -662,6 +663,7 @@ const SPEC = {
   naming: { values: ['--map'], positional: 1 },
   commits: { values: ['--range'] },
   health: { values: ['--url', '--timeout'] },
+  unknown: { values: ['--url', '--timeout'] },
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
   components: { flags: ['--environments'] },
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
@@ -714,6 +716,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
     else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);
     else if (command === 'health') await health(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
+    // REQ-DEPLOYMENT-018
+    else if (command === 'unknown') await unknown(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
     else if (command === 'deps') await deps(root, parsed, { usage: USAGE, refuse });
     else if (command === 'components') await components(root, { environments: parsed.flags.has('--environments') });
     else if (command === 'deployed') await deployed(root, parsed, { usage: USAGE, refuse });

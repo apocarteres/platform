@@ -1,7 +1,7 @@
 ---
 id: CORE-QUAL-022
 type: ticket
-status: backlog
+status: done
 scope: quality, api, wiring
 authority: supporting
 priority: P0

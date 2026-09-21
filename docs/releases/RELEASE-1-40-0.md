@@ -19,7 +19,7 @@ opened-on: 2026-09-21
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-022](../tickets/CORE-QUAL-022-conditional-bean-decides-before-the-registry-exists.md) | Указана при открытии выпуска |
+| [CORE-QUAL-022](../tickets/closed/CORE-QUAL-022-conditional-bean-decides-before-the-registry-exists.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

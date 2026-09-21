@@ -31,7 +31,7 @@ class ApiErrorAdviceTest {
   private MockMvc mockMvc(ErrorCodeResolver codes, ErrorMessages messages) {
     return MockMvcBuilders.standaloneSetup(new Failing())
       .setControllerAdvice(new ApiErrorAdvice(
-        codes, messages, Optional.empty(), Optional.empty(), Optional.of(new ErrorMetrics(registry))
+        codes, messages, Optional.empty(), Optional.empty(), Optional.of(new ErrorMetrics(Optional.of(registry)))
       ))
       .build();
   }

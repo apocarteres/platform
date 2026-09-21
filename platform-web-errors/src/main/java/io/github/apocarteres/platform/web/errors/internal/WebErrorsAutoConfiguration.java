@@ -8,7 +8,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -56,11 +55,11 @@ public class WebErrorsAutoConfiguration {
   @ConditionalOnClass(MeterRegistry.class)
   static class MetricsConfiguration {
 
+    // REQ-QUALITY-015
     @Bean
-    @ConditionalOnBean(MeterRegistry.class)
     @ConditionalOnMissingBean
-    ErrorMetrics errorMetrics(MeterRegistry registry) {
-      return new ErrorMetrics(registry);
+    ErrorMetrics errorMetrics(ObjectProvider<MeterRegistry> registries) {
+      return new ErrorMetrics(Optional.ofNullable(registries.getIfAvailable()));
     }
   }
 }

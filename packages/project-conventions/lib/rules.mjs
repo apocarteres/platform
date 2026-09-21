@@ -10,6 +10,7 @@ import { findNamingIssues } from './document-naming.mjs';
 import { findForbiddenWords, findLongWordings } from './terms.mjs';
 import { findSourceSetsWithoutAnalysis } from './static-analysis.mjs';
 import { findRustExemptions } from './rust-exemptions.mjs';
+import { findOrderSensitiveWiring } from './wiring.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -105,6 +106,15 @@ export const RULES = [
     summary: 'Каждый набор исходников несёт статический разбор, роняющий сборку на предупреждениях',
     title: 'наборов исходников без статического разбора',
     find: findSourceSetsWithoutAnalysis,
+  },
+  {
+    id: 'wiring-conditions',
+    level: DIRECTIVE,
+    document: 'REQ-QUALITY',
+    file: 'quality-checks.md',
+    summary: 'Автонастройка не решает условием о чужом бине: порядок автонастроек ей не принадлежит',
+    title: 'условий автонастройки, зависящих от порядка',
+    find: findOrderSensitiveWiring,
   },
   {
     id: 'rust-exemptions',

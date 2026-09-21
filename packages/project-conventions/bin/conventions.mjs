@@ -22,7 +22,7 @@ import { declaredObligations, findObligationDebts, loadObligations, obligationSt
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
-import { commits, deps, health } from '../lib/cli/commands.mjs';
+import { commits, components, deps, health } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -580,7 +580,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|deps|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|deps|components|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -596,6 +596,8 @@ const USAGE = {
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
+  components: 'conventions components [--environments] [--root <path>]'
+    + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
     + '\n  Код 0 — зависимости не менялись, ставить нечего; код 1 — изменились.',
   release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
@@ -642,6 +644,7 @@ const SPEC = {
   commits: { values: ['--range'] },
   health: { values: ['--url', '--timeout'] },
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
+  components: { flags: ['--environments'] },
 };
 
 // REQ-RELEASE-028
@@ -691,6 +694,7 @@ if (command === undefined || command === '--help') {
     else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);
     else if (command === 'health') await health(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
     else if (command === 'deps') await deps(root, parsed, { usage: USAGE, refuse });
+    else if (command === 'components') await components(root, { environments: parsed.flags.has('--environments') });
     else await naming(root, parsed.positional[0], parsed.values.get('--map'));
   }
 }

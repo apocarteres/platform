@@ -2,6 +2,8 @@ import path from 'node:path';
 import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../health.mjs';
 import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dependencies-state.mjs';
 import { commitsWithoutATicket } from '../release/cycle.mjs';
+import { readConfig } from '../config.mjs';
+import { deployment } from '../components.mjs';
 
 // REQ-BUILD-013
 export async function deps(root, parsed, { usage, refuse }) {
@@ -77,4 +79,23 @@ export async function commits(root, range) {
   console.error('После отправки правка сообщения переписала бы общую историю: такой коммит учитывается');
   console.error('в открытом выпуске командой release account <хеш> --reason "<причина>" (REQ-RELEASE-041).');
   process.exitCode = 1;
+}
+
+// REQ-DEPLOYMENT-015
+export async function components(root, { environments = false } = {}) {
+  const declared = deployment(await readConfig(root));
+  if (!declared.declared) {
+    console.error('Развёртывание не объявлено: добавьте раздел deployment в .conventions.json');
+    console.error('  {"deployment": {"environments": ["prod"], "components": {"backend": {"artifact": "..."}}}}');
+    process.exitCode = 1;
+    return;
+  }
+  if (declared.problems.length > 0) {
+    console.error('Объявление развёртывания не принято:');
+    for (const problem of declared.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  const names = environments ? declared.environments : declared.components.map((one) => one.name);
+  for (const name of names) console.log(name);
 }

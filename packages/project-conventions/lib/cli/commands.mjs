@@ -4,6 +4,7 @@ import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dep
 import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
 import { deployment } from '../components.mjs';
+import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
 
 // REQ-BUILD-013
 export async function deps(root, parsed, { usage, refuse }) {
@@ -98,4 +99,33 @@ export async function components(root, { environments = false } = {}) {
   }
   const names = environments ? declared.environments : declared.components.map((one) => one.name);
   for (const name of names) console.log(name);
+}
+
+// REQ-DEPLOYMENT-016
+export async function deployed(root, parsed, { usage, refuse }) {
+  const artifact = parsed.values.get('--artifact');
+  const container = parsed.values.get('--container');
+  const installed = parsed.values.get('--installed');
+  const label = parsed.values.get('--label');
+  if (!artifact) {
+    refuse(usage.deployed, 'сверка требует собранного артефакта: ключ --artifact');
+    return;
+  }
+  if ((container === undefined) === (installed === undefined)) {
+    refuse(usage.deployed, 'назовите одно из двух: --container с --label либо --installed');
+    return;
+  }
+  if (container !== undefined && !label) {
+    refuse(usage.deployed, 'сверка по контейнеру требует метки: ключ --label');
+    return;
+  }
+  const answer = container !== undefined
+    ? await deployedInContainer(root, { artifact, container, label })
+    : await deployedAsFile(root, { artifact, installed });
+  if (!answer.proved) {
+    console.error(`Развёрнутое не подтвердило, что оно собранное: ${answer.reason}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Развёрнуто собранное: ${answer.value.slice(0, 12)}`);
 }

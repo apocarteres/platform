@@ -19,7 +19,7 @@ opened-on: 2026-09-21
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-066](../tickets/CORE-OPS-066-deployed-proves-it-is-what-was-built.md) | Указана при открытии выпуска |
+| [CORE-OPS-066](../tickets/closed/CORE-OPS-066-deployed-proves-it-is-what-was-built.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

@@ -386,13 +386,15 @@
           "Вход зовётся scripts/deploy.sh — один и тот же путь во всех проектах ядра (REQ-DEPLOYMENT-019).",
           "Доводы разбирает ядро: скрипт вызывает conventions deploy-args -- \"$@\" и читает строки env= и components=, а своего разбора не держит.",
           "Умолчания у среды нет: вызов без --env отказывает.",
-          "Рабочая среда называется production; prod, prd и live в объявлении отвергаются."
+          "Рабочая среда называется production; prod, prd и live в объявлении отвергаются.",
+          "Ключи предметной области проекта объявлены разделом deployment.arguments и разбираются тем же conventions deploy-args, а не переменными окружения (REQ-DEPLOYMENT-021)."
         ],
         "acceptance": [
           "`scripts/deploy.sh --env production` разворачивает все объявленные составляющие; `--only` сужает.",
           "Вызов без `--env` и вызов с позиционным именем среды отказывают формой вызова, напечатанной ядром.",
           "`.conventions.json` объявляет рабочую среду как `production`; `conventions components --environments` её печатает.",
-          "Правило `deploy-entry` в `check` замечаний не даёт."
+          "Правило `deploy-entry` в `check` замечаний не даёт.",
+          "`conventions deploy-args --usage` печатает форму вызова со всеми ключами проекта и пояснениями к ним."
         ]
       }
     },

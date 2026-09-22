@@ -5,7 +5,7 @@ import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dep
 import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
 import { deployment } from '../components.mjs';
-import { DEPLOY_USAGE, deployCall, deployLines } from '../deploy-entry.mjs';
+import { deployCall, deployLines, deployUsage } from '../deploy-entry.mjs';
 import { HELP } from './arguments.mjs';
 import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
 import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
@@ -151,21 +151,25 @@ export async function deployArgs(root, argv, { usage, refuse }) {
       return;
     }
     if (argv.includes('--usage')) {
-      console.log(DEPLOY_USAGE);
+      console.log(deployUsage(deployment(await readConfig(root))));
       return;
     }
     refuse(usage['deploy-args'], 'доводы скрипта передаются после --; форму вызова печатает ключ --usage');
     return;
   }
-  const call = deployCall(await readConfig(root), argv.slice(separator + 1));
+  const config = await readConfig(root);
+  const form = deployUsage(deployment(config));
+  const call = deployCall(config, argv.slice(separator + 1));
   if (call.usage) {
-    console.log(DEPLOY_USAGE);
+    console.log(form);
     return;
   }
   if (call.problems.length > 0) {
     console.error('Вызов развёртывания не принят:');
     for (const problem of call.problems) console.error(`- ${problem}`);
-    console.error(`Форма вызова: ${DEPLOY_USAGE}`);
+    console.error(`Форма вызова:\n${form}`);
+    // REQ-DEPLOYMENT-021
+    console.error('Ключи проекта объявляются в deployment.arguments: имя, берёт ли значение, пояснение');
     process.exitCode = 2;
     return;
   }

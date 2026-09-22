@@ -7,11 +7,30 @@ import { CONFIG_FILE } from './config.mjs';
 // REQ-DEPLOYMENT-019
 export const ENTRY = 'scripts/deploy.sh';
 
-// REQ-DEPLOYMENT-019
-export const DEPLOY_USAGE = `${ENTRY} --env <среда> [--only <составляющая[,составляющая]>]`;
+// REQ-DEPLOYMENT-019, REQ-DEPLOYMENT-021
+export const DEPLOY_USAGE = `${ENTRY} --env <среда> [--only <составляющая[,составляющая]>]`
+  + ' [--untagged-reason "<причина>"]';
 
-// REQ-DEPLOYMENT-019
-const SPEC = { values: ['--env', '--only'], positional: 1 };
+// REQ-DEPLOYMENT-019, REQ-DEPLOYMENT-021
+const CORE_VALUES = ['--env', '--only', '--untagged-reason'];
+
+// REQ-DEPLOYMENT-021
+export function deployUsage(declared) {
+  const own = (declared.arguments ?? []).map((one) => (one.value ? `[--${one.name} <значение>]` : `[--${one.name}]`));
+  const line = [DEPLOY_USAGE, ...own].join(' ');
+  const explained = (declared.arguments ?? []).map((one) => `  --${one.name} — ${one.summary}`);
+  return [line, ...explained].join('\n');
+}
+
+// REQ-DEPLOYMENT-021
+function specFor(declared) {
+  const own = declared.arguments ?? [];
+  return {
+    values: [...CORE_VALUES, ...own.filter((one) => one.value).map((one) => `--${one.name}`)],
+    flags: own.filter((one) => !one.value).map((one) => `--${one.name}`),
+    positional: 1,
+  };
+}
 
 // REQ-DEPLOYMENT-019
 function namedComponents(declared, only) {
@@ -34,7 +53,7 @@ export function deployCall(config, argv) {
     return { problems: ['развёртывание не объявлено: добавьте раздел deployment в .conventions.json'] };
   }
   if (declared.problems.length > 0) return { problems: declared.problems };
-  const parsed = parseArguments(argv, SPEC);
+  const parsed = parseArguments(argv, specFor(declared));
   if (parsed.help) return { usage: true };
   if (parsed.error) return { problems: [parsed.error] };
   // REQ-DEPLOYMENT-019
@@ -57,17 +76,32 @@ export function deployCall(config, argv) {
     };
   }
   const only = parsed.values.get('--only');
-  if (only === undefined) {
-    return { problems: [], environment, components: declared.components.map((one) => one.name) };
-  }
-  const named = namedComponents(declared.components, only);
-  if (named.problems.length > 0) return { problems: named.problems };
-  return { problems: [], environment, components: named.components };
+  const chosen = only === undefined
+    ? { problems: [], components: declared.components.map((one) => one.name) }
+    : namedComponents(declared.components, only);
+  if (chosen.problems.length > 0) return { problems: chosen.problems };
+  // REQ-DEPLOYMENT-021
+  const own = new Map((declared.arguments ?? []).map((one) => [
+    one.name,
+    one.value ? parsed.values.get(`--${one.name}`) ?? '' : (parsed.flags.has(`--${one.name}`) ? 'yes' : ''),
+  ]));
+  return {
+    problems: [],
+    environment,
+    components: chosen.components,
+    untaggedReason: parsed.values.get('--untagged-reason') ?? '',
+    own,
+  };
 }
 
-// REQ-DEPLOYMENT-019
-export function deployLines({ environment, components }) {
-  return [`env=${environment}`, `components=${components.join(',')}`];
+// REQ-DEPLOYMENT-019, REQ-DEPLOYMENT-021
+export function deployLines({ environment, components, untaggedReason = '', own = new Map() }) {
+  return [
+    `env=${environment}`,
+    `components=${components.join(',')}`,
+    `untagged-reason=${untaggedReason}`,
+    ...[...own].map(([name, value]) => `${name}=${value}`),
+  ];
 }
 
 // REQ-DEPLOYMENT-019

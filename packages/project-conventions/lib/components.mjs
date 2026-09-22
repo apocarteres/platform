@@ -47,6 +47,37 @@ function placeProblems(name, declared) {
   return problems;
 }
 
+// REQ-DEPLOYMENT-021
+export const CORE_ARGUMENTS = ['env', 'only', 'untagged-reason'];
+
+// REQ-DEPLOYMENT-021
+function argumentProblems(name, declared) {
+  const problems = [];
+  if (!NAME.test(name)) problems.push(`имя ключа «${name}»: строчные буквы, цифры и дефис, без двух дефисов впереди`);
+  if (CORE_ARGUMENTS.includes(name)) {
+    problems.push(`ключ «${name}» принадлежит ядру: он есть у входа всегда и объявлять его проекту не нужно`);
+  }
+  if (typeof declared?.summary !== 'string' || declared.summary.trim().length === 0) {
+    problems.push(`ключ «${name}» без пояснения: поле summary печатается в форме вызова`);
+  }
+  if (declared?.value !== undefined && typeof declared.value !== 'boolean') {
+    problems.push(`ключ «${name}»: поле value отвечает, берёт ли ключ значение, — да или нет`);
+  }
+  return problems;
+}
+
+// REQ-DEPLOYMENT-021
+function declaredArguments(declared) {
+  const entries = Object.entries(declared.arguments ?? {});
+  const problems = entries.flatMap(([name, one]) => argumentProblems(name, one));
+  return {
+    problems,
+    arguments: entries.map(([name, one]) => ({
+      name, value: one?.value === true, summary: one?.summary,
+    })),
+  };
+}
+
 // REQ-DEPLOYMENT-015, REQ-DEPLOYMENT-020
 function componentProblems(name, declared) {
   const problems = [];
@@ -76,7 +107,11 @@ export function deployment(config) {
   const components = Object.entries(declared.components ?? {});
   if (components.length === 0) problems.push('составляющие не объявлены: разворачивать нечего');
   for (const [name, one] of components) problems.push(...componentProblems(name, one));
+  // REQ-DEPLOYMENT-021
+  const named = declaredArguments(declared);
+  problems.push(...named.problems);
   return {
+    arguments: named.arguments,
     declared: true,
     // REQ-DEPLOYMENT-020
     components: components.map(([name, one]) => ({

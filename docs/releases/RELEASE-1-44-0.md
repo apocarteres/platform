@@ -19,7 +19,7 @@ opened-on: 2026-09-22
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-074](../tickets/CORE-OPS-074-deployment-carried-only-what-was-built.md) | Указана при открытии выпуска |
+| [CORE-OPS-074](../tickets/closed/CORE-OPS-074-deployment-carried-only-what-was-built.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

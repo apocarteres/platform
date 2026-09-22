@@ -12,6 +12,7 @@ import { findSourceSetsWithoutAnalysis } from './static-analysis.mjs';
 import { findRustExemptions } from './rust-exemptions.mjs';
 import { findOrderSensitiveWiring } from './wiring.mjs';
 import { findMissingDeployEntry } from './deploy-entry.mjs';
+import { findUndeliveredConfiguration } from './environment-config.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -116,6 +117,15 @@ export const RULES = [
     summary: 'У объявленного развёртывания есть вход scripts/deploy.sh — один и тот же во всех проектах',
     title: 'объявлений развёртывания без входа',
     find: findMissingDeployEntry,
+  },
+  {
+    id: 'environment-config',
+    level: DIRECTIVE,
+    document: 'REQ-DEPLOYMENT',
+    file: 'deployment.md',
+    summary: 'Настройка веб-сервера и описание службы объявлены составляющими и едут развёртыванием',
+    title: 'настроек среды вне составляющих',
+    find: findUndeliveredConfiguration,
   },
   {
     id: 'wiring-conditions',

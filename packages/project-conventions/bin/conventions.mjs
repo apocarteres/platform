@@ -611,7 +611,7 @@ const USAGE = {
   'deploy-args': 'conventions deploy-args [--root <path>] -- <доводы скрипта>   |   conventions deploy-args --usage',
   manifest: 'conventions manifest --env <среда> [--only a,b] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
-  components: 'conventions components [--environments] [--root <path>]'
+  components: 'conventions components [--environments|--full] [--root <path>]'
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
     + '\n  Код 0 — зависимости не менялись, ставить нечего; код 1 — изменились.',
@@ -663,7 +663,7 @@ const SPEC = {
   health: { values: ['--url', '--timeout'] },
   unknown: { values: ['--url', '--timeout'] },
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
-  components: { flags: ['--environments'] },
+  components: { flags: ['--environments', '--full'] },
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
   manifest: { values: ['--env', '--only', '--file', '--journal', '--untagged-reason'] },
 };
@@ -720,7 +720,13 @@ if (command === undefined || command === '--help') {
     // REQ-DEPLOYMENT-018
     else if (command === 'unknown') await unknown(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
     else if (command === 'deps') await deps(root, parsed, { usage: USAGE, refuse });
-    else if (command === 'components') await components(root, { environments: parsed.flags.has('--environments') });
+    else if (command === 'components') {
+      // REQ-DEPLOYMENT-020
+      await components(root, {
+        environments: parsed.flags.has('--environments'),
+        full: parsed.flags.has('--full'),
+      });
+    }
     else if (command === 'deployed') await deployed(root, parsed, { usage: USAGE, refuse });
     else if (command === 'manifest') await deployManifest(root, parsed, { usage: USAGE, refuse });
     else await naming(root, parsed.positional[0], parsed.values.get('--map'));

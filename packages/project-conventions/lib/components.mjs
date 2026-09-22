@@ -20,13 +20,41 @@ function environmentProblem(environment) {
   return null;
 }
 
-// REQ-DEPLOYMENT-015
+// REQ-DEPLOYMENT-020
+export const VERIFY_PLACEHOLDER = '{}';
+
+// REQ-DEPLOYMENT-020
+function placeProblems(name, declared) {
+  const problems = [];
+  const install = declared?.install;
+  if (install !== undefined && (typeof install !== 'string' || install.trim().length === 0)) {
+    problems.push(`составляющая ${name}: поле install называет путь в среде, а не пустое значение`);
+  }
+  const verify = declared?.verify;
+  if (verify === undefined) return problems;
+  if (typeof verify !== 'string' || verify.trim().length === 0) {
+    problems.push(`составляющая ${name}: поле verify называет команду разбора, а не пустое значение`);
+    return problems;
+  }
+  if (!verify.includes(VERIFY_PLACEHOLDER)) {
+    problems.push(`составляющая ${name}: в команде verify нет места для пути «${VERIFY_PLACEHOLDER}»:`
+      + ' разбирать надо тот файл, который собран, а не тот, что уже лежит в среде');
+  }
+  if (declared?.install === undefined) {
+    problems.push(`составляющая ${name}: разбор объявлен, а место установки нет:`
+      + ' разбирают перед тем, как положить, а класть некуда');
+  }
+  return problems;
+}
+
+// REQ-DEPLOYMENT-015, REQ-DEPLOYMENT-020
 function componentProblems(name, declared) {
   const problems = [];
   if (!NAME.test(name)) problems.push(`имя составляющей «${name}»: строчные буквы, цифры и дефис`);
   if (typeof declared?.artifact !== 'string' || declared.artifact.length === 0) {
-    problems.push(`составляющая ${name} без артефакта: назовите путь, появление которого утверждает её шаг сборки (REQ-BUILD-013)`);
+    problems.push(`составляющая ${name} без артефакта: назовите путь — собранный шагом сборки (REQ-BUILD-013) либо ведомый в репозитории`);
   }
+  problems.push(...placeProblems(name, declared));
   return problems;
 }
 
@@ -50,7 +78,10 @@ export function deployment(config) {
   for (const [name, one] of components) problems.push(...componentProblems(name, one));
   return {
     declared: true,
-    components: components.map(([name, one]) => ({ name, artifact: one?.artifact })),
+    // REQ-DEPLOYMENT-020
+    components: components.map(([name, one]) => ({
+      name, artifact: one?.artifact, install: one?.install ?? null, verify: one?.verify ?? null,
+    })),
     environments: Array.isArray(environments) ? environments : [],
     problems,
   };

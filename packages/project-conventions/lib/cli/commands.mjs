@@ -111,7 +111,7 @@ export async function commits(root, range) {
 }
 
 // REQ-DEPLOYMENT-015
-export async function components(root, { environments = false } = {}) {
+export async function components(root, { environments = false, full = false } = {}) {
   const declared = deployment(await readConfig(root));
   if (!declared.declared) {
     console.error('Развёртывание не объявлено: добавьте раздел deployment в .conventions.json');
@@ -127,8 +127,18 @@ export async function components(root, { environments = false } = {}) {
     process.exitCode = 1;
     return;
   }
-  const names = environments ? declared.environments : declared.components.map((one) => one.name);
-  for (const name of names) console.log(name);
+  if (environments) {
+    for (const name of declared.environments) console.log(name);
+    return;
+  }
+  // REQ-DEPLOYMENT-020
+  if (full) {
+    for (const one of declared.components) {
+      console.log([one.name, one.artifact, one.install ?? '', one.verify ?? ''].join('\t'));
+    }
+    return;
+  }
+  for (const one of declared.components) console.log(one.name);
 }
 
 // REQ-DEPLOYMENT-019

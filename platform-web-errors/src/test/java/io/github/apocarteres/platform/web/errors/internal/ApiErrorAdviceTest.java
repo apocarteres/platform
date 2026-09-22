@@ -8,12 +8,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.github.apocarteres.platform.web.errors.ErrorCode;
 import io.github.apocarteres.platform.web.errors.ErrorCodeResolver;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -95,5 +102,65 @@ class ApiErrorAdviceTest {
     String rejected() {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "тело запроса не разобрано");
     }
+  }
+
+  // REQ-API-010
+  private final ListAppender<ILoggingEvent> records = new ListAppender<>();
+
+  // REQ-API-010
+  @BeforeEach
+  void listen() {
+    records.start();
+    ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ApiErrorAdvice.class)).addAppender(records);
+  }
+
+  @AfterEach
+  void stopListening() {
+    ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ApiErrorAdvice.class)).detachAppender(records);
+    records.stop();
+  }
+
+  private List<ILoggingEvent> failures() {
+    return records.list.stream().filter(event -> event.getLevel() == Level.ERROR).toList();
+  }
+
+  // REQ-API-010
+  @Test
+  @DisplayName("Отказ без объявленного кода сохраняется в журнале вместе с исключением")
+  void keepsTheUnexplained() throws Exception {
+    mockMvc(failure -> Optional.empty(), new StatusErrorMessages())
+      .perform(get("/players/17"))
+      .andExpect(status().isInternalServerError())
+      .andExpect(jsonPath("$.code").value("unexpected"));
+
+    Assertions.assertThat(failures()).hasSize(1);
+    ILoggingEvent kept = failures().get(0);
+    Assertions.assertThat(kept.getFormattedMessage())
+      .contains("GET /players/17")
+      .contains("500")
+      .contains("unexpected");
+    Assertions.assertThat(kept.getThrowableProxy()).isNotNull();
+    Assertions.assertThat(kept.getThrowableProxy().getClassName()).isEqualTo(NoSuchElementException.class.getName());
+    Assertions.assertThat(kept.getThrowableProxy().getMessage()).contains("пароль администратора");
+  }
+
+  // REQ-API-010
+  @Test
+  @DisplayName("Отказ с объявленным кодом и отказ клиента журнал не шевелят")
+  void staysSilentOnDeclaredAndOnClientFailures() throws Exception {
+    mockMvc(failure -> Optional.of(ErrorCode.of("player-not-found", HttpStatus.NOT_FOUND)), new StatusErrorMessages())
+      .perform(get("/players/17"))
+      .andExpect(status().isNotFound());
+    Assertions.assertThat(failures()).isEmpty();
+
+    mockMvc(failure -> Optional.of(ErrorCode.of("storage-down", HttpStatus.SERVICE_UNAVAILABLE)), new StatusErrorMessages())
+      .perform(get("/players/17"))
+      .andExpect(status().isServiceUnavailable());
+    Assertions.assertThat(failures()).as("объявленный потребителем отказ службы молчалив").isEmpty();
+
+    mockMvc(failure -> Optional.empty(), new StatusErrorMessages())
+      .perform(get("/rejected"))
+      .andExpect(status().isBadRequest());
+    Assertions.assertThat(failures()).as("отказ клиента не есть отказ службы").isEmpty();
   }
 }

@@ -7,6 +7,8 @@ import io.github.apocarteres.platform.web.errors.ErrorHeaders;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Map;
@@ -24,6 +26,9 @@ import org.springframework.web.context.request.WebRequest;
 // REQ-API-001, REQ-API-005
 @RestControllerAdvice
 class ApiErrorAdvice {
+
+  // REQ-API-010
+  private static final Log LOG = LogFactory.getLog(ApiErrorAdvice.class);
 
   private final ErrorCodeResolver codes;
   private final ErrorMessages messages;
@@ -47,7 +52,12 @@ class ApiErrorAdvice {
 
   @ExceptionHandler(Throwable.class)
   ResponseEntity<ProblemDetail> onFailure(Throwable failure, WebRequest request) {
-    ErrorCode code = codes.resolve(failure).orElseGet(() -> fallbackFor(failure));
+    Optional<ErrorCode> resolved = codes.resolve(failure);
+    ErrorCode code = resolved.orElseGet(() -> fallbackFor(failure));
+    // REQ-API-010
+    if (resolved.isEmpty() && code.status().is5xxServerError()) {
+      LOG.error(unexplained(code, request), failure);
+    }
     ProblemDetail detail = ProblemDetail.forStatus(code.status());
     detail.setTitle(code.status().getReasonPhrase());
     detail.setDetail(messages.detailFor(code, localeOf(request)));
@@ -60,6 +70,14 @@ class ApiErrorAdvice {
       .headers(headersFor(failure, code))
       .contentType(MediaType.APPLICATION_PROBLEM_JSON)
       .body(detail);
+  }
+
+  // REQ-API-010
+  private static String unexplained(ErrorCode code, WebRequest request) {
+    HttpServletRequest servlet = servletRequestOf(request);
+    String where = servlet == null ? "вне запроса" : servlet.getMethod() + " " + servlet.getRequestURI();
+    return "Отказ без объявленного кода: " + where + " отдан как " + code.status().value()
+      + " с кодом " + code.value() + ". Причина сохранена здесь, потому что клиенту она не отдаётся";
   }
 
   // REQ-API-007

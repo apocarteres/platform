@@ -53,11 +53,49 @@ describe('порт неизвестного адреса', () => {
       .toThrowError(/два ответа на один вопрос/);
   });
 
-  it('отказывает, когда порт страницы не объявляет', () => {
-    const empty = {} as { notFound: typeof NotFoundPage };
-
-    expect(() => withUnknownPath(APPLICATION, empty))
+  it('отказывает, когда порт страницы не объявляет или объявляет дважды', () => {
+    expect(() => withUnknownPath(APPLICATION, {}))
       .toThrowError(/ядро требует решения, а не подставляет своё/);
+
+    expect(() => withUnknownPath(APPLICATION, {
+      notFound: NotFoundPage,
+      loadNotFound: () => Promise.resolve(NotFoundPage),
+    })).toThrowError(/объявляет страницу дважды/);
+  });
+});
+
+// REQ-DEPLOYMENT-018
+describe('порт на лениво загружаемых маршрутах', () => {
+  const lobby = () => Promise.resolve(LobbyPage);
+  const LAZY: Routes = [
+    { path: '', loadComponent: lobby },
+    { path: 'inventory', loadComponent: () => import('./index').then(() => InventoryPage) },
+  ];
+
+  it('ловит тот же загрузчик', () => {
+    expect(() => withUnknownPath(LAZY, { loadNotFound: lobby }))
+      .toThrowError(/тем же загрузчиком, что рабочая страница «\/»/);
+  });
+
+  it('ловит тот же модуль, объявленный рядом', () => {
+    expect(() => withUnknownPath(LAZY, { loadNotFound: () => import('./index').then(() => NotFoundPage) }))
+      .toThrowError(/из того же модуля, что рабочая страница «\/inventory»/);
+  });
+
+  it('чужой загрузчик из другого модуля пропускается', () => {
+    const routes = withUnknownPath(LAZY, { loadNotFound: () => import('@angular/router').then(() => NotFoundPage) });
+
+    expect(routes).toHaveLength(LAZY.length + 1);
+    expect(routes.at(-1)?.path).toBe(UNKNOWN_PATH);
+    expect(routes.at(-1)?.loadComponent).toBeTypeOf('function');
+  });
+
+  it('отказывает, когда сравнивать не с чем', () => {
+    expect(() => withUnknownPath(LAZY, { notFound: NotFoundPage }))
+      .toThrowError(/сравнить не с чем[\s\S]*loadNotFound/);
+
+    expect(() => withUnknownPath(APPLICATION, { loadNotFound: () => Promise.resolve(NotFoundPage) }))
+      .toThrowError(/сравнить не с чем[\s\S]*notFound/);
   });
 });
 

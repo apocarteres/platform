@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -33,6 +34,20 @@ export async function headCommit(root) {
 
 export async function workingTreeClean(root) {
   return (await git(root, ['status', '--porcelain'])) === '';
+}
+
+// REQ-RELEASE-045
+export const OUTSIDE_THE_CODE = ['docs/', '.conventions/'];
+
+// REQ-RELEASE-045
+export async function codeTree(root, commit) {
+  const listing = await git(root, ['ls-tree', '-r', '--full-tree', commit]);
+  const lines = listing === '' ? [] : listing.split('\n');
+  const code = lines.filter((line) => {
+    const file = line.slice(line.indexOf('\t') + 1);
+    return !OUTSIDE_THE_CODE.some((prefix) => file.startsWith(prefix));
+  });
+  return createHash('sha256').update(code.sort().join('\n')).digest('hex');
 }
 
 // REQ-DEPLOYMENT-002

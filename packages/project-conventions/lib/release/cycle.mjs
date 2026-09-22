@@ -8,11 +8,11 @@ import {
 import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
-import { attested, readReceipt } from './receipt.mjs';
+import { attested, receiptFor } from './receipt.mjs';
 import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
-import { NOT_A_REPOSITORY, createTag, headCommit, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
+import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
 export async function closability(root, { scheme }) {
@@ -26,14 +26,21 @@ export async function closability(root, { scheme }) {
       + ' Зафиксируйте изменения коммитом своей задачи либо отбросьте их');
   }
   const commit = await headCommit(root);
-  const receipt = await readReceipt(root, commit);
+  // REQ-RELEASE-045
+  const found = await receiptFor(root, commit, { treeOf: (sha) => codeTree(root, sha) });
+  const receipt = found.receipt;
   // REQ-RELEASE-039
   if (receipt === null) {
     problems.push(`Нет расписки о пройденном verify для ${commit.slice(0, 8)}:`
-      + ' запишите её командой conventions receipt --checks verify -- <команда набора>');
+      + ' запишите её командой conventions receipt --checks verify -- <команда набора>.'
+      + ' Служебные правки выпуска расписку не обесценивают (REQ-RELEASE-045):'
+      + ' если расписки нет вовсе, менялся код — сначала разберите всё, что называет release status, и только потом записывайте расписку');
   } else if (!attested(receipt)) {
     problems.push(`Расписка для ${commit.slice(0, 8)} не содержит признака прогона: наборы заявлены, но не наблюдались.`
       + ' Перезапишите её командой conventions receipt: заявить набор вручную контур выпуска не позволяет');
+  } else if (found.carriedFrom !== null) {
+    // REQ-RELEASE-045
+    problems.push(...await documentsSinceTheReceipt(root, config, found.carriedFrom));
   }
   const composition = release === null
     ? []
@@ -365,7 +372,8 @@ export async function finishRelease(root, { scheme, today, note }) {
     .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id && shipsResult(item)))
     .map((obligation) => obligation.id);
   const deferredNow = Object.keys(state.state.deferred ?? {});
-  const receipt = await readReceipt(root, commit);
+  // REQ-RELEASE-045
+  const receipt = (await receiptFor(root, commit, { treeOf: (sha) => codeTree(root, sha) })).receipt;
   content = replaceSection(
     content,
     '## Критерии выхода',
@@ -690,6 +698,18 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
     // REQ-RELEASE-019
     unclaimed: unclaimed.map((entry) => ({ ticket: ticketId(entry.ticket), obligation: entry.obligation.id })),
   };
+}
+
+// REQ-RELEASE-045
+async function documentsSinceTheReceipt(root, config, carriedFrom) {
+  const { documentationProblems } = await import('../docs/documentation.mjs');
+  const { errors } = await documentationProblems(root, config);
+  if (errors.length === 0) return [];
+  return [
+    `Расписка перенесена с ${carriedFrom.slice(0, 8)}: код с тех пор не менялся, а документы менялись`
+    + ` и согласованными больше не являются (${errors.length}):`,
+    ...errors.map((error) => `  ${error}`),
+  ];
 }
 
 // REQ-RELEASE-033

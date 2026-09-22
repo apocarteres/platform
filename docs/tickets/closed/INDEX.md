@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 129. Включены самостоятельные задачи и этапы планов функций.
+Всего: 130. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -30,6 +30,7 @@ authority: navigation
 | [Развёртывание везло только собранное](CORE-OPS-074-deployment-carried-only-what-was-built.md) | P0 | Выполнена | [RELEASE-1-44-0](../../releases/RELEASE-1-44-0.md) | deployment, operations |
 | [Порт неизвестного адреса не видел лениво загружаемых страниц](CORE-OPS-075-port-did-not-see-lazy-pages.md) | P0 | Выполнена | [RELEASE-1-45-0](../../releases/RELEASE-1-45-0.md) | deployment, client |
 | [Тег до раската сжигал номер выпуска](CORE-OPS-076-tag-before-rollout-burned-the-number.md) | P0 | Выполнена | [RELEASE-1-45-0](../../releases/RELEASE-1-45-0.md) | release, tooling |
+| [Закрытая грамматика входа не оставила потребителю законного хода](CORE-OPS-077-closed-grammar-left-no-lawful-move.md) | P0 | Выполнена | [RELEASE-1-46-0](../../releases/RELEASE-1-46-0.md) | deployment, build |
 | [Ядро не исполняет собственного требования о статическом разборе](CORE-QUAL-011-core-does-not-do-what-it-requires.md) | P0 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Доставленная настройка полагалась на состав группы, а не объявляла правило](CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Аннотация времени жизни ослепляет разбор Rust](CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | P0 | Выполнена | [RELEASE-1-31-0](../../releases/RELEASE-1-31-0.md) | rust, quality |

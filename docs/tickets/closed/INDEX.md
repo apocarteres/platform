@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 127. Включены самостоятельные задачи и этапы планов функций.
+Всего: 129. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -28,6 +28,8 @@ authority: navigation
 | [Отмена выпуска запирает задачи состава навсегда](CORE-OPS-069-cancel-locks-tickets-in-a-cancelled-release.md) | P0 | Выполнена | [RELEASE-1-41-0](../../releases/RELEASE-1-41-0.md) | release, tooling |
 | [Артефакт составляющей может быть каталогом, а сумма считалась только с файла](CORE-OPS-070-artifact-may-be-a-directory.md) | P0 | Выполнена | [RELEASE-1-41-0](../../releases/RELEASE-1-41-0.md) | deployment, tooling |
 | [Развёртывание везло только собранное](CORE-OPS-074-deployment-carried-only-what-was-built.md) | P0 | Выполнена | [RELEASE-1-44-0](../../releases/RELEASE-1-44-0.md) | deployment, operations |
+| [Порт неизвестного адреса не видел лениво загружаемых страниц](CORE-OPS-075-port-did-not-see-lazy-pages.md) | P0 | Выполнена | [RELEASE-1-45-0](../../releases/RELEASE-1-45-0.md) | deployment, client |
+| [Тег до раската сжигал номер выпуска](CORE-OPS-076-tag-before-rollout-burned-the-number.md) | P0 | Выполнена | [RELEASE-1-45-0](../../releases/RELEASE-1-45-0.md) | release, tooling |
 | [Ядро не исполняет собственного требования о статическом разборе](CORE-QUAL-011-core-does-not-do-what-it-requires.md) | P0 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, build |
 | [Доставленная настройка полагалась на состав группы, а не объявляла правило](CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Аннотация времени жизни ослепляет разбор Rust](CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | P0 | Выполнена | [RELEASE-1-31-0](../../releases/RELEASE-1-31-0.md) | rust, quality |

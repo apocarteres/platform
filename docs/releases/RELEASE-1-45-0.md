@@ -19,8 +19,8 @@ opened-on: 2026-09-22
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-075](../tickets/CORE-OPS-075-port-did-not-see-lazy-pages.md) | Указана при открытии выпуска |
-| [CORE-OPS-076](../tickets/CORE-OPS-076-tag-before-rollout-burned-the-number.md) | Указана при открытии выпуска |
+| [CORE-OPS-075](../tickets/closed/CORE-OPS-075-port-did-not-see-lazy-pages.md) | Указана при открытии выпуска |
+| [CORE-OPS-076](../tickets/closed/CORE-OPS-076-tag-before-rollout-burned-the-number.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

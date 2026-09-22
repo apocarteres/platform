@@ -11,7 +11,7 @@ import { environmentWithoutGit } from '../lib/release/git.mjs';
 const run = promisify(execFile);
 const CONFIG = {
   deployment: {
-    environments: ['qa', 'prod'],
+    environments: ['qa', 'production'],
     components: {
       backend: { artifact: 'backend/target/app.jar' },
       frontend: { artifact: 'frontend/dist/index.html' },
@@ -38,14 +38,14 @@ async function project({ tag = null } = {}) {
 test('манифест собирается по объявленным составляющим, а не по именам в коде', async () => {
   const root = await project({ tag: 'v1.0.0' });
   try {
-    const built = await buildManifest(root, CONFIG, { environment: 'prod' });
+    const built = await buildManifest(root, CONFIG, { environment: 'production' });
 
     assert.equal(built.written, true, built.reason);
     assert.deepEqual(built.manifest.components.map((one) => one.name), ['backend', 'frontend']);
     assert.match(built.manifest.components[0].sha256, /^[0-9a-f]{64}$/);
     assert.equal(built.manifest.releaseTag, 'v1.0.0');
     assert.equal(built.manifest.untaggedReason, null);
-    assert.equal(built.manifest.environment, 'prod');
+    assert.equal(built.manifest.environment, 'production');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -55,11 +55,11 @@ test('манифест собирается по объявленным сост
 test('непомеченный коммит требует названной причины, а не проходит молча', async () => {
   const root = await project();
   try {
-    const refused = await buildManifest(root, CONFIG, { environment: 'prod' });
+    const refused = await buildManifest(root, CONFIG, { environment: 'production' });
     assert.equal(refused.written, false);
     assert.match(refused.reason, /не помечен тегом/);
 
-    const withReason = await buildManifest(root, CONFIG, { environment: 'prod', reason: 'срочное исправление' });
+    const withReason = await buildManifest(root, CONFIG, { environment: 'production', reason: 'срочное исправление' });
     assert.equal(withReason.written, true, withReason.reason);
     assert.equal(withReason.manifest.releaseTag, null);
     assert.equal(withReason.manifest.untaggedReason, 'срочное исправление');
@@ -75,11 +75,11 @@ test('неизвестная среда и неизвестная составл
     const environment = await buildManifest(root, CONFIG, { environment: 'staging' });
     assert.match(environment.reason, /среда staging не объявлена; объявлены: qa, prod/);
 
-    const component = await buildManifest(root, CONFIG, { environment: 'prod', only: ['backend', 'агент'] });
+    const component = await buildManifest(root, CONFIG, { environment: 'production', only: ['backend', 'агент'] });
     assert.match(component.reason, /составляющие не объявлены: агент/);
 
-    const missing = await buildManifest(root, { deployment: { environments: ['prod'], components: {
-      backend: { artifact: 'нет/такого.jar' } } } }, { environment: 'prod' });
+    const missing = await buildManifest(root, { deployment: { environments: ['production'], components: {
+      backend: { artifact: 'нет/такого.jar' } } } }, { environment: 'production' });
     assert.match(missing.reason, /backend: артефакта нет/, 'манифест не пишется по несобранному');
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -91,7 +91,7 @@ test('манифест ложится файлом, журнал — строк�
   const root = await project({ tag: 'v1.0.0' });
   const journal = path.join(root, '..', `journal-${path.basename(root)}.log`);
   try {
-    const built = await buildManifest(root, CONFIG, { environment: 'prod' });
+    const built = await buildManifest(root, CONFIG, { environment: 'production' });
     const file = await writeManifest(root, built.manifest);
     const written = JSON.parse(await readFile(file, 'utf8'));
     assert.equal(written.commit, built.manifest.commit);
@@ -101,7 +101,7 @@ test('манифест ложится файлом, журнал — строк�
     const lines = (await readFile(journal, 'utf8')).trim().split('\n');
 
     assert.equal(lines.length, 2, 'журнал дополняется, а не переписывается');
-    assert.match(lines[0], /env=prod commit=[0-9a-f]{40} tag=v1\.0\.0 components=backend,frontend/);
+    assert.match(lines[0], /env=production commit=[0-9a-f]{40} tag=v1\.0\.0 components=backend,frontend/);
   } finally {
     await rm(root, { recursive: true, force: true });
     await rm(journal, { force: true });
@@ -110,7 +110,7 @@ test('манифест ложится файлом, журнал — строк�
 
 // REQ-DEPLOYMENT-002
 test('строка журнала различает тег и объявленную причину его отсутствия', () => {
-  const base = { environment: 'prod', commit: 'abc', createdAt: '2026-09-21T00:00:00.000Z', components: [{ name: 'backend' }] };
+  const base = { environment: 'production', commit: 'abc', createdAt: '2026-09-21T00:00:00.000Z', components: [{ name: 'backend' }] };
 
   assert.match(journalLine({ ...base, releaseTag: 'v1.0.0', untaggedReason: null }), /tag=v1\.0\.0/);
   assert.match(journalLine({ ...base, releaseTag: null, untaggedReason: 'срочно' }), /tag=none exception=срочно/);

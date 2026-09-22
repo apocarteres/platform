@@ -5,6 +5,8 @@ import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dep
 import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
 import { deployment } from '../components.mjs';
+import { DEPLOY_USAGE, deployCall, deployLines } from '../deploy-entry.mjs';
+import { HELP } from './arguments.mjs';
 import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
 import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
 
@@ -113,7 +115,9 @@ export async function components(root, { environments = false } = {}) {
   const declared = deployment(await readConfig(root));
   if (!declared.declared) {
     console.error('Развёртывание не объявлено: добавьте раздел deployment в .conventions.json');
-    console.error('  {"deployment": {"environments": ["prod"], "components": {"backend": {"artifact": "..."}}}}');
+    // REQ-DEPLOYMENT-019
+    console.error('  {"deployment": {"environments": ["local", "qa", "production"],'
+      + ' "components": {"backend": {"artifact": "..."}}}}');
     process.exitCode = 1;
     return;
   }
@@ -125,6 +129,37 @@ export async function components(root, { environments = false } = {}) {
   }
   const names = environments ? declared.environments : declared.components.map((one) => one.name);
   for (const name of names) console.log(name);
+}
+
+// REQ-DEPLOYMENT-019
+export async function deployArgs(root, argv, { usage, refuse }) {
+  const separator = argv.indexOf('--');
+  // REQ-RELEASE-028
+  if (separator === -1 || argv.slice(0, separator).includes(HELP)) {
+    if (argv.includes(HELP)) {
+      console.log(usage['deploy-args']);
+      return;
+    }
+    if (argv.includes('--usage')) {
+      console.log(DEPLOY_USAGE);
+      return;
+    }
+    refuse(usage['deploy-args'], 'доводы скрипта передаются после --; форму вызова печатает ключ --usage');
+    return;
+  }
+  const call = deployCall(await readConfig(root), argv.slice(separator + 1));
+  if (call.usage) {
+    console.log(DEPLOY_USAGE);
+    return;
+  }
+  if (call.problems.length > 0) {
+    console.error('Вызов развёртывания не принят:');
+    for (const problem of call.problems) console.error(`- ${problem}`);
+    console.error(`Форма вызова: ${DEPLOY_USAGE}`);
+    process.exitCode = 2;
+    return;
+  }
+  for (const line of deployLines(call)) console.log(line);
 }
 
 // REQ-DEPLOYMENT-016

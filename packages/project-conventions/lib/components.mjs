@@ -1,6 +1,25 @@
 // REQ-DEPLOYMENT-015
 export const NAME = /^[a-z][a-z0-9-]*$/;
 
+// REQ-DEPLOYMENT-019
+export const CANONICAL_ENVIRONMENTS = new Map([
+  ['prod', 'production'],
+  ['prd', 'production'],
+  ['production', 'production'],
+  ['live', 'production'],
+]);
+
+// REQ-DEPLOYMENT-019
+function environmentProblem(environment) {
+  if (!NAME.test(environment)) return `имя среды «${environment}»: строчные буквы, цифры и дефис`;
+  const canonical = CANONICAL_ENVIRONMENTS.get(environment);
+  if (canonical !== undefined && canonical !== environment) {
+    return `имя среды «${environment}»: рабочая среда называется «${canonical}» во всех проектах ядра.`
+      + ' Разные имена одной среды — то же расхождение входа, из-за которого имя среды и предписано (REQ-DEPLOYMENT-019)';
+  }
+  return null;
+}
+
 // REQ-DEPLOYMENT-015
 function componentProblems(name, declared) {
   const problems = [];
@@ -21,7 +40,9 @@ export function deployment(config) {
     problems.push('среды не объявлены: имя среды — единственное обязательное в развёртывании');
   } else {
     for (const environment of environments) {
-      if (!NAME.test(environment)) problems.push(`имя среды «${environment}»: строчные буквы, цифры и дефис`);
+      // REQ-DEPLOYMENT-019
+      const problem = environmentProblem(environment);
+      if (problem !== null) problems.push(problem);
     }
   }
   const components = Object.entries(declared.components ?? {});

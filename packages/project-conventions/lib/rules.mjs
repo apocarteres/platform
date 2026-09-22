@@ -11,6 +11,7 @@ import { findForbiddenWords, findLongWordings } from './terms.mjs';
 import { findSourceSetsWithoutAnalysis } from './static-analysis.mjs';
 import { findRustExemptions } from './rust-exemptions.mjs';
 import { findOrderSensitiveWiring } from './wiring.mjs';
+import { findMissingDeployEntry } from './deploy-entry.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -106,6 +107,15 @@ export const RULES = [
     summary: 'Каждый набор исходников несёт статический разбор, роняющий сборку на предупреждениях',
     title: 'наборов исходников без статического разбора',
     find: findSourceSetsWithoutAnalysis,
+  },
+  {
+    id: 'deploy-entry',
+    level: DIRECTIVE,
+    document: 'REQ-DEPLOYMENT',
+    file: 'deployment.md',
+    summary: 'У объявленного развёртывания есть вход scripts/deploy.sh — один и тот же во всех проектах',
+    title: 'объявлений развёртывания без входа',
+    find: findMissingDeployEntry,
   },
   {
     id: 'wiring-conditions',

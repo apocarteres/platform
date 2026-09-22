@@ -14,15 +14,17 @@ import { BASELINE_FILE, baselineExists, compare, counts, grewOver, readBaseline,
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 import { feedbackChannel, feedbackLine } from '../lib/feedback.mjs';
 import { collisions, dictionary } from '../lib/terms.mjs';
-import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
+import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 import { accountCommit, adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
 import { declaredObligations, findObligationDebts, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
-import { commits, components, deployed, deps, health, manifest as deployManifest, unknown } from '../lib/cli/commands.mjs';
+import {
+  commits, components, deployArgs, deployed, deps, health, manifest as deployManifest, unknown,
+} from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -160,13 +162,8 @@ async function baseline(root, allowGrowth) {
 
 async function docsCheck(root) {
   const config = await readConfig(root);
-  const result = await checkDocumentation(root, { requiredCatalogTargets: config.docs?.requiredCatalogTargets ?? [] });
-  const indexErrors = [
-    ...await updateTicketIndexes(root, { check: true }),
-    ...await refreshCompositionLinks(root, { check: true }),
-    ...await updateReleaseIndex(root, { check: true }),
-  ];
-  const errors = [...result.errors, ...indexErrors];
+  const result = await documentationProblems(root, config);
+  const errors = result.errors;
   if (errors.length > 0) {
     console.error(`Проверка документации завершилась с ошибками (${errors.length}):`);
     for (const error of errors) console.error(`- ${error}`);
@@ -594,7 +591,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|deps|components|deployed|manifest|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|deps|components|deploy-args|deployed|manifest|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -611,6 +608,7 @@ const USAGE = {
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
   unknown: 'conventions unknown --url <адрес сайта> [--timeout <с>]',
+  'deploy-args': 'conventions deploy-args [--root <path>] -- <доводы скрипта>   |   conventions deploy-args --usage',
   manifest: 'conventions manifest --env <среда> [--only a,b] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
   components: 'conventions components [--environments] [--root <path>]'
@@ -700,6 +698,9 @@ if (command === undefined || command === '--help') {
   else await run(rootOf(argv), withoutRoot(argv));
 } else if (command === 'release') {
   await release(argv);
+} else if (command === 'deploy-args') {
+  // REQ-DEPLOYMENT-019
+  await deployArgs(rootOf(argv), withoutRoot(argv), { usage: USAGE, refuse });
 } else {
   const spec = SPEC[command];
   const parsed = parseArguments(argv, { ...spec, values: ['--root', ...(spec.values ?? [])] });

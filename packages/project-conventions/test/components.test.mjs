@@ -13,7 +13,7 @@ const cli = path.join(path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 
 const DECLARED = {
   deployment: {
-    environments: ['local', 'qa', 'prod'],
+    environments: ['local', 'qa', 'production'],
     components: {
       backend: { artifact: 'backend/target/app.jar' },
       frontend: { artifact: 'frontend/dist/index.html' },
@@ -33,7 +33,7 @@ test('проект объявляет составляющие сам, и пер
   const three = deployment(DECLARED);
   assert.deepEqual(three.components.map((one) => one.name), ['backend', 'frontend', 'agent']);
 
-  const two = deployment({ deployment: { environments: ['prod'], components: {
+  const two = deployment({ deployment: { environments: ['production'], components: {
     backend: { artifact: 'target/app.jar' }, frontend: { artifact: 'dist/index.html' },
   } } });
   assert.deepEqual(two.components.map((one) => one.name), ['backend', 'frontend'],
@@ -55,7 +55,7 @@ test('необъявленное развёртывание от неверно 
 
 // REQ-DEPLOYMENT-015, REQ-BUILD-013
 test('составляющая называет артефакт, а его появление утверждает шаг сборки', () => {
-  const withoutArtifact = deployment({ deployment: { environments: ['prod'], components: { backend: {} } } });
+  const withoutArtifact = deployment({ deployment: { environments: ['production'], components: { backend: {} } } });
 
   assert.equal(withoutArtifact.problems.length, 1);
   assert.match(withoutArtifact.problems[0], /REQ-BUILD-013/, 'отказ связывает объявление с утверждением шага');
@@ -65,7 +65,7 @@ test('составляющая называет артефакт, а его по
 test('среда узнаётся по объявленному перечню', () => {
   assert.equal(knownEnvironment(DECLARED, 'qa'), true);
   assert.equal(knownEnvironment(DECLARED, 'staging'), false);
-  assert.equal(knownEnvironment({}, 'prod'), false, 'без объявления неизвестна любая');
+  assert.equal(knownEnvironment({}, 'production'), false, 'без объявления неизвестна любая');
 });
 
 // REQ-DEPLOYMENT-015
@@ -85,7 +85,7 @@ test('команда отдаёт перечень построчно, чтоб�
     assert.deepEqual(listed.output.trim().split('\n'), ['backend', 'frontend', 'agent']);
 
     const environments = await conventions('--environments');
-    assert.deepEqual(environments.output.trim().split('\n'), ['local', 'qa', 'prod']);
+    assert.deepEqual(environments.output.trim().split('\n'), ['local', 'qa', 'production']);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

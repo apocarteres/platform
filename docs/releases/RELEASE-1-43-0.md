@@ -19,8 +19,8 @@ opened-on: 2026-09-22
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-072](../tickets/CORE-OPS-072-entry-spelling-is-delivered-not-described.md) | Указана при открытии выпуска |
-| [CORE-OPS-073](../tickets/CORE-OPS-073-receipt-belongs-to-the-code-tree.md) | Указана при открытии выпуска |
+| [CORE-OPS-072](../tickets/closed/CORE-OPS-072-entry-spelling-is-delivered-not-described.md) | Указана при открытии выпуска |
+| [CORE-OPS-073](../tickets/closed/CORE-OPS-073-receipt-belongs-to-the-code-tree.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

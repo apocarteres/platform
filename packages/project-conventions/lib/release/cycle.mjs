@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  ACCOUNTED_SECTION, RELEASES_DIR, STAGE_ID, TICKETS_DIR, accountedCommits, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
+  ACCOUNTED_SECTION, RELEASES_DIR, RETAGGED_SECTION, STAGE_ID, TICKETS_DIR, accountedCommits, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
   unassignedDoneTickets, withSection, writeDocument,
 } from './documents.mjs';
@@ -12,10 +12,10 @@ import { attested, receiptFor } from './receipt.mjs';
 import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
-import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
+import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
-export async function closability(root, { scheme }) {
+export async function closability(root, { scheme, retagging = false }) {
   const problems = [];
   const config = await readConfig(root);
   const release = await openRelease(root);
@@ -63,8 +63,8 @@ export async function closability(root, { scheme }) {
       + ` либо командой release satisfy ${entry.obligation.id} --ticket <ID>; перенести просроченное нельзя`);
   }
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
-  // REQ-RELEASE-039
-  if (tag !== null && await tagExists(root, tag)) {
+  // REQ-RELEASE-039, REQ-RELEASE-046
+  if (!retagging && tag !== null && await tagExists(root, tag)) {
     problems.push(`Тег ${tag} уже существует: номер не переиспользуется.`
       + ' Либо первый шаг закрытия уже выполнен — тогда завершите выпуск командой release finish,'
       + ' — либо номер занят прежним выпуском и следующий открывается с другим номером');
@@ -499,28 +499,6 @@ export async function satisfyObligation(root, { obligationId, ticketId: evidence
   return { satisfied: true, removed, evidence: evidenceId };
 }
 
-// REQ-RELEASE-029
-export async function cancelRelease(root, { reason }) {
-  const release = await openRelease(root);
-  if (release === null) return { cancelled: false, problems: ['Открытого выпуска нет: отменять нечего'] };
-  if (reason === undefined || reason.trim() === '') {
-    return { cancelled: false, problems: ['Отмена выпуска требует причины: --reason "<причина>"'] };
-  }
-  const id = release.metadata.get('id');
-  const content = replaceSection(
-    replaceMetadata(release.content, { status: 'cancelled' }),
-    '## Результат',
-    [`Выпуск отменён, ничего не выпущено: ${reason.trim()}`],
-  );
-  await writeDocument(release.file, content);
-  // REQ-RELEASE-044
-  const composition = (await tickets(root)).filter((ticket) => ticket.metadata.get('release') === id);
-  for (const ticket of composition) {
-    await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'unassigned' }));
-  }
-  return { cancelled: true, id, file: release.file, released: composition.map(ticketId) };
-}
-
 // REQ-RELEASE-030
 function releaseNumberProblem(scheme, version) {
   if (scheme !== 'semver' || version) return null;
@@ -712,44 +690,64 @@ async function documentsSinceTheReceipt(root, config, carriedFrom) {
   ];
 }
 
-// REQ-RELEASE-033
-export async function dropFromComposition(root, { ticketId: name, reason }) {
+// REQ-RELEASE-046
+export async function recloseRelease(root, { scheme, reason }) {
   if (!reason || !reason.trim()) {
-    return { dropped: false, problems: ['Снятие задачи из состава требует причины: ключ --reason'] };
+    return { reclosed: false, problems: ['Перенос тега требует причины: ключ --reason'] };
   }
   const release = await openRelease(root);
   if (release === null) {
-    return { dropped: false, problems: ['Открытого выпуска нет: снимать задачу не из чего'] };
+    return { reclosed: false, problems: ['Открытого выпуска нет: переносить тег не у чего'] };
   }
   const id = release.metadata.get('id');
-  const ticket = (await tickets(root)).find((item) => ticketId(item) === name);
-  if (ticket === undefined) {
-    return { dropped: false, problems: [`Задачи ${name} в проекте нет`] };
-  }
-  if ((ticket.metadata.get('release') ?? 'unassigned') !== id) {
-    return { dropped: false, problems: [`Задача ${name} не отнесена к ${id}: снимать её из состава нечего`] };
-  }
-  if (ticket.metadata.has('obligation')) {
+  const tag = releaseTag(id, scheme);
+  const tagged = await tagCommit(root, tag);
+  if (tagged === null) {
     return {
-      dropped: false,
-      problems: [`Задача ${name} материализует обязательство ядра: обязательство переносится командой release defer с причиной (REQ-RELEASE-014)`],
+      reclosed: false,
+      problems: [`Первый шаг закрытия ${id} ещё не выполнен: тега ${tag} нет.`
+        + ' Выпуск закрывается командой release close, а перезакрывается только после неё'],
     };
   }
-
-  const kept = sectionLines(release.content, '## Состав')
-    .filter((line) => !(line.startsWith('| [') && line.includes(`[${name}]`)));
-  const rows = kept.filter((line) => line.startsWith('| [')).length === 0
-    ? ['Обязательств ядра к исполнению нет; состав наполняется по факту закрытия задач.']
-    : kept;
-  let content = replaceSection(release.content, '## Состав', rows);
-  content = replaceSection(content, '## Не входит', [
-    ...sectionLines(content, '## Не входит').filter((line) => line.trim().length > 0),
-    '',
-    `- ${name} — снята из состава: ${reason.trim()}`,
-  ]);
+  const head = await headCommit(root);
+  if (head === tagged) {
+    return {
+      reclosed: false,
+      problems: [`Тег ${tag} уже на текущем коммите: переносить некуда.`
+        + ' Правка, ради которой переносят тег, ещё не зафиксирована'],
+    };
+  }
+  const state = await closability(root, { scheme, retagging: true });
+  if (state.problems.length > 0) return { reclosed: false, problems: state.problems };
+  const { receipt, composition } = state;
+  let content = replaceSection(release.content, '## Результат', resultLines(receipt, head, tag));
+  const closedNow = state.obligations
+    .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))
+    .map((obligation) => obligation.id);
+  content = replaceSection(
+    content,
+    '## Критерии выхода',
+    criteriaLines(receipt, tag, obligationsSummary(closedNow, Object.keys(state.state.deferred ?? {}), state.isCore)),
+  );
+  const already = retaggedRows(content);
+  content = withSection(content, RETAGGED_SECTION, [
+    '| Было | Стало | Причина |',
+    '|---|---|---|',
+    ...already,
+    `| ${tagged.slice(0, 8)} | ${head.slice(0, 8)} | ${reason.trim().replaceAll('|', '&#124;')} |`,
+  ], '## Результат');
+  await moveTag(root, tag, head, `Выпуск ${id}`);
   await writeDocument(release.file, content);
-  await writeDocument(ticket.file, replaceMetadata(ticket.content, { release: 'unassigned' }));
-  return { dropped: true, id, ticket: name };
+  return { reclosed: true, id, tag, from: tagged, to: head };
+}
+
+// REQ-RELEASE-046
+function retaggedRows(content) {
+  if (!content.split('\n').some((line) => line.trim() === RETAGGED_SECTION)) return [];
+  return sectionLines(content, RETAGGED_SECTION)
+    .filter((line) => line.startsWith('| ') && !line.startsWith('| Было') && !/^\|[\s:|-]+\|$/.test(line));
 }
 
 export { obligationState, readState };
+// REQ-CODE-DESIGN-009
+export { cancelRelease, dropFromComposition } from './composition.mjs';

@@ -74,3 +74,8 @@ export async function tagCommit(root, tag) {
 export async function createTag(root, tag, commit, message) {
   await git(root, ['tag', '-a', tag, commit, '-m', message]);
 }
+
+// REQ-RELEASE-046
+export async function moveTag(root, tag, commit, message) {
+  await git(root, ['tag', '-f', '-a', tag, commit, '-m', message]);
+}

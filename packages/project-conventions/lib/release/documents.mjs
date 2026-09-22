@@ -196,6 +196,9 @@ export function ticketLinkTarget(root, ticket) {
 // REQ-RELEASE-041
 export const ACCOUNTED_SECTION = '## Учтённые коммиты';
 
+// REQ-RELEASE-046
+export const RETAGGED_SECTION = '## Переносы тега';
+
 // REQ-RELEASE-041
 export function accountedCommits(content) {
   const lines = content.split('\n');

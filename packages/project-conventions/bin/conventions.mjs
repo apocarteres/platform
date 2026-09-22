@@ -17,7 +17,10 @@ import { collisions, dictionary } from '../lib/terms.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
-import { accountCommit, adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition, finishability, finishRelease, openNext, satisfyObligation } from '../lib/release/cycle.mjs';
+import {
+  accountCommit, adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition,
+  finishability, finishRelease, openNext, recloseRelease, satisfyObligation,
+} from '../lib/release/cycle.mjs';
 import { declaredObligations, findObligationDebts, loadObligations, obligationState, readState, writeState } from '../lib/release/obligations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
@@ -419,6 +422,21 @@ async function releaseDrop(root, name, reason) {
   console.log(`Задача ${result.ticket} снята из состава ${result.id}; причина записана в границы выпуска.`);
 }
 
+// REQ-RELEASE-046
+async function releaseReclose(root, reason) {
+  const config = await readConfig(root);
+  const result = await recloseRelease(root, { scheme: releaseScheme(config), reason });
+  if (!result.reclosed) {
+    console.error('Тег не перенесён:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Тег ${result.tag} перенесён: ${result.from.slice(0, 8)} → ${result.to.slice(0, 8)}.`);
+  console.log('Выпуск ещё не закрыт: отметьте завершающий шаг командой release finish --note "<чем выполнен>".');
+  console.log('Если тег уже был отправлен — отправьте его заново с замещением: выпуск ещё никуда не вышел.');
+}
+
 // REQ-RELEASE-029
 async function releaseCancel(root, reason) {
   const result = await cancelRelease(root, { reason });
@@ -615,13 +633,14 @@ const USAGE = {
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
     + '\n  Код 0 — зависимости не менялись, ставить нечего; код 1 — изменились.',
-  release: 'conventions release <status|close|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
+  release: 'conventions release <status|close|reclose|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
 };
 
 // REQ-RELEASE-028
 const RELEASE_USAGE = {
   status: 'conventions release status [--root <path>]',
   close: 'conventions release close [--root <path>]',
+  reclose: 'conventions release reclose --reason "<причина>" [--root <path>]',
   finish: 'conventions release finish --note "<чем выполнен>" [--root <path>]',
   open: 'conventions release open [--version X.Y.Z] [--tickets A,B] [--root <path>]',
   drop: 'conventions release drop <TICKET-ID> --reason "<причина>" [--root <path>]',
@@ -636,6 +655,7 @@ const RELEASE_USAGE = {
 const RELEASE_SPEC = {
   status: {},
   close: {},
+  reclose: { values: ['--reason'] },
   finish: { values: ['--note'] },
   open: { values: ['--version', '--tickets'] },
   drop: { values: ['--reason'], positional: 1 },
@@ -761,6 +781,8 @@ async function release(argv) {
   const first = parsed.positional[0];
   if (subcommand === 'status') await releaseStatus(root);
   else if (subcommand === 'close') await releaseClose(root);
+  // REQ-RELEASE-046
+  else if (subcommand === 'reclose') await releaseReclose(root, valueOf('--reason'));
   else if (subcommand === 'finish') await releaseFinish(root, valueOf('--note'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'), ticketList(valueOf('--tickets')));
   else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));

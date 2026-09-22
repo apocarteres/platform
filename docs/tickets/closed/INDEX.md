@@ -14,10 +14,11 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 130. Включены самостоятельные задачи и этапы планов функций.
+Всего: 131. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Неопознанный отказ не оставлял следа](CORE-API-008-unexplained-failure-left-no-trace.md) | P0 | Выполнена | [RELEASE-1-47-0](../../releases/RELEASE-1-47-0.md) | api, observability |
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
 | [Правило разбирало чужие рабочие копии](CORE-OPS-048-rule-reads-a-neighbours-working-copy.md) | P0 | Выполнена | [RELEASE-1-21-0](../../releases/RELEASE-1-21-0.md) | tooling, quality |
 | [Забытая строка признака цикла исправлялась только перезаписью истории](CORE-OPS-053-forgotten-cycle-line-forces-a-rewrite.md) | P0 | Выполнена | [RELEASE-1-25-0](../../releases/RELEASE-1-25-0.md) | tooling, release |

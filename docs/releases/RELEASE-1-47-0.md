@@ -19,7 +19,7 @@ opened-on: 2026-09-22
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-API-008](../tickets/CORE-API-008-unexplained-failure-left-no-trace.md) | Указана при открытии выпуска |
+| [CORE-API-008](../tickets/closed/CORE-API-008-unexplained-failure-left-no-trace.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

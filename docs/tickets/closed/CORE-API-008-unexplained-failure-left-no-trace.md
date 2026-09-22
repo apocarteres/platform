@@ -1,7 +1,7 @@
 ---
 id: CORE-API-008
 type: ticket
-status: backlog
+status: done
 scope: api, observability
 authority: supporting
 priority: P0

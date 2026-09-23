@@ -19,7 +19,7 @@ opened-on: 2026-09-23
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-078](../tickets/CORE-OPS-078-version-number-stopped-telling-the-cost.md) | Указана при открытии выпуска |
+| [CORE-OPS-078](../tickets/closed/CORE-OPS-078-version-number-stopped-telling-the-cost.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

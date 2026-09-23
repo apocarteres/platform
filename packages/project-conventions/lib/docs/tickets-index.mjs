@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontMatter, priorities, terminalStatuses } from './ticket-model.mjs';
 
@@ -90,7 +90,19 @@ function releaseCell(root, release, href) {
   return `[${release}](${href(path.join(root, 'docs/releases', `${release}.md`))})`;
 }
 
+// REQ-PROJECT-PROCESS-021
+export async function present(directory) {
+  try {
+    return (await stat(directory)).isDirectory();
+  } catch (failure) {
+    if (failure.code === 'ENOENT') return false;
+    throw failure;
+  }
+}
+
 export async function updateTicketIndexes(root, { check = false } = {}) {
+  // REQ-PROJECT-PROCESS-021
+  if (!await present(path.join(root, 'docs/tickets'))) return [];
   const { errors, outputs } = await buildTicketIndexes(root);
   if (errors.length) return errors;
   for (const [file, expected] of outputs) {

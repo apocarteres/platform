@@ -36,7 +36,7 @@ async function present(file) {
 // REQ-BUILD-013
 export async function fingerprint(root, directory, tools = DEFAULT_TOOLS) {
   const mise = await readOrNull(path.join(root, MISE_FILE));
-  if (mise === null) return { error: `${MISE_FILE} отсутствует: версии инструментов закрепляются им (REQ-BUILD-004)` };
+  if (mise === null) return { error: `${MISE_FILE} отсутствует: версии инструментов закрепляются им — заведите его с разделом [tools] (REQ-BUILD-004)` };
   const declared = miseTools(mise);
   const missing = tools.filter((tool) => declared.get(tool) === undefined);
   if (missing.length > 0) {

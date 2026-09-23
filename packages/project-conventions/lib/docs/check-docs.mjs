@@ -54,7 +54,14 @@ const DEFAULT_CATALOG_TARGETS = [
 ];
 
 async function walkFiles(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await readdir(directory, { withFileTypes: true });
+  } catch (failure) {
+    // REQ-PROJECT-PROCESS-021
+    if (failure.code === 'ENOENT') return [];
+    throw failure;
+  }
   const files = [];
 
   for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
@@ -530,7 +537,8 @@ export async function checkDocumentation(projectRoot, options = {}) {
   const documentationIndex = path.join(docsRoot, 'INDEX.md');
   const documentationTargets = await collectIndexTargets(resolvedRoot, documentationIndex);
   if (documentationTargets === null) {
-    errors.push('docs/INDEX.md: входная сводка документации отсутствует; создайте файл со ссылками на каталоги');
+    errors.push('docs/INDEX.md: входная сводка документации отсутствует; создайте файл со ссылками на каталоги: '
+      + `${requiredCatalogTargets.join(', ')} (REQ-PROJECT-PROCESS-021)`);
   } else {
     for (const requiredTarget of requiredCatalogTargets) {
       const absoluteTarget = path.join(resolvedRoot, requiredTarget);

@@ -2,11 +2,14 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontMatter } from './ticket-model.mjs';
+import { present } from './tickets-index.mjs';
 
 // REQ-RELEASE-007, REQ-RELEASE-008
 export async function refreshCompositionLinks(root, { check = false } = {}) {
   const { tickets, replaceSection, sectionLines, ticketId, writeDocument } = await import('../release/documents.mjs');
   const directory = path.join(root, 'docs/releases');
+  // REQ-PROJECT-PROCESS-021
+  if (!await present(directory)) return [];
   const byId = new Map((await tickets(root)).map((ticket) => [ticketId(ticket), ticket]));
   const errors = [];
   for (const name of (await readdir(directory)).sort()) {
@@ -41,6 +44,8 @@ export async function refreshCompositionLinks(root, { check = false } = {}) {
 export async function updateReleaseIndex(root, { check = false } = {}) {
   const { compareReleaseIds } = await import('../release/documents.mjs');
   const directory = path.join(root, 'docs/releases');
+  // REQ-PROJECT-PROCESS-021
+  if (!await present(directory)) return [];
   const found = [];
   const labels = { draft: 'Черновик', in_progress: 'В работе', blocked: 'Заблокирован', released: 'Выпущен', cancelled: 'Отменён' };
   for (const name of (await readdir(directory)).sort()) {

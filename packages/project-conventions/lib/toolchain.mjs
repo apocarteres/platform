@@ -149,7 +149,7 @@ export function secondPinnings(content, tools) {
 
 export async function findToolchainMismatches(root) {
   const mise = await read(root, MISE_FILE);
-  if (mise === null) return [`${MISE_FILE} отсутствует: версии инструментов закрепляются им (REQ-BUILD-003)`];
+  if (mise === null) return [`${MISE_FILE} отсутствует: версии инструментов закрепляются им — заведите его с разделом [tools] и версиями java и node, которые закрепляет ядро (REQ-BUILD-003)`];
   const tools = miseTools(mise);
   const problems = [];
 

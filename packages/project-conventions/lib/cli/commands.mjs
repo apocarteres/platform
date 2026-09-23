@@ -147,14 +147,14 @@ export async function components(root, { environments = false, full = false } = 
 
 // REQ-PUBLISHING-015
 async function recordedHistory() {
-  const packaged = new URL('../../changes.json', import.meta.url);
+  const repository = fileURLToPath(new URL('../../../../', import.meta.url));
+  if ((await releaseTags(repository).catch(() => [])).length > 0) return changesHistory(repository);
   try {
-    return JSON.parse(await readFile(packaged, 'utf8')).history;
+    return JSON.parse(await readFile(new URL('../../changes.json', import.meta.url), 'utf8')).history;
   } catch (failure) {
     if (failure.code !== 'ENOENT') throw failure;
+    return null;
   }
-  const repository = fileURLToPath(new URL('../../../../', import.meta.url));
-  return (await releaseTags(repository)).length === 0 ? null : changesHistory(repository);
 }
 
 // REQ-PUBLISHING-015

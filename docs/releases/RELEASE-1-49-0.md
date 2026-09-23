@@ -19,8 +19,8 @@ opened-on: 2026-09-23
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-023](../tickets/CORE-QUAL-023-checks-proved-the-case-the-core-imagined.md) | Указана при открытии выпуска |
-| [CORE-OPS-079](../tickets/CORE-OPS-079-refusals-stated-without-a-way-out.md) | Указана при открытии выпуска |
+| [CORE-QUAL-023](../tickets/closed/CORE-QUAL-023-checks-proved-the-case-the-core-imagined.md) | Указана при открытии выпуска |
+| [CORE-OPS-079](../tickets/closed/CORE-OPS-079-refusals-stated-without-a-way-out.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

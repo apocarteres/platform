@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 132. Включены самостоятельные задачи и этапы планов функций.
+Всего: 134. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -37,6 +37,7 @@ authority: navigation
 | [Доставленная настройка полагалась на состав группы, а не объявляла правило](CORE-QUAL-019-delivered-config-relied-on-a-lint-group.md) | P0 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Аннотация времени жизни ослепляет разбор Rust](CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | P0 | Выполнена | [RELEASE-1-31-0](../../releases/RELEASE-1-31-0.md) | rust, quality |
 | [Условие о чужом бине решает раньше, чем бин появляется](CORE-QUAL-022-conditional-bean-decides-before-the-registry-exists.md) | P0 | Выполнена | [RELEASE-1-40-0](../../releases/RELEASE-1-40-0.md) | quality, api, wiring |
+| [Проверки ядра доказывали случай, который ядро себе представило](CORE-QUAL-023-checks-proved-the-case-the-core-imagined.md) | P0 | Выполнена | [RELEASE-1-49-0](../../releases/RELEASE-1-49-0.md) | quality, tooling |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
 | [Исследование: правила ядра проверяются только на ядре](CORE-ARC-005-rules-are-verified-only-on-the-core.md) | P1 | Выполнена | [RELEASE-1-14-0](../../releases/RELEASE-1-14-0.md) | process, tooling, architecture, research |
@@ -93,6 +94,7 @@ authority: navigation
 | [Неизвестный адрес отвечает рабочей страницей](CORE-OPS-071-unknown-address-answers-as-a-working-page.md) | P1 | Выполнена | [RELEASE-1-42-0](../../releases/RELEASE-1-42-0.md) | deployment, client |
 | [Написание входа в развёртывание описывалось, а не поставлялось](CORE-OPS-072-entry-spelling-is-delivered-not-described.md) | P1 | Выполнена | [RELEASE-1-43-0](../../releases/RELEASE-1-43-0.md) | deployment, build |
 | [Служебный коммит выпуска обесценивал прогон](CORE-OPS-073-receipt-belongs-to-the-code-tree.md) | P1 | Выполнена | [RELEASE-1-43-0](../../releases/RELEASE-1-43-0.md) | release, tooling |
+| [Отказы констатировали без выхода](CORE-OPS-079-refusals-stated-without-a-way-out.md) | P1 | Выполнена | [RELEASE-1-49-0](../../releases/RELEASE-1-49-0.md) | release, deployment, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

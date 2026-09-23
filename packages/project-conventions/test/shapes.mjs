@@ -65,6 +65,9 @@ export async function consumerShape(kind) {
   await put(root, 'pom.xml', POM);
   await put(root, 'frontend/package.json', `${JSON.stringify({ name: 'inventory-client', private: true, scripts: { build: 'ng build', lint: 'eslint .' } }, null, 2)}\n`);
   await put(root, 'frontend/src/app/app.routes.ts', ROUTES);
+  // REQ-CLIENT-MODAL-004
+  await put(root, 'frontend/src/app/confirm/confirm.dialog.html',
+    '<div class="backdrop">\n  <div class="modal-card" role="dialog" apoModal [apoModalEscape]="close">\n    Удалить запись?\n  </div>\n</div>\n');
   await put(root, 'scripts/deploy.sh', DEPLOY);
   const sources = ['src', 'frontend/src'];
   if (kind === 'containers') {
@@ -79,7 +82,7 @@ export async function consumerShape(kind) {
   }
   const config = JSON.parse(await readFile(path.join(root, '.conventions.json'), 'utf8'));
   await writeFile(path.join(root, '.conventions.json'),
-    `${JSON.stringify({ ...config, sources, deployment: deploymentOf(kind) }, null, 2)}\n`);
+    `${JSON.stringify({ ...config, sources, deployment: deploymentOf(kind), modal: { selector: '.modal-card' } }, null, 2)}\n`);
   await consumer.git('add', '-A');
   await consumer.git('commit', '--quiet', '-m', `Форма потребителя: ${kind}\n\nRelease-cycle: RELEASE-2026-09-10`);
   return { ...consumer, kind };

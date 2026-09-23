@@ -13,6 +13,7 @@ import { findRustExemptions } from './rust-exemptions.mjs';
 import { findOrderSensitiveWiring } from './wiring.mjs';
 import { findMissingDeployEntry } from './deploy-entry.mjs';
 import { findUndeliveredConfiguration } from './environment-config.mjs';
+import { findModalsWithoutEscape } from './modal-escape.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -126,6 +127,15 @@ export const RULES = [
     summary: 'Настройка веб-сервера и описание службы объявлены составляющими и едут развёртыванием',
     title: 'настроек среды вне составляющих',
     find: findUndeliveredConfiguration,
+  },
+  {
+    id: 'modal-escape',
+    level: DIRECTIVE,
+    document: 'REQ-CLIENT-MODAL',
+    file: 'client-modals.md',
+    summary: 'Каждое модальное окно объявлено директивой apoModal: решение об Escape принято явно, хотя бы как ESCAPE_IGNORED',
+    title: 'модальных окон без решения об Escape',
+    find: findModalsWithoutEscape,
   },
   {
     id: 'wiring-conditions',

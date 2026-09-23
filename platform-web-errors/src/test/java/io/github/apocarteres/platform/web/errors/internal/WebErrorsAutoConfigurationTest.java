@@ -42,6 +42,7 @@ class WebErrorsAutoConfigurationTest {
       WebErrorsAutoConfiguration.class
     ));
 
+  // REQ-API-005
   @Test
   @DisplayName("Веб-контекст поднимается и даёт совет по ошибкам с портами по умолчанию")
   void registersAdviceWithDefaults() {
@@ -110,6 +111,7 @@ class WebErrorsAutoConfigurationTest {
     return counter == null ? 0 : counter.count();
   }
 
+  // REQ-API-006
   @Test
   @DisplayName("Вне веб-приложения совет по ошибкам не регистрируется")
   void skipsOutsideWebApplication() {

@@ -27,7 +27,7 @@ async function conventions(root, ...args) {
 }
 
 // REQ-RELEASE-039
-const DEPLOYMENT_COMMANDS = ['components', 'deploy-args', 'manifest', 'deployed', 'health', 'unknown', 'upgrade-report'];
+const DEPLOYMENT_COMMANDS = ['components', 'deploy-args', 'manifest', 'deployed', 'health', 'unknown', 'upgrade-report', 'jvm-args'];
 
 // REQ-RELEASE-039
 test('каждый отказ называет выход: команду, ключ или действие', async () => {
@@ -89,6 +89,8 @@ test('каждый отказ называет выход: команду, кл�
     await cliRefusal('unknown', shape.root, 'unknown');
     await cliRefusal('upgrade-report', shape.root, 'upgrade-report');
     await cliRefusal('upgrade-report', shape.root, 'upgrade-report', '--from', 'один');
+    await cliRefusal('jvm-args', shape.root, 'jvm-args');
+    await cliRefusal('jvm-args', shape.root, 'jvm-args', '--archive', 'a.jsa', '--aot', 'a.aot');
   } finally {
     await rm(plain.root, { recursive: true, force: true });
     await rm(shape.root, { recursive: true, force: true });

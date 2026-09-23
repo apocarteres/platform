@@ -10,6 +10,7 @@ import { readConfig } from '../config.mjs';
 import { deployment } from '../components.mjs';
 import { deployCall, deployLines, deployUsage } from '../deploy-entry.mjs';
 import { HELP } from './arguments.mjs';
+import { launchKeys } from '../jvm.mjs';
 import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
 import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
 
@@ -179,6 +180,16 @@ export async function upgradeReport(parsed, { usage, refuse }) {
     return;
   }
   for (const line of reportLines(history, { from, to })) console.log(line);
+}
+
+// REQ-DEPLOYMENT-011
+export function jvmArgs(parsed, { usage, refuse }) {
+  const answer = launchKeys({ archive: parsed.values.get('--archive'), aot: parsed.values.get('--aot') });
+  if (answer.problems.length > 0) {
+    refuse(usage['jvm-args'], answer.problems[0]);
+    return;
+  }
+  for (const key of answer.keys) console.log(key);
 }
 
 // REQ-DEPLOYMENT-019

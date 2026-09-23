@@ -19,8 +19,8 @@ opened-on: 2026-09-23
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-024](../tickets/CORE-QUAL-024-runtime-clauses-written-before-a-run.md) | Указана при открытии выпуска |
-| [CORE-OPS-080](../tickets/CORE-OPS-080-manual-workarounds-went-unfiled.md) | Указана при открытии выпуска |
+| [CORE-QUAL-024](../tickets/closed/CORE-QUAL-024-runtime-clauses-written-before-a-run.md) | Указана при открытии выпуска |
+| [CORE-OPS-080](../tickets/closed/CORE-OPS-080-manual-workarounds-went-unfiled.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

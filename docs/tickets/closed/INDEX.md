@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 134. Включены самостоятельные задачи и этапы планов функций.
+Всего: 136. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -103,6 +103,7 @@ authority: navigation
 | [Часы в Rust ядром не нормированы и не проверяются](CORE-QUAL-014-rust-clock.md) | P1 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | rust, quality |
 | [Правило комментариев воевало бы с документацией Rust](CORE-QUAL-016-comments-rule-would-fight-rust-docs.md) | P1 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, quality |
 | [У Rust нет средства засева, хотя правило его разрешает](CORE-QUAL-020-rust-has-no-seeding-mechanism.md) | P1 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
+| [Положения о поведении при работе писались раньше запуска](CORE-QUAL-024-runtime-clauses-written-before-a-run.md) | P1 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | quality, deployment |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |
@@ -136,6 +137,7 @@ authority: navigation
 | [Отказ ядра не называет дверь в ядро](CORE-OPS-035-refusals-do-not-name-the-door-into-the-core.md) | P2 | Выполнена | [RELEASE-1-14-0](../../releases/RELEASE-1-14-0.md) | tooling, process |
 | [Ядро собирает артефакт и молчит о том, чем его запускать](CORE-OPS-050-core-builds-the-artifact-but-says-nothing-about-launching-it.md) | P2 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment, build |
 | [Машина развёртывания доказывается, а не подразумевается](CORE-OPS-064-deployment-target-is-proved-not-trusted.md) | P2 | Выполнена | [RELEASE-1-36-0](../../releases/RELEASE-1-36-0.md) | deployment |
+| [Обходы, сделанные руками, не заводились задачами](CORE-OPS-080-manual-workarounds-went-unfiled.md) | P2 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | process, agents |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

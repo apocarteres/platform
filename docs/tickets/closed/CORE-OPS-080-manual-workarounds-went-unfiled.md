@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-080
 type: ticket
-status: backlog
+status: done
 scope: process, agents
 authority: supporting
 priority: P2

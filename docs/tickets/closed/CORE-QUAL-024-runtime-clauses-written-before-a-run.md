@@ -1,7 +1,7 @@
 ---
 id: CORE-QUAL-024
 type: ticket
-status: backlog
+status: done
 scope: quality, deployment
 authority: supporting
 priority: P1

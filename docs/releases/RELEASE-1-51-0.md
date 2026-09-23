@@ -19,7 +19,7 @@ opened-on: 2026-09-23
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-081](../tickets/CORE-OPS-081-third-consumer-pilot-adoption.md) | Указана при открытии выпуска |
+| [CORE-OPS-081](../tickets/closed/CORE-OPS-081-third-consumer-pilot-adoption.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

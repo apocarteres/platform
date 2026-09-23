@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-081
 type: ticket
-status: backlog
+status: done
 scope: adoption, tooling
 authority: supporting
 priority: P0

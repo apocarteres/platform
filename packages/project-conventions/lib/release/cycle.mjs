@@ -9,6 +9,10 @@ import {
   loadObligations, obligationState, overdueObligations, pendingObligations, readState, writeState,
 } from './obligations.mjs';
 import { attested, receiptFor } from './receipt.mjs';
+import { costSection, majorProblem, upgradeCost } from './changes.mjs';
+
+// REQ-PUBLISHING-015
+const COST_SECTION = '## Цена обновления';
 import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
@@ -63,6 +67,13 @@ export async function closability(root, { scheme, retagging = false }) {
       + ` либо командой release satisfy ${entry.obligation.id} --ticket <ID>; перенести просроченное нельзя`);
   }
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
+  const existing = await releases(root);
+  // REQ-PUBLISHING-004, REQ-PUBLISHING-015
+  const cost = release === null || !isCore || scheme !== 'semver'
+    ? null
+    : await upgradeCost(root, { from: await previousReleaseTag(root, existing, scheme), content: release.content });
+  const major = cost === null ? null : majorProblem(cost, { from: await previousReleaseTag(root, existing, scheme), tag });
+  if (major !== null) problems.push(major);
   // REQ-RELEASE-039, REQ-RELEASE-046
   if (!retagging && tag !== null && await tagExists(root, tag)) {
     problems.push(`Тег ${tag} уже существует: номер не переиспользуется.`
@@ -71,12 +82,12 @@ export async function closability(root, { scheme, retagging = false }) {
   }
   // REQ-RELEASE-036
   problems.push(...await commitProblems(root, {
-    scheme, config, composition, existing: await releases(root),
+    scheme, config, composition, existing,
     releaseId: release === null ? null : release.metadata.get('id'),
     // REQ-RELEASE-041
     open: release,
   }));
-  return { problems, release, commit, receipt, composition, state, obligations, isCore, tag };
+  return { problems, release, commit, receipt, composition, state, obligations, isCore, tag, cost };
 }
 
 function compositionRows(root, composition) {
@@ -309,6 +320,10 @@ export async function closeRelease(root, { scheme }) {
   // REQ-RELEASE-021, REQ-RELEASE-031
   content = replaceSection(content, '## Состав', compositionRows(root, composition.filter(shipsResult)));
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
+  // REQ-PUBLISHING-015
+  if (state.cost !== null) {
+    content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared), '## Результат');
+  }
   const closedNow = state.obligations
     .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))
     .map((obligation) => obligation.id);
@@ -721,6 +736,10 @@ export async function recloseRelease(root, { scheme, reason }) {
   if (state.problems.length > 0) return { reclosed: false, problems: state.problems };
   const { receipt, composition } = state;
   let content = replaceSection(release.content, '## Результат', resultLines(receipt, head, tag));
+  // REQ-PUBLISHING-015
+  if (state.cost !== null) {
+    content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared), '## Результат');
+  }
   const closedNow = state.obligations
     .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))
     .map((obligation) => obligation.id);

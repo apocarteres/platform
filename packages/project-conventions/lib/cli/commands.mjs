@@ -1,4 +1,7 @@
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { changesHistory, releaseTags, reportLines } from '../release/changes.mjs';
 import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../health.mjs';
 import { DEFAULT_TIMEOUT_SECONDS as ABSENT_TIMEOUT_SECONDS, askForAbsent } from '../unknown-path.mjs';
 import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dependencies-state.mjs';
@@ -139,6 +142,43 @@ export async function components(root, { environments = false, full = false } = 
     return;
   }
   for (const one of declared.components) console.log(one.name);
+}
+
+// REQ-PUBLISHING-015
+async function recordedHistory() {
+  const packaged = new URL('../../changes.json', import.meta.url);
+  try {
+    return JSON.parse(await readFile(packaged, 'utf8')).history;
+  } catch (failure) {
+    if (failure.code !== 'ENOENT') throw failure;
+  }
+  const repository = fileURLToPath(new URL('../../../../', import.meta.url));
+  return (await releaseTags(repository)).length === 0 ? null : changesHistory(repository);
+}
+
+// REQ-PUBLISHING-015
+export async function upgradeReport(parsed, { usage, refuse }) {
+  const from = parsed.values.get('--from');
+  const to = parsed.values.get('--to') ?? null;
+  const version = /^\d+\.\d+\.\d+$/;
+  if (from === undefined) {
+    refuse(usage['upgrade-report'], 'отчёт требует версии, с которой обновляются: ключ --from X.Y.Z');
+    return;
+  }
+  for (const [key, value] of [['--from', from], ['--to', to]]) {
+    if (value !== null && !version.test(value)) {
+      refuse(usage['upgrade-report'], `${key} требует версии вида X.Y.Z: ${value}`);
+      return;
+    }
+  }
+  const history = await recordedHistory();
+  if (history === null) {
+    console.error('Истории изменений нет: пакет собран без changes.json.'
+      + ' Обновитесь на версию, собранную с историей, или сделайте заявку в ядро (REQ-ADOPTION-019)');
+    process.exitCode = 1;
+    return;
+  }
+  for (const line of reportLines(history, { from, to })) console.log(line);
 }
 
 // REQ-DEPLOYMENT-019

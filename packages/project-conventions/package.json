@@ -14,7 +14,8 @@
     "configs",
     "docs",
     "obligations.json",
-    "README.md"
+    "README.md",
+    "changes.json"
   ],
   "type": "module",
   "bin": {
@@ -25,7 +26,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "prepack": "node scripts/collect-docs.mjs",
+    "prepack": "node scripts/collect-docs.mjs && node scripts/collect-changes.mjs",
     "lint": "eslint ."
   },
   "devDependencies": {

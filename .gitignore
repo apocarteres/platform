@@ -7,3 +7,4 @@ dist/
 packages/*/node_modules/
 .idea/
 packages/*/docs/
+packages/project-conventions/changes.json

@@ -1,7 +1,7 @@
 ---
 id: CORE-DOC-017
 type: ticket
-status: backlog
+status: done
 scope: adoption, documentation
 authority: supporting
 priority: P2

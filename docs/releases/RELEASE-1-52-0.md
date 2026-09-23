@@ -19,7 +19,7 @@ opened-on: 2026-09-23
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-DOC-017](../tickets/CORE-DOC-017-integration-release-was-called-a-defect.md) | Указана при открытии выпуска |
+| [CORE-DOC-017](../tickets/closed/CORE-DOC-017-integration-release-was-called-a-defect.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

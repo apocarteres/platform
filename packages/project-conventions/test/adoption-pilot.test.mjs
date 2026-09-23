@@ -90,7 +90,7 @@ test('подключение не приносит потребителю тек
   }
 });
 
-// REQ-ADOPTION-026
+// REQ-ADOPTION-013, REQ-ADOPTION-026
 test('вход развёртывания и отчёт об обновлении работают у только что подключённого проекта', async () => {
   const { root } = await freshProject();
   try {
@@ -101,7 +101,7 @@ test('вход развёртывания и отчёт об обновлени�
     const catalogue = JSON.parse(await readFile(path.join(PACKAGE, 'obligations.json'), 'utf8')).obligations;
     const adopted = await conventions(root, 'release', 'adopt');
     const materialised = adopted.output.split('\n').filter((line) => line.includes('обязательство материализовано')).length;
-    assert.equal(materialised, catalogue.length, 'подключение выдаёт все директивы разом — об этом отчёт разбора, предложение 1');
+    assert.equal(materialised, catalogue.length, 'подключение заводит задачами все действующие обязательства: их разбор — выпуск интеграции (REQ-ADOPTION-013)');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

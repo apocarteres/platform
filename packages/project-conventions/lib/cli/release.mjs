@@ -232,7 +232,7 @@ export async function releaseDefer(root, id, reason) {
   const declared = await declaredObligations(root);
   const obligation = declared.find((item) => item.id === id);
   if (obligation === undefined) {
-    console.error(`Ядро не объявляет обязательства ${id}`);
+    console.error(`Ядро не объявляет обязательства ${id}: объявленные печатает conventions obligations`);
     process.exitCode = 1;
     return;
   }

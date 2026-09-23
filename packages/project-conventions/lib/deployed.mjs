@@ -55,7 +55,7 @@ export async function checksum(artifact) {
     if (about.isDirectory()) return await treeSum(artifact);
     return { value: await fileSum(artifact) };
   } catch (failure) {
-    if (failure.code === 'ENOENT') return { error: `артефакта нет: ${artifact}` };
+    if (failure.code === 'ENOENT') return { error: `артефакта нет: ${artifact} — соберите его шагом сборки составляющей либо проверьте путь в объявлении` };
     throw failure;
   }
 }

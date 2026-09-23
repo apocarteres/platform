@@ -234,18 +234,19 @@ export async function commitsWithoutATicket(root, range) {
 
 // REQ-RELEASE-041
 export async function accountCommit(root, { sha, reason }) {
-  if (!sha) return { accounted: false, problems: ['Учёт коммита требует его хеша'] };
+  if (!sha) return { accounted: false, problems: ['Учёт коммита требует его хеша: release account <хеш> --reason "<причина>"; коммиты, требующие учёта, называет release status'] };
   if (!reason) return { accounted: false, problems: ['Учёт коммита требует причины: ключ --reason'] };
   const release = await openRelease(root);
   if (release === null) {
-    return { accounted: false, problems: ['Открытого выпуска нет: коммит учитывается в том выпуске, в чей диапазон он попал'] };
+    return { accounted: false, problems: ['Открытого выпуска нет: коммит учитывается в том выпуске, в чей диапазон он попал. Откройте выпуск командой release open — учёт ляжет в его документ'] };
   }
   const config = await readConfig(root);
   const scheme = config.release?.scheme ?? 'date';
   const since = await previousReleaseTag(root, await releases(root), scheme);
   const found = (await commitsInRange(root, since)).find((commit) => commit.sha.startsWith(sha));
   if (found === undefined) {
-    return { accounted: false, problems: [`Коммита ${sha} нет в диапазоне выпуска: учитываются коммиты, которые держат его закрытие`] };
+    return { accounted: false, problems: [`Коммита ${sha} нет в диапазоне выпуска: учитываются коммиты, которые держат его закрытие.`
+        + ' Такие коммиты называет release status'] };
   }
   // REQ-RELEASE-042
   const composition = await compositionTickets(root, release.metadata.get('id'));
@@ -470,7 +471,7 @@ function obligationTicket(obligation, releaseId, id) {
 export async function satisfyObligation(root, { obligationId, ticketId: evidenceId }) {
   const { obligations } = await loadObligations(root);
   const obligation = obligations.find((item) => item.id === obligationId);
-  if (obligation === undefined) return { satisfied: false, problems: [`Ядро не объявляет обязательства ${obligationId}`] };
+  if (obligation === undefined) return { satisfied: false, problems: [`Ядро не объявляет обязательства ${obligationId}: объявленные печатает conventions obligations`] };
 
   const all = await tickets(root);
   const evidence = all.find((ticket) => ticketId(ticket) === evidenceId);
@@ -524,7 +525,7 @@ function releaseNumberProblem(scheme, version) {
 export async function adoptCycle(root, { scheme, version, today }) {
   const existing = await releases(root);
   if (existing.length > 0) {
-    return { adopted: false, problems: ['В проекте уже есть выпуски: принятие цикла выполняется один раз'] };
+    return { adopted: false, problems: ['В проекте уже есть выпуски: принятие цикла выполняется один раз. Следующий выпуск открывается командой release open'] };
   }
   const missingNumber = releaseNumberProblem(scheme, version);
   if (missingNumber !== null) return { adopted: false, problems: [missingNumber] };
@@ -544,7 +545,7 @@ async function namedTickets(root, names) {
   for (const name of names) {
     const ticket = all.find((item) => ticketId(item) === name);
     if (ticket === undefined) {
-      problems.push(`Задачи ${name} в проекте нет: в выпуск указываются существующие задачи`);
+      problems.push(`Задачи ${name} в проекте нет: в выпуск указываются существующие задачи — заведите её или исправьте идентификатор`);
       continue;
     }
     const release = ticket.metadata.get('release') ?? 'unassigned';
@@ -563,7 +564,8 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
   const existing = await releases(root);
   const already = await openRelease(root);
   if (already !== null) {
-    return { opened: false, problems: [`Выпуск ${already.metadata.get('id')} уже открыт: открытый выпуск всегда ровно один`] };
+    return { opened: false, problems: [`Выпуск ${already.metadata.get('id')} уже открыт: открытый выпуск всегда ровно один.`
+      + ' Закройте его командой release close либо отмените командой release cancel'] };
   }
   // REQ-RELEASE-030
   const missingNumber = releaseNumberProblem(scheme, version);
@@ -712,7 +714,7 @@ export async function recloseRelease(root, { scheme, reason }) {
   }
   const release = await openRelease(root);
   if (release === null) {
-    return { reclosed: false, problems: ['Открытого выпуска нет: переносить тег не у чего'] };
+    return { reclosed: false, problems: ['Открытого выпуска нет: переносить тег не у чего. Выпуск открывается командой release open, тег ставит release close'] };
   }
   const id = release.metadata.get('id');
   const tag = releaseTag(id, scheme);

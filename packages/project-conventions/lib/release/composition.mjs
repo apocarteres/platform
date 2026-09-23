@@ -5,7 +5,7 @@ import {
 // REQ-RELEASE-029
 export async function cancelRelease(root, { reason }) {
   const release = await openRelease(root);
-  if (release === null) return { cancelled: false, problems: ['Открытого выпуска нет: отменять нечего'] };
+  if (release === null) return { cancelled: false, problems: ['Открытого выпуска нет: отменять нечего. Состояние выпусков печатает release status'] };
   if (reason === undefined || reason.trim() === '') {
     return { cancelled: false, problems: ['Отмена выпуска требует причины: --reason "<причина>"'] };
   }
@@ -30,15 +30,15 @@ export async function dropFromComposition(root, { ticketId: name, reason }) {
   }
   const release = await openRelease(root);
   if (release === null) {
-    return { dropped: false, problems: ['Открытого выпуска нет: снимать задачу не из чего'] };
+    return { dropped: false, problems: ['Открытого выпуска нет: снимать задачу не из чего. Состояние выпусков печатает release status'] };
   }
   const id = release.metadata.get('id');
   const ticket = (await tickets(root)).find((item) => ticketId(item) === name);
   if (ticket === undefined) {
-    return { dropped: false, problems: [`Задачи ${name} в проекте нет`] };
+    return { dropped: false, problems: [`Задачи ${name} в проекте нет: проверьте идентификатор, состав выпуска печатает release status`] };
   }
   if ((ticket.metadata.get('release') ?? 'unassigned') !== id) {
-    return { dropped: false, problems: [`Задача ${name} не отнесена к ${id}: снимать её из состава нечего`] };
+    return { dropped: false, problems: [`Задача ${name} не отнесена к ${id}: снимать её из состава нечего. Состав выпуска печатает release status`] };
   }
   if (ticket.metadata.has('obligation')) {
     return {

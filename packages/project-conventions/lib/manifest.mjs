@@ -12,7 +12,11 @@ export const MANIFEST = 'target/deploy/manifest.json';
 export async function buildManifest(root, config, { environment, only = null, reason = null }) {
   if (!knownEnvironment(config, environment)) {
     const { environments } = deployment(config);
-    return { written: false, reason: `среда ${environment} не объявлена; объявлены: ${environments.join(', ') || 'ни одной'}` };
+    return {
+      written: false,
+      reason: `среда ${environment} не объявлена; объявлены: ${environments.join(', ') || 'ни одной'}.`
+        + ' Назовите объявленную либо добавьте её в deployment.environments',
+    };
   }
   const declared = deployment(config).components;
   const chosen = only === null ? declared : declared.filter((one) => only.includes(one.name));

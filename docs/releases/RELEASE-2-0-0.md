@@ -19,7 +19,7 @@ opened-on: 2026-09-23
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-ARC-007](../tickets/CORE-ARC-007-modal-escape-decision-is-explicit.md) | Указана при открытии выпуска |
+| [CORE-ARC-007](../tickets/closed/CORE-ARC-007-modal-escape-decision-is-explicit.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

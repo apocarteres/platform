@@ -19,7 +19,7 @@ opened-on: 2026-09-24
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-ARC-010](../tickets/CORE-ARC-010-window-closable-during-its-call.md) | Указана при открытии выпуска |
+| [CORE-ARC-010](../tickets/closed/CORE-ARC-010-window-closable-during-its-call.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

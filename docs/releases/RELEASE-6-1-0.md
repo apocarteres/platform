@@ -22,6 +22,12 @@ opened-on: 2026-09-24
 | [CORE-ARC-013](../tickets/closed/CORE-ARC-013-core-authentication.md) | Указана при открытии выпуска |
 | [CORE-OPS-088](../tickets/closed/CORE-OPS-088-verify-runner-on-a-build-machine.md) | Указана при открытии выпуска |
 
+## Учтённые коммиты
+
+| Коммит | Заголовок | Причина |
+|---|---|---|
+| 71d305f7 | CORE-ARC-012 The user support centre research: ADR-0007 proposes a library, requirements before code | итог исследования CORE-ARC-012: ADR-0007 в статусе proposed, центр поддержки поставлен на паузу до входа ядра; кода задача не несёт |
+
 ## Критерии выхода
 
 - [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска

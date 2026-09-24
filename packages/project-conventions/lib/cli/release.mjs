@@ -76,6 +76,8 @@ export async function releaseClose(root) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
   const result = await closeRelease(root, { scheme });
+  // REQ-RELEASE-047
+  for (const reminder of result.reminders ?? []) console.log(`Напоминание: ${reminder}`);
   if (!result.closed) {
     console.error('Выпуск закрыть нельзя:');
     for (const problem of result.problems) console.error(`- ${problem}`);
@@ -121,6 +123,8 @@ export async function releaseOpen(root, version, names) {
     return;
   }
   console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
+  // REQ-RELEASE-047
+  for (const reminder of result.reminders ?? []) console.log(`Напоминание: ${reminder}`);
   for (const ticket of result.named ?? []) console.log(`- в состав указана задача ${ticket}`);
   for (const ticket of result.created) console.log(`- обязательство материализовано задачей ${ticket}`);
   // REQ-RELEASE-019

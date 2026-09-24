@@ -17,6 +17,7 @@ import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, 
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { findExpandDebts } from '../migrations.mjs';
+import { questionStanding } from './questions.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -68,7 +69,10 @@ export async function closability(root, { scheme, retagging = false }) {
       + ` либо командой release satisfy ${entry.obligation.id} --ticket <ID>; перенести просроченное нельзя`);
   }
   // REQ-DEPLOYMENT-027
-  problems.push(...(await findExpandDebts(root, await readConfig(root))).problems);
+  problems.push(...(await findExpandDebts(root, config)).problems);
+  // REQ-RELEASE-047
+  const questions = await questionStanding(root, config);
+  problems.push(...questions.problems);
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
   const existing = await releases(root);
   // REQ-PUBLISHING-004, REQ-PUBLISHING-015
@@ -90,7 +94,7 @@ export async function closability(root, { scheme, retagging = false }) {
     // REQ-RELEASE-041
     open: release,
   }));
-  return { problems, release, commit, receipt, composition, state, obligations, isCore, tag, cost };
+  return { problems, reminders: questions.reminders, release, commit, receipt, composition, state, obligations, isCore, tag, cost };
 }
 
 function compositionRows(root, composition) {
@@ -315,7 +319,7 @@ async function withoutOlderThan(root, commits, baseline) {
 // REQ-RELEASE-001, REQ-RELEASE-005
 export async function closeRelease(root, { scheme }) {
   const state = await closability(root, { scheme });
-  if (state.problems.length > 0) return { closed: false, problems: state.problems };
+  if (state.problems.length > 0) return { closed: false, problems: state.problems, reminders: state.reminders };
   const { release, commit, receipt, tag } = state;
   const id = release.metadata.get('id');
   // REQ-RELEASE-021, REQ-RELEASE-031
@@ -354,7 +358,7 @@ export async function closeRelease(root, { scheme }) {
   await createTag(root, tag, commit, `Выпуск ${id}`);
   for (const write of writes) await writeDocument(write.file, write.content);
 
-  return { closed: true, id, tag, commit, composition: composition.map(ticketId) };
+  return { closed: true, id, tag, commit, composition: composition.map(ticketId), reminders: state.reminders };
 }
 
 // REQ-RELEASE-001, REQ-RELEASE-034
@@ -588,6 +592,9 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
       problems: [`Выпуск ${id} уже существует: номер не переиспользуется, задайте следующий номер`],
     };
   }
+  // REQ-RELEASE-047
+  const questions = await questionStanding(root, await readConfig(root));
+  if (questions.problems.length > 0) return { opened: false, problems: questions.problems };
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
   const pending = pendingObligations(obligations, state, isCore);
@@ -696,7 +703,7 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
   }
   await writeState(root, state);
   return {
-    opened: true, id, tag, file,
+    opened: true, id, tag, file, reminders: questions.reminders,
     named: named.found.map(ticketId),
     created: created.map((ticket) => ticket.id),
     carried: carried.map((entry) => ticketId(entry.ticket)),

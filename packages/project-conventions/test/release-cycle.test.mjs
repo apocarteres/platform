@@ -1427,3 +1427,69 @@ test('просроченная временная совместимость д�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-RELEASE-047
+async function questioned(root, count) {
+  for (let index = 1; index <= count; index += 1) {
+    await writeFile(path.join(root, `docs/tickets/Q-${String(index).padStart(2, '0')}.md`),
+      ticket(`Q-${String(index).padStart(2, '0')}`, 'backlog').replace('release: unassigned', 'release: unassigned\nquestions: open')
+      + '\n## Открытые вопросы\n\n1. Как быть? Ответ: —\n');
+  }
+}
+
+// REQ-RELEASE-047
+test('открытые вопросы сверх порога напоминают при открытии и закрытии, сверх второго — требуют ответов', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'), JSON.stringify({ obligations: [] }));
+    await questioned(root, 4);
+    await writeFile(path.join(root, 'docs/tickets/R-01.md'),
+      ticket('R-01', 'backlog').replace('release: unassigned', 'release: unassigned\nquestions: resolved')
+      + '\n## Открытые вопросы\n\n1. Как быть? Ответ: так.\n');
+    assert.deepEqual((await openNext(root, { scheme: 'date', today: FIXED_DAY })).reminders, [], 'четыре открытых — ещё не повод, решённый не в счёт');
+    await cancelRelease(root, { reason: 'проба' });
+
+    await questioned(root, 5);
+    const reminded = await openNext(root, { scheme: 'date', today: NEXT_DAY });
+    assert.equal(reminded.opened, true);
+    assert.match(reminded.reminders[0], /Задач с открытыми вопросами 5 — больше 4; при 10 выпуск потребует ответов: Q-01, Q-02, Q-03, Q-04, Q-05/);
+    await writeFile(path.join(root, 'docs/tickets/closed/shipped.md'), ticket('TICKET-SHIPPED', 'done'));
+    await writeReceipt(root, RECEIPT(await commitAll(root), NEXT_DAY));
+    const closed = await closeRelease(root, { scheme: 'date' });
+    assert.equal(closed.closed, true, closed.problems?.join('\n'));
+    assert.match(closed.reminders[0], /открытыми вопросами 5/);
+    await finishRelease(root, { scheme: 'date', today: NEXT_DAY, note: 'развёртывание' });
+
+    await questioned(root, 10);
+    const refused = await openNext(root, { scheme: 'date', today: new Date('2026-09-09T00:00:00Z') });
+    assert.equal(refused.opened, false);
+    assert.match(refused.problems[0], /Задач с открытыми вопросами 10 — больше 9: выпуск требует ответов\. .*questions: resolved: Q-01, .*Q-10/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-047
+test('проект задаёт свои пороги; неверные пороги названы', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'), JSON.stringify({ obligations: [] }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ release: { openQuestions: { remind: 0, require: 1 } } }));
+    await questioned(root, 1);
+    const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    assert.match(opened.reminders[0], /Задач с открытыми вопросами 1 — больше 0; при 2/);
+
+    await questioned(root, 2);
+    await writeReceipt(root, RECEIPT(await commitAll(root), FIXED_DAY));
+    const refused = await closeRelease(root, { scheme: 'date' });
+    assert.equal(refused.closed, false);
+    assert.ok(refused.problems.some((problem) => /открытыми вопросами 2 — больше 1: выпуск требует ответов/.test(problem)), refused.problems.join('\n'));
+
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ release: { openQuestions: { remind: 5, require: 2 } } }));
+    assert.ok((await closability(root, { scheme: 'date' })).problems.some((problem) => /require 2 меньше remind 5/.test(problem)));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ release: { openQuestions: { remind: -1 } } }));
+    assert.ok((await closability(root, { scheme: 'date' })).problems.some((problem) => /release\.openQuestions\.remind=-1: целое число задач от 0/.test(problem)));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

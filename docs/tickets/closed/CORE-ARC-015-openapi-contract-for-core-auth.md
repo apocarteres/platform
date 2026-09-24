@@ -22,7 +22,7 @@ HTTP-API аутентификации ядра описан только тек�
 ## Решение владельца
 
 Решение владельца от 2026-09-24 — идея
-[CORE-IDEA-001](../ideas/CORE-IDEA-001-openapi-contract-for-core-auth.md)
+[CORE-IDEA-001](../../ideas/CORE-IDEA-001-openapi-contract-for-core-auth.md)
 принята:
 
 - `platform-auth` поставляет `openapi/auth.yaml`, тест держит контроллеры в
@@ -82,4 +82,4 @@ Prone и пересобрана.
 
 ## Откуда пришла задача
 
-Идея [CORE-IDEA-001](../ideas/CORE-IDEA-001-openapi-contract-for-core-auth.md).
+Идея [CORE-IDEA-001](../../ideas/CORE-IDEA-001-openapi-contract-for-core-auth.md).

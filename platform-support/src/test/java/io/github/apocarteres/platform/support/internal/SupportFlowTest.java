@@ -568,7 +568,9 @@ class SupportFlowTest {
     assertThat(retention.erase("guest@mail.example")).isEqualTo(1);
     author.get("/api/support/requests/" + mine).andExpect(status().isNotFound());
     author.get("/api/support/requests").andExpect(jsonPath("$.total").value(0));
-    operator.get("/api/support/operator/requests/" + mine).andExpect(status().isNotFound());
+    operator.get("/api/support/operator/requests/" + mine).andExpect(status().isOk())
+      .andExpect(jsonPath("$.erased").value(true)).andExpect(jsonPath("$.message").doesNotExist())
+      .andExpect(jsonPath("$.author").doesNotExist()).andExpect(jsonPath("$.email").doesNotExist());
     assertThat(jdbc.sql("SELECT COUNT(*) FROM platform_support_entry WHERE text IS NOT NULL").query(Long.class).single()).isZero();
     assertThat(jdbc.sql("SELECT COUNT(*) FROM platform_support_attachment_content").query(Long.class).single()).isZero();
     assertThat(jdbc.sql("SELECT COUNT(*) FROM platform_support_request WHERE message IS NOT NULL OR guest_email IS NOT NULL"

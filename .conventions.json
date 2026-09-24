@@ -1,11 +1,20 @@
 {
   "sources": [
+    "packages/action/src",
+    "packages/app-update/src",
+    "packages/auth/src",
+    "packages/http/src",
+    "packages/modal/src",
+    "packages/routing/src",
+    "platform-api-version/src",
+    "platform-arch-rules/src",
+    "platform-auth/src",
     "platform-persistence/src",
+    "platform-rate-limit/src",
     "platform-time/src",
     "platform-web-errors/src",
     "scripts",
-    "packages/project-conventions",
-    "packages/http/src"
+    "packages/project-conventions"
   ],
   "exclude": [
     "/test/resources/"

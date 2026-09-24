@@ -14,10 +14,11 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 6. Включены самостоятельные задачи и этапы планов функций.
+Всего: 7. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Правила ядра не видят девяти его модулей](CORE-QUAL-026-core-rules-miss-nine-modules.md) | P1 | В работе | Не назначен | quality, tooling |
 | [Исследование: отдельный сервис уведомлений](CORE-ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
 | [Исследование: центр поддержки пользователей](CORE-ARC-012-user-support-centre-research.md) | P2 | В работе | Не назначен | frontend, backend, architecture, research |
 | [Журнал клиента: пакет `@apocarteres/client-journal`](CORE-ARC-016-client-journal.md) | P2 | В работе | Не назначен | frontend, typescript, personal-data |

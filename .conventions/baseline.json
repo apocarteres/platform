@@ -1,14 +1,33 @@
 {
   "version": 2,
   "rules": {
+    "bundle-budgets": {},
+    "client-update": {},
     "clock": {},
     "comments": {},
     "config-secrets": {},
+    "defer-error": {},
     "dependency-versions": {},
+    "deploy-entry": {},
     "document-naming": {},
+    "environment-config": {},
     "file-size": {},
+    "migration-labels": {},
+    "modal-actions": {},
+    "modal-backdrop": {},
+    "modal-escape": {},
     "money-types": {},
-    "naming-er": {},
+    "naming-er": {
+      "platform-arch-rules/src/test/java/io/github/apocarteres/platform/arch/fixtures/chain/lower/Lower.java": 1,
+      "platform-arch-rules/src/test/java/io/github/apocarteres/platform/arch/fixtures/chain/upper/Upper.java": 1,
+      "platform-arch-rules/src/test/java/io/github/apocarteres/platform/arch/fixtures/ring/right/LeftSideHolder.java": 1,
+      "platform-auth/src/test/java/io/github/apocarteres/platform/auth/internal/AuthFlowTest.java": 2,
+      "platform-auth/src/test/java/io/github/apocarteres/platform/auth/internal/ProfileReaderTest.java": 1,
+      "platform-rate-limit/src/main/java/io/github/apocarteres/platform/ratelimit/internal/RedisRateLimiter.java": 1,
+      "platform-rate-limit/src/main/java/io/github/apocarteres/platform/ratelimit/RateLimiter.java": 1
+    },
+    "rust-exemptions": {},
+    "static-analysis": {},
     "terms-alias": {
       "docs/REQUIREMENTS.md": 4,
       "docs/requirements/adoption.md": 1,
@@ -33,6 +52,7 @@
       "docs/tickets/closed/CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md": 2,
       "docs/tickets/closed/CORE-QUAL-003-clock-hidden-in-a-template-string.md": 1
     },
-    "terms-preferred": {}
+    "terms-preferred": {},
+    "wiring-conditions": {}
   }
 }

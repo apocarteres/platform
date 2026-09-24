@@ -3,6 +3,7 @@
     "packages/action/src",
     "packages/app-update/src",
     "packages/auth/src",
+    "packages/client-journal/src",
     "packages/http/src",
     "packages/modal/src",
     "packages/routing/src",
@@ -20,6 +21,7 @@
     "/test/resources/"
   ],
   "clockAllowlist": [
+    "packages/client-journal/src/clock.ts",
     "packages/project-conventions/lib/now.mjs",
     "platform-time/src/main/java/io/github/apocarteres/platform/time/internal/TimeAutoConfiguration.java"
   ],

@@ -11,7 +11,7 @@ const CORE = path.resolve(here, '../../..');
 const SELF = path.relative(CORE, fileURLToPath(import.meta.url));
 
 // REQ-QUALITY-017
-const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md'];
+const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md'];
 
 // REQ-QUALITY-017
 const CONSUMER_SIDE = {
@@ -28,8 +28,11 @@ const CONSUMER_SIDE = {
 };
 
 // REQ-QUALITY-017
+const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH';
+
+// REQ-QUALITY-017
 function citations() {
-  const listed = execFileSync('git', ['-C', CORE, 'grep', '--untracked', '-l', '-E', 'REQ-(DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|AUTH)-[0-9]+', '--',
+  const listed = execFileSync('git', ['-C', CORE, 'grep', '--untracked', '-l', '-E', `REQ-(${PREFIXES})-[0-9]+`, '--',
     'packages/*/test/*', 'packages/*/src/*.test.ts', 'platform-*/src/test/*'], { env: environmentWithoutGit(), encoding: 'utf8' });
   return listed.split('\n').filter((file) => file.length > 0 && file !== SELF);
 }
@@ -38,7 +41,7 @@ function citations() {
 test('положение о поведении при работе выходит с проверкой либо с записанной причиной, почему ядро его не запускает', async () => {
   const cited = new Set();
   for (const file of citations()) {
-    for (const match of (await readFile(path.join(CORE, file), 'utf8')).matchAll(/REQ-(?:DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|AUTH)-\d+/g)) cited.add(match[0]);
+    for (const match of (await readFile(path.join(CORE, file), 'utf8')).matchAll(new RegExp(`REQ-(?:${PREFIXES})-\\d+`, 'g'))) cited.add(match[0]);
   }
   const clauses = [];
   for (const document of RUNTIME_DOCUMENTS) {

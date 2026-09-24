@@ -1,0 +1,26 @@
+{
+  "mask": "***",
+  "masked": [
+    { "input": "почта ivan.petrov@example.org не подтверждена", "output": "почта *** не подтверждена" },
+    { "input": "/verify/Zk3p_Qe9-Lm2Xc7Vb4Nq", "output": "/verify/***" },
+    { "input": "/verify/Zk3p_Qe9-Lm2Xc7Vb4N", "output": "/verify/Zk3p_Qe9-Lm2Xc7Vb4N" },
+    { "input": "звонить +7 (900) 123-45-67 вечером", "output": "звонить *** вечером" },
+    { "input": "код 123456", "output": "код 123456" },
+    { "input": "/accounts/3f2b8c1e-5a47-4d2e-9b61-0c8d7e6f5a43", "output": "/accounts/***" },
+    { "input": "срок 2026-09-24 истёк", "output": "срок *** истёк" },
+    { "input": "TypeError: x is undefined", "output": "TypeError: x is undefined" },
+    { "input": "a@b.co и c@d.io", "output": "*** и ***" },
+    { "input": "письмо:ivan@example.org", "output": "***" },
+    { "input": "", "output": "" }
+  ],
+  "paths": [
+    { "url": "/api/auth/verify?token=Zk3p_Qe9#frag", "path": "/api/auth/verify" },
+    { "url": "https://example.org/api/items/7?page=2", "path": "/api/items/7" },
+    { "url": "//cdn.example.org/assets/app.js", "path": "/assets/app.js" },
+    { "url": "https://example.org", "path": "/" },
+    { "url": "https://example.org?x=1", "path": "/" },
+    { "url": "#top", "path": "/" },
+    { "url": "api/items", "path": "api/items" },
+    { "url": "/reset#Zk3p_Qe9-Lm2Xc7Vb4Nq", "path": "/reset" }
+  ]
+}

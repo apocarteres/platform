@@ -1,8 +1,10 @@
 package io.github.apocarteres.platform.support.internal;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Set;
 
 // REQ-SUPPORT-006
+@JsonInclude(JsonInclude.Include.NON_NULL)
 record JournalEntry(String at, String kind, String method, String path, Integer status, Long durationMs, String code,
   String message) {
 

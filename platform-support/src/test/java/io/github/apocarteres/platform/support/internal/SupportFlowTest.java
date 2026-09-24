@@ -433,6 +433,24 @@ class SupportFlowTest {
       .andExpect(jsonPath("$.email").doesNotExist());
   }
 
+  // REQ-SUPPORT-006
+  @Test
+  @DisplayName("Журнал держит не больше 5000 записей — самые свежие, даже когда объём в пределе")
+  void journalKeepsTheLatestEntries() throws Exception {
+    account("player@site.example", "USER");
+    account("operator@site.example", "USER", "ADMIN");
+    StringBuilder journal = new StringBuilder("[");
+    for (int index = 0; index < 5100; index++) {
+      journal.append(index == 0 ? "" : ",").append("{\"at\":\"").append(index).append("\",\"kind\":\"navigation\"}");
+    }
+    journal.append("]");
+    String id = submitted(new Tab().signIn("player@site.example"), "{\"message\":\"много\",\"journal\":" + journal + "}");
+    JsonNode kept = body(new Tab().signIn("operator@site.example").get("/api/support/operator/requests/" + id)).get("journal");
+    assertThat(kept.size()).isEqualTo(SupportLimits.JOURNAL_ENTRIES);
+    assertThat(kept.get(0).get("at").asString()).isEqualTo("100");
+    assertThat(kept.get(kept.size() - 1).get("at").asString()).isEqualTo("5099");
+  }
+
   // REQ-SUPPORT-007
   @Test
   @DisplayName("Состояния: ответ оператора — ANSWERED, сообщение автора — IN_PROGRESS, закрытое не пишется, запрещённый переход отказывает")

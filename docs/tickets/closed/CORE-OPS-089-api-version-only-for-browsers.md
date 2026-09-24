@@ -5,7 +5,7 @@ status: done
 scope: backend, api
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-7-0-0
 related: REQ-CLIENT-UPDATE
 ---
 

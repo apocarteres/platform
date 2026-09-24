@@ -106,7 +106,7 @@ authority: navigation
 | [Куски клиента переживают раскат, их размер держит проверка](CORE-OPS-084-client-chunks-survive-a-rollout.md) | P1 | Выполнена | [RELEASE-5-0-0](../../releases/RELEASE-5-0-0.md) | frontend, deployment, tooling |
 | [Развёртывание службы без простоя: второй экземпляр и переключение](CORE-OPS-085-deployment-without-downtime.md) | P1 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | deployment, persistence, tooling |
 | [Набор проверок ядра в сборочном контейнере на машине сборки](CORE-OPS-088-verify-runner-on-a-build-machine.md) | P1 | Выполнена | [RELEASE-6-1-0](../../releases/RELEASE-6-1-0.md) | build, tooling |
-| [Версия API требуется от всех запросов: забытое исключение кладёт машинных клиентов](CORE-OPS-089-api-version-only-for-browsers.md) | P1 | Выполнена | Не назначен | backend, api |
+| [Версия API требуется от всех запросов: забытое исключение кладёт машинных клиентов](CORE-OPS-089-api-version-only-for-browsers.md) | P1 | Выполнена | [RELEASE-7-0-0](../../releases/RELEASE-7-0-0.md) | backend, api |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

@@ -3,7 +3,7 @@ package io.github.apocarteres.platform.support.internal;
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
-import io.github.apocarteres.platform.support.AnswerLetter;
+import io.github.apocarteres.platform.support.AnswerNotice;
 import io.github.apocarteres.platform.support.ArrivalNotice;
 import io.github.apocarteres.platform.support.AttachmentStore;
 import io.github.apocarteres.platform.support.RequestState;
@@ -257,11 +257,11 @@ final class SupportService {
   }
 
   // REQ-SUPPORT-004, REQ-SUPPORT-009
-  private Optional<AnswerLetter> letter(Stored request, String text, Instant now) {
+  private Optional<AnswerNotice> letter(Stored request, String text, Instant now) {
     Locale locale = Locale.forLanguageTag(request.locale());
     if (request.author() != null) {
       return accounts.find(request.author()).map(Account::email)
-        .map(email -> new AnswerLetter(email, request.number(), settings.request(request.id()), Optional.of(text), locale));
+        .map(email -> new AnswerNotice(email, request.number(), settings.request(request.id()), Optional.of(text), locale));
     }
     if (request.guestEmail() == null) {
       return Optional.empty();
@@ -270,7 +270,7 @@ final class SupportService {
     RANDOM.nextBytes(raw);
     String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
     requests.answerLink(Digest.of(token), request.id(), now, now.plus(settings.answerLinkTtl()));
-    return Optional.of(new AnswerLetter(request.guestEmail(), request.number(), settings.answer(token), Optional.empty(), locale));
+    return Optional.of(new AnswerNotice(request.guestEmail(), request.number(), settings.answer(token), Optional.empty(), locale));
   }
 
   // REQ-SUPPORT-007

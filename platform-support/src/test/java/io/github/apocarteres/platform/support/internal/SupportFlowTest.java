@@ -12,7 +12,7 @@ import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.RegistrationHook;
-import io.github.apocarteres.platform.support.AnswerLetter;
+import io.github.apocarteres.platform.support.AnswerNotice;
 import io.github.apocarteres.platform.support.ArrivalNotice;
 import io.github.apocarteres.platform.support.Expired;
 import io.github.apocarteres.platform.support.GuestIntake;
@@ -155,24 +155,24 @@ class SupportFlowTest {
       .build();
   }
 
-  final class Browser {
+  final class Tab {
 
     private final List<Cookie> cookies = new ArrayList<>();
     private final String address;
     private String csrf;
 
-    Browser() throws Exception {
+    Tab() throws Exception {
       this("198.51.100.7");
     }
 
-    Browser(String address) throws Exception {
+    Tab(String address) throws Exception {
       this.address = address;
       MockHttpServletResponse response = send(MockMvcRequestBuilders.get("/api/auth/csrf")).andExpect(status().isOk())
         .andReturn().getResponse();
       csrf = response.getContentAsString().replaceAll(".*\"token\":\"([^\"]+)\".*", "$1");
     }
 
-    Browser signIn(String email) throws Exception {
+    Tab signIn(String email) throws Exception {
       post("/api/auth/login", "{\"email\":\"" + email + "\",\"password\":\"" + PASSWORD + "\"}").andExpect(status().isOk());
       MockHttpServletResponse response = get("/api/auth/csrf").andReturn().getResponse();
       csrf = response.getContentAsString().replaceAll(".*\"token\":\"([^\"]+)\".*", "$1");
@@ -236,7 +236,7 @@ class SupportFlowTest {
     return "{\"message\":\"" + message + "\",\"email\":\"" + email + "\"}";
   }
 
-  private String submitted(Browser browser, String request, byte[]... files) throws Exception {
+  private String submitted(Tab browser, String request, byte[]... files) throws Exception {
     return body(browser.submit(request, files).andExpect(status().isCreated())).get("id").asString();
   }
 
@@ -244,7 +244,7 @@ class SupportFlowTest {
   @DisplayName("Вошедший отправляет обращение: номер, своё в списке, ход; оператор извещён после фиксации")
   void signedInSubmits() throws Exception {
     account("player@site.example", "USER");
-    Browser player = new Browser().signIn("player@site.example");
+    Tab player = new Tab().signIn("player@site.example");
     JsonNode created = body(player.submit(request("Не открывается страница")).andExpect(status().isCreated()));
     String id = created.get("id").asString();
     assertThat(created.get("number").asLong()).isPositive();
@@ -264,7 +264,7 @@ class SupportFlowTest {
   @Test
   @DisplayName("Приём без входа проект объявляет явно: открыт — почта обязательна, закрыт — guest-intake-closed")
   void guestIntakeIsDeclared() throws Exception {
-    Browser guest = new Browser();
+    Tab guest = new Tab();
     guest.submit(request("без почты")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("guest-email-rejected"));
     guest.submit(guest("с почтой", "Guest@Mail.Example")).andExpect(status().isCreated());
     assertThat(jdbc.sql("SELECT guest_email FROM platform_support_request").query(String.class).single()).isEqualTo("guest@mail.example");
@@ -285,7 +285,7 @@ class SupportFlowTest {
   @Test
   @DisplayName("Предел тела и ограничитель по сети срабатывают до разбора и до проверки CSRF")
   void intakeIsGuardedBeforeParsing() throws Exception {
-    Browser guest = new Browser();
+    Tab guest = new Tab();
     guest.send(multipart("/api/support/requests").with(r -> {
       r.setContent(new byte[(int) SupportLimits.BODY_BYTES + 1]);
       return r;
@@ -309,9 +309,9 @@ class SupportFlowTest {
   @DisplayName("Невошедший с одной почты — не больше трёх обращений в час")
   void guestIsLimitedByEmail() throws Exception {
     for (int index = 0; index < 3; index++) {
-      new Browser("203.0.113." + index).submit(guest("обращение", "same@mail.example")).andExpect(status().isCreated());
+      new Tab("203.0.113." + index).submit(guest("обращение", "same@mail.example")).andExpect(status().isCreated());
     }
-    new Browser("203.0.113.9").submit(guest("обращение", "same@mail.example"))
+    new Tab("203.0.113.9").submit(guest("обращение", "same@mail.example"))
       .andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("rate-limited"));
   }
 
@@ -333,10 +333,10 @@ class SupportFlowTest {
   @DisplayName("Невошедшему ответ приходит ссылкой без текста; ссылка открывает ответ на чтение и истекает")
   void guestReadsTheAnswerByLink() throws Exception {
     account("operator@site.example", "USER", "ADMIN");
-    String id = submitted(new Browser(), guest("Не могу войти", "guest@mail.example"));
-    Browser operator = new Browser().signIn("operator@site.example");
+    String id = submitted(new Tab(), guest("Не могу войти", "guest@mail.example"));
+    Tab operator = new Tab().signIn("operator@site.example");
     operator.post("/api/support/operator/requests/" + id + "/messages", "{\"text\":\"Сбросьте пароль\"}").andExpect(status().isOk());
-    AnswerLetter letter = letters.answers.getFirst();
+    AnswerNotice letter = letters.answers.getFirst();
     assertThat(letter.email()).isEqualTo("guest@mail.example");
     assertThat(letter.text()).isEmpty();
     assertThat(letter.locale()).isEqualTo(Locale.forLanguageTag("ru-RU"));
@@ -344,7 +344,7 @@ class SupportFlowTest {
     assertThat(token.find()).isTrue();
     assertThat(jdbc.sql("SELECT COUNT(*) FROM platform_support_answer_link WHERE digest = :d").param("d", token.group(1))
       .query(Long.class).single()).isZero();
-    Browser guest = new Browser("192.0.2.4");
+    Tab guest = new Tab("192.0.2.4");
     guest.post("/api/support/answer", "{\"token\":\"" + token.group(1) + "\"}").andExpect(status().isOk())
       .andExpect(jsonPath("$.steps[0].text").value("Сбросьте пароль")).andExpect(jsonPath("$.email").doesNotExist());
     clock.advance(Duration.ofDays(8));
@@ -359,8 +359,8 @@ class SupportFlowTest {
   void accountAuthorGetsTheText() throws Exception {
     account("player@site.example", "USER");
     account("operator@site.example", "USER", "ADMIN");
-    String id = submitted(new Browser().signIn("player@site.example"), request("Вопрос"));
-    new Browser().signIn("operator@site.example")
+    String id = submitted(new Tab().signIn("player@site.example"), request("Вопрос"));
+    new Tab().signIn("operator@site.example")
       .post("/api/support/operator/requests/" + id + "/messages", "{\"text\":\"Ответ\"}").andExpect(status().isOk());
     assertThat(letters.answers).singleElement().satisfies(letter -> {
       assertThat(letter.email()).isEqualTo("player@site.example");
@@ -376,7 +376,7 @@ class SupportFlowTest {
     account("player@site.example", "USER");
     account("other@site.example", "USER");
     account("operator@site.example", "USER", "ADMIN");
-    Browser player = new Browser().signIn("player@site.example");
+    Tab player = new Tab().signIn("player@site.example");
     player.submit(request("гиф"), GIF).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("attachment-rejected"));
     player.submit(request("четыре"), PNG, PNG, PNG, PNG).andExpect(jsonPath("$.code").value("attachment-rejected"));
     byte[] large = new byte[SupportLimits.ATTACHMENT_BYTES + 1];
@@ -390,9 +390,9 @@ class SupportFlowTest {
     byte[] got = player.get("/api/support/requests/" + id + "/files/" + file).andExpect(status().isOk())
       .andExpect(header().string("X-Content-Type-Options", "nosniff")).andReturn().getResponse().getContentAsByteArray();
     assertThat(got).isEqualTo(PNG);
-    new Browser().signIn("operator@site.example").get("/api/support/operator/requests/" + id + "/files/" + file)
+    new Tab().signIn("operator@site.example").get("/api/support/operator/requests/" + id + "/files/" + file)
       .andExpect(status().isOk());
-    new Browser().signIn("other@site.example").get("/api/support/requests/" + id + "/files/" + file)
+    new Tab().signIn("other@site.example").get("/api/support/requests/" + id + "/files/" + file)
       .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("request-not-found"));
   }
 
@@ -410,9 +410,9 @@ class SupportFlowTest {
     journal.append(",{\"at\":\"x\",\"kind\":\"other\"},{\"at\":\"2026-09-25T09:00:00Z\",\"kind\":\"error\",")
       .append("\"message\":\"письмо ivan@mail.example не ушло\"}]");
     String body = "{\"message\":\"с журналом\",\"snapshot\":{\"version\":\"1.2\",\"page\":\"https://site.example/reset?token=Zk3p_Qe9-Lm2Xc7Vb4Nq#x\","
-      + "\"language\":\"ru\",\"width\":1280,\"height\":800,\"agent\":\"Browser\"},\"journal\":" + journal + "}";
-    String id = submitted(new Browser().signIn("player@site.example"), body);
-    JsonNode view = body(new Browser().signIn("operator@site.example").get("/api/support/operator/requests/" + id));
+      + "\"language\":\"ru\",\"width\":1280,\"height\":800,\"agent\":\"Tab\"},\"journal\":" + journal + "}";
+    String id = submitted(new Tab().signIn("player@site.example"), body);
+    JsonNode view = body(new Tab().signIn("operator@site.example").get("/api/support/operator/requests/" + id));
     assertThat(view.get("snapshot").get("page").asString()).isEqualTo("/reset");
     JsonNode kept = view.get("journal");
     assertThat(kept.size()).isLessThanOrEqualTo(SupportLimits.JOURNAL_ENTRIES);
@@ -420,7 +420,7 @@ class SupportFlowTest {
     assertThat(kept.get(0).get("path").asString()).doesNotContain("?");
     assertThat(jdbc.sql("SELECT OCTET_LENGTH(journal) FROM platform_support_request").query(Integer.class).single())
       .isLessThanOrEqualTo(SupportLimits.JOURNAL_BYTES);
-    new Browser().signIn("player@site.example").get("/api/support/requests/" + id).andExpect(status().isOk())
+    new Tab().signIn("player@site.example").get("/api/support/requests/" + id).andExpect(status().isOk())
       .andExpect(jsonPath("$.journal").doesNotExist()).andExpect(jsonPath("$.snapshot").doesNotExist())
       .andExpect(jsonPath("$.email").doesNotExist());
   }
@@ -431,8 +431,8 @@ class SupportFlowTest {
   void statesMoveByTheRules() throws Exception {
     account("player@site.example", "USER");
     account("operator@site.example", "USER", "ADMIN");
-    Browser player = new Browser().signIn("player@site.example");
-    Browser operator = new Browser().signIn("operator@site.example");
+    Tab player = new Tab().signIn("player@site.example");
+    Tab operator = new Tab().signIn("operator@site.example");
     String id = submitted(player, request("вопрос"));
     operator.post("/api/support/operator/requests/" + id + "/state", "{\"state\":\"ANSWERED\"}")
       .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("transition-refused"));
@@ -463,8 +463,8 @@ class SupportFlowTest {
   void freshIsCountedForBothSides() throws Exception {
     account("player@site.example", "USER");
     account("operator@site.example", "USER", "ADMIN");
-    Browser player = new Browser().signIn("player@site.example");
-    Browser operator = new Browser().signIn("operator@site.example");
+    Tab player = new Tab().signIn("player@site.example");
+    Tab operator = new Tab().signIn("operator@site.example");
     String id = submitted(player, request("вопрос"));
     operator.get("/api/support/unread").andExpect(jsonPath("$.operator").value(1));
     player.get("/api/support/unread").andExpect(jsonPath("$.mine").value(0)).andExpect(jsonPath("$.operator").doesNotExist());
@@ -488,9 +488,9 @@ class SupportFlowTest {
   @DisplayName("Отказ письма не откатывает ответ: запись в ходе остаётся, ответ точки успешен")
   void failedLetterKeepsTheAnswer() throws Exception {
     account("operator@site.example", "USER", "ADMIN");
-    String id = submitted(new Browser(), guest("вопрос", "guest@mail.example"));
+    String id = submitted(new Tab(), guest("вопрос", "guest@mail.example"));
     letters.failing = true;
-    new Browser().signIn("operator@site.example")
+    new Tab().signIn("operator@site.example")
       .post("/api/support/operator/requests/" + id + "/messages", "{\"text\":\"ответ\"}").andExpect(status().isOk());
     assertThat(jdbc.sql("SELECT COUNT(*) FROM platform_support_entry WHERE kind = 'MESSAGE'").query(Long.class).single()).isEqualTo(1);
   }
@@ -502,7 +502,7 @@ class SupportFlowTest {
     account("player@site.example", "USER");
     jdbc.sql("ALTER TABLE platform_support_attachment ADD CONSTRAINT refuse_all CHECK (size_bytes < 0)").update();
     try {
-      new Browser().signIn("player@site.example").submit(request("с вложением"), PNG).andExpect(status().is5xxServerError());
+      new Tab().signIn("player@site.example").submit(request("с вложением"), PNG).andExpect(status().is5xxServerError());
     } finally {
       jdbc.sql("ALTER TABLE platform_support_attachment DROP CONSTRAINT refuse_all").update();
     }
@@ -515,10 +515,10 @@ class SupportFlowTest {
   @DisplayName("Стирание по сроку: вложения, журнал и почта невошедшего через год после закрытия; повторный прогон ничего не меняет")
   void expiredDataIsPurged() throws Exception {
     account("operator@site.example", "USER", "ADMIN");
-    String closed = submitted(new Browser("192.0.2.1"), "{\"message\":\"старое\",\"email\":\"old@mail.example\",\"journal\":["
+    String closed = submitted(new Tab("192.0.2.1"), "{\"message\":\"старое\",\"email\":\"old@mail.example\",\"journal\":["
       + "{\"at\":\"2026-09-25T09:00:00Z\",\"kind\":\"navigation\",\"path\":\"/a\"}]}", PNG);
-    String open = submitted(new Browser("192.0.2.2"), guest("открытое", "open@mail.example"), PNG);
-    Browser operator = new Browser().signIn("operator@site.example");
+    String open = submitted(new Tab("192.0.2.2"), guest("открытое", "open@mail.example"), PNG);
+    Tab operator = new Tab().signIn("operator@site.example");
     operator.post("/api/support/operator/requests/" + closed + "/state", "{\"state\":\"CLOSED\"}").andExpect(status().isOk());
     clock.advance(Duration.ofDays(364));
     assertThat(retention.purgeExpired()).isEqualTo(new Expired(0, 0, 0));
@@ -558,12 +558,15 @@ class SupportFlowTest {
   void subjectIsErased() throws Exception {
     UUID player = account("player@site.example", "USER");
     account("operator@site.example", "USER", "ADMIN");
-    Browser author = new Browser().signIn("player@site.example");
+    Tab author = new Tab().signIn("player@site.example");
     String mine = submitted(author, request("моё"), PNG);
-    String guest = submitted(new Browser("192.0.2.3"), guest("гостевое", "Guest@Mail.Example"), PNG);
-    Browser operator = new Browser().signIn("operator@site.example");
+    String guest = submitted(new Tab("192.0.2.3"), guest("гостевое", "Guest@Mail.Example"), PNG);
+    Tab operator = new Tab().signIn("operator@site.example");
     operator.post("/api/support/operator/requests/" + mine + "/messages", "{\"text\":\"ответ с данными\"}").andExpect(status().isOk());
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.sql("DELETE FROM platform_account WHERE id = :id").param("id", player).update())
+      .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     assertThat(retention.erase(player)).isEqualTo(1);
+    assertThat(jdbc.sql("DELETE FROM platform_account WHERE id = :id").param("id", player).update()).isEqualTo(1);
     assertThat(retention.erase(player)).isZero();
     assertThat(retention.erase("guest@mail.example")).isEqualTo(1);
     author.get("/api/support/requests/" + mine).andExpect(status().isNotFound());
@@ -587,13 +590,13 @@ class SupportFlowTest {
   void accessIsNarrow() throws Exception {
     account("player@site.example", "USER");
     account("other@site.example", "USER");
-    String id = submitted(new Browser().signIn("player@site.example"), request("моё"));
-    Browser other = new Browser().signIn("other@site.example");
+    String id = submitted(new Tab().signIn("player@site.example"), request("моё"));
+    Tab other = new Tab().signIn("other@site.example");
     other.get("/api/support/requests/" + id).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("request-not-found"));
     other.post("/api/support/requests/" + id + "/messages", "{\"text\":\"чужое\"}").andExpect(status().isNotFound());
     other.get("/api/support/operator/requests").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("access-denied"));
     other.get("/api/support/operator/requests/" + id).andExpect(status().isForbidden());
-    new Browser().get("/api/support/operator/requests").andExpect(status().isUnauthorized());
+    new Tab().get("/api/support/operator/requests").andExpect(status().isUnauthorized());
   }
 
   record Arrival(ArrivalNotice notice, boolean committed) {
@@ -601,7 +604,7 @@ class SupportFlowTest {
 
   static final class Letters implements SupportLetters {
 
-    final List<AnswerLetter> answers = new CopyOnWriteArrayList<>();
+    final List<AnswerNotice> answers = new CopyOnWriteArrayList<>();
     final List<Arrival> arrivals = new CopyOnWriteArrayList<>();
     volatile boolean failing;
     private final DataSource source;
@@ -611,7 +614,7 @@ class SupportFlowTest {
     }
 
     @Override
-    public void answered(AnswerLetter letter) {
+    public void answered(AnswerNotice letter) {
       if (failing) {
         throw new IllegalStateException("почта недоступна");
       }

@@ -85,8 +85,11 @@ function obligationsOf(catalogue) {
   }
 }
 
-// REQ-PUBLISHING-015, REQ-AUTH-020
-export const CONTRACTS = ['platform-auth/src/main/resources/openapi/platform-auth.openapi.json'];
+// REQ-PUBLISHING-015, REQ-AUTH-020, REQ-SUPPORT-013
+export const CONTRACTS = [
+  'platform-auth/src/main/resources/openapi/platform-auth.openapi.json',
+  'platform-support/src/main/resources/openapi/platform-support.openapi.json',
+];
 
 // REQ-PUBLISHING-015, REQ-AUTH-020
 export function contractOf(source, name = 'контракт') {
@@ -110,6 +113,8 @@ export function contractOf(source, name = 'контракт') {
   for (const [schema, definition] of Object.entries(document.components?.schemas ?? {})) {
     for (const field of Object.keys(definition.properties ?? {})) found.push(`${name}: поле ${schema}.${field}`);
     for (const field of definition.required ?? []) found.push(`${name}: обязательное поле ${schema}.${field}`);
+    // REQ-SUPPORT-013
+    for (const value of definition.enum ?? []) found.push(`${name}: значение ${schema} ${value}`);
   }
   return found.sort();
 }

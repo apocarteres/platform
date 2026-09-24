@@ -214,3 +214,14 @@ test('контракт: снятая точка, ответ или поле и �
     components: { schemas: { LoginRequest: { properties: { email: {}, password: {} }, required: [] } } } }), 'auth') });
   assert.deepEqual(breakingReasons(changesBetween(before, relaxed)), [], 'снятие обязательности — не несовместимость');
 });
+
+// REQ-SUPPORT-013
+test('контракт: снятое значение перечисления несовместимо, добавленное — нет', () => {
+  const states = (values) => contractOf(JSON.stringify({ paths: {}, components: { schemas: { RequestState: { type: 'string', enum: values } } } }), 'support');
+  const before = surface({ contract: states(['NEW', 'CLOSED']) });
+  assert.ok(before.contract.includes('support: значение RequestState NEW'));
+  const grown = surface({ contract: states(['NEW', 'CLOSED', 'ANSWERED']) });
+  assert.deepEqual(breakingReasons(changesBetween(before, grown)), []);
+  const shrunk = surface({ contract: states(['NEW']) });
+  assert.ok(breakingReasons(changesBetween(before, shrunk)).some((line) => line.includes('снято в контракте — support: значение RequestState CLOSED')));
+});

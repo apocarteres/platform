@@ -5,5 +5,5 @@ import java.util.Locale;
 import java.util.Optional;
 
 // REQ-SUPPORT-009
-public record AnswerLetter(String email, long number, URI link, Optional<String> text, Locale locale) {
+public record AnswerNotice(String email, long number, URI link, Optional<String> text, Locale locale) {
 }

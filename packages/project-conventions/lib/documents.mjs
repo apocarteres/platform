@@ -30,6 +30,7 @@ export const DELIVERED_DOCUMENTS = [
   'client-update.md',
   'client-journal.md',
   'auth.md',
+  'support.md',
   'project-rules.md',
   'rule-distribution.md',
   'terminology.md',

@@ -607,7 +607,7 @@
       "requirement": "REQ-AUTH-001",
       "level": "директива",
       "since": "6.1.0",
-      "dueReleases": 6,
+      "dueReleases": 3,
       "slug": "adopt-core-auth",
       "area": "SEC",
       "ticket": {

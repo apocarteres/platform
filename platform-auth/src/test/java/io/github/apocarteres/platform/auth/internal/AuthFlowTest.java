@@ -48,6 +48,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -203,6 +204,7 @@ class AuthFlowTest {
     browser.post("/api/auth/register", "{\"email\":\" New@Player.Example \",\"password\":\"" + PASSWORD
       + "\",\"human\":\"human\",\"profile\":{\"name\":\"Игрок\"}}").andExpect(status().isAccepted());
     assertThat(letters.sent).hasSize(1);
+    assertThat(letters.sent.get(0).inTransaction()).as("письмо уходит после фиксации, вне транзакции").isFalse();
     assertThat(letters.sent.get(0).email()).isEqualTo("new@player.example");
     assertThat(letters.sent.get(0).link().toString()).startsWith("https://site.example/auth/verify?token=");
     assertThat(hook.seen).singleElement().satisfies(seen -> {
@@ -210,6 +212,8 @@ class AuthFlowTest {
       assertThat(seen.profile()).containsEntry("name", "Игрок");
     });
 
+    browser.post("/api/auth/login", login("new@player.example", "wrong password here"))
+      .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("credentials-rejected"));
     browser.post("/api/auth/login", login("new@player.example", PASSWORD))
       .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("email-unverified"));
     browser.post("/api/auth/verify", "{\"token\":\"" + token(0) + "\"}").andExpect(status().isNoContent());
@@ -223,6 +227,9 @@ class AuthFlowTest {
       .andExpect(jsonPath("$.roles[0]").value("USER"));
     assertThat(browser.session()).as("вход меняет идентификатор сессии").isNotNull().isNotEqualTo(before);
     browser.get("/api/things").andExpect(status().isOk());
+    String first = browser.session();
+    browser.post("/api/auth/login", login("new@player.example", PASSWORD)).andExpect(status().isOk());
+    assertThat(browser.session()).as("повторный вход тоже меняет идентификатор сессии").isNotEqualTo(first);
     browser.get("/api/auth/me").andExpect(status().isOk()).andExpect(jsonPath("$.email").value("new@player.example"));
     browser.get("/api/admin/panel").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("access-denied"));
     assertThat(accounts.findByEmail("new@player.example")).get().extracting(Account::lastLoginAt).isEqualTo(clock.instant());
@@ -246,6 +253,21 @@ class AuthFlowTest {
       .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("credentials-rejected"));
     other.post("/api/auth/login", login("taken@player.example", "wrong password here"))
       .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("credentials-rejected"));
+  }
+
+  @Test
+  @DisplayName("Повторное письмо не чаще раза в минуту, и действует только последняя ссылка")
+  void onlyTheLatestLinkWorks() throws Exception {
+    Browser browser = new Browser();
+    browser.post("/api/auth/register", "{\"email\":\"again@player.example\",\"password\":\"" + PASSWORD + "\",\"human\":\"human\"}");
+    String first = token(0);
+    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\"}").andExpect(status().isAccepted());
+    assertThat(letters.sent).as("раньше минуты второго письма нет").hasSize(1);
+    clock.advance(Duration.ofMinutes(2));
+    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\"}").andExpect(status().isAccepted());
+    assertThat(letters.sent).hasSize(2);
+    browser.post("/api/auth/verify", "{\"token\":\"" + first + "\"}").andExpect(jsonPath("$.code").value("token-rejected"));
+    browser.post("/api/auth/verify", "{\"token\":\"" + token(1) + "\"}").andExpect(status().isNoContent());
   }
 
   @Test
@@ -375,7 +397,7 @@ class AuthFlowTest {
     assertThat(accounts.findByEmail("active@player.example")).isPresent();
   }
 
-  record Letter(String email, URI link, Locale locale) {
+  record Letter(String email, URI link, Locale locale, boolean inTransaction) {
   }
 
   static final class Letters implements AuthLetters {
@@ -384,12 +406,12 @@ class AuthFlowTest {
 
     @Override
     public void verification(String email, URI link, Locale locale) {
-      sent.add(new Letter(email, link, locale));
+      sent.add(new Letter(email, link, locale, TransactionSynchronizationManager.isActualTransactionActive()));
     }
 
     @Override
     public void passwordReset(String email, URI link, Locale locale) {
-      sent.add(new Letter(email, link, locale));
+      sent.add(new Letter(email, link, locale, TransactionSynchronizationManager.isActualTransactionActive()));
     }
   }
 

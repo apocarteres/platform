@@ -5,7 +5,7 @@ status: backlog
 scope: frontend, backend, architecture
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-5-0-0
 related: REQ-CLIENT-MODAL, REQ-DEPLOYMENT, REQ-COMPATIBILITY
 ---
 

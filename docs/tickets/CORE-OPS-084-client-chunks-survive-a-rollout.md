@@ -5,7 +5,7 @@ status: backlog
 scope: frontend, deployment, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-5-0-0
 related: REQ-DEPLOYMENT, REQ-QUALITY, REQ-ADOPTION
 questions: resolved
 ---

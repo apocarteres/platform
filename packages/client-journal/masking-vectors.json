@@ -11,6 +11,8 @@
     { "input": "TypeError: x is undefined", "output": "TypeError: x is undefined" },
     { "input": "a@b.co и c@d.io", "output": "*** и ***" },
     { "input": "письмо:ivan@example.org", "output": "***" },
+    { "input": "почта\u00a0ivan@example.org", "output": "почта\u00a0***" },
+    { "input": "почта\tivan@example.org", "output": "почта\t***" },
     { "input": "", "output": "" }
   ],
   "paths": [

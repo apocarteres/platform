@@ -1,0 +1,22 @@
+CREATE TABLE platform_support_request (
+  id UUID PRIMARY KEY,
+  number BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+  author_account UUID REFERENCES platform_account (id) ON DELETE RESTRICT,
+  guest_email VARCHAR(320),
+  locale VARCHAR(35) NOT NULL,
+  message VARCHAR(4000),
+  snapshot TEXT,
+  journal TEXT,
+  state VARCHAR(16) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  closed_at TIMESTAMP WITH TIME ZONE,
+  author_acted_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  operator_acted_at TIMESTAMP WITH TIME ZONE,
+  author_seen_at TIMESTAMP WITH TIME ZONE,
+  operator_seen_at TIMESTAMP WITH TIME ZONE,
+  attachments_expired_at TIMESTAMP WITH TIME ZONE,
+  journal_expired_at TIMESTAMP WITH TIME ZONE,
+  email_expired_at TIMESTAMP WITH TIME ZONE,
+  erased_at TIMESTAMP WITH TIME ZONE
+)

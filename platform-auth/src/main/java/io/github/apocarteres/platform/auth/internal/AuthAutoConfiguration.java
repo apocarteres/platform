@@ -5,6 +5,7 @@ import io.github.apocarteres.platform.auth.ApiAccess;
 import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.HumanCheck;
+import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.persistence.SqlStatements;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
@@ -13,6 +14,7 @@ import java.time.Clock;
 import java.util.UUID;
 import jakarta.validation.Validator;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
@@ -149,10 +151,10 @@ public class AuthAutoConfiguration {
     };
   }
 
-  // REQ-AUTH-008, REQ-AUTH-014
+  // REQ-AUTH-008, REQ-AUTH-014, REQ-AUTH-022
   @Bean
-  SecurityFilterChain platformApiSecurity(HttpSecurity http, ApiAccess access, ErrorMessages messages,
-    SecurityContextRepository contexts) throws Exception {
+  SecurityFilterChain platformApiSecurity(HttpSecurity http, ApiAccess access, ObjectProvider<ModuleApiAccess> modules,
+    ErrorMessages messages, SecurityContextRepository contexts) throws Exception {
     ProblemResponses problems = new ProblemResponses(messages);
     http.securityMatcher("/api/**")
       .authorizeHttpRequests(rules -> {
@@ -160,6 +162,7 @@ public class AuthAutoConfiguration {
           "/api/auth/login", "/api/auth/password-reset/request", "/api/auth/password-reset/confirm").permitAll();
         rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/policy").permitAll();
         rules.requestMatchers("/api/auth/**").authenticated();
+        modules.orderedStream().forEach(module -> module.rules(rules));
         access.rules(rules);
         rules.anyRequest().authenticated();
       })

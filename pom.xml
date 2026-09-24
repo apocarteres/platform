@@ -23,6 +23,7 @@
     <module>platform-api-version</module>
     <module>platform-rate-limit</module>
     <module>platform-auth</module>
+    <module>platform-support</module>
   </modules>
 
   <properties>

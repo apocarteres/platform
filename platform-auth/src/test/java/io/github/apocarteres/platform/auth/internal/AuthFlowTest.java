@@ -17,6 +17,7 @@ import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.Purged;
 import io.github.apocarteres.platform.auth.CurrentAccount;
 import io.github.apocarteres.platform.auth.HumanCheck;
+import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.time.MutableClock;
 import jakarta.servlet.Filter;
@@ -44,6 +45,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -60,7 +62,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
-// REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019
+// REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -411,6 +413,15 @@ class AuthFlowTest {
     assertThat(accounts.findByEmail("rolled@player.example")).isEmpty();
   }
 
+  // REQ-AUTH-022
+  @Test
+  @DisplayName("Открытая точка модуля ядра открыта раньше правил проекта, прочие пути модуля — по правилам проекта")
+  void moduleRulesPrecedeTheProject() throws Exception {
+    mvc.perform(get("/api/module/open")).andExpect(status().isOk());
+    mvc.perform(get("/api/module/other")).andExpect(status().isUnauthorized())
+      .andExpect(jsonPath("$.code").value("authentication-required"));
+  }
+
   @Test
   @DisplayName("Изменяющий запрос без токена CSRF отказывает кодом csrf-rejected")
   void csrfIsRequired() throws Exception {
@@ -657,7 +668,13 @@ class AuthFlowTest {
 
     @Bean
     ApiAccess apiAccess() {
-      return rules -> rules.requestMatchers("/api/admin/**").hasRole("ADMIN");
+      return rules -> rules.requestMatchers("/api/admin/**", "/api/module/**").hasRole("ADMIN");
+    }
+
+    // REQ-AUTH-022
+    @Bean
+    ModuleApiAccess moduleAccess() {
+      return rules -> rules.requestMatchers(HttpMethod.GET, "/api/module/open").permitAll();
     }
 
     @Bean
@@ -678,6 +695,11 @@ class AuthFlowTest {
     @GetMapping("/api/things")
     String things() {
       return CurrentAccount.id().map(UUID::toString).orElse("none");
+    }
+
+    @GetMapping({"/api/module/open", "/api/module/other"})
+    String module() {
+      return "модуль";
     }
 
     @GetMapping("/api/admin/panel")

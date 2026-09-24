@@ -54,6 +54,25 @@ class ApiVersionCheckTest {
   }
 
   @Test
+  @DisplayName("Запрос без заголовка и без признака браузера проходит: машинного клиента проверка не касается")
+  void machineClientPasses() throws Exception {
+    mvc.perform(get("/api/things")).andExpect(status().isOk());
+    mvc.perform(get("/api/things").header("Authorization", "Bearer service-token")).andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("Машинный клиент, назвавший устаревшую версию, получает отказ: заголовок сверяется, от кого бы ни пришёл")
+  void machineClientNamingAnOldVersionIsRefused() throws Exception {
+    mvc.perform(get("/api/things").header(ApiVersion.HEADER, "2")).andExpect(jsonPath("$.code").value("client-outdated"));
+  }
+
+  @Test
+  @DisplayName("Точки actuator проверкой не охвачены")
+  void actuatorIsNotChecked() throws Exception {
+    mvc.perform(get("/actuator/health").header("Sec-Fetch-Site", "same-origin")).andExpect(status().isOk());
+  }
+
+  @Test
   @DisplayName("Младшая версия получает ошибку ядра client-outdated, даже когда порт потребителя сопоставляет всё")
   void olderClientIsRefused() throws Exception {
     mvc.perform(get("/api/things").header(ApiVersion.HEADER, "2"))
@@ -64,16 +83,17 @@ class ApiVersionCheckTest {
   }
 
   @Test
-  @DisplayName("Запрос без заголовка или с неразборчивым заголовком отказывает так же")
-  void unversionedClientIsRefused() throws Exception {
-    mvc.perform(get("/api/things")).andExpect(jsonPath("$.code").value("client-outdated"));
+  @DisplayName("Браузер без заголовка — по Sec-Fetch-Site или, где его нет, по Referer — и неразборчивый заголовок отказывают так же")
+  void unversionedBrowserIsRefused() throws Exception {
+    mvc.perform(get("/api/things").header("Sec-Fetch-Site", "same-origin")).andExpect(jsonPath("$.code").value("client-outdated"));
+    mvc.perform(get("/api/things").header("Referer", "http://mini:4200/lobby")).andExpect(jsonPath("$.code").value("client-outdated"));
     mvc.perform(get("/api/things").header(ApiVersion.HEADER, "03")).andExpect(jsonPath("$.code").value("client-outdated"));
   }
 
   @Test
   @DisplayName("Объявленные пути освобождены от проверки")
   void exemptPathsPass() throws Exception {
-    mvc.perform(get("/hooks/payment")).andExpect(status().isOk());
+    mvc.perform(get("/hooks/payment").header("Sec-Fetch-Site", "cross-site")).andExpect(status().isOk());
   }
 
   @Test

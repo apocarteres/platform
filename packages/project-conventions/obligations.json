@@ -521,7 +521,7 @@
         "required": [
           "Клиент объявляет provideAppUpdate({ apiVersion, available, required }) из @apocarteres/app-update; available — компонент проекта либо UPDATE_IGNORED, required — компонент проекта (REQ-CLIENT-UPDATE-001).",
           "Перехватчик appUpdateInterceptor подключён в provideHttpClient(withInterceptors([...])) (REQ-CLIENT-UPDATE-006).",
-          "Служба подключает platform-api-version и задаёт platform.api.min-supported-version; вызовы чужих систем перечислены в platform.api.version-exempt-paths (REQ-CLIENT-UPDATE-005, REQ-CLIENT-UPDATE-006).",
+          "Служба подключает platform-api-version и задаёт platform.api.min-supported-version; машинные вызовы без заголовка проходят сами, platform.api.version-exempt-paths нужен только для путей, освобождаемых и от браузера (REQ-CLIENT-UPDATE-005, REQ-CLIENT-UPDATE-006).",
           "Собственные опрос сборки, плашка и сверка версии API сняты: их заменяет механизм ядра."
         ],
         "acceptance": [

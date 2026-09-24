@@ -20,10 +20,20 @@ final class ApiVersionInterceptor implements HandlerInterceptor {
     if (!(handler instanceof HandlerMethod)) {
       return true;
     }
-    boolean accepted = ApiVersion.parse(request.getHeader(ApiVersion.HEADER)).map(minimum::accepts).orElse(false);
+    String declared = request.getHeader(ApiVersion.HEADER);
+    // REQ-CLIENT-UPDATE-006
+    if (declared == null && !fromBrowser(request)) {
+      return true;
+    }
+    boolean accepted = ApiVersion.parse(declared).map(minimum::accepts).orElse(false);
     if (!accepted) {
       throw new ClientOutdated();
     }
     return true;
+  }
+
+  // REQ-CLIENT-UPDATE-006
+  static boolean fromBrowser(HttpServletRequest request) {
+    return request.getHeader("Sec-Fetch-Site") != null || request.getHeader("Referer") != null;
   }
 }

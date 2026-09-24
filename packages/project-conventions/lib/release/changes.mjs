@@ -49,6 +49,8 @@ export function changesBetween(before, after) {
     obligations: difference(before.obligations, after.obligations, (one) => one.id),
     // REQ-AUTH-020
     contract: difference(before.contract ?? [], after.contract ?? []),
+    // REQ-AUTH-020
+    schemasBefore: [...new Set((before.contract ?? []).map((entry) => /: поле ([^.]+)\./.exec(entry)?.[1]).filter(Boolean))],
   };
 }
 
@@ -64,7 +66,8 @@ export function breakingReasons(changes, declared = []) {
     // REQ-AUTH-020
     ...(changes.contract?.removed ?? []).filter((entry) => !entry.includes(': обязательное поле '))
       .map((entry) => `снято в контракте — ${entry}: клиент, опиравшийся на это, сломается`),
-    ...(changes.contract?.added ?? []).filter((entry) => entry.includes(': обязательное поле '))
+    ...(changes.contract?.added ?? []).filter((entry) => entry.includes(': обязательное поле ')
+      && (changes.schemasBefore ?? []).includes(/: обязательное поле ([^.]+)\./.exec(entry)?.[1]))
       .map((entry) => `в контракте стало обязательным — ${entry}: прежний запрос его не несёт`),
     ...declared,
   ];

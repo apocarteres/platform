@@ -196,6 +196,13 @@ test('контракт: снятая точка, ответ или поле и �
   assert.deepEqual(breakingReasons(added), []);
   assert.ok(costSection(added).some((line) => line.includes('в контракте — auth: точка GET /api/auth/policy')));
 
+  const born = changesBetween(surface({}), before);
+  assert.deepEqual(breakingReasons(born), [], 'появление контракта с обязательными полями новых схем — не несовместимость');
+  const widened = surface({ contract: contractOf(JSON.stringify({ paths: {}, components: { schemas: {
+    LoginRequest: { properties: { email: {}, password: {} }, required: ['email'] },
+    PolicyRequest: { properties: { strict: {} }, required: ['strict'] } } } }).replace('"paths":{}', '"paths":{"/api/auth/login":{"post":{"responses":{"200":{}}}}}'), 'auth') });
+  assert.deepEqual(breakingReasons(changesBetween(before, widened)), [], 'новая схема с обязательным полем — не несовместимость');
+
   const tightened = surface({ contract: contractOf(contract({ required: ['password'] }), 'auth') });
   assert.match(breakingReasons(changesBetween(before, tightened))[0], /стало обязательным — auth: обязательное поле LoginRequest\.password/);
 

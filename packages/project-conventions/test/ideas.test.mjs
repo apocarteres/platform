@@ -89,3 +89,21 @@ test('вопросы идей не считаются в пороги откры
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-TICKETS-019
+test('проверка документов принимает принятую идею с полем ticket и отвергает это поле у задачи', async () => {
+  const { checkDocumentation } = await import('../lib/docs/check-docs.mjs');
+  const root = await mkdtemp(path.join(os.tmpdir(), 'ideas-docs-'));
+  try {
+    await mkdir(path.join(root, 'docs/ideas'), { recursive: true });
+    await mkdir(path.join(root, 'docs/tickets'), { recursive: true });
+    await writeFile(path.join(root, 'docs/tickets/CORE-OPS-001-work.md'),
+      '---\nid: CORE-OPS-001\ntype: ticket\nstatus: backlog\nscope: quality\nauthority: supporting\npriority: P2\nrelease: unassigned\nticket: CORE-OPS-002\n---\n\n# Работа\n');
+    await writeFile(path.join(root, 'docs/ideas/CORE-IDEA-001-idea.md'), idea('status: accepted\nticket: CORE-OPS-001\n'));
+    const { errors } = await checkDocumentation(root);
+    assert.deepEqual(errors.filter((one) => one.includes('docs/ideas/CORE-IDEA-001')), []);
+    assert.ok(errors.some((one) => /CORE-OPS-001-work\.md: неизвестное поле метаданных ticket/.test(one)), errors.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

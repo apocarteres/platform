@@ -26,3 +26,8 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   printf '[pre-push] conventions attested --commit %s\n' "$local_sha"
   node "$ROOT_DIR/packages/project-conventions/bin/conventions.mjs" attested --commit "$local_sha" --root "$ROOT_DIR"
 done
+
+# CORE-OPS-091: расписка переносится по дереву кода, а документы вне его;
+# их согласованность проверяется здесь, как при закрытии выпуска (REQ-RELEASE-045).
+printf '[pre-push] conventions docs-check\n'
+node "$ROOT_DIR/packages/project-conventions/bin/conventions.mjs" docs-check --root "$ROOT_DIR"

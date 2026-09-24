@@ -108,6 +108,8 @@ function validateMetadata(relativePath, parsed, errors, ids, references) {
   }
 
   for (const field of metadata.keys()) {
+    // REQ-TICKETS-019
+    if (field === 'ticket' && metadata.get('type') === 'idea') continue;
     if (!ALLOWED_METADATA_FIELDS.has(field)) {
       errors.push(`${relativePath}: неизвестное поле метаданных ${field}`);
     }

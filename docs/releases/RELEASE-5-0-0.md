@@ -19,8 +19,8 @@ opened-on: 2026-09-24
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-ARC-011](../tickets/CORE-ARC-011-client-update-framework.md) | Указана при открытии выпуска |
-| [CORE-OPS-084](../tickets/CORE-OPS-084-client-chunks-survive-a-rollout.md) | Указана при открытии выпуска |
+| [CORE-ARC-011](../tickets/closed/CORE-ARC-011-client-update-framework.md) | Указана при открытии выпуска |
+| [CORE-OPS-084](../tickets/closed/CORE-OPS-084-client-chunks-survive-a-rollout.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

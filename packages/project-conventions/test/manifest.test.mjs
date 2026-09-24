@@ -148,3 +148,27 @@ test('негодный каталог обязательств называет�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-DEPLOYMENT-025
+test('при объявленных экземплярах манифест записывает, какой стал активным, и без него не пишется', async () => {
+  const root = await project({ tag: 'v1.0.0' });
+  const config = { deployment: { ...CONFIG.deployment, withoutDowntime: { migrations: 'db', instances: ['blue', 'green'] } } };
+  try {
+    const silent = await buildManifest(root, config, { environment: 'production' });
+    assert.equal(silent.written, false);
+    assert.match(silent.reason, /объявлены экземпляры blue, green: назовите ставший активным ключом --instance/);
+
+    const stranger = await buildManifest(root, config, { environment: 'production', instance: 'red' });
+    assert.match(stranger.reason, /экземпляр red не объявлен; объявлены: blue, green/);
+
+    const built = await buildManifest(root, config, { environment: 'production', instance: 'green' });
+    assert.equal(built.manifest.instance, 'green');
+    assert.match(journalLine(built.manifest), / instance=green\n$/);
+
+    const plain = await buildManifest(root, CONFIG, { environment: 'production' });
+    assert.equal('instance' in plain.manifest, false, 'без экземпляров формат манифеста прежний');
+    assert.match((await buildManifest(root, CONFIG, { environment: 'production', instance: 'blue' })).reason, /объявлены: ни одного/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

@@ -1405,3 +1405,25 @@ test('коммит отменённой задачи закрытие не де�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-DEPLOYMENT-027
+test('просроченная временная совместимость держит закрытие выпуска', async () => {
+  const root = await project();
+  try {
+    await writeFile(path.join(root, '.conventions.json'),
+      JSON.stringify({ deployment: { withoutDowntime: { migrations: 'db', expandReleases: 1 } } }));
+    await mkdir(path.join(root, 'db'), { recursive: true });
+    await writeFile(path.join(root, 'db/V2__rename.sql'), '-- migration: expand\nselect 1;\n');
+    const commit = await commitAll(root);
+    for (const number of [1, 2]) {
+      await writeFile(path.join(root, `docs/releases/RELEASE-2026-08-${number}.md`),
+        `---\nid: RELEASE-2026-08-${number}\ntype: release\nstatus: released\ncommit: ${commit}\n---\n\n# Выпуск\n`);
+    }
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    const state = await closability(root, { scheme: 'date' });
+    assert.ok(state.problems.some((problem) => /Временная совместимость просрочена: db\/V2__rename\.sql/.test(problem)),
+      state.problems.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

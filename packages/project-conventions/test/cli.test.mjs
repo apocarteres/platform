@@ -516,3 +516,36 @@ test('выпуск открывается по-прежнему, когда ар
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-DEPLOYMENT-027
+test('check называет долг временной совместимости и краснеет, когда срок вышел', async () => {
+  const root = await project({
+    'AGENTS.md': '---\na: b\n---\n',
+    'src/A.java': 'class A {}\n',
+    '.conventions.json': JSON.stringify({ sources: ['src'], deployment: { withoutDowntime: { migrations: 'db', expandReleases: 1 } } }),
+    'db/V2__rename.sql': '-- migration: expand\nselect 1;\n',
+  });
+  try {
+    await conventions(root, 'sync');
+    await git('-C', root, 'init', '--quiet');
+    await git('-C', root, 'config', 'user.email', 't@t');
+    await git('-C', root, 'config', 'user.name', 't');
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'OPS-001 состояние');
+    const commit = (await git('-C', root, 'rev-parse', 'HEAD')).stdout.trim();
+    const released = (number) => writeFile(path.join(root, `docs/releases/RELEASE-2026-08-${number}.md`),
+      `---\nid: RELEASE-2026-08-${number}\ntype: release\nstatus: released\ncommit: ${commit}\n---\n\n# Выпуск\n`);
+    await mkdir(path.join(root, 'docs/releases'), { recursive: true });
+    await released(1);
+    const waiting = await conventions(root, 'check');
+    assert.match(waiting.output, /db\/V2__rename\.sql ждёт парного contract, остаётся выпусков 1/);
+    assert.doesNotMatch(waiting.output, /просрочена/);
+
+    await released(2);
+    const overdue = await conventions(root, 'check');
+    assert.equal(overdue.code, 1);
+    assert.match(overdue.output, /Временная совместимость просрочена: db\/V2__rename\.sql/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

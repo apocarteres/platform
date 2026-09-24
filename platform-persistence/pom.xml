@@ -29,6 +29,11 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
     <!-- Jackson 2 нужен только SqlCommandWriter; потребитель без Jackson 2 получает каталоги SQL без writer. -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>io.github.apocarteres.platform</groupId>
@@ -39,6 +44,11 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

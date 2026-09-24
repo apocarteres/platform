@@ -312,6 +312,7 @@ export async function manifest(root, parsed, { usage, refuse }) {
     environment,
     only,
     reason: parsed.values.get('--untagged-reason') ?? null,
+    instance: parsed.values.get('--instance') ?? null,
   });
   if (!built.written) {
     console.error(`Манифест не записан: ${built.reason}`);

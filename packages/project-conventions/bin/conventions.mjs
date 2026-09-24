@@ -18,6 +18,7 @@ import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 import { findObligationDebts, loadObligations, obligationState, readState } from '../lib/release/obligations.mjs';
+import { findExpandDebts } from '../lib/migrations.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
@@ -94,6 +95,10 @@ async function check(root) {
   const debts = await findObligationDebts(root);
   problems.push(...debts.problems);
   advisories.push(...debts.advisories);
+  // REQ-DEPLOYMENT-027
+  const expands = await findExpandDebts(root, config);
+  problems.push(...expands.problems);
+  advisories.push(...expands.advisories);
   for (const rule of rules) {
     const violations = await rule.find(root, config);
     tracked += violations.size;
@@ -385,7 +390,7 @@ const USAGE = {
   'upgrade-report': 'conventions upgrade-report --from X.Y.Z [--to X.Y.Z]',
   'jvm-args': 'conventions jvm-args --archive <путь> | --aot <путь>',
   'deploy-args': 'conventions deploy-args [--root <path>] -- <доводы скрипта>   |   conventions deploy-args --usage',
-  manifest: 'conventions manifest --env <среда> [--only a,b] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
+  manifest: 'conventions manifest --env <среда> [--only a,b] [--instance <экземпляр>] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
   components: 'conventions components [--environments|--full] [--root <path>]'
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
@@ -446,7 +451,7 @@ const SPEC = {
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
   components: { flags: ['--environments', '--full'] },
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
-  manifest: { values: ['--env', '--only', '--file', '--journal', '--untagged-reason'] },
+  manifest: { values: ['--env', '--only', '--instance', '--file', '--journal', '--untagged-reason'] },
 };
 
 // REQ-RELEASE-028

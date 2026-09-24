@@ -16,6 +16,7 @@ const COST_SECTION = '## Цена обновления';
 import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
+import { findExpandDebts } from '../migrations.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -66,6 +67,8 @@ export async function closability(root, { scheme, retagging = false }) {
       + ` прошло ${entry.state.elapsed}. Закрывается задачей с полем obligation: ${entry.obligation.id}`
       + ` либо командой release satisfy ${entry.obligation.id} --ticket <ID>; перенести просроченное нельзя`);
   }
+  // REQ-DEPLOYMENT-027
+  problems.push(...(await findExpandDebts(root, await readConfig(root))).problems);
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
   const existing = await releases(root);
   // REQ-PUBLISHING-004, REQ-PUBLISHING-015

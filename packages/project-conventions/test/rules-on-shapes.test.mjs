@@ -76,6 +76,13 @@ export const PLANTED = {
     const workspace = path.join(root, 'frontend/angular.json');
     await writeFile(workspace, (await readFile(workspace, 'utf8')).replace('"maximumError": "800kb"', '"maximumWarning": "700kb",\n                  "maximumError": "800kb"'));
   }),
+  'migration-labels': BOTH(async (root) => {
+    const file = path.join(root, '.conventions.json');
+    const config = JSON.parse(await readFile(file, 'utf8'));
+    config.deployment.withoutDowntime = { migrations: 'src/main/resources/db/migration' };
+    await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
+    await put(root, 'src/main/resources/db/migration/V2__rename_stock.sql', 'alter table stock rename column qty to quantity;\n');
+  }),
   'wiring-conditions': BOTH((root) => put(root, 'src/main/java/net/example/inventory/Wiring.java',
     java('Wiring', '@AutoConfiguration\npublic final class NAME {\n  @Bean\n  @ConditionalOnBean(Object.class)\n  Object bean() {\n    return null;\n  }\n}'))),
   'rust-exemptions': {

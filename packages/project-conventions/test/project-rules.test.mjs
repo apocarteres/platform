@@ -16,7 +16,7 @@ test('правило проекта дополняет правила платф
   assert.deepEqual(rules.map((rule) => rule.id), [
     'terms-alias', 'terms-preferred', 'comments', 'clock', 'money-types', 'file-size', 'config-secrets',
     'dependency-versions', 'document-naming', 'static-analysis', 'deploy-entry', 'environment-config',
-    'modal-escape', 'modal-actions', 'modal-backdrop', 'client-update', 'defer-error', 'bundle-budgets', 'wiring-conditions', 'rust-exemptions',
+    'modal-escape', 'modal-actions', 'modal-backdrop', 'client-update', 'defer-error', 'bundle-budgets', 'migration-labels', 'wiring-conditions', 'rust-exemptions',
     'naming-er', 'no-er-suffix',
   ]);
 });

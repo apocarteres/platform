@@ -19,6 +19,7 @@ import { findBackdropsOutsideTheCore } from './modal-backdrop.mjs';
 import { findClientsWithoutUpdate } from './client-update.mjs';
 import { findDefersWithoutError } from './defer-error.mjs';
 import { findUnguardedBudgets } from './bundle-budgets.mjs';
+import { findUnlabelledMigrations } from './migrations.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -186,6 +187,15 @@ export const RULES = [
     summary: 'У приложения Angular есть бюджет начального пакета с порогом ошибки и нет порогов предупреждения',
     title: 'бюджетов сборки клиента, которые не держат размер',
     find: findUnguardedBudgets,
+  },
+  {
+    id: 'migration-labels',
+    level: DIRECTIVE,
+    document: 'REQ-DEPLOYMENT',
+    file: 'deployment.md',
+    summary: 'У проекта, выбравшего развёртывание без простоя, каждый переход базы помечен: additive, expand, contract <переход> или breaking',
+    title: 'переходов базы без метки или с неверной парой',
+    find: findUnlabelledMigrations,
   },
   {
     id: 'wiring-conditions',

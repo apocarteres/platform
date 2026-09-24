@@ -26,6 +26,7 @@ usage() {
 Usage:
   mise run verify-runner-prepare              подготовить образ и контейнер
   mise run verify-runner -- [--commit REF]    прогнать verify в контейнере
+  mise run verify-runner -- --run "<команда>"  прогнать в контейнере только названное; расписки нет
 
 Docker выбирается текущим контекстом: DOCKER_CONTEXT=<контекст> mise run verify-runner
 USAGE
@@ -78,9 +79,11 @@ in_container() {
 
 verify() {
   local commit="HEAD"
+  local only=""
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --commit) commit="${2:?--commit требует значения}"; shift 2 ;;
+      --run) only="${2:?--run требует команды}"; shift 2 ;;
       -h|--help) usage; exit 0 ;;
       *) usage >&2; fail "неизвестный ключ: $1" ;;
     esac
@@ -100,6 +103,11 @@ verify() {
     rm -f /tmp/platform.bundle
   "
   in_container 'mise trust --yes >/dev/null && mise install -y'
+  if [ -n "$only" ]; then
+    in_container "eval \"\$(mise activate bash --shims)\" && $only"
+    log "названное выполнено в контейнере; набор verify не прогонялся, расписки нет"
+    return
+  fi
   in_container 'eval "$(mise activate bash --shims)" && mise run verify'
   mkdir -p "$ROOT_DIR/target/verify"
   docker cp "$CONTAINER:/work/src/target/verify/$commit.json" "$ROOT_DIR/target/verify/$commit.json"

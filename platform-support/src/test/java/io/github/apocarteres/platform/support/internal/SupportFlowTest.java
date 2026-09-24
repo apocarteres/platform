@@ -326,6 +326,14 @@ class SupportFlowTest {
         new jakarta.servlet.MultipartConfigElement("", 5L * 1024 * 1024, 10L * 1024 * 1024, 0)))
       .hasMessageContaining("spring.servlet.multipart.max-request-size");
     SupportAutoConfiguration.requireRoom(new jakarta.servlet.MultipartConfigElement("", -1, -1, 0));
+    org.springframework.beans.factory.support.DefaultListableBeanFactory beans = new org.springframework.beans.factory.support.DefaultListableBeanFactory();
+    beans.registerSingleton("multipart", new jakarta.servlet.MultipartConfigElement("", 1024 * 1024, 16L * 1024 * 1024, 0));
+    org.springframework.mock.env.MockEnvironment environment = new org.springframework.mock.env.MockEnvironment()
+      .withProperty("platform.support.operator-role", "ADMIN").withProperty("platform.auth.roles", "USER,ADMIN")
+      .withProperty("platform.auth.link-base", "https://site.example");
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> new SupportAutoConfiguration().supportSettings(environment,
+        beans.getBeanProvider(jakarta.servlet.MultipartConfigElement.class)))
+      .hasMessageContaining("spring.servlet.multipart.max-file-size");
   }
 
   // REQ-SUPPORT-004, REQ-SUPPORT-009
@@ -624,9 +632,15 @@ class SupportFlowTest {
     // REQ-SUPPORT-009
     @Override
     public void arrived(ArrivalNotice notice) {
-      Long seen = JdbcClient.create(source).sql("SELECT COUNT(*) FROM platform_support_request WHERE id = :id")
-        .param("id", notice.request()).query(Long.class).single();
-      arrivals.add(new Arrival(notice, seen == 1));
+      try (var connection = source.getConnection();
+        var query = connection.prepareStatement("SELECT COUNT(*) FROM platform_support_request WHERE id = ?")) {
+        query.setObject(1, notice.request());
+        try (var rows = query.executeQuery()) {
+          arrivals.add(new Arrival(notice, rows.next() && rows.getInt(1) == 1));
+        }
+      } catch (java.sql.SQLException failure) {
+        throw new IllegalStateException(failure);
+      }
     }
   }
 

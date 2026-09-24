@@ -4,7 +4,6 @@ import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.CurrentAccount;
 import io.github.apocarteres.platform.support.GuestIntake;
 import io.github.apocarteres.platform.support.RequestState;
-import io.github.apocarteres.platform.support.SupportRefused;
 import io.github.apocarteres.platform.support.internal.SupportService.Upload;
 import io.github.apocarteres.platform.support.internal.SupportViews.AnswerLink;
 import io.github.apocarteres.platform.support.internal.SupportViews.AuthorView;
@@ -168,13 +167,7 @@ class SupportController {
     if (files == null) {
       return uploads;
     }
-    if (files.size() > SupportLimits.ATTACHMENTS) {
-      throw new SupportRefused(SupportRefused.ATTACHMENT, "Вложений больше " + SupportLimits.ATTACHMENTS);
-    }
     for (MultipartFile file : files) {
-      if (file.getSize() > SupportLimits.ATTACHMENT_BYTES) {
-        throw new SupportRefused(SupportRefused.ATTACHMENT, "Вложение больше " + SupportLimits.ATTACHMENT_BYTES + " байт");
-      }
       try {
         uploads.add(new Upload(file.getOriginalFilename(), file.getBytes()));
       } catch (IOException failure) {

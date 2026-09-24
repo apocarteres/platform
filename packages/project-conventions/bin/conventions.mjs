@@ -23,7 +23,7 @@ import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
 import {
-  commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, staticCheck, unknown, upgradeReport,
+  commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, unknown, upgradeReport,
 } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 import {
@@ -369,7 +369,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -386,6 +386,8 @@ const USAGE = {
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
   unknown: 'conventions unknown --url <адрес сайта> [--timeout <с>]',
+  migrations: 'conventions migrations --unreleased [--root <path>]'
+    + '\n  Печатает переходы базы, которых нет ни в одном выпущенном выпуске, и порядок развёртывания: order=switch или order=downtime.',
   'static-check': 'conventions static-check --url <адрес сайта> --component <составляющая клиента> [--previous <путь>,<путь>] [--timeout <с>]',
   'upgrade-report': 'conventions upgrade-report --from X.Y.Z [--to X.Y.Z]',
   'jvm-args': 'conventions jvm-args --archive <путь> | --aot <путь>',
@@ -446,6 +448,7 @@ const SPEC = {
   health: { values: ['--url', '--timeout'] },
   unknown: { values: ['--url', '--timeout'] },
   'static-check': { values: ['--url', '--component', '--previous', '--timeout'] },
+  migrations: { flags: ['--unreleased'] },
   'upgrade-report': { values: ['--from', '--to'] },
   'jvm-args': { values: ['--archive', '--aot'] },
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
@@ -507,6 +510,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'unknown') await unknown(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
     // REQ-DEPLOYMENT-024
     else if (command === 'static-check') await staticCheck(root, parsed, { usage: USAGE, refuse });
+    // REQ-DEPLOYMENT-029
+    else if (command === 'migrations') await migrations(root, parsed, { usage: USAGE, refuse });
     else if (command === 'deps') await deps(root, parsed, { usage: USAGE, refuse });
     else if (command === 'components') {
       // REQ-DEPLOYMENT-020

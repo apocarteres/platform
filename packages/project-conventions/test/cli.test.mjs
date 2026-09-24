@@ -536,7 +536,12 @@ test('check называет долг временной совместимос�
     const released = (number) => writeFile(path.join(root, `docs/releases/RELEASE-2026-08-${number}.md`),
       `---\nid: RELEASE-2026-08-${number}\ntype: release\nstatus: released\ncommit: ${commit}\n---\n\n# Выпуск\n`);
     await mkdir(path.join(root, 'docs/releases'), { recursive: true });
+    // REQ-DEPLOYMENT-029
+    const before = await conventions(root, 'migrations', '--unreleased');
+    assert.equal(before.code, 0, before.output);
+    assert.equal(before.output, 'migration=db/V2__rename.sql kind=expand\norder=switch\n');
     await released(1);
+    assert.equal((await conventions(root, 'migrations', '--unreleased')).output, 'order=switch\n');
     const waiting = await conventions(root, 'check');
     assert.match(waiting.output, /db\/V2__rename\.sql ждёт парного contract, остаётся выпусков 1/);
     assert.doesNotMatch(waiting.output, /просрочена/);

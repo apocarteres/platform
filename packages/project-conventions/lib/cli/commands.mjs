@@ -5,6 +5,7 @@ import { changesHistory, releaseTags, reportLines } from '../release/changes.mjs
 import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../health.mjs';
 import { DEFAULT_TIMEOUT_SECONDS as ABSENT_TIMEOUT_SECONDS, askForAbsent } from '../unknown-path.mjs';
 import { DEFAULT_TIMEOUT_SECONDS as STATIC_TIMEOUT_SECONDS, checkStatic } from '../static-check.mjs';
+import { unreleasedMigrations } from '../migrations.mjs';
 import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dependencies-state.mjs';
 import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
@@ -133,6 +134,22 @@ export async function staticCheck(root, parsed, { usage, refuse }) {
   }
   console.log(`Статика клиента разложена по правилам: спрошено адресов ${answer.asked}`);
   if (answer.unchecked !== null) console.log(answer.unchecked);
+}
+
+// REQ-DEPLOYMENT-029
+export async function migrations(root, parsed, { usage, refuse }) {
+  if (!parsed.flags.has('--unreleased')) {
+    refuse(usage.migrations, 'назовите, что печатать: ключ --unreleased — переходы, которых нет ни в одном выпущенном выпуске');
+    return;
+  }
+  const found = await unreleasedMigrations(root, await readConfig(root));
+  if (found.problems.length > 0) {
+    console.error('Порядок развёртывания не выбран:');
+    for (const problem of found.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  for (const line of found.lines) console.log(line);
 }
 
 // REQ-QUALITY-004

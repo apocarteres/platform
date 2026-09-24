@@ -93,6 +93,11 @@ related: REQ-DEPLOYMENT, REQ-COMPATIBILITY, REQ-PERSISTENCE, REQ-RELEASE
 - `conventions manifest --instance <имя>`; при объявленных экземплярах без
   ключа манифест не пишется. `health` уже проверял любой адрес, `deployed` —
   любой путь установки.
+- `conventions migrations --unreleased` (`REQ-DEPLOYMENT-029`): переходы, которых
+  нет ни в одном выпущенном выпуске, с метками и порядок `order=switch` или
+  `order=downtime`. Добавлено при сверке с заявкой перед выпуском: без команды
+  каждый скрипт разбирал бы метки сам. `deployed` не расширялась — путь
+  установки экземпляра называет скрипт, сверка по пути уже есть.
 
 ## Чем закреплено
 

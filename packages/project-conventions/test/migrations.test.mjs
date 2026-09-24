@@ -5,7 +5,7 @@ import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { findExpandDebts, findUnlabelledMigrations, labelOf, withoutDowntime } from '../lib/migrations.mjs';
+import { findExpandDebts, findUnlabelledMigrations, labelOf, unreleasedMigrations, withoutDowntime } from '../lib/migrations.mjs';
 import { environmentWithoutGit } from '../lib/release/git.mjs';
 
 const run = promisify(execFile);
@@ -132,6 +132,32 @@ test('долг expand напоминает, пока срок идёт, и ро�
     await one.migration('V3__drop.sql', 'contract V2');
     debts = await findExpandDebts(one.root, config());
     assert.deepEqual([...debts.problems, ...debts.advisories], [], 'парный contract закрывает долг');
+  } finally {
+    await one.stop();
+  }
+});
+
+// REQ-DEPLOYMENT-029
+test('невыпущенные переходы печатаются с метками, breaking среди них выбирает порядок с простоем', async () => {
+  const one = await repository();
+  try {
+    await one.migration('V1__stock.sql', 'additive');
+    await one.release();
+    assert.deepEqual((await unreleasedMigrations(one.root, config())).lines, ['order=switch'], 'выпущенное не печатается');
+
+    await one.migration('V2__rename.sql', 'expand');
+    assert.deepEqual((await unreleasedMigrations(one.root, config())).lines,
+      [`migration=${DIRECTORY}/V2__rename.sql kind=expand`, 'order=switch']);
+
+    await one.migration('V3__split.sql', 'breaking');
+    assert.deepEqual((await unreleasedMigrations(one.root, config())).lines.at(-1), 'order=downtime');
+
+    await one.release();
+    assert.deepEqual((await unreleasedMigrations(one.root, config())).lines, ['order=switch'], 'вышедший breaking порядок больше не решает');
+
+    await one.migration('V4__bare.sql', null);
+    assert.match((await unreleasedMigrations(one.root, config())).problems[0], /V4__bare\.sql: переход без метки — порядок развёртывания не выбрать/);
+    assert.match((await unreleasedMigrations(one.root, {})).problems[0], /развёртывание без простоя не объявлено/);
   } finally {
     await one.stop();
   }

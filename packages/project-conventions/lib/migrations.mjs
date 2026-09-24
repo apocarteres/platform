@@ -149,3 +149,29 @@ export async function findExpandDebts(root, config) {
   }
   return { problems, advisories };
 }
+
+// REQ-DEPLOYMENT-029
+export async function unreleasedMigrations(root, config) {
+  const declared = withoutDowntime(config);
+  if (!declared.declared) {
+    return { problems: ['развёртывание без простоя не объявлено: объявите раздел deployment.withoutDowntime с каталогом переходов migrations (REQ-DEPLOYMENT-025)'] };
+  }
+  if (declared.problems.length > 0) return { problems: declared.problems };
+  const all = await migrations(root, declared.migrations);
+  if (all === null) return { problems: [`каталога переходов ${declared.migrations} нет: назовите существующий в deployment.withoutDowntime.migrations`] };
+  const unreleased = [];
+  for (const migration of all) {
+    if (await releasesCarrying(root, migration.file) === 0) unreleased.push(migration);
+  }
+  const unlabelled = unreleased.filter((one) => one.label === null || !KINDS.includes(one.label.kind));
+  if (unlabelled.length > 0) {
+    return {
+      problems: unlabelled.map((one) => `${one.file}: переход без метки — порядок развёртывания не выбрать; поставьте первой строкой -- migration: ${KINDS.join(' | ')}`),
+    };
+  }
+  const order = unreleased.some((one) => one.label.kind === 'breaking') ? 'downtime' : 'switch';
+  return {
+    problems: [],
+    lines: [...unreleased.map((one) => `migration=${one.file} kind=${one.label.kind}`), `order=${order}`],
+  };
+}

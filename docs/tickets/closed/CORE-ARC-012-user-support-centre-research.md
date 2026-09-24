@@ -92,7 +92,7 @@ related: CORE-ARC-001, CORE-ARC-013, CORE-ARC-016, CORE-ARC-017, ADR-0007
   границы, положения о персональных данных и приёме без входа, состояния,
   порядок шагов.
 - Шаги оформлены задачами: [CORE-ARC-016](CORE-ARC-016-client-journal.md) —
-  журнал клиента, [CORE-ARC-017](../CORE-ARC-017-support-centre.md) — центр
+  журнал клиента, [CORE-ARC-017](CORE-ARC-017-support-centre.md) — центр
   поддержки.
 
 ## Откуда пришла задача

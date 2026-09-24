@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-017
 type: ticket
-status: in_progress
+status: done
 scope: frontend, backend, architecture, personal-data
 authority: supporting
 priority: P2
@@ -22,7 +22,7 @@ related: CORE-ARC-012, CORE-ARC-013, CORE-ARC-001, ADR-0007, REQ-AUTH
 
 ## Подтверждение
 
-Разбор модуля потребителя в [ADR-0007](../decisions/ADR-0007-user-support-centre.md).
+Разбор модуля потребителя в [ADR-0007](../../decisions/ADR-0007-user-support-centre.md).
 Решения владельца от 2026-09-24 — там же, раздел «Решения владельца».
 
 ## Последствия при сохранении текущего поведения
@@ -153,5 +153,5 @@ related: CORE-ARC-012, CORE-ARC-013, CORE-ARC-001, ADR-0007, REQ-AUTH
 ## Откуда пришла задача
 
 [issue #43](https://github.com/apocarteres/platform/issues/43), исследование
-[CORE-ARC-012](closed/CORE-ARC-012-user-support-centre-research.md). Уровень —
+[CORE-ARC-012](CORE-ARC-012-user-support-centre-research.md). Уровень —
 рекомендация: функция необязательная.

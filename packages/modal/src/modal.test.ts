@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ApoModal, ESCAPE_IGNORED } from './modal';
+import { ApcrModal, ESCAPE_IGNORED } from './modal';
 import type { EscapeHandler } from './modal';
 
 function escape(): KeyboardEvent {
@@ -13,11 +13,11 @@ function escape(): KeyboardEvent {
 @Component({
   selector: 'test-two-modals',
   standalone: true,
-  imports: [ApoModal],
+  imports: [ApcrModal],
   template: `
-    <div apoModal [apoModalEscape]="closeOuter">внешнее</div>
+    <div apcrModal [apcrModalEscape]="closeOuter">внешнее</div>
     @if (innerOpen()) {
-      <div apoModal [apoModalEscape]="closeInner">внутреннее</div>
+      <div apcrModal [apcrModalEscape]="closeInner">внутреннее</div>
     }
   `,
 })
@@ -34,16 +34,16 @@ class TwoModals {
 @Component({
   selector: 'test-undeclared',
   standalone: true,
-  imports: [ApoModal],
-  template: '<div apoModal>без решения</div>',
+  imports: [ApcrModal],
+  template: '<div apcrModal>без решения</div>',
 })
 class Undeclared {}
 
 @Component({
   selector: 'test-ignored',
   standalone: true,
-  imports: [ApoModal],
-  template: '<div apoModal [apoModalEscape]="ignored">не закрывается</div>',
+  imports: [ApcrModal],
+  template: '<div apcrModal [apcrModalEscape]="ignored">не закрывается</div>',
 })
 class Ignored {
   readonly ignored = ESCAPE_IGNORED;
@@ -52,8 +52,8 @@ class Ignored {
 @Component({
   selector: 'test-not-a-handler',
   standalone: true,
-  imports: [ApoModal],
-  template: '<div apoModal [apoModalEscape]="notAHandler">не обработчик</div>',
+  imports: [ApcrModal],
+  template: '<div apcrModal [apcrModalEscape]="notAHandler">не обработчик</div>',
 })
 class NotAHandler {
   readonly notAHandler = 'закрыть' as unknown as EscapeHandler;
@@ -65,7 +65,7 @@ afterEach(() => TestBed.resetTestingModule());
 describe('решение об Escape обязательно', () => {
   it('модальное окно без решения не создаётся, и отказ называет, что указать', () => {
     const fixture = TestBed.createComponent(Undeclared);
-    expect(() => fixture.detectChanges()).toThrowError(/без решения об Escape: укажите \[apoModalEscape\].*ESCAPE_IGNORED/);
+    expect(() => fixture.detectChanges()).toThrowError(/без решения об Escape: укажите \[apcrModalEscape\].*ESCAPE_IGNORED/);
   });
 
   it('не обработчик вместо обработчика отвергается тем же отказом', () => {

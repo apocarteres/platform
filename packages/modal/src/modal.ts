@@ -6,7 +6,7 @@ export type EscapeHandler = (event: KeyboardEvent) => void;
 // REQ-CLIENT-MODAL-002
 export const ESCAPE_IGNORED: EscapeHandler = () => undefined;
 
-const UNDECLARED = 'Модальное окно объявлено без решения об Escape: укажите [apoModalEscape] —'
+const UNDECLARED = 'Модальное окно объявлено без решения об Escape: укажите [apcrModalEscape] —'
   + ' обработчик, который закрывает окно, либо ESCAPE_IGNORED, если окно намеренно не закрывается';
 
 // REQ-CLIENT-MODAL-003
@@ -37,18 +37,18 @@ export class ModalStack {
 
 // REQ-CLIENT-MODAL-001
 @Directive({
-  selector: '[apoModal]',
+  selector: '[apcrModal]',
   standalone: true,
-  inputs: [{ name: 'apoModalEscape', required: true }],
+  inputs: [{ name: 'apcrModalEscape', required: true }],
 })
-export class ApoModal implements OnInit, OnDestroy {
-  apoModalEscape: EscapeHandler | undefined;
+export class ApcrModal implements OnInit, OnDestroy {
+  apcrModalEscape: EscapeHandler | undefined;
   private readonly stack = inject(ModalStack);
   private release: (() => void) | null = null;
 
   ngOnInit(): void {
-    if (typeof this.apoModalEscape !== 'function') throw new Error(UNDECLARED);
-    this.release = this.stack.push(() => this.apoModalEscape ?? ESCAPE_IGNORED);
+    if (typeof this.apcrModalEscape !== 'function') throw new Error(UNDECLARED);
+    this.release = this.stack.push(() => this.apcrModalEscape ?? ESCAPE_IGNORED);
   }
 
   ngOnDestroy(): void {

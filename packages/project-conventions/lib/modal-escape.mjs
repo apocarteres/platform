@@ -4,16 +4,16 @@ import { collectSourceFiles } from './comments.mjs';
 import { CONFIG_FILE } from './config.mjs';
 
 // REQ-CLIENT-MODAL-004
-const TEMPLATES = new Set(['.html', '.ts']);
+export const TEMPLATES = new Set(['.html', '.ts']);
 
 // REQ-CLIENT-MODAL-004
 const OPENING_TAG = /<([a-zA-Z][\w-]*)((?:[^<>"']|"[^"]*"|'[^']*')*)>/g;
 
 // REQ-CLIENT-MODAL-004
-const QUOTED = /"[^"]*"|'[^']*'/g;
+export const QUOTED = /"[^"]*"|'[^']*'/g;
 
 // REQ-CLIENT-MODAL-004
-const DIRECTIVE = /(?:^|\s)apoModal(?=[\s=/]|$)/;
+const DIRECTIVE = /(?:^|\s)apcrModal(?=[\s=/]|$)/;
 
 // REQ-CLIENT-MODAL-004
 export function markerOf(selector) {
@@ -58,7 +58,7 @@ export async function findModalsWithoutEscape(root, config) {
   const violations = new Map();
   for (const file of await collectSourceFiles(root, config, TEMPLATES)) {
     const found = modalsWithoutDirective(await readFile(path.join(root, file), 'utf8'), marker)
-      .map((item) => ({ ...item, text: `модальное окно без apoModal — нет решения об Escape: ${item.text}` }));
+      .map((item) => ({ ...item, text: `модальное окно без apcrModal — нет решения об Escape: ${item.text}` }));
     if (found.length > 0) violations.set(file, found);
   }
   return violations;

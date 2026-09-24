@@ -22,8 +22,8 @@ test('признак окна проекта — класс, атрибут ил
 // REQ-CLIENT-MODAL-001, REQ-CLIENT-MODAL-004
 test('окно с директивой проходит, окно с одним входом без директивы — нет', () => {
   const byClass = markerOf('.modal-card');
-  assert.equal(modalsWithoutDirective('<div class="modal-card" apoModal [apoModalEscape]="close">', byClass).length, 0);
-  assert.equal(modalsWithoutDirective('<div class="modal-card" [apoModalEscape]="close">', byClass).length, 1,
+  assert.equal(modalsWithoutDirective('<div class="modal-card" apcrModal [apcrModalEscape]="close">', byClass).length, 0);
+  assert.equal(modalsWithoutDirective('<div class="modal-card" [apcrModalEscape]="close">', byClass).length, 1,
     'вход без директивы решения не применяет');
 });
 
@@ -35,7 +35,7 @@ test('правило читает шаблоны .html и встроенные �
     await writeFile(path.join(root, 'src/app/share.dialog.html'), '<div class="modal-card">поделиться</div>\n');
     await writeFile(path.join(root, 'src/app/confirm.component.ts'),
       "@Component({\n  template: `\n    <div class=\"modal-card\">удалить?</div>\n  `,\n})\nexport class Confirm {}\n");
-    await writeFile(path.join(root, 'src/app/fine.dialog.html'), '<div class="modal-card" apoModal [apoModalEscape]="close">ок</div>\n');
+    await writeFile(path.join(root, 'src/app/fine.dialog.html'), '<div class="modal-card" apcrModal [apcrModalEscape]="close">ок</div>\n');
 
     const config = { sources: ['src'], modal: { selector: '.modal-card' } };
     const found = await findModalsWithoutEscape(root, config);
@@ -54,23 +54,23 @@ test('правило читает шаблоны .html и встроенные �
 // REQ-CLIENT-MODAL-004
 test('знак «>» внутри значения атрибута тега не обрывает', () => {
   const byClass = markerOf('.modal-card');
-  const afterArrow = '<div [apoModalEscape]="() => close()" class="modal-card">';
+  const afterArrow = '<div [apcrModalEscape]="() => close()" class="modal-card">';
   assert.equal(modalsWithoutDirective(afterArrow, byClass).length, 1, 'окно после стрелки находится, а не выпадает молча');
 
-  const afterComparison = '<div [class.wide]="count > 3" class="modal-card" apoModal [apoModalEscape]="close">';
-  assert.equal(modalsWithoutDirective(afterComparison, byClass).length, 0, 'apoModal после сравнения виден: ложного отказа нет');
-  assert.equal(modalsWithoutDirective(afterComparison.replace(' apoModal ', ' '), byClass).length, 1);
+  const afterComparison = '<div [class.wide]="count > 3" class="modal-card" apcrModal [apcrModalEscape]="close">';
+  assert.equal(modalsWithoutDirective(afterComparison, byClass).length, 0, 'apcrModal после сравнения виден: ложного отказа нет');
+  assert.equal(modalsWithoutDirective(afterComparison.replace(' apcrModal ', ' '), byClass).length, 1);
 
-  const reported = '<div class="dialog-backdrop" [apoModalEscape]="() => close()" aria-modal="true" apoModal>';
+  const reported = '<div class="dialog-backdrop" [apcrModalEscape]="() => close()" aria-modal="true" apcrModal>';
   assert.equal(modalsWithoutDirective(reported, markerOf('[aria-modal]')).length, 0, 'тег из заявки: признак и директива после стрелки');
-  assert.equal(modalsWithoutDirective(reported.replace(' apoModal>', '>'), markerOf('[aria-modal]')).length, 1);
+  assert.equal(modalsWithoutDirective(reported.replace(' apcrModal>', '>'), markerOf('[aria-modal]')).length, 1);
 });
 
 // REQ-CLIENT-MODAL-004
 test('имя директивы внутри значения атрибута директивой не считается', () => {
   const byClass = markerOf('.modal-card');
-  assert.equal(modalsWithoutDirective('<div class="modal-card" title="открыть apoModal позже">', byClass).length, 1,
-    'слово apoModal посреди значения — не директива');
+  assert.equal(modalsWithoutDirective('<div class="modal-card" title="открыть apcrModal позже">', byClass).length, 1,
+    'слово apcrModal посреди значения — не директива');
   assert.equal(modalsWithoutDirective('<div appModal="x" [x]="a > b">', markerOf('[appModal]')).length, 1);
   assert.equal(modalsWithoutDirective('<div title="это appModal окно">', markerOf('[appModal]')).length, 0,
     'признак-атрибут внутри значения признаком не считается');

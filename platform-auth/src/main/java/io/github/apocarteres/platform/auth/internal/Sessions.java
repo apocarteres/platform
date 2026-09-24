@@ -14,8 +14,20 @@ final class Sessions {
   }
 
   int terminate(UUID account) {
+    return terminateExcept(account, null);
+  }
+
+  // REQ-AUTH-019
+  int terminateExcept(UUID account, String kept) {
     var found = repository.findByPrincipalName(account.toString());
-    found.keySet().forEach(repository::deleteById);
-    return found.size();
+    int ended = 0;
+    for (String id : found.keySet()) {
+      if (id.equals(kept)) {
+        continue;
+      }
+      repository.deleteById(id);
+      ended++;
+    }
+    return ended;
   }
 }

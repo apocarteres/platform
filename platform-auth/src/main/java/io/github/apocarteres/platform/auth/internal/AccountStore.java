@@ -9,6 +9,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -77,8 +78,33 @@ final class AccountStore {
     jdbc.sql(sql.get("account-logged-in")).param("id", id).param("now", StoredInstant.offsetOf(clock)).update();
   }
 
-  int purgeUnverified(Instant before) {
-    return jdbc.sql(sql.get("account-purge-unverified")).param("before", StoredInstant.offsetOf(before)).update();
+  // REQ-AUTH-009
+  List<Account> search(String emailPart, int offset, int limit) {
+    return jdbc.sql(sql.get("account-search"))
+      .param("pattern", pattern(emailPart))
+      .param("offset", offset)
+      .param("limit", limit)
+      .query(this::row).list().stream().map(this::withRoles).map(Stored::account).toList();
+  }
+
+  // REQ-AUTH-009
+  long count(String emailPart) {
+    return jdbc.sql(sql.get("account-count")).param("pattern", pattern(emailPart)).query(Long.class).single();
+  }
+
+  // REQ-AUTH-013
+  List<UUID> unverifiedBefore(Instant before) {
+    return jdbc.sql(sql.get("account-unverified")).param("before", StoredInstant.offsetOf(before)).query(UUID.class).list();
+  }
+
+  // REQ-AUTH-013
+  int deleteUnverified(UUID id) {
+    return jdbc.sql(sql.get("account-delete")).param("id", id).update();
+  }
+
+  private static String pattern(String emailPart) {
+    String part = emailPart == null ? "" : emailPart.trim().toLowerCase(java.util.Locale.ROOT);
+    return "%" + part.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
   }
 
   private Stored row(ResultSet row, int number) throws SQLException {

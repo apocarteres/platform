@@ -1,6 +1,7 @@
 package io.github.apocarteres.platform.auth.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,7 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.ApiAccess;
+import io.github.apocarteres.platform.auth.AccountVerified;
 import io.github.apocarteres.platform.auth.AuthLetters;
+import io.github.apocarteres.platform.auth.AuthRefused;
+import io.github.apocarteres.platform.auth.EntryAccess;
+import io.github.apocarteres.platform.auth.Purged;
 import io.github.apocarteres.platform.auth.CurrentAccount;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.RegistrationHook;
@@ -22,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
@@ -36,6 +42,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -53,7 +60,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
-// REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014
+// REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -64,6 +71,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
     "platform.auth.admin.email=Admin@Site.Example",
     "platform.auth.admin.password=initial-admin-password",
     "platform.auth.admin.roles=USER,ADMIN",
+    "platform.auth.admin.profile.name=Администратор",
   }
 )
 class AuthFlowTest {
@@ -85,6 +93,7 @@ class AuthFlowTest {
           statement.execute(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
         }
       }
+      statement.execute("CREATE TABLE player_wallet (account_id UUID NOT NULL REFERENCES platform_account (id) ON DELETE RESTRICT)");
     } catch (java.sql.SQLException | java.io.IOException failure) {
       throw new IllegalStateException(failure);
     }
@@ -116,17 +125,21 @@ class AuthFlowTest {
   private StringRedisTemplate redis;
   @Autowired
   private DataSource source;
+  @Autowired
+  private Verified verified;
 
   private MockMvc mvc;
 
   @BeforeEach
   void setUp() {
     JdbcClient jdbc = JdbcClient.create(source);
+    jdbc.sql("DELETE FROM player_wallet").update();
     jdbc.sql("DELETE FROM platform_account WHERE email <> 'admin@site.example'").update();
     redis.getConnectionFactory().getConnection().serverCommands().flushAll();
     letters.sent.clear();
     hook.seen.clear();
     hook.failing = false;
+    verified.seen.clear();
     mvc = MockMvcBuilders.webAppContextSetup(context)
       .addFilters(context.getBean("springSessionRepositoryFilter", Filter.class), context.getBean("springSecurityFilterChain", Filter.class))
       .build();
@@ -152,7 +165,7 @@ class AuthFlowTest {
       return send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(path));
     }
 
-    private ResultActions send(MockHttpServletRequestBuilder request) throws Exception {
+    ResultActions send(MockHttpServletRequestBuilder request) throws Exception {
       if (!cookies.isEmpty()) {
         request.cookie(cookies.toArray(Cookie[]::new));
       }
@@ -267,6 +280,104 @@ class AuthFlowTest {
     assertThat(letters.sent).hasSize(2);
     browser.post("/api/auth/verify", "{\"token\":\"" + first + "\"}").andExpect(jsonPath("$.code").value("token-rejected"));
     browser.post("/api/auth/verify", "{\"token\":\"" + token(1) + "\"}").andExpect(status().isNoContent());
+  }
+
+  @Test
+  @DisplayName("Проект закрывает точки аутентификации своим условием: отказ entry-closed, токен CSRF по-прежнему выдаётся")
+  void projectClosesTheEntry() throws Exception {
+    Browser browser = new Browser();
+    browser.send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/auth/register")
+        .contentType(MediaType.APPLICATION_JSON).header("X-XSRF-TOKEN", browser.csrf).header("X-Public", "1")
+        .content("{\"email\":\"public@player.example\",\"password\":\"" + PASSWORD + "\",\"human\":\"human\"}"))
+      .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("entry-closed"));
+    browser.send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/auth/login")
+        .contentType(MediaType.APPLICATION_JSON).header("X-XSRF-TOKEN", browser.csrf).header("X-Public", "1")
+        .content(login("admin@site.example", "initial-admin-password")))
+      .andExpect(jsonPath("$.code").value("entry-closed"));
+    mvc.perform(get("/api/auth/csrf").header("X-Public", "1")).andExpect(status().isOk());
+    assertThat(accounts.findByEmail("public@player.example")).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Администратор проекта создаёт учётную запись через ядро — с хуком, ролями и правилом пароля — и назначает пароль")
+  void administratorCreatesAndSetsPassword() throws Exception {
+    Account created = accounts.create(" Made@Player.Example ", PASSWORD, Set.of("USER"), true, Map.of("name", "Клиент"));
+    assertThat(created.email()).isEqualTo("made@player.example");
+    assertThat(hook.seen).singleElement().satisfies(seen -> assertThat(seen.profile()).containsEntry("name", "Клиент"));
+    assertThatThrownBy(() -> accounts.create("weak@player.example", "short", Set.of("USER"), true, Map.of()))
+      .isInstanceOf(AuthRefused.class).hasMessageContaining("байт");
+    assertThatThrownBy(() -> accounts.create("odd@player.example", PASSWORD, Set.of("OWNER"), true, Map.of()))
+      .hasMessageContaining("не объявлена");
+
+    Browser browser = new Browser();
+    browser.post("/api/auth/login", login("made@player.example", PASSWORD)).andExpect(status().isOk());
+    accounts.setPassword(created.id(), "assigned by admin");
+    browser.get("/api/things").andExpect(status().isUnauthorized());
+    browser.post("/api/auth/login", login("made@player.example", "assigned by admin")).andExpect(status().isOk());
+
+    accounts.create("made-too@player.example", PASSWORD, Set.of("USER"), false, Map.of());
+    assertThat(accounts.search("MADE", 0, 10)).extracting(Account::email).containsExactly("made-too@player.example", "made@player.example");
+    assertThat(accounts.search("made", 1, 1)).extracting(Account::email).containsExactly("made@player.example");
+    assertThat(accounts.count("made")).isEqualTo(2);
+    assertThat(accounts.search("_", 0, 10)).as("подстановочные знаки LIKE ищутся буквально").isEmpty();
+  }
+
+  @Test
+  @DisplayName("Пользователь меняет свой пароль, назвав текущий: прочие сессии завершаются, текущая остаётся")
+  void userChangesOwnPassword() throws Exception {
+    registered("own@player.example");
+    Browser here = new Browser();
+    here.post("/api/auth/login", login("own@player.example", PASSWORD)).andExpect(status().isOk());
+    Browser elsewhere = new Browser();
+    elsewhere.post("/api/auth/login", login("own@player.example", PASSWORD)).andExpect(status().isOk());
+
+    here.post("/api/auth/password", "{\"current\":\"wrong password here\",\"password\":\"brand new password\"}")
+      .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("credentials-rejected"));
+    here.post("/api/auth/password", "{\"current\":\"" + PASSWORD + "\",\"password\":\"brand new password\"}")
+      .andExpect(status().isNoContent());
+    here.get("/api/things").andExpect(status().isOk());
+    elsewhere.get("/api/things").andExpect(status().isUnauthorized());
+    new Browser().post("/api/auth/login", login("own@player.example", "brand new password")).andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("После подтверждения почты ядро сообщает событием, и транзакция к этому моменту зафиксирована")
+  void verificationIsAnnounced() throws Exception {
+    registered("announced@player.example");
+    assertThat(verified.seen).singleElement().satisfies(event -> {
+      assertThat(event.event().email()).isEqualTo("announced@player.example");
+      assertThat(event.committed()).isTrue();
+    });
+  }
+
+  @Test
+  @DisplayName("Первый администратор создаётся тем же путём, что и регистрация: хук получает профиль из настроек")
+  void adminGoesThroughTheHook() {
+    assertThat(hook.all).anySatisfy(seen -> {
+      assertThat(seen.account().email()).isEqualTo("admin@site.example");
+      assertThat(seen.profile()).containsEntry("name", "Администратор");
+    });
+  }
+
+  @Test
+  @DisplayName("Очистка стирает по одной записи: удержанная внешним ключом проекта пропускается и считается, остальные стираются")
+  void purgeSkipsReferencedAccounts() throws Exception {
+    new Browser().post("/api/auth/register", "{\"email\":\"wallet@player.example\",\"password\":\"" + PASSWORD
+      + "\",\"human\":\"human\",\"profile\":{\"wallet\":true}}");
+    new Browser().post("/api/auth/register", "{\"email\":\"loose@player.example\",\"password\":\"" + PASSWORD + "\",\"human\":\"human\"}");
+    clock.advance(Duration.ofDays(8));
+    assertThat(accounts.purgeUnverified(Duration.ofDays(7))).isEqualTo(new Purged(1, 1));
+    assertThat(accounts.findByEmail("wallet@player.example")).isPresent();
+    assertThat(accounts.findByEmail("loose@player.example")).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Правило пароля отдаётся клиенту открытой точкой")
+  void policyIsOpen() throws Exception {
+    mvc.perform(get("/api/auth/policy"))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.passwordMinBytes").value(10))
+      .andExpect(jsonPath("$.passwordMaxBytes").value(72));
   }
 
   @Test
@@ -391,7 +502,7 @@ class AuthFlowTest {
     registered("active@player.example");
     clock.advance(Duration.ofDays(8));
     assertThat(accounts.purgeTokens(Duration.ofDays(7))).isEqualTo(2);
-    assertThat(accounts.purgeUnverified(Duration.ofDays(7))).isEqualTo(1);
+    assertThat(accounts.purgeUnverified(Duration.ofDays(7))).isEqualTo(new Purged(1, 0));
     assertThat(accounts.findByEmail("idle@player.example")).isEmpty();
     assertThat(accounts.findByEmail("active@player.example")).isPresent();
   }
@@ -438,14 +549,51 @@ class AuthFlowTest {
   static final class Hook implements RegistrationHook {
 
     final List<Seen> seen = new CopyOnWriteArrayList<>();
+    final List<Seen> all = new CopyOnWriteArrayList<>();
     volatile boolean failing;
+    private final DataSource source;
+
+    Hook(DataSource source) {
+      this.source = source;
+    }
 
     @Override
     public void registered(Account account, Map<String, Object> profile) {
       if (failing) {
         throw new IllegalStateException("профиль проекта не создан");
       }
+      if (Boolean.TRUE.equals(profile.get("wallet"))) {
+        JdbcClient.create(source).sql("INSERT INTO player_wallet (account_id) VALUES (:id)").param("id", account.id()).update();
+      }
       seen.add(new Seen(account, profile));
+      all.add(new Seen(account, profile));
+    }
+  }
+
+  record Event(AccountVerified event, boolean committed) {
+  }
+
+  static final class Verified {
+
+    final List<Event> seen = new CopyOnWriteArrayList<>();
+    private final DataSource source;
+
+    Verified(DataSource source) {
+      this.source = source;
+    }
+
+    // REQ-AUTH-017
+    @EventListener
+    void on(AccountVerified event) {
+      try (var connection = source.getConnection();
+        var query = connection.prepareStatement("SELECT email_verified FROM platform_account WHERE id = ?")) {
+        query.setObject(1, event.id());
+        try (var rows = query.executeQuery()) {
+          seen.add(new Event(event, rows.next() && rows.getBoolean(1)));
+        }
+      } catch (java.sql.SQLException failure) {
+        throw new IllegalStateException(failure);
+      }
     }
   }
 
@@ -459,8 +607,18 @@ class AuthFlowTest {
     }
 
     @Bean
-    Hook hook() {
-      return new Hook();
+    Hook hook(DataSource source) {
+      return new Hook(source);
+    }
+
+    @Bean
+    Verified verified(DataSource source) {
+      return new Verified(source);
+    }
+
+    @Bean
+    EntryAccess entryAccess() {
+      return request -> request.getHeader("X-Public") == null;
     }
 
     @Bean

@@ -3,6 +3,7 @@ package io.github.apocarteres.platform.auth.internal;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.ApiAccess;
 import io.github.apocarteres.platform.auth.AuthLetters;
+import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.persistence.SqlStatements;
@@ -17,6 +18,7 @@ import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfigurat
 import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -88,18 +90,25 @@ public class AuthAutoConfiguration {
     return new Sessions(repository);
   }
 
-  // REQ-AUTH-003, REQ-AUTH-010
+  // REQ-AUTH-003, REQ-AUTH-009
+  @Bean
+  AccountCreation accountCreation(AccountStore accounts, PasswordEncoder passwords, RegistrationHook hook, AuthSettings settings) {
+    return new AccountCreation(accounts, passwords, hook, settings);
+  }
+
+  // REQ-AUTH-003, REQ-AUTH-010, REQ-AUTH-017
   @Bean
   AuthService authService(AccountStore accounts, TokenStore tokens, Sessions sessions, PasswordEncoder passwords,
-    RateLimiter limiter, HumanCheck human, RegistrationHook hook, AuthLetters letters,
+    RateLimiter limiter, HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, AuthLetters letters,
     PlatformTransactionManager transactions, AuthSettings settings, Clock clock) {
-    return new AuthService(accounts, tokens, sessions, passwords, limiter, human, hook, letters,
+    return new AuthService(accounts, tokens, sessions, passwords, limiter, human, creation, events, letters,
       new TransactionTemplate(transactions), settings, clock);
   }
 
   @Bean
-  Accounts accounts(AccountStore accounts, TokenStore tokens, Sessions sessions, AuthSettings settings, Clock clock) {
-    return new AccountsService(accounts, tokens, sessions, settings, clock);
+  Accounts accounts(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
+    PlatformTransactionManager transactions, AuthSettings settings, Clock clock) {
+    return new AccountsService(accounts, tokens, sessions, creation, passwords, new TransactionTemplate(transactions), settings, clock);
   }
 
   @Bean
@@ -108,14 +117,16 @@ public class AuthAutoConfiguration {
   }
 
   @Bean
-  AuthController authController(AuthService auth, Accounts accounts, SecurityContextRepository contexts) {
-    return new AuthController(auth, accounts, contexts);
+  AuthController authController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry,
+    AuthSettings settings) {
+    return new AuthController(auth, accounts, contexts, entry, settings);
   }
 
   // REQ-AUTH-009
   @Bean
-  AdminProvisioning adminProvisioning(AccountStore accounts, PasswordEncoder passwords, AuthSettings settings) {
-    return new AdminProvisioning(accounts, passwords, settings);
+  AdminProvisioning adminProvisioning(AccountStore accounts, AccountCreation creation, PlatformTransactionManager transactions,
+    AuthSettings settings) {
+    return new AdminProvisioning(accounts, creation, new TransactionTemplate(transactions), settings);
   }
 
   @Bean
@@ -145,7 +156,7 @@ public class AuthAutoConfiguration {
       .authorizeHttpRequests(rules -> {
         rules.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/verify", "/api/auth/resend",
           "/api/auth/login", "/api/auth/password-reset/request", "/api/auth/password-reset/confirm").permitAll();
-        rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll();
+        rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/policy").permitAll();
         rules.requestMatchers("/api/auth/**").authenticated();
         access.rules(rules);
         rules.anyRequest().authenticated();

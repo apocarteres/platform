@@ -2,18 +2,20 @@ package io.github.apocarteres.platform.auth.internal;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionTemplate;
 
 // REQ-AUTH-009
 final class AdminProvisioning implements ApplicationRunner {
 
   private final AccountStore accounts;
-  private final PasswordEncoder passwords;
+  private final AccountCreation creation;
+  private final TransactionTemplate transactions;
   private final AuthSettings settings;
 
-  AdminProvisioning(AccountStore accounts, PasswordEncoder passwords, AuthSettings settings) {
+  AdminProvisioning(AccountStore accounts, AccountCreation creation, TransactionTemplate transactions, AuthSettings settings) {
     this.accounts = accounts;
-    this.passwords = passwords;
+    this.creation = creation;
+    this.transactions = transactions;
     this.settings = settings;
   }
 
@@ -24,7 +26,7 @@ final class AdminProvisioning implements ApplicationRunner {
       if (accounts.findByEmail(email).isPresent()) {
         return;
       }
-      accounts.insert(email, passwords.encode(Credentials.password(admin.password(), settings)), true, admin.roles());
+      transactions.executeWithoutResult(status -> creation.create(email, admin.password(), admin.roles(), true, admin.profile()));
     });
   }
 }

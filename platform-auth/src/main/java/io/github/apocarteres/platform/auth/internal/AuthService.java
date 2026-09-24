@@ -4,7 +4,7 @@ import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.HumanCheck;
-import io.github.apocarteres.platform.auth.RegistrationHook;
+import io.github.apocarteres.platform.auth.AccountVerified;
 import io.github.apocarteres.platform.auth.internal.TokenStore.Purpose;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
 import java.time.Clock;
@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -26,7 +27,8 @@ final class AuthService {
   private final PasswordEncoder passwords;
   private final RateLimiter limiter;
   private final HumanCheck human;
-  private final RegistrationHook hook;
+  private final AccountCreation creation;
+  private final ApplicationEventPublisher events;
   private final AuthLetters letters;
   private final TransactionTemplate transactions;
   private final AuthSettings settings;
@@ -34,15 +36,16 @@ final class AuthService {
   private final String absentHash;
 
   AuthService(AccountStore accounts, TokenStore tokens, Sessions sessions, PasswordEncoder passwords, RateLimiter limiter,
-    HumanCheck human, RegistrationHook hook, AuthLetters letters, TransactionTemplate transactions, AuthSettings settings,
-    Clock clock) {
+    HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, AuthLetters letters,
+    TransactionTemplate transactions, AuthSettings settings, Clock clock) {
     this.accounts = accounts;
     this.tokens = tokens;
     this.sessions = sessions;
     this.passwords = passwords;
     this.limiter = limiter;
     this.human = human;
-    this.hook = hook;
+    this.creation = creation;
+    this.events = events;
     this.letters = letters;
     this.transactions = transactions;
     this.settings = settings;
@@ -61,8 +64,7 @@ final class AuthService {
       if (accounts.findByEmail(email).isPresent()) {
         return;
       }
-      Account account = accounts.insert(email, passwords.encode(password), false, settings.defaultRoles());
-      hook.registered(account, profile == null ? Map.of() : Map.copyOf(profile));
+      Account account = creation.create(email, password, settings.defaultRoles(), false, profile == null ? Map.of() : profile);
       String token = tokens.issue(account.id(), Purpose.EMAIL_VERIFICATION, settings.verificationTtl());
       afterCommit(() -> letters.verification(email, settings.link(settings.verificationLink(), token), locale));
     });
@@ -75,6 +77,9 @@ final class AuthService {
       UUID id = tokens.take(token, Purpose.EMAIL_VERIFICATION)
         .orElseThrow(() -> new AuthRefused(AuthRefused.TOKEN, "Ссылка подтверждения недействительна или просрочена"));
       accounts.verified(id);
+      String email = accounts.find(id).orElseThrow().account().email();
+      // REQ-AUTH-017
+      afterCommit(() -> events.publishEvent(new AccountVerified(id, email)));
     });
   }
 
@@ -148,6 +153,20 @@ final class AuthService {
       return taken;
     });
     sessions.terminate(id);
+  }
+
+  // REQ-AUTH-019
+  void changePassword(UUID id, String current, String declaredPassword, String keptSession) {
+    limiter.require(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+    AccountStore.Stored stored = accounts.find(id).orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Учётной записи нет"));
+    if (current == null || !passwords.matches(current, stored.passwordHash())) {
+      limiter.count(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+      throw new AuthRefused(AuthRefused.CREDENTIALS, "Текущий пароль не подошёл");
+    }
+    String password = Credentials.password(declaredPassword, settings);
+    accounts.password(id, passwords.encode(password));
+    limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+    sessions.terminateExcept(id, keptSession);
   }
 
   private void requireHuman(String answer, String action, String address) {

@@ -36,7 +36,7 @@ record AuthSettings(
 
   private static final Pattern ROLE = Pattern.compile("[A-Z][A-Z0-9_]*");
 
-  record Admin(String email, String password, Set<String> roles) {
+  record Admin(String email, String password, Set<String> roles, java.util.Map<String, Object> profile) {
   }
 
   static AuthSettings of(Environment environment) {
@@ -120,7 +120,9 @@ record AuthSettings(
         throw refused("admin.roles", "роль " + role + " не объявлена в " + PREFIX + "roles");
       }
     }
-    return Optional.of(new Admin(email.get(), password, granted));
+    java.util.Map<String, Object> profile = binder.bind(PREFIX + "admin.profile", Bindable.mapOf(String.class, Object.class))
+      .orElse(java.util.Map.of());
+    return Optional.of(new Admin(email.get(), password, granted, profile));
   }
 
   private static IllegalStateException refused(String key, String reason) {

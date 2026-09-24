@@ -127,6 +127,7 @@ describe('состояние сессии', () => {
       [session.resend('new@site.example'), '/api/auth/resend', { email: 'new@site.example' }],
       [session.requestReset('new@site.example', 'h'), '/api/auth/password-reset/request', { email: 'new@site.example', human: 'h' }],
       [session.confirmReset('tok', 'another password'), '/api/auth/password-reset/confirm', { token: 'tok', password: 'another password' }],
+      [session.changePassword('old password', 'new password'), '/api/auth/password', { current: 'old password', password: 'new password' }],
     ] as const;
     for (const [promise, url, body] of calls) {
       const request = http.expectOne(url);
@@ -135,6 +136,17 @@ describe('состояние сессии', () => {
       request.flush(null, { status: 202, statusText: 'Accepted' });
       await promise;
     }
+  });
+});
+
+// REQ-AUTH-018
+describe('правило пароля', () => {
+  it('читается открытой точкой ядра', async () => {
+    const { http, session } = setUp();
+    await start(http, null);
+    const policy = session.policy();
+    http.expectOne('/api/auth/policy').flush({ passwordMinBytes: 10, passwordMaxBytes: 72 });
+    await expect(policy).resolves.toEqual({ passwordMinBytes: 10, passwordMaxBytes: 72 });
   });
 });
 

@@ -15,6 +15,12 @@ export interface SignedIn {
   readonly roles: readonly string[];
 }
 
+// REQ-AUTH-018
+export interface PasswordPolicy {
+  readonly passwordMinBytes: number;
+  readonly passwordMaxBytes: number;
+}
+
 // REQ-AUTH-015
 export interface AuthOptions {
   readonly base?: string;
@@ -89,6 +95,16 @@ export class AuthSession {
 
   async confirmReset(token: string, password: string): Promise<void> {
     await firstValueFrom(this.http.post(`${this.base}/password-reset/confirm`, { token, password }));
+  }
+
+  // REQ-AUTH-019
+  async changePassword(current: string, password: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.base}/password`, { current, password }));
+  }
+
+  // REQ-AUTH-018
+  policy(): Promise<PasswordPolicy> {
+    return firstValueFrom(this.http.get<PasswordPolicy>(`${this.base}/policy`));
   }
 
   // REQ-AUTH-008

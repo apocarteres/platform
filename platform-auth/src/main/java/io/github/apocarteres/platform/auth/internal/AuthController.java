@@ -4,6 +4,7 @@ import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.CurrentAccount;
+import io.github.apocarteres.platform.auth.EntryAccess;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -55,30 +56,50 @@ class AuthController {
   record Csrf(String headerName, String parameterName, String token) {
   }
 
+  record PasswordChange(String current, String password) {
+  }
+
+  record Policy(int passwordMinBytes, int passwordMaxBytes) {
+  }
+
   private final AuthService auth;
   private final Accounts accounts;
   private final SecurityContextRepository contexts;
+  private final EntryAccess entry;
+  private final AuthSettings settings;
 
-  AuthController(AuthService auth, Accounts accounts, SecurityContextRepository contexts) {
+  AuthController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry, AuthSettings settings) {
     this.auth = auth;
     this.accounts = accounts;
     this.contexts = contexts;
+    this.entry = entry;
+    this.settings = settings;
+  }
+
+  // REQ-AUTH-016
+  private void open(HttpServletRequest request) {
+    if (!entry.allowed(request)) {
+      throw new AuthRefused(AuthRefused.ENTRY, "Точки аутентификации для этого запроса закрыты проектом");
+    }
   }
 
   @PostMapping("/register")
   ResponseEntity<Void> register(@RequestBody Registration body, HttpServletRequest request) {
+    open(request);
     auth.register(body.email(), body.password(), body.human(), request.getRemoteAddr(), request.getLocale(), body.profile());
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 
   @PostMapping("/verify")
   ResponseEntity<Void> verify(@RequestBody Token body, HttpServletRequest request) {
+    open(request);
     auth.verify(body.token(), request.getRemoteAddr());
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/resend")
   ResponseEntity<Void> resend(@RequestBody Email body, HttpServletRequest request) {
+    open(request);
     auth.resend(body.email(), request.getLocale());
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
@@ -86,6 +107,7 @@ class AuthController {
   // REQ-AUTH-005, REQ-AUTH-008
   @PostMapping("/login")
   Me login(@RequestBody Login body, HttpServletRequest request, HttpServletResponse response) {
+    open(request);
     Account account = auth.authenticate(body.email(), body.password(), body.human(), request.getRemoteAddr());
     List<SimpleGrantedAuthority> authorities = account.roles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
     SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -119,14 +141,31 @@ class AuthController {
     return new Csrf(token.getHeaderName(), token.getParameterName(), token.getToken());
   }
 
+  // REQ-AUTH-019
+  @PostMapping("/password")
+  ResponseEntity<Void> changePassword(@RequestBody PasswordChange body, HttpServletRequest request) {
+    UUID id = CurrentAccount.id().orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Вход не выполнен"));
+    HttpSession session = request.getSession(false);
+    auth.changePassword(id, body.current(), body.password(), session == null ? null : session.getId());
+    return ResponseEntity.noContent().build();
+  }
+
+  // REQ-AUTH-018
+  @GetMapping("/policy")
+  Policy policy() {
+    return new Policy(settings.passwordMinBytes(), settings.passwordMaxBytes());
+  }
+
   @PostMapping("/password-reset/request")
   ResponseEntity<Void> requestReset(@RequestBody Email body, HttpServletRequest request) {
+    open(request);
     auth.requestReset(body.email(), body.human(), request.getRemoteAddr(), request.getLocale());
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 
   @PostMapping("/password-reset/confirm")
   ResponseEntity<Void> confirmReset(@RequestBody Reset body, HttpServletRequest request) {
+    open(request);
     auth.confirmReset(body.token(), body.password(), request.getRemoteAddr());
     return ResponseEntity.noContent().build();
   }

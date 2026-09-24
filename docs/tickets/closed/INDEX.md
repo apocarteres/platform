@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 159. Включены самостоятельные задачи и этапы планов функций.
+Всего: 160. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -124,6 +124,7 @@ authority: navigation
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |
 | [Обработчик истёкшей сессии не отличает её от неудачного входа](CORE-API-005-session-handler-cannot-tell-a-failed-login.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | frontend, api |
 | [Ответ об ошибке не может нести заголовки](CORE-API-006-error-response-cannot-carry-headers.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | backend, api |
+| [Исследование: отдельный сервис уведомлений](CORE-ARC-001-notification-service-research.md) | P2 | Заменена | Не назначен | notification, architecture, research |
 | [Исследование: единообразное поведение модалок — контракт и код](CORE-ARC-002-shared-modal-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
 | [Исследование: поведение кнопки, ждущей удалённого вызова](CORE-ARC-003-async-action-button-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
 | [Исследование: здоровье и метрики как контракт ядра](CORE-ARC-004-health-and-metrics-contracts-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, architecture, observability, research |

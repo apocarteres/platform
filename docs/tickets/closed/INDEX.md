@@ -109,7 +109,7 @@ authority: navigation
 | [Набор проверок ядра в сборочном контейнере на машине сборки](CORE-OPS-088-verify-runner-on-a-build-machine.md) | P1 | Выполнена | [RELEASE-6-1-0](../../releases/RELEASE-6-1-0.md) | build, tooling |
 | [Версия API требуется от всех запросов: забытое исключение кладёт машинных клиентов](CORE-OPS-089-api-version-only-for-browsers.md) | P1 | Выполнена | [RELEASE-7-0-0](../../releases/RELEASE-7-0-0.md) | backend, api |
 | [Шлагбаум перед отправкой перестал проверять документы, принятая идея не проходила проверку](CORE-OPS-091-hook-lost-docs-check.md) | P1 | Выполнена | [RELEASE-8-1-1](../../releases/RELEASE-8-1-1.md) | tickets, tooling, quality |
-| [Завершающий шаг засчитывает обязательство задаче, закрытой после тега](CORE-OPS-094-finish-credits-work-closed-after-the-tag.md) | P1 | Выполнена | Не назначен | release, tooling |
+| [Завершающий шаг засчитывает обязательство задаче, закрытой после тега](CORE-OPS-094-finish-credits-work-closed-after-the-tag.md) | P1 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
@@ -133,7 +133,7 @@ authority: navigation
 | [Исследование: центр поддержки пользователей](CORE-ARC-012-user-support-centre-research.md) | P2 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | frontend, backend, architecture, research |
 | [OpenAPI-контракт аутентификации ядра и типизированный профиль проекта](CORE-ARC-015-openapi-contract-for-core-auth.md) | P2 | Выполнена | [RELEASE-9-0-0](../../releases/RELEASE-9-0-0.md) | backend, frontend, api, tooling |
 | [Журнал клиента: пакет `@apocarteres/client-journal`](CORE-ARC-016-client-journal.md) | P2 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | frontend, typescript, personal-data |
-| [Центр поддержки: starter `platform-support` и пакет `@apocarteres/support`](CORE-ARC-017-support-centre.md) | P2 | Выполнена | Не назначен | frontend, backend, architecture, personal-data |
+| [Центр поддержки: starter `platform-support` и пакет `@apocarteres/support`](CORE-ARC-017-support-centre.md) | P2 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | frontend, backend, architecture, personal-data |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
@@ -179,5 +179,5 @@ authority: navigation
 | [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |
 | [Кеш AOT: сказать положением, а не молчанием](CORE-OPS-051-aot-cache-as-a-recommendation.md) | P3 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment |
 | [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | quality, tooling, documentation |
-| [Доменные существительные `Player`, `Character`, `Ledger`](CORE-QUAL-027-domain-nouns-player-character-ledger.md) | P3 | Выполнена | Не назначен | quality, java |
+| [Доменные существительные `Player`, `Character`, `Ledger`](CORE-QUAL-027-domain-nouns-player-character-ledger.md) | P3 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | quality, java |
 | [Шифр секрета повторяется у каждого потребителя](CORE-SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | backend, security |

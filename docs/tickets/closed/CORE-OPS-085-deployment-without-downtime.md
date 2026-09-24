@@ -5,7 +5,7 @@ status: done
 scope: deployment, persistence, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-6-0-0
 related: REQ-DEPLOYMENT, REQ-COMPATIBILITY, REQ-PERSISTENCE, REQ-RELEASE
 ---
 

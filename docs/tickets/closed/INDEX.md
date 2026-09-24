@@ -103,7 +103,7 @@ authority: navigation
 | [Отказы констатировали без выхода](CORE-OPS-079-refusals-stated-without-a-way-out.md) | P1 | Выполнена | [RELEASE-1-49-0](../../releases/RELEASE-1-49-0.md) | release, deployment, tooling |
 | [Выпущенный выпуск числил за собой невыполненную задачу обязательства](CORE-OPS-083-closed-release-keeps-undone-obligation.md) | P1 | Выполнена | [RELEASE-4-0-1](../../releases/RELEASE-4-0-1.md) | release, tooling |
 | [Куски клиента переживают раскат, их размер держит проверка](CORE-OPS-084-client-chunks-survive-a-rollout.md) | P1 | Выполнена | [RELEASE-5-0-0](../../releases/RELEASE-5-0-0.md) | frontend, deployment, tooling |
-| [Развёртывание службы без простоя: второй экземпляр и переключение](CORE-OPS-085-deployment-without-downtime.md) | P1 | Выполнена | Не назначен | deployment, persistence, tooling |
+| [Развёртывание службы без простоя: второй экземпляр и переключение](CORE-OPS-085-deployment-without-downtime.md) | P1 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | deployment, persistence, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
@@ -150,7 +150,7 @@ authority: navigation
 | [Машина развёртывания доказывается, а не подразумевается](CORE-OPS-064-deployment-target-is-proved-not-trusted.md) | P2 | Выполнена | [RELEASE-1-36-0](../../releases/RELEASE-1-36-0.md) | deployment |
 | [Обходы, сделанные руками, не заводились задачами](CORE-OPS-080-manual-workarounds-went-unfiled.md) | P2 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | process, agents |
 | [Исправление слепой проверки — не несовместимость, но и не молчание](CORE-OPS-082-sharper-check-is-not-incompatible.md) | P2 | Выполнена | [RELEASE-3-1-0](../../releases/RELEASE-3-1-0.md) | publishing, release, tooling |
-| [Задачи с открытыми вопросами копятся без напоминания](CORE-OPS-086-open-questions-pile-up.md) | P2 | Выполнена | Не назначен | release, tickets, tooling |
+| [Задачи с открытыми вопросами копятся без напоминания](CORE-OPS-086-open-questions-pile-up.md) | P2 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | release, tickets, tooling |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

@@ -5,7 +5,7 @@ status: done
 scope: backend, frontend, security, architecture
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-6-1-0
 related: REQ-API, REQ-SECRETS, ADR-0001, CORE-ARC-012
 questions: resolved
 ---

@@ -21,8 +21,7 @@
       "platform-arch-rules/src/test/java/io/github/apocarteres/platform/arch/fixtures/chain/lower/Lower.java": 1,
       "platform-arch-rules/src/test/java/io/github/apocarteres/platform/arch/fixtures/chain/upper/Upper.java": 1,
       "platform-arch-rules/src/test/java/io/github/apocarteres/platform/arch/fixtures/ring/right/LeftSideHolder.java": 1,
-      "platform-auth/src/test/java/io/github/apocarteres/platform/auth/internal/AuthFlowTest.java": 2,
-      "platform-auth/src/test/java/io/github/apocarteres/platform/auth/internal/ProfileReaderTest.java": 1,
+      "platform-auth/src/test/java/io/github/apocarteres/platform/auth/internal/AuthFlowTest.java": 1,
       "platform-rate-limit/src/main/java/io/github/apocarteres/platform/ratelimit/internal/RedisRateLimiter.java": 1,
       "platform-rate-limit/src/main/java/io/github/apocarteres/platform/ratelimit/RateLimiter.java": 1
     },

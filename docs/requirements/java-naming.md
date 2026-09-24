@@ -28,7 +28,7 @@ related: REQ-PROJECT-RULES
 
 ## Доменные существительные
 
-3. <a id="REQ-JAVA-NAMING-003"></a> **REQ-JAVA-NAMING-003** — Разрешены существительные, которые оканчиваются на `-er` по строению языка, а не потому, что называют исполнителя: `Buffer`, `Cipher`, `Cluster`, `Container`, `Counter`, `Folder`, `Header`, `Layer`, `Manager`, `Marker`, `Member`, `Number`, `Offer`, `Order`, `Owner`, `Parameter`, `Peer`, `Register`, `Server`, `Trigger`, `User`, `Ver`, `Wrapper`.
+3. <a id="REQ-JAVA-NAMING-003"></a> **REQ-JAVA-NAMING-003** — Разрешены существительные, которые оканчиваются на `-er` по строению языка, а не потому, что называют исполнителя: `Buffer`, `Character`, `Cipher`, `Cluster`, `Container`, `Counter`, `Folder`, `Header`, `Layer`, `Ledger`, `Letter`, `Manager`, `Marker`, `Member`, `Number`, `Offer`, `Order`, `Owner`, `Parameter`, `Peer`, `Player`, `Register`, `Server`, `Trigger`, `User`, `Ver`, `Wrapper`. `Player`, `Character` и `Ledger` добавлены 2026-09-25 по заявке потребителя, `Letter` — по тому же основанию из кода ядра.
 4. <a id="REQ-JAVA-NAMING-004"></a> **REQ-JAVA-NAMING-004** — Перечни раздельны намеренно: они разрешают имена по разным причинам, и расширять их следует по соответствующей причине, а не одним списком исключений.
 
 ## Что проверяется

@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 160. Включены самостоятельные задачи и этапы планов функций.
+Всего: 162. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -109,6 +109,7 @@ authority: navigation
 | [Набор проверок ядра в сборочном контейнере на машине сборки](CORE-OPS-088-verify-runner-on-a-build-machine.md) | P1 | Выполнена | [RELEASE-6-1-0](../../releases/RELEASE-6-1-0.md) | build, tooling |
 | [Версия API требуется от всех запросов: забытое исключение кладёт машинных клиентов](CORE-OPS-089-api-version-only-for-browsers.md) | P1 | Выполнена | [RELEASE-7-0-0](../../releases/RELEASE-7-0-0.md) | backend, api |
 | [Шлагбаум перед отправкой перестал проверять документы, принятая идея не проходила проверку](CORE-OPS-091-hook-lost-docs-check.md) | P1 | Выполнена | [RELEASE-8-1-1](../../releases/RELEASE-8-1-1.md) | tickets, tooling, quality |
+| [Завершающий шаг засчитывает обязательство задаче, закрытой после тега](../CORE-OPS-094-finish-credits-work-closed-after-the-tag.md) | P1 | Выполнена | Не назначен | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
@@ -177,4 +178,5 @@ authority: navigation
 | [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |
 | [Кеш AOT: сказать положением, а не молчанием](CORE-OPS-051-aot-cache-as-a-recommendation.md) | P3 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment |
 | [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | quality, tooling, documentation |
+| [Доменные существительные `Player`, `Character`, `Ledger`](../CORE-QUAL-027-domain-nouns-player-character-ledger.md) | P3 | Выполнена | Не назначен | quality, java |
 | [Шифр секрета повторяется у каждого потребителя](CORE-SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | backend, security |

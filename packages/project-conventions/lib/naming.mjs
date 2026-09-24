@@ -13,9 +13,9 @@ export const PATTERN_SUFFIXES = [
 
 // REQ-JAVA-NAMING-003
 export const DOMAIN_NOUNS = [
-  'Buffer', 'Cipher', 'Cluster', 'Container', 'Counter', 'Folder', 'Header', 'Layer', 'Manager',
-  'Marker', 'Member', 'Number', 'Offer', 'Order', 'Owner', 'Parameter', 'Peer', 'Register',
-  'Server', 'Trigger', 'User', 'Ver', 'Wrapper',
+  'Buffer', 'Character', 'Cipher', 'Cluster', 'Container', 'Counter', 'Folder', 'Header', 'Layer', 'Ledger',
+  'Letter', 'Manager', 'Marker', 'Member', 'Number', 'Offer', 'Order', 'Owner', 'Parameter', 'Peer', 'Player',
+  'Register', 'Server', 'Trigger', 'User', 'Ver', 'Wrapper',
 ];
 
 const DECLARATION = /\b(?:class|interface|record|enum)\s+(\w*er)\b/g;

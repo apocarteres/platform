@@ -14,12 +14,11 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 5. Включены самостоятельные задачи и этапы планов функций.
+Всего: 4. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Исследование: отдельный сервис уведомлений](CORE-ARC-001-notification-service-research.md) | P2 | Запланирована | Не назначен | notification, architecture, research |
 | [Исследование: центр поддержки пользователей](CORE-ARC-012-user-support-centre-research.md) | P2 | Запланирована | Не назначен | frontend, backend, architecture, research |
-| [OpenAPI-контракт аутентификации ядра и типизированный профиль проекта](CORE-ARC-015-openapi-contract-for-core-auth.md) | P2 | Запланирована | Не назначен | backend, frontend, api, tooling |
 | [Правило, включаемое объявлением проекта, требует старшей версии зря](CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | P2 | Запланирована | Не назначен | publishing, release, tooling |
 | [У Rust нет языковых документов, которые есть у Java и TypeScript](CORE-QUAL-012-rust-has-no-language-documents.md) | P2 | Запланирована | Не назначен | documentation, rust |

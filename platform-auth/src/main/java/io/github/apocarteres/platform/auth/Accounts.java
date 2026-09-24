@@ -2,7 +2,6 @@ package io.github.apocarteres.platform.auth;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -15,7 +14,7 @@ public interface Accounts {
   Optional<Account> findByEmail(String email);
 
   // REQ-AUTH-009
-  Account create(String email, String password, Set<String> roles, boolean verified, Map<String, Object> profile);
+  Account create(String email, String password, Set<String> roles, boolean verified, Object profile);
 
   // REQ-AUTH-009
   void setPassword(UUID id, String password);

@@ -1,8 +1,6 @@
 package io.github.apocarteres.platform.auth.internal;
 
 import io.github.apocarteres.platform.auth.Account;
-import io.github.apocarteres.platform.auth.RegistrationHook;
-import java.util.Map;
 import java.util.Set;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -11,17 +9,22 @@ final class AccountCreation {
 
   private final AccountStore accounts;
   private final PasswordEncoder passwords;
-  private final RegistrationHook hook;
+  private final ProfileReader profiles;
   private final AuthSettings settings;
 
-  AccountCreation(AccountStore accounts, PasswordEncoder passwords, RegistrationHook hook, AuthSettings settings) {
+  AccountCreation(AccountStore accounts, PasswordEncoder passwords, ProfileReader profiles, AuthSettings settings) {
     this.accounts = accounts;
     this.passwords = passwords;
-    this.hook = hook;
+    this.profiles = profiles;
     this.settings = settings;
   }
 
-  Account create(String declaredEmail, String declaredPassword, Set<String> roles, boolean verified, Map<String, Object> profile) {
+  // REQ-AUTH-021
+  Object profile(Object declared) {
+    return profiles.read(declared);
+  }
+
+  Account create(String declaredEmail, String declaredPassword, Set<String> roles, boolean verified, Object declaredProfile) {
     String email = Credentials.email(declaredEmail);
     String password = Credentials.password(declaredPassword, settings);
     for (String role : roles) {
@@ -29,8 +32,9 @@ final class AccountCreation {
         throw new IllegalArgumentException("Роль " + role + " не объявлена в platform.auth.roles: " + settings.roles());
       }
     }
+    Object profile = profiles.read(declaredProfile);
     Account account = accounts.insert(email, passwords.encode(password), verified, roles);
-    hook.registered(account, profile == null ? Map.of() : Map.copyOf(profile));
+    profiles.registered(account, profile);
     return account;
   }
 }

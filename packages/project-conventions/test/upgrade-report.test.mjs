@@ -7,10 +7,10 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import {
   SEES_MORE_SECTION, breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, reportLines,
 } from '../lib/release/changes.mjs';
-import { commandsOf, rulesOf, surfaceAt } from '../lib/release/surface.mjs';
+import { commandsOf, contractOf, rulesOf, surfaceAt } from '../lib/release/surface.mjs';
 import { environmentWithoutGit } from '../lib/release/git.mjs';
 
-const EMPTY = { rules: [], commands: [], subcommands: [], keys: {}, clauses: [], obligations: [] };
+const EMPTY = { rules: [], commands: [], subcommands: [], keys: {}, clauses: [], obligations: [], contract: [] };
 
 function surface(overrides) {
   return { ...EMPTY, ...overrides };
@@ -178,4 +178,32 @@ test('исправление проверки объявляется «види�
   const lines = reportLines(history, { from: '2.0.0' });
   assert.ok(lines.includes('Проверка видит больше в 1 выпуск(ах): 2.0.1.'), lines.join('\n'));
   assert.ok(lines.some((line) => line.includes('правило больше не обрывает тег на стрелке')), 'выпуск без несовместимого всё равно показан');
+});
+
+// REQ-AUTH-020
+test('контракт: снятая точка, ответ или поле и новое обязательное поле запроса несовместимы, добавленное — нет', () => {
+  const contract = (extra = {}) => JSON.stringify({
+    paths: { '/api/auth/login': { post: { responses: { 200: {}, 401: {} } } }, ...(extra.paths ?? {}) },
+    components: { schemas: { LoginRequest: { properties: { email: {}, password: {}, ...(extra.fields ?? {}) }, required: ['email', ...(extra.required ?? [])] } } },
+  });
+  const before = surface({ contract: contractOf(contract(), 'auth') });
+  assert.ok(before.contract.includes('auth: точка POST /api/auth/login'));
+  assert.ok(before.contract.includes('auth: ответ 200 у POST /api/auth/login'));
+  assert.ok(!before.contract.some((entry) => entry.includes('401')), 'ответ отказа — не часть поверхности: коды держит тест контракта');
+
+  const grown = surface({ contract: contractOf(contract({ paths: { '/api/auth/policy': { get: { responses: { 200: {} } } } }, fields: { human: {} } }), 'auth') });
+  const added = changesBetween(before, grown);
+  assert.deepEqual(breakingReasons(added), []);
+  assert.ok(costSection(added).some((line) => line.includes('в контракте — auth: точка GET /api/auth/policy')));
+
+  const tightened = surface({ contract: contractOf(contract({ required: ['password'] }), 'auth') });
+  assert.match(breakingReasons(changesBetween(before, tightened))[0], /стало обязательным — auth: обязательное поле LoginRequest\.password/);
+
+  const shrunk = surface({ contract: contractOf(JSON.stringify({ paths: {}, components: { schemas: { LoginRequest: { properties: { email: {} }, required: ['email'] } } } }), 'auth') });
+  const reasons = breakingReasons(changesBetween(before, shrunk));
+  assert.ok(reasons.some((line) => line.includes('снято в контракте — auth: точка POST /api/auth/login')), reasons.join('\n'));
+  assert.ok(reasons.some((line) => line.includes('снято в контракте — auth: поле LoginRequest.password')));
+  const relaxed = surface({ contract: contractOf(JSON.stringify({ paths: { '/api/auth/login': { post: { responses: { 200: {} } } } },
+    components: { schemas: { LoginRequest: { properties: { email: {}, password: {} }, required: [] } } } }), 'auth') });
+  assert.deepEqual(breakingReasons(changesBetween(before, relaxed)), [], 'снятие обязательности — не несовместимость');
 });

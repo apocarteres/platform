@@ -7,7 +7,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -45,7 +44,7 @@ final class AccountsService implements Accounts {
 
   // REQ-AUTH-009
   @Override
-  public Account create(String email, String password, Set<String> roles, boolean verified, Map<String, Object> profile) {
+  public Account create(String email, String password, Set<String> roles, boolean verified, Object profile) {
     return transactions.execute(status -> creation.create(email, password, roles, verified, profile));
   }
 

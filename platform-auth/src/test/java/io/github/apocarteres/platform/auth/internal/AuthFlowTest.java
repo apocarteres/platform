@@ -221,7 +221,7 @@ class AuthFlowTest {
     assertThat(letters.sent.get(0).link().toString()).startsWith("https://site.example/auth/verify?token=");
     assertThat(hook.seen).singleElement().satisfies(seen -> {
       assertThat(seen.account().email()).isEqualTo("new@player.example");
-      assertThat(seen.profile()).containsEntry("name", "Игрок");
+      assertThat(seen.profile().name()).isEqualTo("Игрок");
     });
 
     browser.post("/api/auth/login", login("new@player.example", "wrong password here"))
@@ -303,7 +303,7 @@ class AuthFlowTest {
   void administratorCreatesAndSetsPassword() throws Exception {
     Account created = accounts.create(" Made@Player.Example ", PASSWORD, Set.of("USER"), true, Map.of("name", "Клиент"));
     assertThat(created.email()).isEqualTo("made@player.example");
-    assertThat(hook.seen).singleElement().satisfies(seen -> assertThat(seen.profile()).containsEntry("name", "Клиент"));
+    assertThat(hook.seen).singleElement().satisfies(seen -> assertThat(seen.profile().name()).isEqualTo("Клиент"));
     assertThatThrownBy(() -> accounts.create("weak@player.example", "short", Set.of("USER"), true, Map.of()))
       .isInstanceOf(AuthRefused.class).hasMessageContaining("байт");
     assertThatThrownBy(() -> accounts.create("odd@player.example", PASSWORD, Set.of("OWNER"), true, Map.of()))
@@ -355,7 +355,7 @@ class AuthFlowTest {
   void adminGoesThroughTheHook() {
     assertThat(hook.all).anySatisfy(seen -> {
       assertThat(seen.account().email()).isEqualTo("admin@site.example");
-      assertThat(seen.profile()).containsEntry("name", "Администратор");
+      assertThat(seen.profile().name()).isEqualTo("Администратор");
     });
   }
 
@@ -369,6 +369,26 @@ class AuthFlowTest {
     assertThat(accounts.purgeUnverified(Duration.ofDays(7))).isEqualTo(new Purged(1, 1));
     assertThat(accounts.findByEmail("wallet@player.example")).isPresent();
     assertThat(accounts.findByEmail("loose@player.example")).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Профиль разбирается в класс проекта и проверяется до регистрации: чужое поле и неверное значение — profile-rejected")
+  void profileIsTyped() throws Exception {
+    Browser browser = new Browser();
+    browser.post("/api/auth/register", "{\"email\":\"odd@player.example\",\"password\":\"" + PASSWORD
+      + "\",\"human\":\"human\",\"profile\":{\"nickname\":\"x\"}}")
+      .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("profile-rejected"));
+    browser.post("/api/auth/register", "{\"email\":\"long@player.example\",\"password\":\"" + PASSWORD
+      + "\",\"human\":\"human\",\"profile\":{\"name\":\"" + "я".repeat(41) + "\"}}")
+      .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("profile-rejected"));
+    assertThat(hook.seen).isEmpty();
+    assertThat(accounts.findByEmail("odd@player.example")).isEmpty();
+
+    Account made = accounts.create("typed@player.example", PASSWORD, Set.of("USER"), true, new TestProfile("Типизированный", null));
+    assertThat(made.email()).isEqualTo("typed@player.example");
+    assertThat(hook.seen).singleElement().satisfies(seen -> assertThat(seen.profile().name()).isEqualTo("Типизированный"));
+    assertThatThrownBy(() -> accounts.create("wrong@player.example", PASSWORD, Set.of("USER"), true, "не профиль"))
+      .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("хук ждёт");
   }
 
   @Test
@@ -543,10 +563,14 @@ class AuthFlowTest {
     }
   }
 
-  record Seen(Account account, Map<String, Object> profile) {
+  record Seen(Account account, TestProfile profile) {
   }
 
-  static final class Hook implements RegistrationHook {
+  // REQ-AUTH-021
+  record TestProfile(@jakarta.validation.constraints.Size(max = 40) String name, Boolean wallet) {
+  }
+
+  static final class Hook implements RegistrationHook<TestProfile> {
 
     final List<Seen> seen = new CopyOnWriteArrayList<>();
     final List<Seen> all = new CopyOnWriteArrayList<>();
@@ -558,11 +582,16 @@ class AuthFlowTest {
     }
 
     @Override
-    public void registered(Account account, Map<String, Object> profile) {
+    public Class<TestProfile> profile() {
+      return TestProfile.class;
+    }
+
+    @Override
+    public void registered(Account account, TestProfile profile) {
       if (failing) {
         throw new IllegalStateException("профиль проекта не создан");
       }
-      if (Boolean.TRUE.equals(profile.get("wallet"))) {
+      if (Boolean.TRUE.equals(profile.wallet())) {
         JdbcClient.create(source).sql("INSERT INTO player_wallet (account_id) VALUES (:id)").param("id", account.id()).update();
       }
       seen.add(new Seen(account, profile));

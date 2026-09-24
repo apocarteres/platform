@@ -47,6 +47,8 @@ export function changesBetween(before, after) {
     keys: keysDifference(before.keys, after.keys),
     clauses: difference(before.clauses, after.clauses),
     obligations: difference(before.obligations, after.obligations, (one) => one.id),
+    // REQ-AUTH-020
+    contract: difference(before.contract ?? [], after.contract ?? []),
   };
 }
 
@@ -59,6 +61,11 @@ export function breakingReasons(changes, declared = []) {
     ...changes.subcommands.removed.map((name) => `снята подкоманда conventions release ${name}`),
     ...changes.keys.removed.map((key) => `снят ключ conventions ${key}`),
     ...changes.clauses.removed.map((id) => `снято положение ${id}: ссылки на него у потребителя перестанут разрешаться`),
+    // REQ-AUTH-020
+    ...(changes.contract?.removed ?? []).filter((entry) => !entry.includes(': обязательное поле '))
+      .map((entry) => `снято в контракте — ${entry}: клиент, опиравшийся на это, сломается`),
+    ...(changes.contract?.added ?? []).filter((entry) => entry.includes(': обязательное поле '))
+      .map((entry) => `в контракте стало обязательным — ${entry}: прежний запрос его не несёт`),
     ...declared,
   ];
 }
@@ -78,6 +85,8 @@ export function addedLines(changes) {
     ...changes.subcommands.added.map((name) => `подкоманда conventions release ${name}`),
     ...changes.keys.added.map((key) => `ключ conventions ${key}`),
     ...(changes.clauses.added.length === 0 ? [] : [`положений добавлено: ${changes.clauses.added.length}`]),
+    // REQ-AUTH-020
+    ...(changes.contract ?? { added: [] }).added.filter((entry) => !entry.includes(': обязательное поле ')).map((entry) => `в контракте — ${entry}`),
   ];
 }
 

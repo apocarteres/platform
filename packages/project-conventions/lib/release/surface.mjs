@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import path from 'node:path';
 import { promisify } from 'node:util';
 import { environmentWithoutGit } from './git.mjs';
 
@@ -84,6 +85,35 @@ function obligationsOf(catalogue) {
   }
 }
 
+// REQ-PUBLISHING-015, REQ-AUTH-020
+export const CONTRACTS = ['platform-auth/src/main/resources/openapi/platform-auth.openapi.json'];
+
+// REQ-PUBLISHING-015, REQ-AUTH-020
+export function contractOf(source, name = 'контракт') {
+  let document;
+  try {
+    document = JSON.parse(source ?? 'null');
+  } catch {
+    return [];
+  }
+  if (document === null) return [];
+  const found = [];
+  for (const [route, operations] of Object.entries(document.paths ?? {})) {
+    for (const [method, operation] of Object.entries(operations)) {
+      const at = `${method.toUpperCase()} ${route}`;
+      found.push(`${name}: точка ${at}`);
+      for (const status of Object.keys(operation.responses ?? {})) {
+        if (status.startsWith('2')) found.push(`${name}: ответ ${status} у ${at}`);
+      }
+    }
+  }
+  for (const [schema, definition] of Object.entries(document.components?.schemas ?? {})) {
+    for (const field of Object.keys(definition.properties ?? {})) found.push(`${name}: поле ${schema}.${field}`);
+    for (const field of definition.required ?? []) found.push(`${name}: обязательное поле ${schema}.${field}`);
+  }
+  return found.sort();
+}
+
 // REQ-PUBLISHING-015
 export async function surfaceAt(root, ref) {
   const cli = await shown(root, ref, `${PACKAGE}/bin/conventions.mjs`);
@@ -92,5 +122,7 @@ export async function surfaceAt(root, ref) {
   const clauses = [];
   for (const document of delivered) clauses.push(...clausesOf(await shown(root, ref, `docs/requirements/${document}`)));
   const obligations = obligationsOf(await shown(root, ref, `${PACKAGE}/obligations.json`));
-  return { ...commandsOf(cli), rules, clauses: [...new Set(clauses)].sort(), obligations };
+  const contract = [];
+  for (const file of CONTRACTS) contract.push(...contractOf(await shown(root, ref, file), path.basename(file, '.openapi.json')));
+  return { ...commandsOf(cli), rules, clauses: [...new Set(clauses)].sort(), obligations, contract };
 }

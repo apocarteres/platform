@@ -60,11 +60,13 @@ final class AuthService {
     requireHuman(answer, "register", address);
     String email = Credentials.email(declaredEmail);
     String password = Credentials.password(declaredPassword, settings);
+    // REQ-AUTH-021
+    Object parsed = creation.profile(profile);
     transactions.executeWithoutResult(status -> {
       if (accounts.findByEmail(email).isPresent()) {
         return;
       }
-      Account account = creation.create(email, password, settings.defaultRoles(), false, profile == null ? Map.of() : profile);
+      Account account = creation.create(email, password, settings.defaultRoles(), false, parsed);
       String token = tokens.issue(account.id(), Purpose.EMAIL_VERIFICATION, settings.verificationTtl());
       afterCommit(() -> letters.verification(email, settings.link(settings.verificationLink(), token), locale));
     });

@@ -11,6 +11,7 @@ import io.github.apocarteres.platform.ratelimit.RateLimiter;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
 import java.time.Clock;
 import java.util.UUID;
+import jakarta.validation.Validator;
 import javax.sql.DataSource;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -92,8 +93,9 @@ public class AuthAutoConfiguration {
 
   // REQ-AUTH-003, REQ-AUTH-009
   @Bean
-  AccountCreation accountCreation(AccountStore accounts, PasswordEncoder passwords, RegistrationHook hook, AuthSettings settings) {
-    return new AccountCreation(accounts, passwords, hook, settings);
+  AccountCreation accountCreation(AccountStore accounts, PasswordEncoder passwords, RegistrationHook<?> hook, Validator validator,
+    AuthSettings settings) {
+    return new AccountCreation(accounts, passwords, new ProfileReader(hook, validator), settings);
   }
 
   // REQ-AUTH-003, REQ-AUTH-010, REQ-AUTH-017

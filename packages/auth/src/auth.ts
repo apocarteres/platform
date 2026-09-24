@@ -7,19 +7,15 @@ import type { EnvironmentProviders, Signal } from '@angular/core';
 import { Router } from '@angular/router';
 import type { CanMatchFn, UrlTree } from '@angular/router';
 import { firstValueFrom, tap } from 'rxjs';
+import type {
+  Account, EmailRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest, ResetRequest, TokenRequest,
+} from './contract';
 
-// REQ-AUTH-015
-export interface SignedIn {
-  readonly id: string;
-  readonly email: string;
-  readonly roles: readonly string[];
-}
+// REQ-AUTH-015, REQ-AUTH-020
+export type SignedIn = Account;
 
-// REQ-AUTH-018
-export interface PasswordPolicy {
-  readonly passwordMinBytes: number;
-  readonly passwordMaxBytes: number;
-}
+// REQ-AUTH-018, REQ-AUTH-020
+export type PasswordPolicy = Policy;
 
 // REQ-AUTH-015
 export interface AuthOptions {
@@ -62,7 +58,8 @@ export class AuthSession {
   }
 
   async login(email: string, password: string, human?: string): Promise<SignedIn> {
-    const signed = await firstValueFrom(this.http.post<SignedIn>(`${this.base}/login`, { email, password, human }));
+    const body: LoginRequest = { email, password, human };
+    const signed = await firstValueFrom(this.http.post<SignedIn>(`${this.base}/login`, body));
     this.current.set(signed);
     await this.csrf();
     return signed;
@@ -77,29 +74,36 @@ export class AuthSession {
     }
   }
 
-  async register(email: string, password: string, profile: Readonly<Record<string, unknown>> = {}, human?: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${this.base}/register`, { email, password, human, profile }));
+  // REQ-AUTH-021
+  async register<P extends object>(email: string, password: string, profile?: P, human?: string): Promise<void> {
+    const body: RegisterRequest = { email, password, human, profile: profile as Readonly<Record<string, unknown>> | undefined };
+    await firstValueFrom(this.http.post(`${this.base}/register`, body));
   }
 
   async verify(token: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${this.base}/verify`, { token }));
+    const body: TokenRequest = { token };
+    await firstValueFrom(this.http.post(`${this.base}/verify`, body));
   }
 
   async resend(email: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${this.base}/resend`, { email }));
+    const body: EmailRequest = { email };
+    await firstValueFrom(this.http.post(`${this.base}/resend`, body));
   }
 
   async requestReset(email: string, human?: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${this.base}/password-reset/request`, { email, human }));
+    const body: EmailRequest = { email, human };
+    await firstValueFrom(this.http.post(`${this.base}/password-reset/request`, body));
   }
 
   async confirmReset(token: string, password: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${this.base}/password-reset/confirm`, { token, password }));
+    const body: ResetRequest = { token, password };
+    await firstValueFrom(this.http.post(`${this.base}/password-reset/confirm`, body));
   }
 
   // REQ-AUTH-019
   async changePassword(current: string, password: string): Promise<void> {
-    await firstValueFrom(this.http.post(`${this.base}/password`, { current, password }));
+    const body: PasswordChangeRequest = { current, password };
+    await firstValueFrom(this.http.post(`${this.base}/password`, body));
   }
 
   // REQ-AUTH-018

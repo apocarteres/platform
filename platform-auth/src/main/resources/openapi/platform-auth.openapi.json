@@ -1,0 +1,889 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Аутентификация ядра",
+    "version": "0.0.0",
+    "description": "Контракт точек platform-auth (REQ-AUTH-020). Версия документа — версия ядра. Изменяющие запросы требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN. Запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006)."
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Регистрация. Ответ не раскрывает, есть ли почта",
+        "x-clause": "REQ-AUTH-003",
+        "responses": {
+          "202": {
+            "description": "Принято; письмо уходит после фиксации"
+          },
+          "400": {
+            "description": "Запрос отвергнут",
+            "x-codes": [
+              "email-rejected",
+              "password-rejected",
+              "human-check-failed",
+              "profile-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Точки аутентификации закрыты проектом либо нет токена CSRF",
+            "x-codes": [
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "post": {
+        "summary": "Подтверждение почты",
+        "x-clause": "REQ-AUTH-004",
+        "responses": {
+          "204": {
+            "description": "Успех"
+          },
+          "400": {
+            "description": "Ссылка недействительна или просрочена",
+            "x-codes": [
+              "token-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Точки аутентификации закрыты проектом либо нет токена CSRF",
+            "x-codes": [
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/resend": {
+      "post": {
+        "summary": "Повторное письмо подтверждения",
+        "x-clause": "REQ-AUTH-004",
+        "responses": {
+          "202": {
+            "description": "Успех"
+          },
+          "400": {
+            "description": "Почта не разобрана",
+            "x-codes": [
+              "email-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Точки аутентификации закрыты проектом либо нет токена CSRF",
+            "x-codes": [
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Вход",
+        "x-clause": "REQ-AUTH-005",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Проверка «человек ли это» не пройдена",
+            "x-codes": [
+              "human-check-failed"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Почта или пароль не подошли",
+            "x-codes": [
+              "credentials-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Почта не подтверждена, запись заблокирована, точки закрыты либо нет токена CSRF",
+            "x-codes": [
+              "email-unverified",
+              "account-blocked",
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Выход",
+        "x-clause": "REQ-AUTH-008",
+        "responses": {
+          "204": {
+            "description": "Успех"
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Текущая учётная запись; профиль проекта отдаёт проект своей точкой",
+        "x-clause": "REQ-AUTH-001",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/csrf": {
+      "get": {
+        "summary": "Токен CSRF до первого изменяющего запроса",
+        "x-clause": "REQ-AUTH-008",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Csrf"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/policy": {
+      "get": {
+        "summary": "Правило пароля",
+        "x-clause": "REQ-AUTH-018",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Policy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "summary": "Смена своего пароля",
+        "x-clause": "REQ-AUTH-019",
+        "responses": {
+          "204": {
+            "description": "Успех"
+          },
+          "400": {
+            "description": "Новый пароль не прошёл правило",
+            "x-codes": [
+              "password-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Текущий пароль не подошёл либо вход не выполнен",
+            "x-codes": [
+              "credentials-rejected",
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password-reset/request": {
+      "post": {
+        "summary": "Запрос сброса пароля. Ответ не раскрывает, есть ли почта",
+        "x-clause": "REQ-AUTH-006",
+        "responses": {
+          "202": {
+            "description": "Успех"
+          },
+          "400": {
+            "description": "Запрос отвергнут",
+            "x-codes": [
+              "email-rejected",
+              "human-check-failed"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Точки аутентификации закрыты проектом либо нет токена CSRF",
+            "x-codes": [
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/password-reset/confirm": {
+      "post": {
+        "summary": "Новый пароль по ссылке сброса",
+        "x-clause": "REQ-AUTH-006",
+        "responses": {
+          "204": {
+            "description": "Успех"
+          },
+          "400": {
+            "description": "Ссылка недействительна либо пароль не прошёл правило",
+            "x-codes": [
+              "token-rejected",
+              "password-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Точки аутентификации закрыты проектом либо нет токена CSRF",
+            "x-codes": [
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetRequest"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "human": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Схему задаёт проект: RegistrationHook объявляет класс профиля (REQ-AUTH-021)"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "human": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "EmailRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "human": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "TokenRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ResetRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "PasswordChangeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "current",
+          "password"
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "roles"
+        ]
+      },
+      "Csrf": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "headerName": {
+            "type": "string"
+          },
+          "parameterName": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "headerName",
+          "parameterName",
+          "token"
+        ]
+      },
+      "Policy": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "passwordMinBytes": {
+            "type": "integer"
+          },
+          "passwordMaxBytes": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "passwordMinBytes",
+          "passwordMaxBytes"
+        ]
+      },
+      "ProblemDetail": {
+        "type": "object",
+        "description": "RFC 9457 с расширением code (REQ-API-001)",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code"
+        ]
+      }
+    },
+    "parameters": {
+      "ApiVersion": {
+        "name": "X-Api-Version",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,8}$"
+        },
+        "description": "Версия API клиента (REQ-CLIENT-UPDATE-006, REQ-CLIENT-UPDATE-007); без неё запрос браузера получает 426 client-outdated"
+      }
+    },
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "SESSION"
+      }
+    }
+  }
+}

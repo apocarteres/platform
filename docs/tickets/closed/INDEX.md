@@ -49,7 +49,7 @@ authority: navigation
 | [Модальное окно явно решает, что делать по Escape](CORE-ARC-007-modal-escape-decision-is-explicit.md) | P1 | Выполнена | [RELEASE-2-0-0](../../releases/RELEASE-2-0-0.md) | frontend, architecture |
 | [Клиент узнаёт о новой сборке и об устаревшем API: готовая реализация ядра](CORE-ARC-011-client-update-framework.md) | P1 | Выполнена | [RELEASE-5-0-0](../../releases/RELEASE-5-0-0.md) | frontend, backend, architecture |
 | [Вход в ядре: учётная запись, регистрация, сессия, роли проекта](CORE-ARC-013-core-authentication.md) | P1 | Выполнена | [RELEASE-6-1-0](../../releases/RELEASE-6-1-0.md) | backend, frontend, security, architecture |
-| [Аутентификация ядра не покрывает то, что у потребителя уже работает](CORE-ARC-014-core-auth-covers-the-consumer.md) | P1 | Выполнена | Не назначен | backend, frontend, security |
+| [Аутентификация ядра не покрывает то, что у потребителя уже работает](CORE-ARC-014-core-auth-covers-the-consumer.md) | P1 | Выполнена | [RELEASE-8-0-0](../../releases/RELEASE-8-0-0.md) | backend, frontend, security |
 | [Подключение ядра сняло границу вокруг каталога запросов](CORE-DATA-002-core-package-escapes-the-module-model.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, java, persistence |
 | [Сериализатор команд требует Jackson 2, которого в платформе приложений уже нет](CORE-DATA-003-command-writer-depends-on-jackson-2.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | backend, java, persistence |
 | [Правила подключения ядра нигде не записаны](CORE-DOC-004-core-adoption-rules.md) | P1 | Выполнена | [RELEASE-0-24-0](../../releases/RELEASE-0-24-0.md) | process, platform |

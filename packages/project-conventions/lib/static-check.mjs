@@ -49,6 +49,19 @@ export function judgeServed({ path: asked, status, cacheControl, role }) {
   return [];
 }
 
+// REQ-DEPLOYMENT-024, REQ-CLIENT-UPDATE-006
+const NO_REFERRER = /(?:^|[\s,])no-referrer(?:$|[\s,])/i;
+
+// REQ-DEPLOYMENT-024, REQ-CLIENT-UPDATE-006
+export function referrerWarning({ referrerPolicy, body }) {
+  const meta = /<meta\s[^>]*name=["']?referrer["']?[^>]*content=["']?([^"'>]+)/i.exec(body ?? '')?.[1]
+    ?? /<meta\s[^>]*content=["']?([^"'>]+)["']?[^>]*name=["']?referrer/i.exec(body ?? '')?.[1];
+  const found = [referrerPolicy, meta].filter((one) => one && NO_REFERRER.test(one));
+  if (found.length === 0) return null;
+  return `/${ENTRY}: политика no-referrer — по http браузер не пошлёт ни Sec-Fetch-Site, ни Referer, и старая сборка без заголовка`
+    + ' версии API пройдёт мимо проверки (REQ-CLIENT-UPDATE-006); по https признак браузера остаётся';
+}
+
 // REQ-DEPLOYMENT-023
 export function judgeAbsent({ path: asked, status, cacheControl }) {
   const reasons = [];
@@ -61,7 +74,12 @@ export function judgeAbsent({ path: asked, status, cacheControl }) {
 async function ask(fetcher, url, seconds) {
   try {
     const answer = await fetcher(url, { signal: AbortSignal.timeout(seconds * 1000), redirect: 'manual' });
-    return { status: answer.status, cacheControl: answer.headers.get('cache-control'), body: await answer.text() };
+    return {
+      status: answer.status,
+      cacheControl: answer.headers.get('cache-control'),
+      referrerPolicy: answer.headers.get('referrer-policy'),
+      body: await answer.text(),
+    };
   } catch (failure) {
     // REQ-QUALITY-005
     return { failure: failure.name === 'TimeoutError' ? `не ответил за ${seconds} с` : `обращение не удалось: ${failure.message}` };
@@ -73,6 +91,7 @@ export async function checkStatic(base, { artifact, previous = [], timeoutSecond
   const origin = base.replace(/\/+$/, '');
   const files = await builtFiles(artifact);
   const reasons = [];
+  const warnings = [];
   if (!files.includes(ENTRY)) return { proved: false, reasons: [`в сборке ${artifact} нет ${ENTRY}: назовите составляющую клиента`], asked: 0 };
   const hashed = files.find((file) => HASHED.test(file) && file.endsWith('.js')) ?? files.find((file) => HASHED.test(file));
   if (hashed === undefined) {
@@ -80,7 +99,11 @@ export async function checkStatic(base, { artifact, previous = [], timeoutSecond
   }
   const built = await readFile(path.join(artifact, ENTRY), 'utf8');
   const questions = [
-    { path: `/${ENTRY}`, judge: (answer) => judgeEntry({ ...answer, built }) },
+    { path: `/${ENTRY}`, judge: (answer) => {
+      const warning = referrerWarning(answer);
+      if (warning !== null) warnings.push(warning);
+      return judgeEntry({ ...answer, built });
+    } },
     ...(hashed === undefined ? [] : [{ path: `/${hashed}`, judge: (answer) => judgeServed({ ...answer, path: `/${hashed}`, role: 'файл текущей сборки' }) }]),
     { path: `/nonexistent-${token}.0badc0de.js`, judge: (answer) => judgeAbsent({ ...answer, path: `/nonexistent-${token}.0badc0de.js` }) },
     ...previous.map((one) => {
@@ -99,6 +122,7 @@ export async function checkStatic(base, { artifact, previous = [], timeoutSecond
   return {
     proved: reasons.length === 0,
     reasons,
+    warnings,
     asked: questions.length,
     unchecked: previous.length === 0 ? 'архив прежних кусков не проверен: назовите кусок прежней сборки ключом --previous <путь>' : null,
   };

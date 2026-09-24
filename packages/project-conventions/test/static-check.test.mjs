@@ -4,7 +4,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { checkStatic, judgeAbsent, judgeEntry, judgeServed } from '../lib/static-check.mjs';
+import { checkStatic, judgeAbsent, judgeEntry, judgeServed, referrerWarning } from '../lib/static-check.mjs';
 
 // REQ-DEPLOYMENT-022
 const CURRENT = { 'index.html': '<script src="main-BBBBBBBB.js"></script>\n', 'main-BBBBBBBB.js': 'новая', 'chunk-CCCCCCCC.js': 'кусок' };
@@ -23,14 +23,14 @@ async function tree(files) {
 }
 
 // REQ-DEPLOYMENT-022, REQ-DEPLOYMENT-023
-async function site({ entryCache = 'no-store', hashedCache = 'public, max-age=31536000, immutable', absentImmutable = false, entryFromArchive = false, archive = true } = {}) {
+async function site({ referrerPolicy = null, entryCache = 'no-store', hashedCache = 'public, max-age=31536000, immutable', absentImmutable = false, entryFromArchive = false, archive = true } = {}) {
   const current = await tree(CURRENT);
   const previous = await tree(PREVIOUS);
   const server = http.createServer(async (request, response) => {
     const name = decodeURIComponent(request.url.slice(1));
     const from = async (directory) => readFile(path.join(directory, name), 'utf8').catch(() => null);
     if (name === 'index.html') {
-      response.writeHead(200, { 'content-type': 'text/html', 'cache-control': entryCache });
+      response.writeHead(200, { 'content-type': 'text/html', 'cache-control': entryCache, ...(referrerPolicy ? { 'referrer-policy': referrerPolicy } : {}) });
       response.end(await from(entryFromArchive ? previous : current));
       return;
     }
@@ -130,4 +130,26 @@ test('сборка без файлов с отпечатком названа: �
     await one.stop();
     await rm(bare, { recursive: true, force: true });
   }
+});
+
+// REQ-DEPLOYMENT-024, REQ-CLIENT-UPDATE-006
+test('политика no-referrer — предупреждение, а не отказ: на http признак браузера пропадает', async () => {
+  const strict = await site({ referrerPolicy: 'no-referrer' });
+  try {
+    const answer = await checkStatic(strict.url, { artifact: strict.artifact, token: 'проба' });
+    assert.equal(answer.proved, true, answer.reasons.join('\n'));
+    assert.equal(answer.warnings.length, 1);
+    assert.match(answer.warnings[0], /no-referrer — по http браузер не пошлёт ни Sec-Fetch-Site, ни Referer/);
+  } finally {
+    await strict.stop();
+  }
+  const plain = await site({ referrerPolicy: 'strict-origin-when-cross-origin' });
+  try {
+    assert.deepEqual((await checkStatic(plain.url, { artifact: plain.artifact, token: 'проба' })).warnings, []);
+  } finally {
+    await plain.stop();
+  }
+  assert.match(referrerWarning({ referrerPolicy: null, body: '<meta name="referrer" content="no-referrer">' }), /no-referrer/);
+  assert.match(referrerWarning({ referrerPolicy: null, body: "<meta content='no-referrer' name='referrer'>" }), /no-referrer/);
+  assert.equal(referrerWarning({ referrerPolicy: 'no-referrer-when-downgrade', body: '' }), null, 'no-referrer-when-downgrade — другая политика');
 });

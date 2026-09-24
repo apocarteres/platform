@@ -124,6 +124,8 @@ export async function staticCheck(root, parsed, { usage, refuse }) {
     process.exitCode = 1;
     return;
   }
+  // REQ-CLIENT-UPDATE-006
+  for (const warning of answer.warnings) console.log(`Предупреждение: ${warning}`);
   if (!answer.proved) {
     console.error('Раскладка статики клиента требованиям не отвечает:');
     for (const reason of answer.reasons) console.error(`- ${reason}`);

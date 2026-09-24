@@ -48,7 +48,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -204,7 +203,7 @@ class AuthFlowTest {
     browser.post("/api/auth/register", "{\"email\":\" New@Player.Example \",\"password\":\"" + PASSWORD
       + "\",\"human\":\"human\",\"profile\":{\"name\":\"Игрок\"}}").andExpect(status().isAccepted());
     assertThat(letters.sent).hasSize(1);
-    assertThat(letters.sent.get(0).inTransaction()).as("письмо уходит после фиксации, вне транзакции").isFalse();
+    assertThat(letters.sent.get(0).committed()).as("письмо уходит после фиксации: с другого соединения учётная запись видна").isTrue();
     assertThat(letters.sent.get(0).email()).isEqualTo("new@player.example");
     assertThat(letters.sent.get(0).link().toString()).startsWith("https://site.example/auth/verify?token=");
     assertThat(hook.seen).singleElement().satisfies(seen -> {
@@ -397,21 +396,39 @@ class AuthFlowTest {
     assertThat(accounts.findByEmail("active@player.example")).isPresent();
   }
 
-  record Letter(String email, URI link, Locale locale, boolean inTransaction) {
+  record Letter(String email, URI link, Locale locale, boolean committed) {
   }
 
   static final class Letters implements AuthLetters {
 
     final List<Letter> sent = new CopyOnWriteArrayList<>();
+    private final DataSource source;
+
+    Letters(DataSource source) {
+      this.source = source;
+    }
 
     @Override
     public void verification(String email, URI link, Locale locale) {
-      sent.add(new Letter(email, link, locale, TransactionSynchronizationManager.isActualTransactionActive()));
+      sent.add(new Letter(email, link, locale, visible(email)));
     }
 
     @Override
     public void passwordReset(String email, URI link, Locale locale) {
-      sent.add(new Letter(email, link, locale, TransactionSynchronizationManager.isActualTransactionActive()));
+      sent.add(new Letter(email, link, locale, visible(email)));
+    }
+
+    // REQ-AUTH-010
+    private boolean visible(String email) {
+      try (var connection = source.getConnection();
+        var query = connection.prepareStatement("SELECT COUNT(*) FROM platform_account WHERE email = ?")) {
+        query.setString(1, email);
+        try (var rows = query.executeQuery()) {
+          return rows.next() && rows.getInt(1) == 1;
+        }
+      } catch (java.sql.SQLException failure) {
+        throw new IllegalStateException(failure);
+      }
     }
   }
 
@@ -437,8 +454,8 @@ class AuthFlowTest {
   static class Service {
 
     @Bean
-    Letters letters() {
-      return new Letters();
+    Letters letters(DataSource source) {
+      return new Letters(source);
     }
 
     @Bean

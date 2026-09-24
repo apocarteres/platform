@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
-  ACCOUNTED_SECTION, RELEASES_DIR, RETAGGED_SECTION, STAGE_ID, TICKETS_DIR, accountedCommits, compareReleaseIds, compositionTickets, nextReleaseId, openRelease, releaseTag, releases, shipsResult,
+  ACCOUNTED_SECTION, RELEASES_DIR, RETAGGED_SECTION, STAGE_ID, TICKETS_DIR, accountedCommits, compareReleaseIds, compositionTickets, nextReleaseId, releasedTickets, openRelease, releaseTag, releases, shipsResult,
   replaceMetadata, replaceSection, sectionLines, ticketId, ticketLinkTarget, tickets,
   unassignedDoneTickets, withSection, writeDocument,
 } from './documents.mjs';
@@ -375,7 +375,8 @@ export async function finishability(root, { scheme }) {
   if (commit === null) {
     problems.push(`Тега ${tag} нет: сначала выполните первый шаг закрытия командой release close`);
   }
-  const composition = await compositionTickets(root, id);
+  // REQ-RELEASE-019, CORE-OPS-094
+  const composition = await releasedTickets(root, id);
   for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
     // REQ-RELEASE-039
     problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}):`

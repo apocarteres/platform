@@ -211,6 +211,36 @@ test('закрытие записывает состав, коммит и рез
   }
 });
 
+// REQ-RELEASE-019, CORE-OPS-094
+test('задача, закрытая после тега, не засчитывается выпуску при завершающем шаге', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/done-one.md'), ticket('TICKET-DONE-ONE', 'done'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, '2026-09-07T10:00:00Z'));
+    const closed = await closeRelease(root, { scheme: 'date' });
+    assert.deepEqual(closed.composition, ['TICKET-DONE-ONE']);
+
+    const obligationTicket = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
+    const body = await readFile(obligationTicket, 'utf8');
+    assert.match(body, /release: unassigned/, 'невыполненная задача обязательства снята с выпуска при закрытии');
+    await rm(obligationTicket);
+    await writeFile(path.join(root, 'docs/tickets/closed/QUAL-001-adopt-sample.md'), body.replace('status: backlog', 'status: done'));
+    await commitAll(root);
+
+    const finished = await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'развёртывание' });
+    assert.equal(finished.finished, true, finished.problems?.join('\n'));
+    const state = JSON.parse(await readFile(path.join(root, '.conventions/obligations.json'), 'utf8'));
+    assert.equal(state.closed.sample, undefined, 'обязательство закроет выпуск, который несёт работу');
+    const document = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-1.md'), 'utf8');
+    assert.doesNotMatch(document, /закрыты: sample/);
+    assert.match(await readFile(path.join(root, 'docs/tickets/closed/QUAL-001-adopt-sample.md'), 'utf8'), /release: unassigned/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('отказ в закрытии не оставляет тега', async () => {
   const root = await project();
   try {

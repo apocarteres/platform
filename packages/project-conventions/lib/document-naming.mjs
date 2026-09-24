@@ -64,6 +64,16 @@ export function nameIssue(file, metadata, areas, prefix = null) {
     return null;
   }
 
+  // REQ-TICKETS-017, REQ-NAMING-012
+  if (type === 'idea') {
+    const head = prefix ? `${prefix}-` : '';
+    const match = new RegExp(`^${head}IDEA-(\\d{3})-${SLUG}\\.md$`).exec(name);
+    if (match === null) return `имя файла идеи должно быть ${head}IDEA-<NNN>-<слаг>.md`;
+    const expectedId = `${head}IDEA-${match[1]}`;
+    if (id !== expectedId) return `идентификатор ${id} не совпадает с именем файла: ожидается ${expectedId}`;
+    return null;
+  }
+
   if (type === 'decision') {
     if (!new RegExp(`^ADR-\\d{4}-${SLUG}\\.md$`).test(name)) return 'имя файла решения должно быть ADR-NNNN-<слаг>.md';
     const expectedId = name.slice(0, 8);

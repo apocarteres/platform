@@ -25,7 +25,9 @@ export function validateTicket(file, content, parsed) {
   const errors = [];
   const fail = (message) => errors.push(`${file}: ${message}`);
   if (metadata.get('type') !== 'ticket') {
-    for (const field of ['priority', 'questions', 'release']) {
+    // REQ-TICKETS-017
+    const own = metadata.get('type') === 'idea' ? [] : ['priority', 'questions', 'release'];
+    for (const field of own) {
       if (metadata.has(field)) fail(`поле ${field} допустимо только для задачи`);
     }
     return errors;

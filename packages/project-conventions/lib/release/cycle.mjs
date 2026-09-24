@@ -13,7 +13,7 @@ import { costSection, majorProblem, upgradeCost } from './changes.mjs';
 
 // REQ-PUBLISHING-015
 const COST_SECTION = '## Цена обновления';
-import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
+import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, ideaRecord, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { findExpandDebts } from '../migrations.mjs';
@@ -153,7 +153,8 @@ export function commitStanding(commit, { members, cancelled, accounted, areas, p
   if (accounted.some((sha) => commit.sha.startsWith(sha))) return 'учтён в выпуске';
   // REQ-RELEASE-042
   const named = ticketsOf(commit, areas, prefix, stages);
-  if (named.length === 0) return 'не называет задачу';
+  // REQ-TICKETS-020
+  if (named.length === 0) return ideaRecord(commit, prefix) ? 'запись об идее' : 'не называет задачу';
   if (named.some((id) => members.has(id))) return 'задача состава';
   // REQ-RELEASE-031
   if (named.some((id) => cancelled.has(id))) return 'задача отменена';

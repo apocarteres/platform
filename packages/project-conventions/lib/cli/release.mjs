@@ -1,7 +1,9 @@
 import { readConfig } from '../config.mjs';
 import { feedbackChannel, feedbackLine } from '../feedback.mjs';
 import { systemNow } from '../now.mjs';
-import { updateTicketIndexes } from '../docs/tickets-index.mjs';
+import path from 'node:path';
+import { present, updateTicketIndexes } from '../docs/tickets-index.mjs';
+import { IDEAS_DIR, buildIdeaIndex } from '../docs/ideas.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../docs/releases-index.mjs';
 import {
   accountCommit, adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition,
@@ -31,10 +33,18 @@ export async function releaseStatus(root) {
   }
 }
 
+// REQ-TICKETS-017
+async function reportIdeas(root) {
+  if (!await present(path.join(root, IDEAS_DIR))) return;
+  const { open } = await buildIdeaIndex(root);
+  console.log(`Идей открыто: ${open} — в пороги открытых вопросов не входят.`);
+}
+
 async function reportReleaseStatus(root) {
   const config = await readConfig(root);
   const scheme = releaseScheme(config);
   const state = await closability(root, { scheme });
+  await reportIdeas(root);
   if (state.release === null) {
     console.log('Открытого выпуска нет: работа идёт по задачам, коммиты ложатся в main.');
     console.log('Выпуск открывается командой release open --tickets A,B.');

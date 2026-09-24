@@ -38,6 +38,16 @@ export async function commitsInRange(root, since) {
 // REQ-RELEASE-040
 export const TICKETS_PATH = 'docs/tickets/';
 
+// REQ-TICKETS-020
+export const IDEAS_PATH = 'docs/ideas/';
+
+// REQ-TICKETS-020
+export function ideaRecord(commit, prefix) {
+  const head = prefix ? `${prefix}-` : '';
+  const files = commit.files ?? [];
+  return new RegExp(`^${head}IDEA-\\d{3}\\b`).test(commit.subject) && files.length > 0 && files.every((file) => file.startsWith(IDEAS_PATH));
+}
+
 // REQ-RELEASE-040
 export function recordCommit(commit) {
   const files = commit.files ?? [];

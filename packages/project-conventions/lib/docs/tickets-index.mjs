@@ -2,6 +2,7 @@
 import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontMatter, priorities, terminalStatuses } from './ticket-model.mjs';
+import { IDEAS_DIR, buildIdeaIndex } from './ideas.mjs';
 
 async function collect(directory) {
   const files = [];
@@ -104,6 +105,12 @@ export async function updateTicketIndexes(root, { check = false } = {}) {
   // REQ-PROJECT-PROCESS-021
   if (!await present(path.join(root, 'docs/tickets'))) return [];
   const { errors, outputs } = await buildTicketIndexes(root);
+  // REQ-TICKETS-017
+  if (await present(path.join(root, IDEAS_DIR))) {
+    const ideas = await buildIdeaIndex(root);
+    errors.push(...ideas.errors);
+    outputs.set(path.join(root, IDEAS_DIR, 'INDEX.md'), ideas.output);
+  }
   if (errors.length) return errors;
   for (const [file, expected] of outputs) {
     if (check) {

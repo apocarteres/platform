@@ -4,6 +4,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { validateReleases, releaseStatuses } from './release-model.mjs';
 import { parseFrontMatter, validateTicket } from './ticket-model.mjs';
+import { ideaTicketErrors, validateIdea } from './ideas.mjs';
 
 const DELIVERED_DOCS_DIR = 'node_modules/@apocarteres/project-conventions/docs';
 
@@ -42,6 +43,8 @@ const STATUS_BY_TYPE = new Map([
   ['runbook', new Set(['active', 'retired'])],
   ['ticket', new Set(['backlog', 'in_progress', 'blocked', 'done', 'cancelled', 'superseded'])],
   ['reference', new Set(['active', 'retired', 'superseded'])],
+  // REQ-TICKETS-018
+  ['idea', new Set(['open', 'accepted', 'rejected'])],
 ]);
 
 const ALLOWED_AUTHORITIES = new Set(['normative', 'supporting', 'historical', 'navigation']);
@@ -459,6 +462,8 @@ export async function checkDocumentation(projectRoot, options = {}) {
     if (parsed?.metadata) documents.push({ file: relativePath, content, metadata: parsed.metadata });
     validateMetadata(relativePath, parsed, errors, ids, references);
     errors.push(...validateTicket(relativePath, content, parsed));
+    // REQ-TICKETS-017
+    errors.push(...validateIdea(relativePath, content, parsed));
     validateLegacyHeaderFields(relativePath, content, parsed, errors);
     validateRequirementClauses(relativePath, content, parsed, errors, clauseIds);
 
@@ -471,6 +476,8 @@ export async function checkDocumentation(projectRoot, options = {}) {
   }
 
   errors.push(...validateReleases(documents));
+  // REQ-TICKETS-019
+  errors.push(...ideaTicketErrors(documents));
 
   const delivered = await deliveredIds(resolvedRoot);
   for (const reference of references) {

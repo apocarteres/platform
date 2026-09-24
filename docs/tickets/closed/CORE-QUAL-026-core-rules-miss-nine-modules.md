@@ -1,7 +1,7 @@
 ---
 id: CORE-QUAL-026
 type: ticket
-status: in_progress
+status: done
 scope: quality, tooling
 authority: supporting
 priority: P1

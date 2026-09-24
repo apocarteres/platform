@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-012
 type: ticket
-status: in_progress
+status: done
 scope: frontend, backend, architecture, research
 authority: supporting
 priority: P2
@@ -63,7 +63,7 @@ related: CORE-ARC-001, CORE-ARC-013, CORE-ARC-016, CORE-ARC-017, ADR-0007
 ## Открытые вопросы
 
 1. Библиотека или отдельный сервис. Рекомендация — библиотека
-   ([ADR-0007](../decisions/ADR-0007-user-support-centre.md), вопрос 1).
+   ([ADR-0007](../../decisions/ADR-0007-user-support-centre.md), вопрос 1).
    Ответ: библиотека, поверх аутентификации ядра (CORE-ARC-013).
    Решение владельца от 2026-09-24.
 2. Какой шаг первый: журнал клиента или приём обращений целиком.
@@ -88,11 +88,11 @@ related: CORE-ARC-001, CORE-ARC-013, CORE-ARC-016, CORE-ARC-017, ADR-0007
 
 ## Что сделано
 
-- [ADR-0007](../decisions/ADR-0007-user-support-centre.md) принят: форма,
+- [ADR-0007](../../decisions/ADR-0007-user-support-centre.md) принят: форма,
   границы, положения о персональных данных и приёме без входа, состояния,
   порядок шагов.
 - Шаги оформлены задачами: [CORE-ARC-016](CORE-ARC-016-client-journal.md) —
-  журнал клиента, [CORE-ARC-017](CORE-ARC-017-support-centre.md) — центр
+  журнал клиента, [CORE-ARC-017](../CORE-ARC-017-support-centre.md) — центр
   поддержки.
 
 ## Откуда пришла задача

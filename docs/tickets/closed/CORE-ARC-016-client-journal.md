@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-016
 type: ticket
-status: in_progress
+status: done
 scope: frontend, typescript, personal-data
 authority: supporting
 priority: P2
@@ -97,5 +97,5 @@ related: CORE-ARC-012, CORE-ARC-017, ADR-0007, REQ-TYPESCRIPT-CLOCK
 
 [issue #43](https://github.com/apocarteres/platform/issues/43), исследование
 [CORE-ARC-012](CORE-ARC-012-user-support-centre-research.md),
-[ADR-0007](../decisions/ADR-0007-user-support-centre.md). Уровень —
+[ADR-0007](../../decisions/ADR-0007-user-support-centre.md). Уровень —
 рекомендация: пакет необязателен.

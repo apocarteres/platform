@@ -73,5 +73,5 @@ related: CORE-ARC-012, CORE-ARC-013, CORE-ARC-001, ADR-0007, REQ-AUTH
 ## Откуда пришла задача
 
 [issue #43](https://github.com/apocarteres/platform/issues/43), исследование
-[CORE-ARC-012](CORE-ARC-012-user-support-centre-research.md). Уровень —
+[CORE-ARC-012](closed/CORE-ARC-012-user-support-centre-research.md). Уровень —
 рекомендация: функция необязательная.

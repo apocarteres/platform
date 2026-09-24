@@ -127,7 +127,7 @@ authority: navigation
 | [Исследование: поведение кнопки, ждущей удалённого вызова](CORE-ARC-003-async-action-button-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
 | [Исследование: здоровье и метрики как контракт ядра](CORE-ARC-004-health-and-metrics-contracts-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, architecture, observability, research |
 | [Префикс директив ядра — apcr](CORE-ARC-009-directive-prefix-apcr.md) | P2 | Выполнена | [RELEASE-3-0-0](../../releases/RELEASE-3-0-0.md) | frontend, naming |
-| [OpenAPI-контракт аутентификации ядра и типизированный профиль проекта](CORE-ARC-015-openapi-contract-for-core-auth.md) | P2 | Выполнена | Не назначен | backend, frontend, api, tooling |
+| [OpenAPI-контракт аутентификации ядра и типизированный профиль проекта](CORE-ARC-015-openapi-contract-for-core-auth.md) | P2 | Выполнена | [RELEASE-9-0-0](../../releases/RELEASE-9-0-0.md) | backend, frontend, api, tooling |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |

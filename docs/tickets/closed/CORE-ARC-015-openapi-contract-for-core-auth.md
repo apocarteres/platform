@@ -5,7 +5,7 @@ status: done
 scope: backend, frontend, api, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-9-0-0
 related: REQ-AUTH, REQ-API, REQ-PUBLISHING
 ---
 

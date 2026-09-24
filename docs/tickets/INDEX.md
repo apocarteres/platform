@@ -14,10 +14,11 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 5. Включены самостоятельные задачи и этапы планов функций.
+Всего: 6. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Резервные копии данных службы: объявление и проверки](CORE-OPS-093-service-backups.md) | P1 | Запланирована | Не назначен | deployment, operations, personal-data |
 | [Центр поддержки: starter `platform-support` и пакет `@apocarteres/support`](CORE-ARC-017-support-centre.md) | P2 | В работе | Не назначен | frontend, backend, architecture, personal-data |
 | [Колокольчик уведомлений: сервер и служебная часть клиента](CORE-ARC-018-notification-bell.md) | P2 | Запланирована | Не назначен | frontend, backend, notification, personal-data |
 | [Правило, включаемое объявлением проекта, требует старшей версии зря](CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | P2 | Запланирована | Не назначен | publishing, release, tooling |

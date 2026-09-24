@@ -6,12 +6,8 @@ import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.persistence.SqlStatements;
-import io.github.apocarteres.platform.persistence.internal.PersistenceAutoConfiguration;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
-import io.github.apocarteres.platform.ratelimit.internal.RateLimitAutoConfiguration;
-import io.github.apocarteres.platform.time.internal.TimeAutoConfiguration;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
-import io.github.apocarteres.platform.web.errors.internal.WebErrorsAutoConfiguration;
 import java.time.Clock;
 import java.util.UUID;
 import javax.sql.DataSource;
@@ -52,13 +48,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 // REQ-AUTH-001, REQ-AUTH-008, REQ-AUTH-014, REQ-QUALITY-012
 @AutoConfiguration(
   before = {ServletWebSecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class},
-  after = {
-    DataRedisAutoConfiguration.class,
-    DataSourceTransactionManagerAutoConfiguration.class,
-    WebErrorsAutoConfiguration.class,
-    PersistenceAutoConfiguration.class,
-    TimeAutoConfiguration.class,
-    RateLimitAutoConfiguration.class,
+  after = {DataRedisAutoConfiguration.class, DataSourceTransactionManagerAutoConfiguration.class},
+  afterName = {
+    "io.github.apocarteres.platform.web.errors.internal.WebErrorsAutoConfiguration",
+    "io.github.apocarteres.platform.persistence.internal.PersistenceAutoConfiguration",
+    "io.github.apocarteres.platform.time.internal.TimeAutoConfiguration",
+    "io.github.apocarteres.platform.ratelimit.internal.RateLimitAutoConfiguration",
   }
 )
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

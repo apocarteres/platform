@@ -19,7 +19,7 @@ opened-on: 2026-09-24
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-082](../tickets/CORE-OPS-082-sharper-check-is-not-incompatible.md) | Указана при открытии выпуска |
+| [CORE-OPS-082](../tickets/closed/CORE-OPS-082-sharper-check-is-not-incompatible.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

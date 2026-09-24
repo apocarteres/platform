@@ -50,3 +50,28 @@ test('правило читает шаблоны .html и встроенные �
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-CLIENT-MODAL-004
+test('знак «>» внутри значения атрибута тега не обрывает', () => {
+  const byClass = markerOf('.modal-card');
+  const afterArrow = '<div [apoModalEscape]="() => close()" class="modal-card">';
+  assert.equal(modalsWithoutDirective(afterArrow, byClass).length, 1, 'окно после стрелки находится, а не выпадает молча');
+
+  const afterComparison = '<div [class.wide]="count > 3" class="modal-card" apoModal [apoModalEscape]="close">';
+  assert.equal(modalsWithoutDirective(afterComparison, byClass).length, 0, 'apoModal после сравнения виден: ложного отказа нет');
+  assert.equal(modalsWithoutDirective(afterComparison.replace(' apoModal ', ' '), byClass).length, 1);
+
+  const reported = '<div class="dialog-backdrop" [apoModalEscape]="() => close()" aria-modal="true" apoModal>';
+  assert.equal(modalsWithoutDirective(reported, markerOf('[aria-modal]')).length, 0, 'тег из заявки: признак и директива после стрелки');
+  assert.equal(modalsWithoutDirective(reported.replace(' apoModal>', '>'), markerOf('[aria-modal]')).length, 1);
+});
+
+// REQ-CLIENT-MODAL-004
+test('имя директивы внутри значения атрибута директивой не считается', () => {
+  const byClass = markerOf('.modal-card');
+  assert.equal(modalsWithoutDirective('<div class="modal-card" title="открыть apoModal позже">', byClass).length, 1,
+    'слово apoModal посреди значения — не директива');
+  assert.equal(modalsWithoutDirective('<div appModal="x" [x]="a > b">', markerOf('[appModal]')).length, 1);
+  assert.equal(modalsWithoutDirective('<div title="это appModal окно">', markerOf('[appModal]')).length, 0,
+    'признак-атрибут внутри значения признаком не считается');
+});

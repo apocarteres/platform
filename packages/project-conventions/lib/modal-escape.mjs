@@ -7,7 +7,10 @@ import { CONFIG_FILE } from './config.mjs';
 const TEMPLATES = new Set(['.html', '.ts']);
 
 // REQ-CLIENT-MODAL-004
-const OPENING_TAG = /<([a-zA-Z][\w-]*)((?:\s[^<>]*?)?)\/?>/gs;
+const OPENING_TAG = /<([a-zA-Z][\w-]*)((?:[^<>"']|"[^"]*"|'[^']*')*)>/g;
+
+// REQ-CLIENT-MODAL-004
+const QUOTED = /"[^"]*"|'[^']*'/g;
 
 // REQ-CLIENT-MODAL-004
 const DIRECTIVE = /(?:^|\s)apoModal(?=[\s=/]|$)/;
@@ -22,7 +25,8 @@ export function markerOf(selector) {
   }
   const byAttribute = /^\[([A-Za-z_][\w-]*)\]$/.exec(selector);
   if (byAttribute !== null) {
-    return (tag, attributes) => new RegExp(`(?:^|\\s)${byAttribute[1]}(?=[\\s=/]|$)`).test(attributes);
+    const named = new RegExp(`(?:^|\\s)${byAttribute[1]}(?=[\\s=/]|$)`);
+    return (tag, attributes) => named.test(attributes.replace(QUOTED, '""'));
   }
   if (/^[a-z][\w-]*$/.test(selector)) return (tag) => tag === selector;
   return null;
@@ -33,7 +37,7 @@ export function modalsWithoutDirective(source, marker) {
   const found = [];
   for (const match of source.matchAll(OPENING_TAG)) {
     const [whole, tag, attributes] = match;
-    if (!marker(tag, attributes) || DIRECTIVE.test(attributes)) continue;
+    if (!marker(tag, attributes) || DIRECTIVE.test(attributes.replace(QUOTED, '""'))) continue;
     const line = source.slice(0, match.index).split('\n').length;
     found.push({ line, text: whole.replace(/\s+/g, ' ').slice(0, 80) });
   }

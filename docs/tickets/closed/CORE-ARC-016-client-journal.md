@@ -5,7 +5,7 @@ status: done
 scope: frontend, typescript, personal-data
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-9-1-0
 related: CORE-ARC-012, CORE-ARC-017, ADR-0007, REQ-TYPESCRIPT-CLOCK
 ---
 

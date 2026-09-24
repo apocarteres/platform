@@ -5,7 +5,7 @@ status: done
 scope: frontend, backend, architecture, research
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-9-1-0
 questions: resolved
 related: CORE-ARC-001, CORE-ARC-013, CORE-ARC-016, CORE-ARC-017, ADR-0007
 ---

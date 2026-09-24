@@ -16,6 +16,9 @@ import { findUndeliveredConfiguration } from './environment-config.mjs';
 import { findModalsWithoutEscape } from './modal-escape.mjs';
 import { findUndeclaredModalButtons } from './modal-actions.mjs';
 import { findBackdropsOutsideTheCore } from './modal-backdrop.mjs';
+import { findClientsWithoutUpdate } from './client-update.mjs';
+import { findDefersWithoutError } from './defer-error.mjs';
+import { findUnguardedBudgets } from './bundle-budgets.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -156,6 +159,33 @@ export const RULES = [
     summary: 'Каждый фон модального окна объявлен директивой apcrModalBackdrop и не закрывает окно своим щелчком',
     title: 'фонов модальных окон вне ядра',
     find: findBackdropsOutsideTheCore,
+  },
+  {
+    id: 'client-update',
+    level: DIRECTIVE,
+    document: 'REQ-CLIENT-UPDATE',
+    file: 'client-update.md',
+    summary: 'Клиент объявляет provideAppUpdate с решением о новой сборке и об устаревшем API, служба подключает platform-api-version',
+    title: 'клиентов и служб без механизма обновления',
+    find: findClientsWithoutUpdate,
+  },
+  {
+    id: 'defer-error',
+    level: DIRECTIVE,
+    document: 'REQ-CLIENT-UPDATE',
+    file: 'client-update.md',
+    summary: 'Каждый блок @defer объявляет @error: отказ загрузки куска после раската не показывает пустоту',
+    title: 'блоков @defer без @error',
+    find: findDefersWithoutError,
+  },
+  {
+    id: 'bundle-budgets',
+    level: DIRECTIVE,
+    document: 'REQ-BUILD',
+    file: 'build.md',
+    summary: 'У приложения Angular есть бюджет начального пакета с порогом ошибки и нет порогов предупреждения',
+    title: 'бюджетов сборки клиента, которые не держат размер',
+    find: findUnguardedBudgets,
   },
   {
     id: 'wiring-conditions',

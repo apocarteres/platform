@@ -504,6 +504,102 @@
           "Заведомый отказ сервера показывается внутри окна, введённое сохраняется."
         ]
       }
+    },
+    {
+      "id": "client-update",
+      "title": "Клиент узнаёт о новой сборке и об устаревшем API механизмом ядра",
+      "requirement": "REQ-CLIENT-UPDATE-001",
+      "level": "директива",
+      "since": "5.0.0",
+      "dueReleases": 3,
+      "slug": "adopt-client-update",
+      "area": "ARC",
+      "ticket": {
+        "scope": "frontend, backend",
+        "priority": "P1",
+        "problem": "После раската открытая вкладка работает на прежней сборке и видит отказ загрузки куска как ошибку сети; устаревший клиент продолжает слать запросы, которые сервер уже не понимает. Каждый проект решает это сам или не решает вовсе.",
+        "required": [
+          "Клиент объявляет provideAppUpdate({ apiVersion, available, required }) из @apocarteres/app-update; available — компонент проекта либо UPDATE_IGNORED, required — компонент проекта (REQ-CLIENT-UPDATE-001).",
+          "Перехватчик appUpdateInterceptor подключён в provideHttpClient(withInterceptors([...])) (REQ-CLIENT-UPDATE-006).",
+          "Служба подключает platform-api-version и задаёт platform.api.min-supported-version; вызовы чужих систем перечислены в platform.api.version-exempt-paths (REQ-CLIENT-UPDATE-005, REQ-CLIENT-UPDATE-006).",
+          "Собственные опрос сборки, плашка и сверка версии API сняты: их заменяет механизм ядра."
+        ],
+        "acceptance": [
+          "Правило client-update в check замечаний не даёт.",
+          "Вкладка, открытая до раската, после раската показывает компонент available — проверено один раз при принятии.",
+          "Запрос с версией ниже минимальной получает 426 с кодом client-outdated, клиент показывает required."
+        ]
+      }
+    },
+    {
+      "id": "defer-error",
+      "title": "Каждый блок @defer объявляет @error",
+      "requirement": "REQ-CLIENT-UPDATE-009",
+      "level": "директива",
+      "since": "5.0.0",
+      "dueReleases": 3,
+      "slug": "adopt-defer-error",
+      "area": "ARC",
+      "ticket": {
+        "scope": "frontend",
+        "priority": "P2",
+        "problem": "Блок @defer без @error после раската показывает на месте содержимого пустоту: отказ загрузки куска неизбежен, а молчание не отличить от решения.",
+        "required": [
+          "У каждого блока @defer есть @error (REQ-CLIENT-UPDATE-009).",
+          "Содержимое @error несёт директиву apcrChunkFailure, чтобы отказ сразу сверял сборку (REQ-CLIENT-UPDATE-004)."
+        ],
+        "acceptance": [
+          "Правило defer-error в check замечаний не даёт."
+        ]
+      }
+    },
+    {
+      "id": "bundle-budgets",
+      "title": "Размер сборки клиента держит проверка",
+      "requirement": "REQ-BUILD-014",
+      "level": "директива",
+      "since": "5.0.0",
+      "dueReleases": 3,
+      "slug": "adopt-bundle-budgets",
+      "area": "QUAL",
+      "ticket": {
+        "scope": "frontend, build",
+        "priority": "P2",
+        "problem": "Превышение порога предупреждения бюджета сборку клиента не роняет и видно только в журнале: размер растёт незамеченным.",
+        "required": [
+          "В angular.json у приложения объявлен бюджет начального пакета с maximumError (REQ-BUILD-014).",
+          "Пороги maximumWarning и minimumWarning сняты."
+        ],
+        "acceptance": [
+          "Правило bundle-budgets в check замечаний не даёт.",
+          "Сборка с заведомо превышенным порогом отказывает — проверено один раз при принятии."
+        ]
+      }
+    },
+    {
+      "id": "static-archive",
+      "title": "Куски прежней сборки клиента переживают раскат",
+      "requirement": "REQ-DEPLOYMENT-022",
+      "level": "директива",
+      "since": "5.0.0",
+      "dueReleases": 3,
+      "slug": "adopt-static-archive",
+      "area": "OPS",
+      "ticket": {
+        "scope": "deployment, frontend",
+        "priority": "P1",
+        "problem": "Раскат стирает куски прежней сборки: вкладка, открытая до раската, не открывает раздел с отложенной загрузкой до перезагрузки.",
+        "required": [
+          "Прежние куски лежат в архиве вне раздаваемого каталога; раскат и откат дополняют архив, ничего не стирая (REQ-DEPLOYMENT-022).",
+          "Веб-сервер ищет в архиве файл, которого нет в текущей сборке; index.html из архива не отдаётся (REQ-DEPLOYMENT-022).",
+          "Кусок хранится 7 дней с момента, как перестал раздаваться, либо срок проекта, записанный в его развёртывании (REQ-DEPLOYMENT-022).",
+          "Вечный кэш — только файлам с отпечатком, index.html — no-store, отказ — без вечного кэша (REQ-DEPLOYMENT-023)."
+        ],
+        "acceptance": [
+          "conventions static-check --url <стенд> --component <клиент> --previous <кусок прежней сборки> после раската проходит.",
+          "conventions deployed по составляющей клиента проходит: архив в раздаваемый каталог не попал."
+        ]
+      }
     }
   ]
 }

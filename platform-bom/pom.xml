@@ -41,6 +41,11 @@
         <artifactId>platform-web-errors</artifactId>
         <version>${revision}</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-api-version</artifactId>
+        <version>${revision}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

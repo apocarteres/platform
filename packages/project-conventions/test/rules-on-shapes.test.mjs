@@ -66,6 +66,16 @@ export const PLANTED = {
     + '  <button [disabled]="count > 3" (click)="remove.emit(); close()">Удалить</button>\n</div>\n')),
   'modal-backdrop': BOTH((root) => put(root, 'frontend/src/app/share/share.backdrop.html',
     '<div class="backdrop" (click)="close()">\n  <div class="modal-card" apcrModal [apcrModalEscape]="close"></div>\n</div>\n')),
+  'client-update': BOTH(async (root) => {
+    const config = path.join(root, 'frontend/src/app/app.config.ts');
+    await writeFile(config, (await readFile(config, 'utf8')).replace(/ {4}provideAppUpdate\(.*\n/, ''));
+  }),
+  'defer-error': BOTH((root) => put(root, 'frontend/src/app/inventory/inventory.page.html',
+    '@defer (on idle) {\n  <app-stock [rows]="{ page: 1 }"/>\n} @placeholder {\n  <p>…</p>\n}\n')),
+  'bundle-budgets': BOTH(async (root) => {
+    const workspace = path.join(root, 'frontend/angular.json');
+    await writeFile(workspace, (await readFile(workspace, 'utf8')).replace('"maximumError": "800kb"', '"maximumWarning": "700kb",\n                  "maximumError": "800kb"'));
+  }),
   'wiring-conditions': BOTH((root) => put(root, 'src/main/java/net/example/inventory/Wiring.java',
     java('Wiring', '@AutoConfiguration\npublic final class NAME {\n  @Bean\n  @ConditionalOnBean(Object.class)\n  Object bean() {\n    return null;\n  }\n}'))),
   'rust-exemptions': {

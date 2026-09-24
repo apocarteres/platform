@@ -107,7 +107,7 @@ export async function toolingFiles(root) {
   return found.sort();
 }
 
-async function manifests(root, name) {
+export async function manifests(root, name) {
   const found = [];
   const walk = async (directory, depth) => {
     let entries;

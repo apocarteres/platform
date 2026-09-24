@@ -21,7 +21,10 @@ const POM = '<?xml version="1.0" encoding="UTF-8"?>\n<project>\n  <modelVersion>
   + '    <artifactId>platform-service-parent</artifactId>\n    <version>1.48.0</version>\n  </parent>\n'
   + '  <groupId>net.example</groupId>\n  <artifactId>inventory</artifactId>\n  <version>1.0.0</version>\n'
   + '  <dependencies>\n    <dependency>\n      <groupId>org.springframework.boot</groupId>\n'
-  + '      <artifactId>spring-boot-starter-web</artifactId>\n    </dependency>\n  </dependencies>\n</project>\n';
+  + '      <artifactId>spring-boot-starter-web</artifactId>\n    </dependency>\n'
+  // REQ-CLIENT-UPDATE-008
+  + '    <dependency>\n      <groupId>io.github.apocarteres.platform</groupId>\n'
+  + '      <artifactId>platform-api-version</artifactId>\n    </dependency>\n  </dependencies>\n</project>\n';
 
 // REQ-QUALITY-016
 const ROUTES = "import { withUnknownPath } from '@apocarteres/routing';\n\n"
@@ -29,6 +32,37 @@ const ROUTES = "import { withUnknownPath } from '@apocarteres/routing';\n\n"
   + "  { path: '', loadComponent: () => import('./lobby/lobby.page').then((m) => m.LobbyPage) },\n"
   + "  { path: 'inventory', loadComponent: () => import('./inventory/inventory.page').then((m) => m.InventoryPage) },\n"
   + "], { loadNotFound: () => import('./not-found/not-found.page').then((m) => m.NotFoundPage) });\n";
+
+// REQ-CLIENT-UPDATE-008
+const APP_CONFIG = "import { provideHttpClient, withInterceptors } from '@angular/common/http';\n"
+  + "import { provideRouter } from '@angular/router';\n"
+  + "import { appUpdateInterceptor, provideAppUpdate } from '@apocarteres/app-update';\n"
+  + "import { routes } from './app.routes';\n"
+  + "import { UpdateBanner, UpdateBlocker } from './update/update.notices';\n\n"
+  + 'export const appConfig = {\n  providers: [\n'
+  + '    provideRouter(routes),\n'
+  + '    provideHttpClient(withInterceptors([appUpdateInterceptor])),\n'
+  + '    provideAppUpdate({ apiVersion: 1, available: UpdateBanner, required: UpdateBlocker }),\n'
+  + '  ],\n};\n';
+
+// REQ-CLIENT-UPDATE-008, REQ-BUILD-014
+const WORKSPACE = `${JSON.stringify({
+  version: 1,
+  projects: {
+    inventory: {
+      projectType: 'application',
+      root: '',
+      sourceRoot: 'src',
+      architect: {
+        build: {
+          configurations: {
+            production: { budgets: [{ type: 'initial', maximumError: '800kb' }, { type: 'anyComponentStyle', maximumError: '8kb' }] },
+          },
+        },
+      },
+    },
+  },
+}, null, 2)}\n`;
 
 // REQ-QUALITY-016
 const DEPLOY = '#!/usr/bin/env bash\nset -euo pipefail\n\n'
@@ -65,6 +99,12 @@ export async function consumerShape(kind) {
   await put(root, 'pom.xml', POM);
   await put(root, 'frontend/package.json', `${JSON.stringify({ name: 'inventory-client', private: true, scripts: { build: 'ng build', lint: 'eslint .' } }, null, 2)}\n`);
   await put(root, 'frontend/src/app/app.routes.ts', ROUTES);
+  // REQ-CLIENT-UPDATE-008, REQ-CLIENT-UPDATE-009, REQ-BUILD-014
+  await put(root, 'frontend/angular.json', WORKSPACE);
+  await put(root, 'frontend/src/app/app.config.ts', APP_CONFIG);
+  await put(root, 'frontend/src/app/lobby/lobby.page.html',
+    '<h1>Лобби</h1>\n@defer (on viewport) {\n  <app-chart [data]="{ total: count }"/>\n} @placeholder {\n  <p>…</p>\n}'
+    + ' @error {\n  <p apcrChunkFailure>Не удалось загрузить график</p>\n}\n');
   // REQ-CLIENT-MODAL-004
   await put(root, 'frontend/src/app/confirm/confirm.dialog.html',
     '<div class="backdrop" [apcrModalBackdrop]="() => close()">\n  <div role="dialog" [apcrModalEscape]="() => close()" [class.wide]="count > 3"\n'

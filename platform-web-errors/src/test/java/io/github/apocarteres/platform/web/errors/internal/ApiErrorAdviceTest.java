@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import io.github.apocarteres.platform.web.errors.CodedFailure;
 import io.github.apocarteres.platform.web.errors.ErrorCode;
 import io.github.apocarteres.platform.web.errors.ErrorCodeResolver;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
@@ -78,6 +79,17 @@ class ApiErrorAdviceTest {
       .andExpect(jsonPath("$.code").value("bad-request"));
   }
 
+  // REQ-API-011
+  @Test
+  @DisplayName("Отказ с кодом ядра отдаётся своим кодом, даже когда порт потребителя сопоставляет всё")
+  void coreCodeOutranksThePort() throws Exception {
+    mockMvc(failure -> Optional.of(ErrorCode.of("anything", HttpStatus.BAD_REQUEST)), new StatusErrorMessages())
+      .perform(get("/outdated"))
+      .andExpect(status().isUpgradeRequired())
+      .andExpect(jsonPath("$.status").value(426))
+      .andExpect(jsonPath("$.code").value("core-coded"));
+  }
+
   @Test
   @DisplayName("Метрика ошибки считается по шаблону пути, а не по конкретному адресу")
   void metricNormalisesUri() throws Exception {
@@ -101,6 +113,23 @@ class ApiErrorAdviceTest {
     @GetMapping("/rejected")
     String rejected() {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "тело запроса не разобрано");
+    }
+
+    // REQ-API-011
+    @GetMapping("/outdated")
+    String outdated() {
+      throw new CoreCoded();
+    }
+  }
+
+  // REQ-API-011
+  static class CoreCoded extends RuntimeException implements CodedFailure {
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public ErrorCode code() {
+      return ErrorCode.of("core-coded", HttpStatus.UPGRADE_REQUIRED);
     }
   }
 

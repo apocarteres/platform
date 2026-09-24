@@ -1,5 +1,6 @@
 package io.github.apocarteres.platform.web.errors.internal;
 
+import io.github.apocarteres.platform.web.errors.CodedFailure;
 import io.github.apocarteres.platform.web.errors.ErrorCode;
 import io.github.apocarteres.platform.web.errors.ErrorCodeResolver;
 import io.github.apocarteres.platform.web.errors.ErrorExtensions;
@@ -52,7 +53,8 @@ class ApiErrorAdvice {
 
   @ExceptionHandler(Throwable.class)
   ResponseEntity<ProblemDetail> onFailure(Throwable failure, WebRequest request) {
-    Optional<ErrorCode> resolved = codes.resolve(failure);
+    // REQ-API-011
+    Optional<ErrorCode> resolved = failure instanceof CodedFailure coded ? Optional.of(coded.code()) : codes.resolve(failure);
     ErrorCode code = resolved.orElseGet(() -> fallbackFor(failure));
     // REQ-API-010
     if (resolved.isEmpty() && code.status().is5xxServerError()) {

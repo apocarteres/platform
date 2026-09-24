@@ -1,0 +1,17 @@
+{
+  "header": "X-Api-Version",
+  "valid": [
+    { "header": "1", "version": 1 },
+    { "header": "3", "version": 3 },
+    { "header": "42", "version": 42 },
+    { "header": "999999999", "version": 999999999 }
+  ],
+  "invalidHeaders": ["", " ", "0", "-1", "+1", "01", "1.0", "1e3", " 3", "3 ", "abc", "1000000000", "３"],
+  "invalidVersions": [0, -1, 1.5, 1000000000],
+  "comparisons": [
+    { "client": 3, "minimum": 3, "accepted": true },
+    { "client": 4, "minimum": 3, "accepted": true },
+    { "client": 2, "minimum": 3, "accepted": false },
+    { "client": 1, "minimum": 999999999, "accepted": false }
+  ]
+}

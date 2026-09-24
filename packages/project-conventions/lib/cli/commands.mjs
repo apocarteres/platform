@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { changesHistory, releaseTags, reportLines } from '../release/changes.mjs';
 import { DEFAULT_TIMEOUT_SECONDS, askTheService } from '../health.mjs';
 import { DEFAULT_TIMEOUT_SECONDS as ABSENT_TIMEOUT_SECONDS, askForAbsent } from '../unknown-path.mjs';
+import { DEFAULT_TIMEOUT_SECONDS as STATIC_TIMEOUT_SECONDS, checkStatic } from '../static-check.mjs';
 import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dependencies-state.mjs';
 import { commitsWithoutATicket } from '../release/cycle.mjs';
 import { readConfig } from '../config.mjs';
@@ -89,6 +90,49 @@ export async function unknown(url, timeout, { usage, refuse }) {
     return;
   }
   console.log(`Неизвестный адрес отвечает как неизвестный: спрошено адресов ${answer.asked}`);
+}
+
+// REQ-DEPLOYMENT-024
+export async function staticCheck(root, parsed, { usage, refuse }) {
+  const url = parsed.values.get('--url');
+  const name = parsed.values.get('--component');
+  if (!url || !name) {
+    refuse(usage['static-check'], 'проверка статики требует адреса сайта и составляющей клиента: ключи --url и --component');
+    return;
+  }
+  const timeout = parsed.values.get('--timeout');
+  const seconds = timeout === undefined ? STATIC_TIMEOUT_SECONDS : Number(timeout);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    refuse(usage['static-check'], `предел ожидания должен быть положительным числом секунд: ${timeout}`);
+    return;
+  }
+  const declared = deployment(await readConfig(root)).components;
+  const component = declared.find((one) => one.name === name);
+  if (component === undefined) {
+    refuse(usage['static-check'], `составляющая ${name} не объявлена; объявлены: ${declared.map((one) => one.name).join(', ') || 'ни одной'}.`
+      + ' Назовите объявленную в deployment.components');
+    return;
+  }
+  const previous = (parsed.values.get('--previous') ?? '').split(',').map((one) => one.trim()).filter((one) => one.length > 0);
+  let answer;
+  try {
+    answer = await checkStatic(url, { artifact: path.resolve(root, component.artifact), previous, timeoutSeconds: seconds });
+  } catch (failure) {
+    if (failure.code !== 'ENOENT') throw failure;
+    console.error(`Сборки составляющей ${name} нет: ${component.artifact}. Соберите клиент и повторите проверку`);
+    process.exitCode = 1;
+    return;
+  }
+  if (!answer.proved) {
+    console.error('Раскладка статики клиента требованиям не отвечает:');
+    for (const reason of answer.reasons) console.error(`- ${reason}`);
+    // REQ-DEPLOYMENT-024
+    console.error('Образец настройки nginx — в REQ-DEPLOYMENT-024; архив прежних кусков лежит вне раздаваемого каталога');
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Статика клиента разложена по правилам: спрошено адресов ${answer.asked}`);
+  if (answer.unchecked !== null) console.log(answer.unchecked);
 }
 
 // REQ-QUALITY-004

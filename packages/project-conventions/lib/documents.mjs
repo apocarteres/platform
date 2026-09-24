@@ -27,6 +27,7 @@ export const DELIVERED_DOCUMENTS = [
   'typescript-clock.md',
   'client-modals.md',
   'client-actions.md',
+  'client-update.md',
   'project-rules.md',
   'rule-distribution.md',
   'terminology.md',

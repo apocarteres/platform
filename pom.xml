@@ -20,6 +20,7 @@
     <module>platform-persistence</module>
     <module>platform-time</module>
     <module>platform-web-errors</module>
+    <module>platform-api-version</module>
   </modules>
 
   <properties>

@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-008
 type: ticket
-status: backlog
+status: done
 scope: frontend, architecture
 authority: supporting
 priority: P0

@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-009
 type: ticket
-status: backlog
+status: done
 scope: frontend, naming
 authority: supporting
 priority: P2

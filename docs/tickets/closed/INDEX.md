@@ -14,11 +14,12 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 140. Включены самостоятельные задачи и этапы планов функций.
+Всего: 142. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Неопознанный отказ не оставлял следа](CORE-API-008-unexplained-failure-left-no-trace.md) | P0 | Выполнена | [RELEASE-1-47-0](../../releases/RELEASE-1-47-0.md) | api, observability |
+| [Модальное окно с удалённым действием закрывалось до ответа сервера](CORE-ARC-008-modal-closes-before-the-server-answers.md) | P0 | Выполнена | [RELEASE-3-0-0](../../releases/RELEASE-3-0-0.md) | frontend, architecture |
 | [Закрепление версии компонента платформы у потребителя молча перестало действовать](CORE-OPS-004-core-owns-application-platform-versions.md) | P0 | Выполнена | [RELEASE-0-34-0](../../releases/RELEASE-0-34-0.md) | build, backend, platform |
 | [Правило разбирало чужие рабочие копии](CORE-OPS-048-rule-reads-a-neighbours-working-copy.md) | P0 | Выполнена | [RELEASE-1-21-0](../../releases/RELEASE-1-21-0.md) | tooling, quality |
 | [Забытая строка признака цикла исправлялась только перезаписью истории](CORE-OPS-053-forgotten-cycle-line-forces-a-rewrite.md) | P0 | Выполнена | [RELEASE-1-25-0](../../releases/RELEASE-1-25-0.md) | tooling, release |
@@ -115,6 +116,7 @@ authority: navigation
 | [Исследование: единообразное поведение модалок — контракт и код](CORE-ARC-002-shared-modal-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
 | [Исследование: поведение кнопки, ждущей удалённого вызова](CORE-ARC-003-async-action-button-behaviour-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, architecture, research |
 | [Исследование: здоровье и метрики как контракт ядра](CORE-ARC-004-health-and-metrics-contracts-research.md) | P2 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | backend, architecture, observability, research |
+| [Префикс директив ядра — apcr](CORE-ARC-009-directive-prefix-apcr.md) | P2 | Выполнена | [RELEASE-3-0-0](../../releases/RELEASE-3-0-0.md) | frontend, naming |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |

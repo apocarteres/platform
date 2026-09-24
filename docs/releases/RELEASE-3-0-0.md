@@ -19,8 +19,8 @@ opened-on: 2026-09-24
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-ARC-008](../tickets/CORE-ARC-008-modal-closes-before-the-server-answers.md) | Указана при открытии выпуска |
-| [CORE-ARC-009](../tickets/CORE-ARC-009-directive-prefix-apcr.md) | Указана при открытии выпуска |
+| [CORE-ARC-008](../tickets/closed/CORE-ARC-008-modal-closes-before-the-server-answers.md) | Указана при открытии выпуска |
+| [CORE-ARC-009](../tickets/closed/CORE-ARC-009-directive-prefix-apcr.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

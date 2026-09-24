@@ -88,6 +88,16 @@ run = [
 description = "Всё, что проверяется локально; расписку пишет наблюдавший прогон"
 run = "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify -- mise run verify-set"
 
+# CORE-OPS-088
+[tasks.verify-runner-prepare]
+description = "Подготовить сборочный контейнер ядра на машине текущего контекста Docker"
+run = "scripts/verify-runner/runner.sh prepare"
+
+# CORE-OPS-088
+[tasks.verify-runner]
+description = "Прогнать verify в сборочном контейнере: DOCKER_CONTEXT=<контекст> mise run verify-runner"
+run = "scripts/verify-runner/runner.sh verify \"$@\""
+
 [tasks.release]
 description = "Закрыть выпуск: проверки, тег на проверенном коммите, публикация артефактов, отметка завершающего шага"
 run = [

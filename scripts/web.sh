@@ -13,6 +13,18 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FOUND=0
 
+# CORE-OPS-088: зависимости ставятся всем пакетам до первого сценария. Пакеты
+# берут общую настройку разбора из project-conventions, и на чистом дереве её
+# зависимостей не было, пока очередь не дошла до самого пакета правил.
+for manifest in "$ROOT_DIR"/packages/*/package.json; do
+  [ -f "$manifest" ] || continue
+  dir="$(dirname "$manifest")"
+  if [ ! -d "$dir/node_modules" ] && node -e "process.exit(Object.keys(require('$manifest').devDependencies ?? {}).length ? 0 : 1)"; then
+    echo "[web] $(basename "$dir"): установка зависимостей по файлу блокировки"
+    (cd "$dir" && npm ci --silent)
+  fi
+done
+
 for manifest in "$ROOT_DIR"/packages/*/package.json; do
   [ -f "$manifest" ] || continue
   dir="$(dirname "$manifest")"
@@ -20,10 +32,6 @@ for manifest in "$ROOT_DIR"/packages/*/package.json; do
     continue
   fi
   FOUND=1
-  if [ ! -d "$dir/node_modules" ] && node -e "process.exit(Object.keys(require('$manifest').devDependencies ?? {}).length ? 0 : 1)"; then
-    echo "[web] $(basename "$dir"): установка зависимостей по файлу блокировки"
-    (cd "$dir" && npm ci --silent)
-  fi
   echo "[web] $(basename "$dir"): $SCRIPT"
   (cd "$dir" && npm run --silent "$SCRIPT")
 done

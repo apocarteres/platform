@@ -14,6 +14,7 @@ import { findOrderSensitiveWiring } from './wiring.mjs';
 import { findMissingDeployEntry } from './deploy-entry.mjs';
 import { findUndeliveredConfiguration } from './environment-config.mjs';
 import { findModalsWithoutEscape } from './modal-escape.mjs';
+import { findUndeclaredModalButtons } from './modal-actions.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -133,9 +134,18 @@ export const RULES = [
     level: DIRECTIVE,
     document: 'REQ-CLIENT-MODAL',
     file: 'client-modals.md',
-    summary: 'Каждое модальное окно объявлено директивой apoModal: решение об Escape принято явно, хотя бы как ESCAPE_IGNORED',
+    summary: 'Каждое модальное окно объявлено директивой apcrModal: решение об Escape принято явно, хотя бы как ESCAPE_IGNORED',
     title: 'модальных окон без решения об Escape',
     find: findModalsWithoutEscape,
+  },
+  {
+    id: 'modal-actions',
+    level: DIRECTIVE,
+    document: 'REQ-CLIENT-MODAL',
+    file: 'client-modals.md',
+    summary: 'Каждая кнопка модального окна объявляет, удалённое ли у неё действие: apcrAction ждёт ответа, apcrLocal — местная',
+    title: 'кнопок модальных окон без объявления действия',
+    find: findUndeclaredModalButtons,
   },
   {
     id: 'wiring-conditions',

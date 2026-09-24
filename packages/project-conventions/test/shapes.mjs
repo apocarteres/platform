@@ -67,8 +67,11 @@ export async function consumerShape(kind) {
   await put(root, 'frontend/src/app/app.routes.ts', ROUTES);
   // REQ-CLIENT-MODAL-004
   await put(root, 'frontend/src/app/confirm/confirm.dialog.html',
-    '<div class="backdrop">\n  <div role="dialog" [apoModalEscape]="() => close()" [class.wide]="count > 3"\n'
-    + '       class="modal-card" apoModal>\n    Удалить запись?\n  </div>\n</div>\n');
+    '<div class="backdrop">\n  <div role="dialog" [apcrModalEscape]="() => close()" [class.wide]="count > 3"\n'
+    + '       class="modal-card" apcrModal>\n    Удалить запись?\n'
+    + '    <button apcrLocal (click)="close()">Отмена</button>\n'
+    + '    <button [apcrAction]="remove" [apcrActionFailure]="failed" (apcrActionDone)="close()">Удалить</button>\n'
+    + '  </div>\n</div>\n');
   await put(root, 'scripts/deploy.sh', DEPLOY);
   const sources = ['src', 'frontend/src'];
   if (kind === 'containers') {

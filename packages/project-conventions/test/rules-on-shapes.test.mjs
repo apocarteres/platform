@@ -60,7 +60,10 @@ export const PLANTED = {
     host: (root) => put(root, 'deploy/backup.timer', '[Timer]\nOnCalendar=daily\n'),
   },
   'modal-escape': BOTH((root) => put(root, 'frontend/src/app/share/share.dialog.html',
-    '<div role="dialog" [apoModalEscape]="() => close()" class="modal-card">\n  Поделиться ссылкой\n</div>\n')),
+    '<div role="dialog" [apcrModalEscape]="() => close()" class="modal-card">\n  Поделиться ссылкой\n</div>\n')),
+  'modal-actions': BOTH((root) => put(root, 'frontend/src/app/remove/remove.dialog.html',
+    '<div class="modal-card" apcrModal [apcrModalEscape]="() => close()">\n'
+    + '  <button [disabled]="count > 3" (click)="remove.emit(); close()">Удалить</button>\n</div>\n')),
   'wiring-conditions': BOTH((root) => put(root, 'src/main/java/net/example/inventory/Wiring.java',
     java('Wiring', '@AutoConfiguration\npublic final class NAME {\n  @Bean\n  @ConditionalOnBean(Object.class)\n  Object bean() {\n    return null;\n  }\n}'))),
   'rust-exemptions': {

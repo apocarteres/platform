@@ -26,6 +26,7 @@ export const DELIVERED_DOCUMENTS = [
   'rust-naming.md',
   'typescript-clock.md',
   'client-modals.md',
+  'client-actions.md',
   'project-rules.md',
   'rule-distribution.md',
   'terminology.md',

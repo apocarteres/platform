@@ -5,7 +5,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import {
-  breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, reportLines,
+  SEES_MORE_SECTION, breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, reportLines,
 } from '../lib/release/changes.mjs';
 import { commandsOf, rulesOf, surfaceAt } from '../lib/release/surface.mjs';
 import { environmentWithoutGit } from '../lib/release/git.mjs';
@@ -158,4 +158,24 @@ test('история собирается по тегам ядра, а не по
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+// REQ-PUBLISHING-004, REQ-PUBLISHING-015
+test('исправление проверки объявляется «видит больше», несовместимостью не считается, но в отчёте видно', () => {
+  const document = '# Выпуск\n\n## Проверка видит больше\n\n- правило больше не обрывает тег на стрелке\n\n## Результат\n';
+  const seesMore = declaredIn(document, SEES_MORE_SECTION);
+  assert.deepEqual(seesMore, ['правило больше не обрывает тег на стрелке']);
+  assert.deepEqual(declaredIn(document), [], 'это не объявленная несовместимость');
+
+  const nothing = changesBetween(EMPTY, EMPTY);
+  assert.deepEqual(breakingReasons(nothing, declaredIn(document)), [], 'младшая версия допустима');
+
+  const section = costSection(nothing, [], seesMore);
+  assert.match(section[0], /^Несовместимого нет: требования и объявленное поведение не менялись, но проверка видит больше/);
+  assert.ok(section.includes('- правило больше не обрывает тег на стрелке'));
+
+  const history = [{ version: '2.0.1', changes: nothing, declared: [], seesMore, breaking: [] }];
+  const lines = reportLines(history, { from: '2.0.0' });
+  assert.ok(lines.includes('Проверка видит больше в 1 выпуск(ах): 2.0.1.'), lines.join('\n'));
+  assert.ok(lines.some((line) => line.includes('правило больше не обрывает тег на стрелке')), 'выпуск без несовместимого всё равно показан');
 });

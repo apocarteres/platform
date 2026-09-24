@@ -12,6 +12,9 @@ export const CHANGES_FILE = 'changes.json';
 // REQ-PUBLISHING-015
 export const DECLARED_SECTION = '## Несовместимые изменения';
 
+// REQ-PUBLISHING-004, REQ-PUBLISHING-015
+export const SEES_MORE_SECTION = '## Проверка видит больше';
+
 // REQ-PUBLISHING-015
 function difference(before, after, key = (one) => one) {
   const had = new Set(before.map(key));
@@ -79,10 +82,10 @@ export function addedLines(changes) {
 }
 
 // REQ-PUBLISHING-015
-export function declaredIn(content) {
+export function declaredIn(content, heading = DECLARED_SECTION) {
   if (content === null || content === undefined) return [];
   const lines = content.split('\n');
-  const start = lines.findIndex((line) => line.trim() === DECLARED_SECTION);
+  const start = lines.findIndex((line) => line.trim() === heading);
   if (start === -1) return [];
   const found = [];
   for (const line of lines.slice(start + 1)) {
@@ -94,15 +97,21 @@ export function declaredIn(content) {
 }
 
 // REQ-PUBLISHING-015
-export function costSection(changes, declared = []) {
+export function costSection(changes, declared = [], seesMore = []) {
   const breaking = breakingReasons(changes, declared);
   const obliging = obligingLines(changes);
   const added = addedLines(changes);
   const lines = [];
-  lines.push(breaking.length === 0
+  // REQ-PUBLISHING-004
+  const quiet = seesMore.length === 0
     ? 'Несовместимого нет: обновление не делает check красным и не меняет объявленного поведения.'
-    : `Несовместимо (${breaking.length}) — версия обязана быть старшей:`);
+    : 'Несовместимого нет: требования и объявленное поведение не менялись, но проверка видит больше — см. ниже.';
+  lines.push(breaking.length === 0 ? quiet : `Несовместимо (${breaking.length}) — версия обязана быть старшей:`);
   lines.push(...breaking.map((line) => `- ${line}`));
+  if (seesMore.length > 0) {
+    lines.push('', `Проверка видит больше (${seesMore.length}) — нарушение, прежде невидимое, может найтись:`,
+      ...seesMore.map((line) => `- ${line}`));
+  }
   if (obliging.length > 0) {
     lines.push('', `Обязывает (${obliging.length}):`, ...obliging.map((line) => `- ${line}`));
   }
@@ -153,8 +162,10 @@ export async function changesHistory(root, { since = 'v1.0.0' } = {}) {
     const after = await surfaceAt(root, tag);
     if (before !== null) {
       const changes = changesBetween(before, after);
-      const declared = declaredIn(await releaseDocument(root, tag));
-      history.push({ version: tag.slice(1), changes, declared, breaking: breakingReasons(changes, declared) });
+      const document = await releaseDocument(root, tag);
+      const declared = declaredIn(document);
+      const seesMore = declaredIn(document, SEES_MORE_SECTION);
+      history.push({ version: tag.slice(1), changes, declared, seesMore, breaking: breakingReasons(changes, declared) });
     }
     before = after;
   }
@@ -166,7 +177,7 @@ export async function upgradeCost(root, { from, content }) {
   if (from === null) return null;
   const changes = changesBetween(await surfaceAt(root, from), await surfaceAt(root, 'HEAD'));
   const declared = declaredIn(content);
-  return { changes, declared, breaking: breakingReasons(changes, declared) };
+  return { changes, declared, seesMore: declaredIn(content, SEES_MORE_SECTION), breaking: breakingReasons(changes, declared) };
 }
 
 // REQ-PUBLISHING-004, REQ-PUBLISHING-015
@@ -192,6 +203,7 @@ export function reportLines(history, { from, to = null }) {
   const last = taken[taken.length - 1].version;
   const breaking = taken.filter((entry) => entry.breaking.length > 0);
   const obliging = taken.flatMap((entry) => obligingLines(entry.changes));
+  const sharper = taken.filter((entry) => (entry.seesMore ?? []).length > 0);
   const lines = [
     `Обновление ${from} → ${last}: выпусков ${taken.length}.`,
     breaking.length === 0
@@ -199,8 +211,12 @@ export function reportLines(history, { from, to = null }) {
       : `Несовместимо в ${breaking.length} выпуск(ах): ${breaking.map((entry) => entry.version).join(', ')}.`,
     `Обязывает: ${obliging.length}.`,
   ];
+  // REQ-PUBLISHING-004
+  if (sharper.length > 0) {
+    lines.push(`Проверка видит больше в ${sharper.length} выпуск(ах): ${sharper.map((entry) => entry.version).join(', ')}.`);
+  }
   for (const entry of taken) {
-    const section = costSection(entry.changes, entry.declared);
+    const section = costSection(entry.changes, entry.declared, entry.seesMore ?? []);
     const shown = entry.breaking.length === 0 ? section.slice(1).filter((line, index) => index > 0 || line !== '') : section;
     if (shown.length === 0) continue;
     lines.push('', entry.version, ...shown.map((line) => (line === '' ? '' : `  ${line}`)));

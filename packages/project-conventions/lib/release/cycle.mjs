@@ -323,7 +323,7 @@ export async function closeRelease(root, { scheme }) {
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
   // REQ-PUBLISHING-015
   if (state.cost !== null) {
-    content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared), '## Результат');
+    content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared, state.cost.seesMore), '## Результат');
   }
   const closedNow = state.obligations
     .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))
@@ -740,7 +740,7 @@ export async function recloseRelease(root, { scheme, reason }) {
   let content = replaceSection(release.content, '## Результат', resultLines(receipt, head, tag));
   // REQ-PUBLISHING-015
   if (state.cost !== null) {
-    content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared), '## Результат');
+    content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared, state.cost.seesMore), '## Результат');
   }
   const closedNow = state.obligations
     .filter((obligation) => composition.some((item) => (item.metadata.get('obligation') ?? '') === obligation.id))

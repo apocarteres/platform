@@ -156,7 +156,6 @@ class SupportController {
   private ResponseEntity<byte[]> download(File file) {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentDisposition(ContentDisposition.attachment().filename(file.name(), StandardCharsets.UTF_8).build());
-    headers.set("X-Content-Type-Options", "nosniff");
     return ResponseEntity.ok().headers(headers).contentType(MediaType.parseMediaType(file.type())).body(support.content(file.id()));
   }
 

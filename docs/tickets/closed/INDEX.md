@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 139. Включены самостоятельные задачи и этапы планов функций.
+Всего: 140. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -39,6 +39,7 @@ authority: navigation
 | [Аннотация времени жизни ослепляет разбор Rust](CORE-QUAL-021-lifetime-blinds-the-rust-rules.md) | P0 | Выполнена | [RELEASE-1-31-0](../../releases/RELEASE-1-31-0.md) | rust, quality |
 | [Условие о чужом бине решает раньше, чем бин появляется](CORE-QUAL-022-conditional-bean-decides-before-the-registry-exists.md) | P0 | Выполнена | [RELEASE-1-40-0](../../releases/RELEASE-1-40-0.md) | quality, api, wiring |
 | [Проверки ядра доказывали случай, который ядро себе представило](CORE-QUAL-023-checks-proved-the-case-the-core-imagined.md) | P0 | Выполнена | [RELEASE-1-49-0](../../releases/RELEASE-1-49-0.md) | quality, tooling |
+| [Правило modal-escape обрывало тег на «>» внутри атрибута](CORE-QUAL-025-modal-rule-cut-a-tag-at-an-arrow.md) | P0 | Выполнена | [RELEASE-2-0-1](../../releases/RELEASE-2-0-1.md) | quality, frontend |
 | [Клиентская половина контракта молчит о своих требованиях и не проверена в конвейере](CORE-API-003-client-contract-hides-its-demands.md) | P1 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api, quality |
 | [Клиентский пакет отбрасывает поля расширения](CORE-API-007-client-drops-extension-fields.md) | P1 | Выполнена | [RELEASE-1-9-0](../../releases/RELEASE-1-9-0.md) | frontend, api |
 | [Исследование: правила ядра проверяются только на ядре](CORE-ARC-005-rules-are-verified-only-on-the-core.md) | P1 | Выполнена | [RELEASE-1-14-0](../../releases/RELEASE-1-14-0.md) | process, tooling, architecture, research |

@@ -19,7 +19,7 @@ opened-on: 2026-09-24
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-QUAL-025](../tickets/CORE-QUAL-025-modal-rule-cut-a-tag-at-an-arrow.md) | Указана при открытии выпуска |
+| [CORE-QUAL-025](../tickets/closed/CORE-QUAL-025-modal-rule-cut-a-tag-at-an-arrow.md) | Указана при открытии выпуска |
 
 ## Критерии выхода
 

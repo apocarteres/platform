@@ -1,7 +1,7 @@
 ---
 id: CORE-QUAL-025
 type: ticket
-status: backlog
+status: done
 scope: quality, frontend
 authority: supporting
 priority: P0

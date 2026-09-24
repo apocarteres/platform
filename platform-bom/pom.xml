@@ -46,6 +46,16 @@
         <artifactId>platform-api-version</artifactId>
         <version>${revision}</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-rate-limit</artifactId>
+        <version>${revision}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-auth</artifactId>
+        <version>${revision}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

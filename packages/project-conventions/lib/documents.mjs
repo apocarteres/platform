@@ -28,6 +28,7 @@ export const DELIVERED_DOCUMENTS = [
   'client-modals.md',
   'client-actions.md',
   'client-update.md',
+  'auth.md',
   'project-rules.md',
   'rule-distribution.md',
   'terminology.md',

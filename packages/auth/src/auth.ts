@@ -1,0 +1,152 @@
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import type { HttpInterceptorFn } from '@angular/common/http';
+import {
+  Injectable, InjectionToken, inject, makeEnvironmentProviders, provideEnvironmentInitializer, signal,
+} from '@angular/core';
+import type { EnvironmentProviders, Signal } from '@angular/core';
+import { Router } from '@angular/router';
+import type { CanMatchFn, UrlTree } from '@angular/router';
+import { firstValueFrom, tap } from 'rxjs';
+
+// REQ-AUTH-015
+export interface SignedIn {
+  readonly id: string;
+  readonly email: string;
+  readonly roles: readonly string[];
+}
+
+// REQ-AUTH-015
+export interface AuthOptions {
+  readonly base?: string;
+}
+
+// REQ-AUTH-015
+const OPTIONS = new InjectionToken<Required<AuthOptions>>('AUTH_OPTIONS');
+
+// REQ-AUTH-008
+const REQUIRED = 'authentication-required';
+
+// REQ-AUTH-015
+export function authFailureCode(failure: unknown): string | null {
+  if (!(failure instanceof HttpErrorResponse)) return null;
+  const body: unknown = failure.error;
+  if (body === null || typeof body !== 'object') return null;
+  const code = (body as Record<string, unknown>)['code'];
+  return typeof code === 'string' ? code : null;
+}
+
+// REQ-AUTH-015
+@Injectable()
+export class AuthSession {
+  private readonly http = inject(HttpClient);
+  private readonly base = inject(OPTIONS).base;
+  private readonly current = signal<SignedIn | null | undefined>(undefined);
+  private loading: Promise<void> | null = null;
+
+  readonly account: Signal<SignedIn | null | undefined> = this.current.asReadonly();
+
+  // REQ-AUTH-008
+  ready(): Promise<void> {
+    this.loading ??= this.load();
+    return this.loading;
+  }
+
+  has(role: string): boolean {
+    return this.current()?.roles.includes(role) ?? false;
+  }
+
+  async login(email: string, password: string, human?: string): Promise<SignedIn> {
+    const signed = await firstValueFrom(this.http.post<SignedIn>(`${this.base}/login`, { email, password, human }));
+    this.current.set(signed);
+    await this.csrf();
+    return signed;
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.base}/logout`, {}));
+    } finally {
+      this.current.set(null);
+      await this.csrf();
+    }
+  }
+
+  async register(email: string, password: string, profile: Readonly<Record<string, unknown>> = {}, human?: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.base}/register`, { email, password, human, profile }));
+  }
+
+  async verify(token: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.base}/verify`, { token }));
+  }
+
+  async resend(email: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.base}/resend`, { email }));
+  }
+
+  async requestReset(email: string, human?: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.base}/password-reset/request`, { email, human }));
+  }
+
+  async confirmReset(token: string, password: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.base}/password-reset/confirm`, { token, password }));
+  }
+
+  // REQ-AUTH-008
+  expired(): void {
+    this.current.set(null);
+  }
+
+  private async load(): Promise<void> {
+    await this.csrf();
+    try {
+      this.current.set(await firstValueFrom(this.http.get<SignedIn>(`${this.base}/me`)));
+    } catch (failure) {
+      if (authFailureCode(failure) !== REQUIRED) throw failure;
+      this.current.set(null);
+    }
+  }
+
+  // REQ-AUTH-008
+  private async csrf(): Promise<void> {
+    await firstValueFrom(this.http.get(`${this.base}/csrf`));
+  }
+}
+
+// REQ-AUTH-015
+export function provideAuth(options: AuthOptions = {}): EnvironmentProviders {
+  return makeEnvironmentProviders([
+    { provide: OPTIONS, useValue: { base: options.base ?? '/api/auth' } },
+    AuthSession,
+    provideEnvironmentInitializer(() => void inject(AuthSession).ready()),
+  ]);
+}
+
+// REQ-AUTH-008, REQ-AUTH-015
+export const authInterceptor: HttpInterceptorFn = (request, next) => {
+  const session = inject(AuthSession, { optional: true });
+  return next(request).pipe(tap({
+    error: (failure: unknown) => {
+      if (session !== null && authFailureCode(failure) === REQUIRED) session.expired();
+    },
+  }));
+};
+
+// REQ-AUTH-015
+export function signedIn(redirect: string): CanMatchFn {
+  return async (): Promise<boolean | UrlTree> => {
+    const session = inject(AuthSession);
+    const router = inject(Router);
+    await session.ready();
+    return session.account() ? true : router.parseUrl(redirect);
+  };
+}
+
+// REQ-AUTH-002, REQ-AUTH-015
+export function withRole(role: string, redirect: string): CanMatchFn {
+  return async (): Promise<boolean | UrlTree> => {
+    const session = inject(AuthSession);
+    const router = inject(Router);
+    await session.ready();
+    return session.has(role) ? true : router.parseUrl(redirect);
+  };
+}

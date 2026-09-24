@@ -215,6 +215,18 @@ test('контракт: снятая точка, ответ или поле и �
   assert.deepEqual(breakingReasons(changesBetween(before, relaxed)), [], 'снятие обязательности — не несовместимость');
 });
 
+// REQ-PUBLISHING-015, CORE-ARC-017
+test('контракт: новый контракт со схемой того же имени, что в другом контракте, — не несовместимость', () => {
+  const policy = (name) => contractOf(JSON.stringify({ paths: {}, components: { schemas: {
+    Policy: { properties: { limit: {} }, required: ['limit'] } } } }), name);
+  const before = surface({ contract: policy('auth') });
+  const both = surface({ contract: [...policy('auth'), ...policy('support')] });
+  assert.deepEqual(breakingReasons(changesBetween(before, both)), []);
+  const tightened = surface({ contract: contractOf(JSON.stringify({ paths: {}, components: { schemas: {
+    Policy: { properties: { limit: {}, extra: {} }, required: ['limit', 'extra'] } } } }), 'auth') });
+  assert.ok(breakingReasons(changesBetween(before, tightened)).some((line) => line.includes('auth: обязательное поле Policy.extra')));
+});
+
 // REQ-SUPPORT-013
 test('контракт: снятое значение перечисления несовместимо, добавленное — нет', () => {
   const states = (values) => contractOf(JSON.stringify({ paths: {}, components: { schemas: { RequestState: { type: 'string', enum: values } } } }), 'support');

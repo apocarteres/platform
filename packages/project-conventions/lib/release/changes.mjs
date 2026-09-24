@@ -50,7 +50,7 @@ export function changesBetween(before, after) {
     // REQ-AUTH-020
     contract: difference(before.contract ?? [], after.contract ?? []),
     // REQ-AUTH-020
-    schemasBefore: [...new Set((before.contract ?? []).map((entry) => /: поле ([^.]+)\./.exec(entry)?.[1]).filter(Boolean))],
+    schemasBefore: [...new Set((before.contract ?? []).map((entry) => schemaOf(entry, 'поле')).filter(Boolean))],
   };
 }
 
@@ -67,7 +67,7 @@ export function breakingReasons(changes, declared = []) {
     ...(changes.contract?.removed ?? []).filter((entry) => !entry.includes(': обязательное поле '))
       .map((entry) => `снято в контракте — ${entry}: клиент, опиравшийся на это, сломается`),
     ...(changes.contract?.added ?? []).filter((entry) => entry.includes(': обязательное поле ')
-      && (changes.schemasBefore ?? []).includes(/: обязательное поле ([^.]+)\./.exec(entry)?.[1]))
+      && (changes.schemasBefore ?? []).includes(schemaOf(entry, 'обязательное поле')))
       .map((entry) => `в контракте стало обязательным — ${entry}: прежний запрос его не несёт`),
     ...declared,
   ];
@@ -234,4 +234,10 @@ export function reportLines(history, { from, to = null }) {
     lines.push('', entry.version, ...shown.map((line) => (line === '' ? '' : `  ${line}`)));
   }
   return lines;
+}
+
+// REQ-PUBLISHING-015, CORE-ARC-017
+function schemaOf(entry, kind) {
+  const found = new RegExp(`^(.+): ${kind} ([^.]+)\\.`).exec(entry);
+  return found === null ? null : `${found[1]}: ${found[2]}`;
 }

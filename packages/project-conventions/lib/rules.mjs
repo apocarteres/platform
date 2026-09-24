@@ -15,6 +15,7 @@ import { findMissingDeployEntry } from './deploy-entry.mjs';
 import { findUndeliveredConfiguration } from './environment-config.mjs';
 import { findModalsWithoutEscape } from './modal-escape.mjs';
 import { findUndeclaredModalButtons } from './modal-actions.mjs';
+import { findBackdropsOutsideTheCore } from './modal-backdrop.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -146,6 +147,15 @@ export const RULES = [
     summary: 'Каждая кнопка модального окна объявляет, удалённое ли у неё действие: apcrAction ждёт ответа, apcrLocal — местная',
     title: 'кнопок модальных окон без объявления действия',
     find: findUndeclaredModalButtons,
+  },
+  {
+    id: 'modal-backdrop',
+    level: DIRECTIVE,
+    document: 'REQ-CLIENT-MODAL',
+    file: 'client-modals.md',
+    summary: 'Каждый фон модального окна объявлен директивой apcrModalBackdrop и не закрывает окно своим щелчком',
+    title: 'фонов модальных окон вне ядра',
+    find: findBackdropsOutsideTheCore,
   },
   {
     id: 'wiring-conditions',

@@ -64,6 +64,8 @@ export const PLANTED = {
   'modal-actions': BOTH((root) => put(root, 'frontend/src/app/remove/remove.dialog.html',
     '<div class="modal-card" apcrModal [apcrModalEscape]="() => close()">\n'
     + '  <button [disabled]="count > 3" (click)="remove.emit(); close()">Удалить</button>\n</div>\n')),
+  'modal-backdrop': BOTH((root) => put(root, 'frontend/src/app/share/share.backdrop.html',
+    '<div class="backdrop" (click)="close()">\n  <div class="modal-card" apcrModal [apcrModalEscape]="close"></div>\n</div>\n')),
   'wiring-conditions': BOTH((root) => put(root, 'src/main/java/net/example/inventory/Wiring.java',
     java('Wiring', '@AutoConfiguration\npublic final class NAME {\n  @Bean\n  @ConditionalOnBean(Object.class)\n  Object bean() {\n    return null;\n  }\n}'))),
   'rust-exemptions': {

@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, OnDestroy, OnInit, signal } from '@angular/core';
+import { Directive, ElementRef, EventEmitter, OnDestroy, OnInit, Renderer2, inject, signal } from '@angular/core';
 import { from, isObservable } from 'rxjs';
 import type { Observable, Subscription } from 'rxjs';
 
@@ -7,6 +7,9 @@ export type Action = () => Promise<unknown> | Observable<unknown>;
 
 // REQ-CLIENT-ACTION-004
 export type FailureHandler = (failure: unknown) => void;
+
+// REQ-CLIENT-ACTION-005
+export const PENDING_ATTRIBUTE = 'data-apcr-pending';
 
 const UNDECLARED = 'Кнопка удалённого действия объявлена не полностью: укажите [apcrAction] — действие,'
   + ' которое ядро запустит, и [apcrActionFailure] — куда идёт отказ; отказ не поглощается';
@@ -20,7 +23,6 @@ const UNDECLARED = 'Кнопка удалённого действия объя�
   outputs: ['apcrActionDone'],
   host: {
     '(click)': 'run($event)',
-    '[attr.aria-busy]': 'pending() ? "true" : null',
   },
 })
 export class ApcrAction implements OnInit, OnDestroy {
@@ -29,6 +31,8 @@ export class ApcrAction implements OnInit, OnDestroy {
   readonly apcrActionDone = new EventEmitter<unknown>();
   // REQ-CLIENT-ACTION-002
   readonly pending = signal(false);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly renderer = inject(Renderer2);
   private running: Subscription | null = null;
 
   ngOnInit(): void {
@@ -49,7 +53,7 @@ export class ApcrAction implements OnInit, OnDestroy {
       failure(thrown);
       return;
     }
-    this.pending.set(true);
+    this.mark(true);
     let last: unknown;
     this.running = (isObservable(started) ? started : from(started)).subscribe({
       next: (value) => {
@@ -75,6 +79,19 @@ export class ApcrAction implements OnInit, OnDestroy {
   // REQ-CLIENT-ACTION-002
   private settle(): void {
     this.running = null;
-    this.pending.set(false);
+    this.mark(false);
+  }
+
+  // REQ-CLIENT-ACTION-002, REQ-CLIENT-ACTION-005
+  private mark(pending: boolean): void {
+    this.pending.set(pending);
+    const element = this.host.nativeElement;
+    if (pending) {
+      this.renderer.setAttribute(element, 'aria-busy', 'true');
+      this.renderer.setAttribute(element, PENDING_ATTRIBUTE, '');
+    } else {
+      this.renderer.removeAttribute(element, 'aria-busy');
+      this.renderer.removeAttribute(element, PENDING_ATTRIBUTE);
+    }
   }
 }

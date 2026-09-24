@@ -68,13 +68,14 @@ function setUp() {
 
 afterEach(() => TestBed.resetTestingModule());
 
-// REQ-CLIENT-ACTION-001, REQ-CLIENT-ACTION-002
+// REQ-CLIENT-ACTION-001, REQ-CLIENT-ACTION-002, REQ-CLIENT-ACTION-005
 describe('ожидание ведёт ядро', () => {
   it('на время вызова кнопка занята, по успеху отдаёт результат и освобождается', async () => {
     const { fixture, dialog, button } = setUp();
     button()?.click();
+    expect(button()?.getAttribute('aria-busy'), 'признак стоит сразу, без обнаружения изменений').toBe('true');
+    expect(button()?.hasAttribute('data-apcr-pending'), 'окно узнаёт о вызове по этому признаку').toBe(true);
     fixture.detectChanges();
-    expect(button()?.getAttribute('aria-busy')).toBe('true');
     expect(button()?.disabled).toBe(true);
 
     dialog.next.resolve('сохранено');
@@ -97,6 +98,7 @@ describe('ожидание ведёт ядро', () => {
     expect(dialog.failure).toBe(refusal);
     expect(dialog.result).toBeUndefined();
     expect(button()?.hasAttribute('aria-busy'), 'признак, не снятый при отказе, выключил бы кнопку навсегда').toBe(false);
+    expect(button()?.hasAttribute('data-apcr-pending'), 'окно не остаётся запертым после отказа').toBe(false);
   });
 
   it('исключение, брошенное самим действием, тоже отказ, а не зависшее ожидание', () => {

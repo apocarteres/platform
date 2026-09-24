@@ -7,7 +7,7 @@ import { CONFIG_FILE } from './config.mjs';
 export const TEMPLATES = new Set(['.html', '.ts']);
 
 // REQ-CLIENT-MODAL-004
-const OPENING_TAG = /<([a-zA-Z][\w-]*)((?:[^<>"']|"[^"]*"|'[^']*')*)>/g;
+export const OPENING_TAG = /<([a-zA-Z][\w-]*)((?:[^<>"']|"[^"]*"|'[^']*')*)>/g;
 
 // REQ-CLIENT-MODAL-004
 export const QUOTED = /"[^"]*"|'[^']*'/g;

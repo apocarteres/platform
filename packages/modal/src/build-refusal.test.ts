@@ -13,10 +13,10 @@ async function compile(template: string): Promise<string> {
   try {
     await writeFile(path.join(probe, 'consumer.ts'), [
       "import { Component } from '@angular/core';",
-      "import { ApcrModal, ESCAPE_IGNORED } from '../src/modal';",
+      "import { ApcrModal, ApcrModalBackdrop, BACKDROP_IGNORED, ESCAPE_IGNORED } from '../src/modal';",
       '',
-      `@Component({ selector: 'app-consumer', standalone: true, imports: [ApcrModal], template: '${template}' })`,
-      'export class Consumer { readonly ignored = ESCAPE_IGNORED; }',
+      `@Component({ selector: 'app-consumer', standalone: true, imports: [ApcrModal, ApcrModalBackdrop], template: '${template}' })`,
+      'export class Consumer { readonly ignored = ESCAPE_IGNORED; readonly stays = BACKDROP_IGNORED; }',
       '',
     ].join('\n'));
     await writeFile(path.join(probe, 'tsconfig.json'), JSON.stringify({
@@ -47,5 +47,12 @@ describe('сборка потребителя со строгими шаблон
     expect(forgot).toContain('NG8008');
     expect(forgot).toContain("Required input 'apcrModalEscape' from directive ApcrModal must be specified");
     expect(await compile('<div apcrModal [apcrModalEscape]="ignored">решили</div>')).toBe('');
+  }, 120_000);
+
+  // REQ-CLIENT-MODAL-009
+  it('отказывает фону без решения о щелчке и собирает фон с решением', async () => {
+    const forgot = await compile('<div class="backdrop" apcrModalBackdrop>забыли</div>');
+    expect(forgot, 'атрибут без привязки задаёт решение строкой, и типы это отвергают').toContain("is not assignable to type 'BackdropHandler'");
+    expect(await compile('<div class="backdrop" [apcrModalBackdrop]="stays">решили</div>')).toBe('');
   }, 120_000);
 });

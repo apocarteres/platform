@@ -67,7 +67,7 @@ export async function consumerShape(kind) {
   await put(root, 'frontend/src/app/app.routes.ts', ROUTES);
   // REQ-CLIENT-MODAL-004
   await put(root, 'frontend/src/app/confirm/confirm.dialog.html',
-    '<div class="backdrop">\n  <div role="dialog" [apcrModalEscape]="() => close()" [class.wide]="count > 3"\n'
+    '<div class="backdrop" [apcrModalBackdrop]="() => close()">\n  <div role="dialog" [apcrModalEscape]="() => close()" [class.wide]="count > 3"\n'
     + '       class="modal-card" apcrModal>\n    Удалить запись?\n'
     + '    <button apcrLocal (click)="close()">Отмена</button>\n'
     + '    <button [apcrAction]="remove" [apcrActionFailure]="failed" (apcrActionDone)="close()">Удалить</button>\n'
@@ -86,7 +86,7 @@ export async function consumerShape(kind) {
   }
   const config = JSON.parse(await readFile(path.join(root, '.conventions.json'), 'utf8'));
   await writeFile(path.join(root, '.conventions.json'),
-    `${JSON.stringify({ ...config, sources, deployment: deploymentOf(kind), modal: { selector: '.modal-card' } }, null, 2)}\n`);
+    `${JSON.stringify({ ...config, sources, deployment: deploymentOf(kind), modal: { selector: '.modal-card', backdrop: '.backdrop' } }, null, 2)}\n`);
   await consumer.git('add', '-A');
   await consumer.git('commit', '--quiet', '-m', `Форма потребителя: ${kind}\n\nRelease-cycle: RELEASE-2026-09-10`);
   return { ...consumer, kind };

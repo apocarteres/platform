@@ -5,7 +5,7 @@ status: done
 scope: tickets, tooling, quality
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-8-1-1
 related: REQ-QUALITY, REQ-TICKETS
 ---
 

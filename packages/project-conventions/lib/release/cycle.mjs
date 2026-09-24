@@ -313,13 +313,16 @@ async function withoutOlderThan(root, commits, baseline) {
 export async function closeRelease(root, { scheme }) {
   const state = await closability(root, { scheme });
   if (state.problems.length > 0) return { closed: false, problems: state.problems };
-  const { release, commit, receipt, composition, tag } = state;
+  const { release, commit, receipt, tag } = state;
   const id = release.metadata.get('id');
+  // REQ-RELEASE-021, REQ-RELEASE-031
+  const composition = state.composition.filter(shipsResult);
+  const carriedOn = state.composition.filter((ticket) => !shipsResult(ticket));
 
   // REQ-RELEASE-001
   let content = replaceMetadata(release.content, { status: 'in_progress' });
   // REQ-RELEASE-021, REQ-RELEASE-031
-  content = replaceSection(content, '## Состав', compositionRows(root, composition.filter(shipsResult)));
+  content = replaceSection(content, '## Состав', compositionRows(root, composition));
   content = replaceSection(content, '## Результат', resultLines(receipt, commit, tag));
   // REQ-PUBLISHING-015
   if (state.cost !== null) {
@@ -338,6 +341,10 @@ export async function closeRelease(root, { scheme }) {
 
   for (const ticket of composition) {
     writes.push({ file: ticket.file, content: replaceMetadata(ticket.content, { release: id }) });
+  }
+  // REQ-RELEASE-021
+  for (const ticket of carriedOn) {
+    writes.push({ file: ticket.file, content: replaceMetadata(ticket.content, { release: 'unassigned' }) });
   }
 
   // REQ-RELEASE-005

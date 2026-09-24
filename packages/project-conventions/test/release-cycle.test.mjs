@@ -303,8 +303,7 @@ test('невыполненное обязательство переноситс
     const draft = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
     assert.match(await readFile(draft, 'utf8'), /release: RELEASE-2026-09-1/);
 
-    const release = await openRelease(root);
-    await writeFile(release.file, release.content.replace('status: draft', 'status: released'));
+    await releaseWithTheObligationUndone(root, FIXED_DAY);
     const next = await openNext(root, { scheme: 'date', today: NEXT_DAY });
     assert.equal(next.opened, true);
     assert.deepEqual(next.created, [], 'вторая заготовка не создаётся');
@@ -452,6 +451,63 @@ test('отменённая задача не попадает в состав и
     const { errors } = await checkDocumentation(root);
     const aboutComposition = errors.filter((error) => /TICKET-DROPPED|не выполнена|в составе/.test(error));
     assert.deepEqual(aboutComposition, [], errors.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+async function releaseWithTheObligationUndone(root, today) {
+  await writeFile(path.join(root, `docs/tickets/closed/shipped-${today.getUTCDate()}.md`), ticket(`TICKET-SHIPPED-${today.getUTCDate()}`, 'done'));
+  const commit = await commitAll(root);
+  await writeReceipt(root, RECEIPT(commit, today));
+  const closed = await closeRelease(root, { scheme: 'date' });
+  assert.equal(closed.closed, true, closed.problems?.join('\n'));
+  const atClose = await readFile(path.join(root, `docs/releases/${closed.id}.md`), 'utf8');
+  const finished = await finishRelease(root, { scheme: 'date', today, note: 'развёртывание' });
+  assert.equal(finished.finished, true, finished.problems?.join('\n'));
+  return { ...closed, atClose };
+}
+
+async function compositionErrors(root) {
+  const { errors } = await checkDocumentation(root);
+  return errors.filter((error) => /в составе|выпуск не существует/.test(error));
+}
+
+// REQ-RELEASE-021
+test('заготовка обязательства, не выполненная к закрытию, остаётся без выпуска, и проверка документов принимает выпущенное', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    const draft = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
+    assert.match(await readFile(draft, 'utf8'), /^release: RELEASE-2026-09-1$/m, 'план виден в задаче, пока выпуск открыт');
+
+    const closed = await releaseWithTheObligationUndone(root, FIXED_DAY);
+    assert.deepEqual(closed.composition, ['TICKET-SHIPPED-7']);
+    assert.match(await readFile(draft, 'utf8'), /^release: unassigned$/m);
+    assert.deepEqual(await compositionErrors(root), []);
+    assert.doesNotMatch(closed.atClose, /закрыты: sample/, 'невыполненное обязательство закрытым не названо');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-021
+test('перенесённое обязательство, снова не выполненное, остаётся без выпуска и переносится дальше', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await releaseWithTheObligationUndone(root, FIXED_DAY);
+    const next = await openNext(root, { scheme: 'date', today: NEXT_DAY });
+    assert.deepEqual(next.carried, ['QUAL-001']);
+    const draft = path.join(root, 'docs/tickets/QUAL-001-adopt-sample.md');
+    assert.match(await readFile(draft, 'utf8'), /^release: RELEASE-2026-09-2$/m);
+
+    await releaseWithTheObligationUndone(root, NEXT_DAY);
+    assert.match(await readFile(draft, 'utf8'), /^release: unassigned$/m);
+    assert.deepEqual(await compositionErrors(root), []);
+
+    const third = await openNext(root, { scheme: 'date', today: new Date('2026-09-09T00:00:00Z') });
+    assert.deepEqual(third.carried, ['QUAL-001'], 'следующее открытие переносит обязательство само');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

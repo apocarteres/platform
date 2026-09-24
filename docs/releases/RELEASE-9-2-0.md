@@ -23,6 +23,12 @@ opened-on: 2026-09-24
 | [CORE-OPS-094](../tickets/closed/CORE-OPS-094-finish-credits-work-closed-after-the-tag.md) | Указана при открытии выпуска |
 | [CORE-QUAL-027](../tickets/closed/CORE-QUAL-027-domain-nouns-player-character-ledger.md) | Указана при открытии выпуска |
 
+## Учтённые коммиты
+
+| Коммит | Заголовок | Причина |
+|---|---|---|
+| a552df8b | CORE-ARC-018 Notifications start as a bell in the core, and the notification service research is closed by it | Заведение задачи CORE-ARC-018 и закрытие исследования CORE-ARC-001 решением владельца: меняются только документы задач и ADR, работы задачи в коммите нет |
+
 ## Критерии выхода
 
 - [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска

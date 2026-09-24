@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-014
 type: ticket
-status: in_progress
+status: done
 scope: backend, frontend, security
 authority: supporting
 priority: P1
@@ -46,6 +46,29 @@ related: REQ-AUTH, CORE-ARC-013
 
 Выпуск — старшая версия: новый обязательный порт и хук у первого
 администратора.
+
+## Что сделано
+
+- Порт `EntryAccess` (`REQ-AUTH-016`), отказ `entry-closed` 403; токен CSRF и
+  правило пароля открыты.
+- `Accounts.create`, `setPassword`, `search`, `count`; `POST /api/auth/password`
+  и `AuthSession.changePassword` (`REQ-AUTH-009`, `REQ-AUTH-019`).
+- Событие `AccountVerified` после фиксации (`REQ-AUTH-017`).
+- `AccountCreation` — единственное место создания учётной записи, хук всегда;
+  профиль первого администратора из `platform.auth.admin.profile.*`.
+- `purgeUnverified` по одной записи, итог `Purged(removed, held)`
+  (`REQ-AUTH-013`); выбор `CASCADE`/`RESTRICT` и чтение через соединение —
+  в `REQ-AUTH-001`.
+- `GET /api/auth/policy` и `AuthSession.policy()` (`REQ-AUTH-018`); прокси и
+  адрес сети — в `REQ-AUTH-011`.
+
+## Чем закреплено
+
+- Восемь новых тестов полного цикла на Postgres и Redis, в том числе с
+  таблицей профиля под `ON DELETE RESTRICT`; тест клиента на правило пароля.
+- Одиннадцать проб намеренной поломкой, каждая роняет тест. Одна проба была
+  сломана сама — Error Prone отверг неиспользованный `hashCode()` — и
+  пересобрана.
 
 ## Откуда пришла задача
 

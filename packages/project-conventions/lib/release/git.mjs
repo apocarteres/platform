@@ -32,6 +32,12 @@ export async function headCommit(root) {
   return git(root, ['rev-parse', 'HEAD']);
 }
 
+// REQ-QUALITY-004
+export async function resolveCommit(root, ref) {
+  const { stdout } = await run('git', ['-C', root, 'rev-parse', '--verify', '--quiet', `${ref}^{commit}`], { env: environmentWithoutGit() });
+  return stdout.trim();
+}
+
 export async function workingTreeClean(root) {
   return (await git(root, ['status', '--porcelain'])) === '';
 }

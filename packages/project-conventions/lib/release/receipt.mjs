@@ -64,3 +64,16 @@ export async function receiptFor(root, commit, { treeOf }) {
   }
   return { receipt: null, carriedFrom: null };
 }
+
+// REQ-QUALITY-004, REQ-RELEASE-045
+export async function attestation(root, commit, { treeOf, checks = ['verify'] }) {
+  const { receipt, carriedFrom } = await receiptFor(root, commit, { treeOf });
+  if (receipt === null || !attested(receipt)) {
+    return { attested: false, reason: `расписки о пройденном ${checks.join(', ')} на дерево кода ${commit.slice(0, 8)} нет` };
+  }
+  const missing = checks.filter((one) => !(receipt.checks ?? []).includes(one));
+  if (missing.length > 0) {
+    return { attested: false, reason: `расписка ${receipt.commit.slice(0, 8)} не покрывает наборы: ${missing.join(', ')}` };
+  }
+  return { attested: true, receipt, carriedFrom };
+}

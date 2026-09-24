@@ -31,7 +31,9 @@ esac
 log "версия $VERSION"
 
 log "Maven: установка в локальный репозиторий"
-(cd "$ROOT_DIR" && ./mvnw --batch-mode --no-transfer-progress -Drevision="$VERSION" -Prelease install)
+# CORE-OPS-088: тесты пройдены до публикации — это доказывает расписка выпуска;
+# повторный прогон потребовал бы Docker на машине, которая только публикует.
+(cd "$ROOT_DIR" && ./mvnw --batch-mode --no-transfer-progress -Drevision="$VERSION" -Prelease -DskipTests install)
 
 DIST_DIR="$ROOT_DIR/target/local-packages"
 mkdir -p "$DIST_DIR"

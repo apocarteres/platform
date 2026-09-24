@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# REQ-QUALITY-004: шлагбаум перед отправкой изменений.
-# Полный набор: mise run verify. Обход в исключительном случае: git push --no-verify.
+# REQ-QUALITY-004: шлагбаум перед отправкой изменений — расписка о пройденном
+# verify на отправляемое дерево кода. Набор гоняется один раз: mise run verify
+# либо mise run verify-runner (CORE-OPS-088). Обход в исключительном случае:
+# git push --no-verify.
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# CORE-OPS-088: корень — рабочее дерево, из которого отправляют, а не место
+# ссылки на хук: из отдельного рабочего дерева git зовёт хук общего каталога.
+ROOT_DIR="$(git rev-parse --show-toplevel)"
 EMPTY="0000000000000000000000000000000000000000"
 
 # REQ-QUALITY-004, REQ-RELEASE-041: сверяется отправляемый диапазон, а не вся
@@ -19,7 +23,6 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   fi
   printf '[pre-push] conventions commits --range %s\n' "$range"
   node "$ROOT_DIR/packages/project-conventions/bin/conventions.mjs" commits --range "$range" --root "$ROOT_DIR"
+  printf '[pre-push] conventions attested --commit %s\n' "$local_sha"
+  node "$ROOT_DIR/packages/project-conventions/bin/conventions.mjs" attested --commit "$local_sha" --root "$ROOT_DIR"
 done
-
-printf '[pre-push] mise run check\n'
-exec mise run check

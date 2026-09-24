@@ -554,3 +554,43 @@ test('check называет долг временной совместимос�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-QUALITY-004
+test('attested отвечает по расписке на дерево кода: правка документов её не обесценивает, правка кода — да', async () => {
+  const root = await project({ 'AGENTS.md': '---\na: b\n---\n', 'src/A.java': 'class A {}\n', 'docs/note.md': 'заметка\n' });
+  try {
+    await git('-C', root, 'init', '--quiet');
+    await git('-C', root, 'config', 'user.email', 't@t');
+    await git('-C', root, 'config', 'user.name', 't');
+    await writeFile(path.join(root, '.gitignore'), 'target/\n');
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'OPS-001 код');
+    const refused = await conventions(root, 'attested');
+    assert.equal(refused.code, 1);
+    assert.match(refused.output, /расписки о пройденном verify на дерево кода [0-9a-f]{8} нет[\s\S]*mise run verify-runner/);
+
+    const recorded = await conventions(root, 'receipt', '--checks', 'verify', '--', 'true');
+    assert.equal(recorded.code, 0, recorded.output);
+    assert.match((await conventions(root, 'attested')).output, /Расписка на [0-9a-f]{8} есть: verify\./);
+
+    await writeFile(path.join(root, 'docs/note.md'), 'заметка поправлена\n');
+    await git('-C', root, 'commit', '--quiet', '-am', 'OPS-001 документ');
+    const carried = await conventions(root, 'attested');
+    assert.equal(carried.code, 0, carried.output);
+    assert.match(carried.output, /перенесена с [0-9a-f]{8}: дерево кода то же/);
+
+    await writeFile(path.join(root, 'src/A.java'), 'class A { int b; }\n');
+    await git('-C', root, 'commit', '--quiet', '-am', 'OPS-001 код снова');
+    assert.equal((await conventions(root, 'attested')).code, 1);
+
+    await conventions(root, 'receipt', '--checks', 'check', '--', 'true');
+    assert.match((await conventions(root, 'attested')).output, /не покрывает наборы: verify/);
+
+    const head = (await git('-C', root, 'rev-parse', 'HEAD')).stdout.trim();
+    await writeFile(path.join(root, 'target/verify', `${head}.json`),
+      JSON.stringify({ commit: head, checks: ['verify'], run: { command: 'mise run verify', exitCode: 1 } }));
+    assert.equal((await conventions(root, 'attested')).code, 1, 'расписка неудачного прогона ничего не доказывает');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

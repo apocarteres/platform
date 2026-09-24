@@ -27,7 +27,7 @@ async function conventions(root, ...args) {
 }
 
 // REQ-RELEASE-039
-const DEPLOYMENT_COMMANDS = ['components', 'deploy-args', 'manifest', 'deployed', 'health', 'unknown', 'static-check', 'migrations', 'upgrade-report', 'jvm-args'];
+const DEPLOYMENT_COMMANDS = ['components', 'deploy-args', 'manifest', 'deployed', 'health', 'unknown', 'static-check', 'migrations', 'attested', 'upgrade-report', 'jvm-args'];
 
 // REQ-RELEASE-039
 test('каждый отказ называет выход: команду, ключ или действие', async () => {
@@ -89,6 +89,8 @@ test('каждый отказ называет выход: команду, кл�
     await cliRefusal('unknown', shape.root, 'unknown');
     await cliRefusal('static-check', shape.root, 'static-check');
     await cliRefusal('migrations', shape.root, 'migrations');
+    await cliRefusal('attested', shape.root, 'attested');
+    await cliRefusal('attested', shape.root, 'attested', '--commit', 'нет-такого');
     await cliRefusal('migrations', shape.root, 'migrations', '--unreleased');
     await cliRefusal('static-check', shape.root, 'static-check', '--url', 'http://127.0.0.1:1/', '--component', 'нет');
     await cliRefusal('static-check', shape.root, 'static-check', '--url', 'http://127.0.0.1:1/', '--component', 'frontend');

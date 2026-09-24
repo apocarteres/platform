@@ -98,10 +98,11 @@ run = "scripts/verify-runner/runner.sh prepare"
 description = "Прогнать verify в сборочном контейнере: DOCKER_CONTEXT=<контекст> mise run verify-runner"
 run = "scripts/verify-runner/runner.sh verify \"$@\""
 
+# CORE-OPS-088: набор гоняется до выпуска — mise run verify либо mise run verify-runner;
+# закрытие отказывает без расписки на дерево кода выпускаемого коммита.
 [tasks.release]
-description = "Закрыть выпуск: проверки, тег на проверенном коммите, публикация артефактов, отметка завершающего шага"
+description = "Закрыть выпуск: тег на коммите с распиской, публикация артефактов, отметка завершающего шага"
 run = [
-  "mise run verify",
   "node packages/project-conventions/bin/conventions.mjs release close",
   "mise run install-local",
   "node packages/project-conventions/bin/conventions.mjs release finish --note \"публикация артефактов ядра: mise run install-local\"",

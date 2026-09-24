@@ -19,8 +19,8 @@ import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 import { findObligationDebts, loadObligations, obligationState, readState } from '../lib/release/obligations.mjs';
 import { findExpandDebts } from '../lib/migrations.mjs';
-import { writeReceipt } from '../lib/release/receipt.mjs';
-import { headCommit } from '../lib/release/git.mjs';
+import { attestation, writeReceipt } from '../lib/release/receipt.mjs';
+import { codeTree, headCommit, resolveCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
 import {
   commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, unknown, upgradeReport,
@@ -268,6 +268,26 @@ async function receipt(root, argv) {
   console.log(`Расписка о проверках записана: ${path.relative(root, file)}`);
 }
 
+// REQ-QUALITY-004
+async function attestedCommand(root, parsed) {
+  let commit;
+  try {
+    commit = await resolveCommit(root, parsed.values.get('--commit') ?? 'HEAD');
+  } catch {
+    refuse(USAGE.attested, `коммит не найден: ${parsed.values.get('--commit')}`);
+    return;
+  }
+  const found = await attestation(root, commit, { treeOf: (sha) => codeTree(root, sha) });
+  if (!found.attested) {
+    console.error(`Шлагбаум не пройден: ${found.reason}.`);
+    console.error('Прогоните набор и запишите расписку: mise run verify либо DOCKER_CONTEXT=<машина сборки> mise run verify-runner');
+    process.exitCode = 1;
+    return;
+  }
+  const carried = found.carriedFrom === null ? '' : `, перенесена с ${found.carriedFrom.slice(0, 8)}: дерево кода то же`;
+  console.log(`Расписка на ${commit.slice(0, 8)} есть: ${found.receipt.checks.join(', ')}${carried}.`);
+}
+
 async function obligations(root) {
   const state = await readState(root);
   const { obligations: declared, isCore } = await loadObligations(root);
@@ -369,7 +389,7 @@ async function sync(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|release> [--root <path>]';
+  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -386,6 +406,8 @@ const USAGE = {
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
   unknown: 'conventions unknown --url <адрес сайта> [--timeout <с>]',
+  attested: 'conventions attested [--commit <ref>] [--root <path>]'
+    + '\n  Отвечает, есть ли расписка о пройденном verify на дерево кода коммита; без неё — отказ.',
   migrations: 'conventions migrations --unreleased [--root <path>]'
     + '\n  Печатает переходы базы, которых нет ни в одном выпущенном выпуске, и порядок развёртывания: order=switch или order=downtime.',
   'static-check': 'conventions static-check --url <адрес сайта> --component <составляющая клиента> [--previous <путь>,<путь>] [--timeout <с>]',
@@ -449,6 +471,7 @@ const SPEC = {
   unknown: { values: ['--url', '--timeout'] },
   'static-check': { values: ['--url', '--component', '--previous', '--timeout'] },
   migrations: { flags: ['--unreleased'] },
+  attested: { values: ['--commit'] },
   'upgrade-report': { values: ['--from', '--to'] },
   'jvm-args': { values: ['--archive', '--aot'] },
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
@@ -512,6 +535,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'static-check') await staticCheck(root, parsed, { usage: USAGE, refuse });
     // REQ-DEPLOYMENT-029
     else if (command === 'migrations') await migrations(root, parsed, { usage: USAGE, refuse });
+    // REQ-QUALITY-004
+    else if (command === 'attested') await attestedCommand(root, parsed);
     else if (command === 'deps') await deps(root, parsed, { usage: USAGE, refuse });
     else if (command === 'components') {
       // REQ-DEPLOYMENT-020

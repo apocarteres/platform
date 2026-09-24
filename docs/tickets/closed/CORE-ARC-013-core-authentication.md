@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-013
 type: ticket
-status: backlog
+status: done
 scope: backend, frontend, security, architecture
 authority: supporting
 priority: P1
@@ -102,6 +102,36 @@ BCrypt совместимы — сброса паролей не нужно; д�
    переопределяет.
 
 Ответы — решения владельца от 2026-09-24.
+
+## Что сделано
+
+- `platform-rate-limit`: `RateLimit`, `RateLimiter` на Redis одним скриптом,
+  субъект отпечатком, `rate-limited` 429 с `Retry-After`, `rate-limit-unavailable`
+  503 при недоступном хранилище.
+- `platform-auth`: учётная запись ядра с набором ролей проекта, точки
+  `/api/auth/*`, токены действий отпечатком с последним действующим, сессии
+  Spring Session в Redis с индексом по идентификатору, CSRF через cookie, порты
+  `AuthLetters`, `HumanCheck`, `RegistrationHook`, `ApiAccess` с явными
+  заглушками, Java API `Accounts`, первый администратор из окружения, образцы
+  таблиц `sql/platform-auth/create-*.sql`.
+- `@apocarteres/auth`: `provideAuth`, `AuthSession`, `authInterceptor`,
+  `signedIn`, `withRole`, `authFailureCode`.
+- Требование `REQ-AUTH-001…015`; обязательство `core-auth` на 3 выпуска.
+- `platform-web-errors` не менялся: коды входа идут через `CodedFailure`
+  (`REQ-API-011`).
+
+## Чем закреплено
+
+- 12 тестов полного цикла на настоящих Postgres и Redis в контейнере, 6 тестов
+  ограничителя, проверки границ модулей; 9 тестов клиента.
+- Пробы намеренной поломкой: 24 на сервере, 8 на клиенте. Шесть сначала не
+  различали и получили свои тесты: письмо вне транзакции (признак
+  `isActualTransactionActive` в `afterCommit` ложен — видимость проверяется с
+  другого соединения), смена сессии при повторном входе, пароль раньше
+  состояния записи, действует только последняя ссылка, охрана маршрутов ждёт
+  ответа. Две пробы были сломаны сами и отвергнуты Error Prone.
+- Проверка границ модулей нашла ссылки на внутренние классы автонастроек
+  других модулей — порядок теперь задан именами.
 
 ## Откуда пришла задача
 

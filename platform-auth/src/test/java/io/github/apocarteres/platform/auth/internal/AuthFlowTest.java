@@ -473,10 +473,34 @@ class AuthFlowTest {
     first.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"free@player.example\"}")
       .andExpect(status().isAccepted());
     accounts.create("free@player.example", PASSWORD, Set.of("USER"), true, Map.of());
-    first.post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}")
+    new Browser().post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}")
       .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("email-taken"));
     assertThat(accounts.findByEmail("first@player.example")).isPresent();
     assertThat(letters.notices).isEmpty();
+  }
+
+  // REQ-AUTH-012, REQ-AUTH-023
+  @Test
+  @DisplayName("Ссылка смены почты открывается без входа, живёт сутки; запросы смены ограничены частотой")
+  void emailChangeLinkIsBounded() throws Exception {
+    registered("bounded@player.example");
+    Browser owner = new Browser();
+    owner.post("/api/auth/login", login("bounded@player.example", PASSWORD)).andExpect(status().isOk());
+    owner.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"late@player.example\"}").andExpect(status().isAccepted());
+    String late = changeToken();
+    owner.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"other@player.example\"}").andExpect(status().isAccepted());
+    new Browser().post("/api/auth/email/confirm", "{\"token\":\"" + late + "\"}")
+      .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("token-rejected"));
+    String current = changeToken();
+    clock.advance(Duration.ofHours(25));
+    new Browser().post("/api/auth/email/confirm", "{\"token\":\"" + current + "\"}")
+      .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("token-rejected"));
+    for (int index = 0; index < 3; index++) {
+      owner.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"next" + index + "@player.example\"}")
+        .andExpect(status().isAccepted());
+    }
+    owner.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"one-more@player.example\"}")
+      .andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("rate-limited"));
   }
 
   // REQ-AUTH-023

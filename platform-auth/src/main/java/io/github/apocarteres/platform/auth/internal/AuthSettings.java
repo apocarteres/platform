@@ -2,6 +2,7 @@ package io.github.apocarteres.platform.auth.internal;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +34,11 @@ record AuthSettings(
 
   static final String PREFIX = "platform.auth.";
 
+  // REQ-AUTH-010, REQ-DEPLOYMENT-019
+  static final String PRODUCTION = "production";
+
+  private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(AuthSettings.class);
+
   // REQ-AUTH-007
   static final int BCRYPT_LIMIT = 72;
 
@@ -59,7 +65,7 @@ record AuthSettings(
     return new AuthSettings(
       roles,
       defaults,
-      linkBase(binder),
+      linkBase(binder, environment),
       binder.bind(PREFIX + "links.verification", String.class).orElse("/auth/verify?token={token}"),
       binder.bind(PREFIX + "links.password-reset", String.class).orElse("/auth/password-reset?token={token}"),
       binder.bind(PREFIX + "links.email-change", String.class).orElse("/auth/email?token={token}"),
@@ -92,13 +98,21 @@ record AuthSettings(
     return Set.copyOf(roles);
   }
 
-  private static URI linkBase(Binder binder) {
+  // REQ-AUTH-010
+  private static URI linkBase(Binder binder, Environment environment) {
     String declared = binder.bind(PREFIX + "link-base", String.class)
       .orElseThrow(() -> refused("link-base", "не задано: доверенный адрес сайта, от которого строятся ссылки писем"));
     URI base = URI.create(declared.trim());
-    if (!"https".equals(base.getScheme()) && !("http".equals(base.getScheme()) && "localhost".equals(base.getHost()))) {
-      throw refused("link-base", declared + ": ссылки писем ведут на https, http допустим только для localhost");
+    if ("https".equals(base.getScheme()) || ("http".equals(base.getScheme()) && "localhost".equals(base.getHost()))) {
+      return base;
     }
+    if (!"http".equals(base.getScheme())) {
+      throw refused("link-base", declared + ": ссылки писем ведут на https");
+    }
+    if (Arrays.asList(environment.getActiveProfiles()).contains(PRODUCTION)) {
+      throw refused("link-base", declared + ": в профиле " + PRODUCTION + " ссылки писем ведут на https");
+    }
+    LOG.warn("Ссылки писем ведут на http-адрес " + declared + ": так работает стенд, не рабочая среда");
     return base;
   }
 

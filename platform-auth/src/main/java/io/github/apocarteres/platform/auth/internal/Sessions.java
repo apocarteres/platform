@@ -1,10 +1,12 @@
 package io.github.apocarteres.platform.auth.internal;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 
-// REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-009
+// REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-026
 final class Sessions {
 
   private final FindByIndexNameSessionRepository<? extends Session> repository;
@@ -19,13 +21,21 @@ final class Sessions {
 
   // REQ-AUTH-019
   int terminateExcept(UUID account, String kept) {
-    var found = repository.findByPrincipalName(account.toString());
+    return terminateExcept(repository, account, kept);
+  }
+
+  // REQ-AUTH-026
+  private static <S extends Session> int terminateExcept(FindByIndexNameSessionRepository<S> repository, UUID account, String kept) {
+    Map<String, S> found = repository.findByPrincipalName(account.toString());
     int ended = 0;
-    for (String id : found.keySet()) {
-      if (id.equals(kept)) {
+    for (Map.Entry<String, S> one : found.entrySet()) {
+      if (one.getKey().equals(kept)) {
         continue;
       }
-      repository.deleteById(id);
+      S session = one.getValue();
+      session.setLastAccessedTime(Instant.EPOCH);
+      repository.save(session);
+      repository.deleteById(one.getKey());
       ended++;
     }
     return ended;

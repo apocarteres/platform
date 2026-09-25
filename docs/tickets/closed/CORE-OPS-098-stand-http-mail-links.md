@@ -5,7 +5,7 @@ status: done
 scope: security, backend, testing
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-11-3-0
 related: REQ-AUTH, CORE-OPS-099
 ---
 

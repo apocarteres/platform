@@ -174,7 +174,7 @@ authority: navigation
 | [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | release, tooling |
 | [`static-check` падает на сборке без `index.html`](CORE-OPS-096-static-check-crashes-without-index.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | deployment, tooling |
 | [Стенд сценариев упирается в предел входа](CORE-OPS-097-stand-rate-limit-scale.md) | P2 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | security, backend, testing |
-| [Ссылки писем стенда ведут на localhost](CORE-OPS-098-stand-http-mail-links.md) | P2 | Выполнена | Не назначен | security, backend, testing |
+| [Ссылки писем стенда ведут на localhost](CORE-OPS-098-stand-http-mail-links.md) | P2 | Выполнена | [RELEASE-11-3-0](../../releases/RELEASE-11-3-0.md) | security, backend, testing |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

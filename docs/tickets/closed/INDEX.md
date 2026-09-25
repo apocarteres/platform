@@ -112,7 +112,7 @@ authority: navigation
 | [Шлагбаум перед отправкой перестал проверять документы, принятая идея не проходила проверку](CORE-OPS-091-hook-lost-docs-check.md) | P1 | Выполнена | [RELEASE-8-1-1](../../releases/RELEASE-8-1-1.md) | tickets, tooling, quality |
 | [Резервные копии данных службы: объявление и проверки](CORE-OPS-093-service-backups.md) | P1 | Выполнена | [RELEASE-11-0-0](../../releases/RELEASE-11-0-0.md) | deployment, operations, personal-data |
 | [Завершающий шаг засчитывает обязательство задаче, закрытой после тега](CORE-OPS-094-finish-credits-work-closed-after-the-tag.md) | P1 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | release, tooling |
-| [Рабочая среда запускается с профилем `production`](CORE-OPS-099-production-runs-with-its-profile.md) | P1 | Выполнена | Не назначен | deployment, security |
+| [Рабочая среда запускается с профилем `production`](CORE-OPS-099-production-runs-with-its-profile.md) | P1 | Выполнена | [RELEASE-12-0-0](../../releases/RELEASE-12-0-0.md) | deployment, security |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
@@ -171,9 +171,9 @@ authority: navigation
 | [Обходы, сделанные руками, не заводились задачами](CORE-OPS-080-manual-workarounds-went-unfiled.md) | P2 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | process, agents |
 | [Исправление слепой проверки — не несовместимость, но и не молчание](CORE-OPS-082-sharper-check-is-not-incompatible.md) | P2 | Выполнена | [RELEASE-3-1-0](../../releases/RELEASE-3-1-0.md) | publishing, release, tooling |
 | [Задачи с открытыми вопросами копятся без напоминания](CORE-OPS-086-open-questions-pile-up.md) | P2 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | release, tickets, tooling |
-| [Правило, включаемое объявлением проекта, требует старшей версии зря](CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | P2 | Выполнена | Не назначен | publishing, release, tooling |
+| [Правило, включаемое объявлением проекта, требует старшей версии зря](CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | P2 | Выполнена | [RELEASE-12-0-0](../../releases/RELEASE-12-0-0.md) | publishing, release, tooling |
 | [Идеи с вопросами держали выпуск наравне с задачами](CORE-OPS-090-ideas-are-not-tickets.md) | P2 | Выполнена | [RELEASE-8-1-0](../../releases/RELEASE-8-1-0.md) | tickets, release, tooling |
-| [Счётчик выпусков остаётся вне коммита закрытия незамеченным](CORE-OPS-092-release-counter-left-outside-the-close.md) | P2 | Выполнена | Не назначен | release, tooling |
+| [Счётчик выпусков остаётся вне коммита закрытия незамеченным](CORE-OPS-092-release-counter-left-outside-the-close.md) | P2 | Выполнена | [RELEASE-12-0-0](../../releases/RELEASE-12-0-0.md) | release, tooling |
 | [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | release, tooling |
 | [`static-check` падает на сборке без `index.html`](CORE-OPS-096-static-check-crashes-without-index.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | deployment, tooling |
 | [Стенд сценариев упирается в предел входа](CORE-OPS-097-stand-rate-limit-scale.md) | P2 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | security, backend, testing |
@@ -194,7 +194,7 @@ authority: navigation
 | [Шлагбаум перед отправкой не видит отказов проводки](CORE-OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Выполнена | [RELEASE-1-3-0](../../releases/RELEASE-1-3-0.md) | quality, operations |
 | [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |
 | [Кеш AOT: сказать положением, а не молчанием](CORE-OPS-051-aot-cache-as-a-recommendation.md) | P3 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment |
-| [Пропущенное поле `release` даёт лишний отказ и ссылку в никуда](CORE-OPS-102-missing-release-field-reads-as-unknown-release.md) | P3 | Выполнена | Не назначен | tickets, tooling, documentation |
+| [Пропущенное поле `release` даёт лишний отказ и ссылку в никуда](CORE-OPS-102-missing-release-field-reads-as-unknown-release.md) | P3 | Выполнена | [RELEASE-12-0-0](../../releases/RELEASE-12-0-0.md) | tickets, tooling, documentation |
 | [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | quality, tooling, documentation |
 | [Доменные существительные `Player`, `Character`, `Ledger`](CORE-QUAL-027-domain-nouns-player-character-ledger.md) | P3 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | quality, java |
 | [Шифр секрета повторяется у каждого потребителя](CORE-SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | backend, security |

@@ -5,7 +5,7 @@ status: done
 scope: deployment, security
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-12-0-0
 related: REQ-DEPLOYMENT, REQ-AUTH, CORE-OPS-098
 ---
 

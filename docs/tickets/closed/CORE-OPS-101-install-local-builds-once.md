@@ -6,6 +6,7 @@ scope: publishing, tooling, testing
 authority: supporting
 priority: P2
 related: REQ-PUBLISHING
+release: RELEASE-11-4-1
 ---
 
 # Установка ядра собирает клиентские пакеты столько раз, сколько их

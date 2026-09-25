@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-092
 type: ticket
-status: backlog
+status: done
 scope: release, tooling
 authority: supporting
 priority: P2
@@ -42,6 +42,18 @@ related: REQ-RELEASE
 - Тест: закрытие с коммитом только `docs/` — отправка отказывает и называет
   `.conventions/obligations.json`.
 - Проба: снятая проверка — тест падает.
+
+## Что сделано
+
+- `REQ-RELEASE-048`.
+- `release finish` называет файлы коммита закрытия, в том числе
+  `.conventions/obligations.json`, и форму коммита.
+- `conventions commits --range` (его зовут хуки `pre-push` обоих видов)
+  отказывает на изменённых и новых незакоммиченных файлах `.conventions/` и
+  называет их.
+- `release-close-commit.test.mjs`: тест первым падал (закрытие молчало о
+  файлах). 4 пробы: три пойманы сразу; «новые файлы состояния не видны»
+  прошла — добавлен случай первого файла состояния, после этого поймана.
 
 ## Решение владельца
 

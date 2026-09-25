@@ -28,7 +28,7 @@ import {
 import { parseArguments } from '../lib/cli/arguments.mjs';
 import {
   releaseAccount, releaseAdopt, releaseCancel, releaseClose, releaseDefer, releaseDrop, releaseFinish,
-  releaseOpen, releaseReclose, releaseSatisfy, releaseStatus, summariesAfterTheCycle, ticketList,
+  closeCommitFiles, releaseOpen, releaseReclose, releaseSatisfy, releaseStatus, summariesAfterTheCycle, ticketList,
 } from '../lib/cli/release.mjs';
 
 const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -599,4 +599,6 @@ async function release(argv) {
   else await releaseAccount(root, first, valueOf('--reason'));
   // REQ-RELEASE-043
   if (!RELEASE_READS.has(subcommand) && !process.exitCode) await summariesAfterTheCycle(root);
+  // REQ-RELEASE-048
+  if (subcommand === 'finish' && !process.exitCode) await closeCommitFiles(root);
 }

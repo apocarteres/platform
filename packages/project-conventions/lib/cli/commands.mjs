@@ -8,6 +8,7 @@ import { DEFAULT_TIMEOUT_SECONDS as STATIC_TIMEOUT_SECONDS, checkStatic } from '
 import { unreleasedMigrations } from '../migrations.mjs';
 import { DEFAULT_TOOLS, dependenciesUnchanged, recordDependencies } from '../dependencies-state.mjs';
 import { commitsWithoutATicket } from '../release/cycle.mjs';
+import { STATE_DIRECTORY, uncommitted } from '../release/git.mjs';
 import { readConfig } from '../config.mjs';
 import { deployment } from '../components.mjs';
 import { deployCall, deployLines, deployUsage } from '../deploy-entry.mjs';
@@ -160,6 +161,14 @@ export async function migrations(root, parsed, { usage, refuse }) {
 
 // REQ-QUALITY-004
 export async function commits(root, range) {
+  // REQ-QUALITY-004, REQ-RELEASE-048
+  const state = await uncommitted(root, [STATE_DIRECTORY]);
+  if (state.length > 0) {
+    console.error(`Файлы состояния выпуска изменены и не закоммичены: ${state.join(', ')}.`);
+    console.error('Их меняют команды цикла выпуска, и сроки обязательств считаются по ним: без коммита они теряются');
+    console.error(`при следующем чистом клоне. Закоммитьте их коммитом закрытия: git add ${state.join(' ')} && git commit.`);
+    process.exitCode = 1;
+  }
   let found;
   try {
     found = await commitsWithoutATicket(root, range);

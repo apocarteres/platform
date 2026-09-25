@@ -10,7 +10,7 @@ import {
   finishability, finishRelease, openNext, recloseRelease, satisfyObligation,
 } from '../release/cycle.mjs';
 import { declaredObligations, obligationState, readState, writeState } from '../release/obligations.mjs';
-import { tagCommit } from '../release/git.mjs';
+import { OUTSIDE_THE_CODE, tagCommit, uncommitted } from '../release/git.mjs';
 
 // REQ-CODE-DESIGN-009
 export function releaseScheme(config) {
@@ -275,4 +275,12 @@ export async function releaseAccount(root, sha, reason) {
     return;
   }
   console.log(`Коммит ${result.sha} учтён в выпуске ${result.release}: закрытие он больше не держит`);
+}
+
+// REQ-RELEASE-048
+export async function closeCommitFiles(root) {
+  const files = await uncommitted(root, OUTSIDE_THE_CODE);
+  if (files.length === 0) return;
+  console.log(`В коммит закрытия входят: ${files.join(', ')}.`);
+  console.log(`  git add ${files.join(' ')} && git commit — признак цикла Release-cycle: close в теле`);
 }

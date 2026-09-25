@@ -45,6 +45,19 @@ export async function workingTreeClean(root) {
 // REQ-RELEASE-045
 export const OUTSIDE_THE_CODE = ['docs/', '.conventions/'];
 
+// REQ-RELEASE-048
+export const STATE_DIRECTORY = '.conventions/';
+
+// REQ-RELEASE-048
+export async function uncommitted(root, prefixes) {
+  const { stdout } = await run('git', ['-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], { env: environmentWithoutGit() });
+  return stdout.split('\0')
+    .filter((entry) => entry.length > 3)
+    .map((entry) => entry.slice(3))
+    .filter((file) => prefixes.some((prefix) => file.startsWith(prefix)))
+    .sort();
+}
+
 // REQ-RELEASE-045
 export async function codeTree(root, commit) {
   const listing = await git(root, ['ls-tree', '-r', '--full-tree', commit]);

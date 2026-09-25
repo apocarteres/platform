@@ -15,6 +15,9 @@ import org.springframework.session.MapSession;
 // REQ-AUTH-026
 class SessionsTest {
 
+  // REQ-AUTH-026, REQ-JAVA-CLOCK
+  private static final Instant AHEAD = Instant.parse("2999-01-01T00:00:00Z");
+
   // REQ-AUTH-026
   static final class SoftDeleting implements FindByIndexNameSessionRepository<MapSession> {
 
@@ -71,9 +74,9 @@ class SessionsTest {
   void terminatedSessionExpiresDespiteABackwardClockStep() {
     SoftDeleting repository = new SoftDeleting();
     UUID account = UUID.randomUUID();
-    String kept = repository.open(account, Instant.now());
-    String ahead = repository.open(account, Instant.now().plusMillis(300));
-    String other = repository.open(UUID.randomUUID(), Instant.now().plusMillis(300));
+    String kept = repository.open(account, AHEAD);
+    String ahead = repository.open(account, AHEAD);
+    String other = repository.open(UUID.randomUUID(), AHEAD);
     assertThat(new Sessions(repository).terminateExcept(account, kept)).isEqualTo(1);
     assertThat(repository.findById(ahead)).as("сессия с обращением «из будущего» после завершения").isNull();
     assertThat(repository.findById(kept)).isNotNull();

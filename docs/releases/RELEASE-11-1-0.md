@@ -26,6 +26,12 @@ opened-on: 2026-09-25
 | [CORE-OPS-096](../tickets/closed/CORE-OPS-096-static-check-crashes-without-index.md) | Указана при открытии выпуска |
 | [CORE-DOC-018](../tickets/closed/CORE-DOC-018-core-writes-its-own-forbidden-word.md) | Указана при открытии выпуска |
 
+## Учтённые коммиты
+
+| Коммит | Заголовок | Причина |
+|---|---|---|
+| 87a9be4a | CORE-DOC-011 The core writes ограничитель where its own dictionary forbids the other word | Работа задачи CORE-DOC-018 (заявка #54): коммит ошибочно подписан занятым номером CORE-DOC-011, номер исправлен следующим коммитом |
+
 ## Критерии выхода
 
 - [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска

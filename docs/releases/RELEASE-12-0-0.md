@@ -1,10 +1,12 @@
 ---
 id: RELEASE-12-0-0
 type: release
-status: draft
+status: released
 scope: release
 authority: supporting
 opened-on: 2026-09-25
+released-on: 2026-09-25
+commit: 539ec171564aeb2c7c979f10ef902ad363fac599
 ---
 
 # Выпуск 12.0.0
@@ -19,17 +21,17 @@ opened-on: 2026-09-25
 
 | Задача | Причина включения |
 |---|---|
-| [CORE-OPS-099](../tickets/closed/CORE-OPS-099-production-runs-with-its-profile.md) | Указана при открытии выпуска |
-| [CORE-OPS-102](../tickets/closed/CORE-OPS-102-missing-release-field-reads-as-unknown-release.md) | Указана при открытии выпуска |
-| [CORE-OPS-092](../tickets/closed/CORE-OPS-092-release-counter-left-outside-the-close.md) | Указана при открытии выпуска |
-| [CORE-OPS-087](../tickets/closed/CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | Указана при открытии выпуска |
+| [CORE-OPS-087](../tickets/closed/CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-092](../tickets/closed/CORE-OPS-092-release-counter-left-outside-the-close.md) | Закрыта в этом выпуске, приоритет P2 |
+| [CORE-OPS-099](../tickets/closed/CORE-OPS-099-production-runs-with-its-profile.md) | Закрыта в этом выпуске, приоритет P1 |
+| [CORE-OPS-102](../tickets/closed/CORE-OPS-102-missing-release-field-reads-as-unknown-release.md) | Закрыта в этом выпуске, приоритет P3 |
 
 ## Критерии выхода
 
-- [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска
-- [ ] Тег выпуска создан на проверенном коммите — ставится командой выпуска
-- [ ] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной
-- [ ] Завершающий шаг выполнен — развёртывание в производственную среду или публикация артефактов
+- [x] Набор `verify` пройден на выпускаемом коммите — расписка 2026-09-25T14:09:43.696Z, наборы: check, verify, прогон `mise run verify-set`
+- [x] Тег выпуска создан на проверенном коммите — `v12.0.0`
+- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ядро не объявляет обязательств самому себе
+- [x] Завершающий шаг выполнен — публикация артефактов ядра: mise run install-local
 
 ## Не входит
 
@@ -51,4 +53,22 @@ opened-on: 2026-09-25
 
 ## Результат
 
-Заполняется при закрытии из расписки о проверках.
+Выпущено с коммита `539ec171564aeb2c7c979f10ef902ad363fac599`, тег `v12.0.0`.
+
+Расписка о проверках получена 2026-09-25T14:09:43.696Z; выполненные наборы: check, verify.
+
+Прогон наблюдён командой `mise run verify-set` с кодом возврата 0.
+
+Развёртывание выполняется этим тегом: REQ-RELEASE-016.
+
+## Цена обновления
+
+Несовместимо (1) — версия обязана быть старшей:
+- `conventions jvm-args` требует имени среды ключом `--env` и сверяет его с `deployment.environments` (`REQ-DEPLOYMENT-030`): прежний вызов `jvm-args --archive <путь>` отказывает, и служба не получает ключей запуска.
+
+Проверка видит больше (1) — нарушение, прежде невидимое, может найтись:
+- `conventions commits --range` — шлагбаум `pre-push` — отказывает, пока файлы состояния выпуска в `.conventions/` изменены или созданы и не закоммичены (`REQ-RELEASE-048`).
+
+Добавлено (2):
+- ключ conventions jvm-args --env
+- положений добавлено: 2

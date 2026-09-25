@@ -2,6 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it } from 'vitest';
+import { withInterceptors } from '@angular/common/http';
+import { sanitisingInterceptor } from '../../http/src/sanitising-interceptor';
 import { BELL_INTERVAL_MS, BELL_SCHEDULE, NotificationBell, provideNotifications } from './bell';
 import type { NotificationOptions } from './bell';
 
@@ -89,5 +91,24 @@ describe('колокольчик', () => {
     http.expectOne('/svc/bell?limit=20').flush({ items: [], unread: 0 });
     await opened;
     http.verify();
+  });
+});
+
+// REQ-NOTIFICATIONS-005, REQ-API-003
+describe('вместе с sanitisingInterceptor ядра', () => {
+  it('без входа — ноль и пустой список, а не отказ', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(withInterceptors([sanitisingInterceptor])), provideHttpClientTesting(),
+        { provide: BELL_SCHEDULE, useValue: new ManualSchedule() }, provideNotifications()],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const bell = TestBed.inject(NotificationBell);
+    http.expectOne('/api/notifications/unread').flush({ count: 4 });
+    await settle();
+    const opened = bell.open();
+    http.expectOne('/api/notifications?limit=20').flush({ code: 'authentication-required', status: 401 }, { status: 401, statusText: 'Unauthorized' });
+    await opened;
+    expect(bell.unread()).toBe(0);
+    expect(bell.items()).toBeNull();
   });
 });

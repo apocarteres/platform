@@ -85,7 +85,7 @@ export class NotificationBell {
   }
 
   private signedOut(failure: unknown): boolean {
-    if (!(failure instanceof HttpErrorResponse) || failure.status !== 401) return false;
+    if (!signedOutFailure(failure)) return false;
     this.count.set(0);
     this.list.set(null);
     return true;
@@ -108,4 +108,12 @@ export function provideNotifications(options: NotificationOptions = {}): Environ
       poll();
     }),
   ]);
+}
+
+// REQ-API-003
+function signedOutFailure(failure: unknown): boolean {
+  if (failure instanceof HttpErrorResponse) return failure.status === 401;
+  if (failure === null || typeof failure !== 'object') return false;
+  const problem = (failure as Record<string, unknown>)['problem'];
+  return problem !== null && typeof problem === 'object' && (problem as Record<string, unknown>)['status'] === 401;
 }

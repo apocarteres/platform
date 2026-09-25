@@ -94,7 +94,7 @@ export class SupportUnread {
     try {
       this.counts.set(await firstValueFrom(this.http.get<Unread>(`${this.base}/unread`)));
     } catch (failure) {
-      if (failure instanceof HttpErrorResponse && failure.status === 401) {
+      if (signedOutFailure(failure)) {
         this.counts.set({ mine: 0, operator: null });
         return;
       }
@@ -238,4 +238,12 @@ export function provideSupport(options: SupportOptions): EnvironmentProviders {
 
 function paging(page: number, size: number): HttpParams {
   return new HttpParams().set('page', page).set('size', size);
+}
+
+// REQ-API-003
+function signedOutFailure(failure: unknown): boolean {
+  if (failure instanceof HttpErrorResponse) return failure.status === 401;
+  if (failure === null || typeof failure !== 'object') return false;
+  const problem = (failure as Record<string, unknown>)['problem'];
+  return problem !== null && typeof problem === 'object' && (problem as Record<string, unknown>)['status'] === 401;
 }

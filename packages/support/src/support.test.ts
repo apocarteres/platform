@@ -7,6 +7,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { provideHttpClient as provideChainedHttpClient, withInterceptors } from '@angular/common/http';
+import { sanitisingInterceptor } from '../../http/src/sanitising-interceptor';
 import type { Policy } from './contract';
 import {
   NO_JOURNAL, SUPPORT_SCHEDULE, SupportDesk, SupportOperator, SupportUnread, UNREAD_INTERVAL_MS, barePath, provideSupport,
@@ -219,5 +221,24 @@ describe('точки центра', () => {
     expect(desk.fileUrl('r', 'f')).toBe('/svc/support/requests/r/files/f');
     expect(operator.fileUrl('r', 'f')).toBe('/svc/support/operator/requests/r/files/f');
     backend.verify();
+  });
+});
+
+// REQ-SUPPORT-008, REQ-API-003
+describe('вместе с sanitisingInterceptor ядра', () => {
+  it('без входа счётчики — нули, а не отказ', async () => {
+    TestBed.configureTestingModule({
+      providers: [provideChainedHttpClient(withInterceptors([sanitisingInterceptor])), provideHttpClientTesting(),
+        { provide: SUPPORT_SCHEDULE, useValue: new ManualSchedule() }, provideSupport({ journal: NO_JOURNAL })],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const unread = TestBed.inject(SupportUnread);
+    http.expectOne('/api/support/unread').flush({ mine: 3, operator: 2 });
+    await settle();
+    const refreshed = unread.refresh();
+    http.expectOne('/api/support/unread').flush({ code: 'authentication-required', status: 401 }, { status: 401, statusText: 'Unauthorized' });
+    await refreshed;
+    expect(unread.mine()).toBe(0);
+    expect(unread.operator()).toBeNull();
   });
 });

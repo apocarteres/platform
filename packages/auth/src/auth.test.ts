@@ -6,6 +6,7 @@ import { provideRouter, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AuthSession, authFailureCode, authInterceptor, provideAuth, signedIn, withRole } from './index';
+import { sanitisingInterceptor } from '../../http/src/sanitising-interceptor';
 
 @Component({ selector: 'test-page', standalone: true, template: 'страница' })
 class Page {}
@@ -198,5 +199,43 @@ describe('охрана маршрутов', () => {
     pending.flush({ ...ME, roles: ['USER', 'ADMIN'] });
     await navigation;
     expect(router.url).toBe('/admin');
+  });
+});
+
+// REQ-AUTH-015, REQ-API-003
+describe('вместе с sanitisingInterceptor ядра', () => {
+  function chained(): { http: HttpTestingController; session: AuthSession } {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor, sanitisingInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideAuth(),
+      ],
+    });
+    return { http: TestBed.inject(HttpTestingController), session: TestBed.inject(AuthSession) };
+  }
+
+  it('гость получает account() = null', async () => {
+    const { http, session } = chained();
+    await start(http, null);
+    await session.ready();
+    expect(session.account()).toBeNull();
+  });
+
+  it('отказ authentication-required снимает сессию и за sanitisingInterceptor', async () => {
+    const { http, session } = chained();
+    await start(http, ME);
+    expect(session.account()?.email).toBe('player@site.example');
+    const call = firstValueFrom(TestBed.inject(HttpClient).get('/api/things')).catch((reason: unknown) => reason);
+    http.expectOne('/api/things').flush({ code: 'authentication-required', status: 401 }, { status: 401, statusText: 'Unauthorized' });
+    expect(authFailureCode(await call)).toBe('authentication-required');
+    expect(session.account()).toBeNull();
+  });
+
+  it('код отказа читается и у разобранной ошибки ядра', () => {
+    expect(authFailureCode({ problem: { code: 'authentication-required', status: 401 } })).toBe('authentication-required');
+    expect(authFailureCode({ problem: null })).toBeNull();
+    expect(authFailureCode('строка')).toBeNull();
   });
 });

@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 167. Включены самостоятельные задачи и этапы планов функций.
+Всего: 168. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -122,6 +122,7 @@ authority: navigation
 | [У Rust нет средства засева, хотя правило его разрешает](CORE-QUAL-020-rust-has-no-seeding-mechanism.md) | P1 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Положения о поведении при работе писались раньше запуска](CORE-QUAL-024-runtime-clauses-written-before-a-run.md) | P1 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | quality, deployment |
 | [Правила ядра не видят девяти его модулей](CORE-QUAL-026-core-rules-miss-nine-modules.md) | P1 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | quality, tooling |
+| [Код отказа не читается за `sanitisingInterceptor` ядра](CORE-QUAL-028-auth-code-behind-sanitising-interceptor.md) | P1 | Выполнена | Не назначен | frontend, typescript |
 | [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | Не назначен | security, backend |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |

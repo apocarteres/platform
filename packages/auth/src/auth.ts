@@ -28,13 +28,18 @@ const OPTIONS = new InjectionToken<Required<AuthOptions>>('AUTH_OPTIONS');
 // REQ-AUTH-008
 const REQUIRED = 'authentication-required';
 
-// REQ-AUTH-015
+// REQ-AUTH-015, REQ-API-003
 export function authFailureCode(failure: unknown): string | null {
-  if (!(failure instanceof HttpErrorResponse)) return null;
-  const body: unknown = failure.error;
+  const body: unknown = failure instanceof HttpErrorResponse ? failure.error : problemOf(failure);
   if (body === null || typeof body !== 'object') return null;
   const code = (body as Record<string, unknown>)['code'];
   return typeof code === 'string' ? code : null;
+}
+
+// REQ-AUTH-015, REQ-API-003
+function problemOf(failure: unknown): unknown {
+  if (failure === null || typeof failure !== 'object') return null;
+  return (failure as Record<string, unknown>)['problem'] ?? null;
 }
 
 // REQ-AUTH-015

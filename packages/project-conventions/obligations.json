@@ -634,6 +634,7 @@
       "id": "backups",
       "title": "Копии данных службы объявлены, уходят с хоста и проверяются",
       "requirement": "REQ-BACKUPS-009",
+      "declares": "backups",
       "level": "директива",
       "since": "11.0.0",
       "dueReleases": 3,

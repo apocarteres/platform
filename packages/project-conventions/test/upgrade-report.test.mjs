@@ -3,7 +3,8 @@ import test from 'node:test';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { RULES } from '../lib/rules.mjs';
 import {
   SEES_MORE_SECTION, breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, reportLines,
 } from '../lib/release/changes.mjs';
@@ -97,10 +98,45 @@ test('раздел цены обновления говорит прямо, ко
   assert.ok(lines.includes('- команда conventions unknown'));
 });
 
+// REQ-PUBLISHING-015, CORE-OPS-087
+test('правило, включаемое объявлением проекта, не несовместимо и называется в цене отдельной строкой', () => {
+  const optIn = { id: 'migration-labels', level: 'директива', enabledBy: 'deployment.withoutDowntime' };
+  const changes = changesBetween(EMPTY, surface({ rules: [optIn] }));
+  assert.deepEqual(breakingReasons(changes), [], 'у необъявивших check не краснеет');
+
+  const lines = costSection(changes);
+  assert.match(lines[0], /^Несовместимого нет/);
+  const at = lines.findIndex((line) => line.startsWith('Включается объявлением (1)'));
+  assert.ok(at !== -1, lines.join('\n'));
+  assert.match(lines[at + 1], /migration-labels.*deployment\.withoutDowntime/);
+
+  const history = [{ version: '1.43.0', changes, declared: [], breaking: [] }];
+  assert.ok(reportLines(history, { from: '1.42.0' }).some((line) => /migration-labels.*deployment\.withoutDowntime/.test(line)),
+    'отчёт об обновлении называет его так же');
+});
+
+// REQ-PUBLISHING-015, CORE-OPS-087
+test('правило объявляет свой раздел, и раздел, обязательный по обязательству ядра, включением не считается', async () => {
+  assert.equal(RULES.find((rule) => rule.id === 'migration-labels').enabledBy, 'deployment.withoutDowntime');
+  const { obligations } = JSON.parse(await readFile(new URL('../obligations.json', import.meta.url), 'utf8'));
+  assert.equal(obligations.find((one) => one.id === 'backups').declares, 'backups');
+  const required = new Set(obligations.map((one) => one.declares).filter(Boolean));
+  const obliged = RULES.filter((rule) => rule.enabledBy !== undefined && required.has(rule.enabledBy.split('.')[0]));
+  assert.deepEqual(obliged.map((rule) => rule.id), [],
+    'обязательство делает включение неизбежным: такое правило несовместимо и enabledBy не объявляет');
+});
+
 // REQ-PUBLISHING-015
 test('поверхность читается из исходников ядра без их исполнения', () => {
   const rules = "  {\n    id: 'comments',\n    level: DIRECTIVE,\n  },\n  {\n    id: 'hint',\n    level: RECOMMENDATION,\n  },\n";
   assert.deepEqual(rulesOf(rules), [{ id: 'comments', level: 'директива' }, { id: 'hint', level: 'рекомендация' }]);
+  // CORE-OPS-087
+  const declaring = "  {\n    id: 'plain',\n    level: DIRECTIVE,\n  },\n"
+    + "  {\n    id: 'labels',\n    level: DIRECTIVE,\n    document: 'REQ-X',\n    enabledBy: 'deployment.withoutDowntime',\n  },\n";
+  assert.deepEqual(rulesOf(declaring), [
+    { id: 'plain', level: 'директива' },
+    { id: 'labels', level: 'директива', enabledBy: 'deployment.withoutDowntime' },
+  ], 'раздел включения читается только у объявившего правила, не у предыдущего');
 
   const newer = "const USAGE = {\n  check: 'conventions check',\n  'docs-check': 'x',\n  release: 'y',\n};\n"
     + "const RELEASE_USAGE = {\n  open: 'a',\n  close: 'b',\n};\n"

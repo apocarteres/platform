@@ -22,7 +22,14 @@ export function rulesOf(source) {
   if (source === null) return [];
   const found = [];
   const pattern = /^\s+id: '([a-z0-9-]+)',\s*\n\s+level: (DIRECTIVE|RECOMMENDATION)/gm;
-  for (const match of source.matchAll(pattern)) found.push({ id: match[1], level: match[2] === 'DIRECTIVE' ? 'директива' : 'рекомендация' });
+  for (const match of source.matchAll(pattern)) {
+    const rule = { id: match[1], level: match[2] === 'DIRECTIVE' ? 'директива' : 'рекомендация' };
+    const end = source.indexOf('\n  },', match.index);
+    // CORE-OPS-087
+    const enabled = /^\s+enabledBy: '([a-zA-Z0-9.-]+)'/m.exec(source.slice(match.index, end === -1 ? undefined : end));
+    if (enabled !== null) rule.enabledBy = enabled[1];
+    found.push(rule);
+  }
   return found;
 }
 

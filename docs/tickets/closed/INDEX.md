@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 179. Включены самостоятельные задачи и этапы планов функций.
+Всего: 180. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -171,6 +171,7 @@ authority: navigation
 | [Обходы, сделанные руками, не заводились задачами](CORE-OPS-080-manual-workarounds-went-unfiled.md) | P2 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | process, agents |
 | [Исправление слепой проверки — не несовместимость, но и не молчание](CORE-OPS-082-sharper-check-is-not-incompatible.md) | P2 | Выполнена | [RELEASE-3-1-0](../../releases/RELEASE-3-1-0.md) | publishing, release, tooling |
 | [Задачи с открытыми вопросами копятся без напоминания](CORE-OPS-086-open-questions-pile-up.md) | P2 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | release, tickets, tooling |
+| [Правило, включаемое объявлением проекта, требует старшей версии зря](CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | P2 | Выполнена | Не назначен | publishing, release, tooling |
 | [Идеи с вопросами держали выпуск наравне с задачами](CORE-OPS-090-ideas-are-not-tickets.md) | P2 | Выполнена | [RELEASE-8-1-0](../../releases/RELEASE-8-1-0.md) | tickets, release, tooling |
 | [Счётчик выпусков остаётся вне коммита закрытия незамеченным](CORE-OPS-092-release-counter-left-outside-the-close.md) | P2 | Выполнена | Не назначен | release, tooling |
 | [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | release, tooling |

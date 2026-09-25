@@ -57,7 +57,7 @@ export function changesBetween(before, after) {
 // REQ-PUBLISHING-004, REQ-PUBLISHING-015
 export function breakingReasons(changes, declared = []) {
   return [
-    ...changes.rules.added.filter((rule) => rule.level === 'директива')
+    ...changes.rules.added.filter((rule) => rule.level === 'директива' && rule.enabledBy === undefined)
       .map((rule) => `новое правило-директива ${rule.id}: check потребителя может стать красным`),
     ...changes.commands.removed.map((name) => `снята команда conventions ${name}`),
     ...changes.subcommands.removed.map((name) => `снята подкоманда conventions release ${name}`),
@@ -71,6 +71,12 @@ export function breakingReasons(changes, declared = []) {
       .map((entry) => `в контракте стало обязательным — ${entry}: прежний запрос его не несёт`),
     ...declared,
   ];
+}
+
+// REQ-PUBLISHING-015, CORE-OPS-087
+export function optInLines(changes) {
+  return changes.rules.added.filter((rule) => rule.level === 'директива' && rule.enabledBy !== undefined)
+    .map((rule) => `новое правило ${rule.id}: действует только для объявивших ${rule.enabledBy} в .conventions.json`);
 }
 
 // REQ-PUBLISHING-015
@@ -123,6 +129,12 @@ export function costSection(changes, declared = [], seesMore = []) {
   if (seesMore.length > 0) {
     lines.push('', `Проверка видит больше (${seesMore.length}) — нарушение, прежде невидимое, может найтись:`,
       ...seesMore.map((line) => `- ${line}`));
+  }
+  // CORE-OPS-087
+  const optIn = optInLines(changes);
+  if (optIn.length > 0) {
+    lines.push('', `Включается объявлением (${optIn.length}) — check краснеет только у объявивших раздел:`,
+      ...optIn.map((line) => `- ${line}`));
   }
   if (obliging.length > 0) {
     lines.push('', `Обязывает (${obliging.length}):`, ...obliging.map((line) => `- ${line}`));

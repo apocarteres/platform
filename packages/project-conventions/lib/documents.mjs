@@ -7,6 +7,7 @@ export const DELIVERED_DOCUMENTS = [
   'quality-checks.md',
   'dependencies.md',
   'deployment.md',
+  'backups.md',
   'release-cycle.md',
   'api-errors.md',
   'code-design.md',

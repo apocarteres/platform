@@ -76,6 +76,13 @@ export const PLANTED = {
     const workspace = path.join(root, 'frontend/angular.json');
     await writeFile(workspace, (await readFile(workspace, 'utf8')).replace('"maximumError": "800kb"', '"maximumWarning": "700kb",\n                  "maximumError": "800kb"'));
   }),
+  'backups': BOTH(async (root) => {
+    const file = path.join(root, '.conventions.json');
+    const config = JSON.parse(await readFile(file, 'utf8'));
+    config.backups = { sets: { database: { kind: 'database', every: '24h', keep: 'forever', store: 'local', receipt: '/var/lib/x.json' } },
+      restoreRecord: '/var/lib/r.json' };
+    await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
+  }),
   'migration-labels': BOTH(async (root) => {
     const file = path.join(root, '.conventions.json');
     const config = JSON.parse(await readFile(file, 'utf8'));

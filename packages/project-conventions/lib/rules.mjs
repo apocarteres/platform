@@ -20,6 +20,7 @@ import { findClientsWithoutUpdate } from './client-update.mjs';
 import { findDefersWithoutError } from './defer-error.mjs';
 import { findUnguardedBudgets } from './bundle-budgets.mjs';
 import { findUnlabelledMigrations } from './migrations.mjs';
+import { findBackupProblems } from './backups.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -196,6 +197,16 @@ export const RULES = [
     summary: 'У проекта, выбравшего развёртывание без простоя, каждый переход базы помечен: additive, expand, contract <переход> или breaking',
     title: 'переходов базы без метки или с неверной парой',
     find: findUnlabelledMigrations,
+  },
+  // REQ-BACKUPS-001
+  {
+    id: 'backups',
+    level: DIRECTIVE,
+    document: 'REQ-BACKUPS',
+    file: 'backups.md',
+    summary: 'Объявленные копии данных службы названы полностью: вид, расписание, конечный срок, внешнее хранилище, квитанция',
+    title: 'изъянов в объявлении копий',
+    find: findBackupProblems,
   },
   {
     id: 'wiring-conditions',

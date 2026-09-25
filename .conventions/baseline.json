@@ -1,6 +1,7 @@
 {
   "version": 2,
   "rules": {
+    "backups": {},
     "bundle-budgets": {},
     "client-update": {},
     "clock": {},

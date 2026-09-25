@@ -15,6 +15,10 @@ import { HELP } from './arguments.mjs';
 import { launchKeys } from '../jvm.mjs';
 import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
 import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
+import { backups as backupSection, checkBackups, writeReceipt, writeRestored } from '../backups.mjs';
+import { systemNow } from '../now.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
 // REQ-BUILD-013
 export async function deps(root, parsed, { usage, refuse }) {
@@ -201,7 +205,8 @@ export async function components(root, { environments = false, full = false } = 
   // REQ-DEPLOYMENT-020
   if (full) {
     for (const one of declared.components) {
-      console.log([one.name, one.artifact, one.install ?? '', one.verify ?? ''].join('\t'));
+      // REQ-BACKUPS-005
+      console.log([one.name, one.artifact, one.install ?? '', one.verify ?? '', one.enable ? 'enable' : ''].join('\t'));
     }
     return;
   }
@@ -343,3 +348,70 @@ export async function manifest(root, parsed, { usage, refuse }) {
   const journal = parsed.values.get('--journal');
   if (journal !== undefined) console.log(`Журнал дополнен: ${await appendJournal(journal, built.manifest)}`);
 }
+
+// REQ-BACKUPS-005
+async function timerEnabled(unit) {
+  try {
+    const { stdout } = await promisify(execFile)('systemctl', ['is-enabled', unit]);
+    return stdout.trim() === 'enabled';
+  } catch {
+    return false;
+  }
+}
+
+// REQ-BACKUPS-004, REQ-BACKUPS-006, REQ-BACKUPS-007
+export async function backupsCommand(root, parsed, { usage, refuse }) {
+  const receipt = parsed.values.get('--receipt');
+  const check = parsed.flags.has('--check');
+  const restored = parsed.flags.has('--restored');
+  if ([receipt !== undefined, check, restored].filter(Boolean).length !== 1) {
+    refuse(usage.backups, 'назовите одно действие: --check, --receipt <копия> --file <путь> или --restored --note "<чем>"');
+    return;
+  }
+  const section = backupSection(await readConfig(root));
+  if (!section.declared) {
+    console.error('Копии не объявлены: добавьте раздел backups в .conventions.json (REQ-BACKUPS-001)');
+    process.exitCode = 1;
+    return;
+  }
+  if (section.problems.length > 0) {
+    console.error('Объявление копий не принято:');
+    for (const problem of section.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  const now = systemNow();
+  if (receipt !== undefined) {
+    const file = parsed.values.get('--file');
+    if (!file) {
+      refuse(usage.backups, 'квитанция пишется на файл копии: ключ --file');
+      return;
+    }
+    const written = await writeReceipt(section, receipt, path.resolve(file), now);
+    if (!written.written) {
+      console.error(`Квитанция не записана: ${written.problem}`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log(`Квитанция копии ${receipt}: ${written.receipt.bytes} байт, ${written.receipt.sha256.slice(0, 12)}`);
+    return;
+  }
+  if (restored) {
+    const written = await writeRestored(section, parsed.values.get('--note'), now);
+    if (!written.written) {
+      refuse(usage.backups, written.problem);
+      return;
+    }
+    console.log('Проверка восстановления записана');
+    return;
+  }
+  const problems = await checkBackups(section, { now, enabled: timerEnabled });
+  if (problems.length > 0) {
+    console.error('Копии данных не в порядке:');
+    for (const problem of problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Копии в порядке: ${section.sets.map((one) => one.name).join(', ')}; восстановление проверено в срок`);
+}
+

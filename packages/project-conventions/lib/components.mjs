@@ -86,6 +86,13 @@ function componentProblems(name, declared) {
     problems.push(`составляющая ${name} без артефакта: назовите путь — собранный шагом сборки (REQ-BUILD-013) либо ведомый в репозитории`);
   }
   problems.push(...placeProblems(name, declared));
+  // REQ-BACKUPS-005
+  if (declared?.enable !== undefined && typeof declared.enable !== 'boolean') {
+    problems.push(`составляющая ${name}: поле enable отвечает, включает ли развёртывание юнит, — да или нет`);
+  }
+  if (declared?.enable === true && declared?.install === undefined) {
+    problems.push(`составляющая ${name}: включать объявлено, а место установки нет — включают то, что положили`);
+  }
   return problems;
 }
 
@@ -115,7 +122,7 @@ export function deployment(config) {
     declared: true,
     // REQ-DEPLOYMENT-020
     components: components.map(([name, one]) => ({
-      name, artifact: one?.artifact, install: one?.install ?? null, verify: one?.verify ?? null,
+      name, artifact: one?.artifact, install: one?.install ?? null, verify: one?.verify ?? null, enable: one?.enable === true,
     })),
     environments: Array.isArray(environments) ? environments : [],
     problems,

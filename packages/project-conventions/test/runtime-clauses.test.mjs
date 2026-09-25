@@ -11,10 +11,11 @@ const CORE = path.resolve(here, '../../..');
 const SELF = path.relative(CORE, fileURLToPath(import.meta.url));
 
 // REQ-QUALITY-017
-const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md', 'docs/requirements/support.md'];
+const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md', 'docs/requirements/support.md', 'docs/requirements/backups.md'];
 
 // REQ-QUALITY-017
 const CONSUMER_SIDE = {
+  'REQ-BACKUPS-002': 'копию своей базы снимает задание проекта на его хосте; ядро задания не поставляет и его не запускает',
   'REQ-DEPLOYMENT-001': 'исполняется скриптом развёртывания потребителя; ядро его не запускает',
   'REQ-DEPLOYMENT-003': 'исполняется скриптом развёртывания потребителя; ядро его не запускает',
   'REQ-DEPLOYMENT-004': 'проверка предпосылок — шаг скрипта потребителя; ядро даёт для неё conventions deps, чья проверка ссылается на REQ-BUILD-013',
@@ -28,7 +29,7 @@ const CONSUMER_SIDE = {
 };
 
 // REQ-QUALITY-017
-const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH|SUPPORT';
+const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH|SUPPORT|BACKUPS';
 
 // REQ-QUALITY-017
 function citations() {

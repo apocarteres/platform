@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 174. Включены самостоятельные задачи и этапы планов функций.
+Всего: 175. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -175,6 +175,7 @@ authority: navigation
 | [`static-check` падает на сборке без `index.html`](CORE-OPS-096-static-check-crashes-without-index.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | deployment, tooling |
 | [Стенд сценариев упирается в предел входа](CORE-OPS-097-stand-rate-limit-scale.md) | P2 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | security, backend, testing |
 | [Ссылки писем стенда ведут на localhost](CORE-OPS-098-stand-http-mail-links.md) | P2 | Выполнена | [RELEASE-11-3-0](../../releases/RELEASE-11-3-0.md) | security, backend, testing |
+| [Отказ коммиту задачи вне состава молчит об учёте](CORE-OPS-100-out-of-release-refusal-names-account.md) | P2 | Выполнена | [undefined](../../releases/undefined.md) | release, tooling, testing |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

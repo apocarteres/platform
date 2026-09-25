@@ -1044,16 +1044,28 @@ test('отказ называет способ внести задачу в со
     await writeFile(path.join(root, 'src/Ongoing.java'), 'class Ongoing {}\n');
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-006 работа по незаконченной задаче');
+    await writeFile(path.join(root, 'src/Ongoing.java'), 'class Ongoing { int step; }\n');
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-006 ещё шаг по незаконченной задаче');
+    const shippedSha = (await git('-C', root, 'rev-parse', '--short=8', 'HEAD~2')).stdout.trim();
+    const openSha = (await git('-C', root, 'rev-parse', '--short=8', 'HEAD~1')).stdout.trim();
+    const nextSha = (await git('-C', root, 'rev-parse', '--short=8', 'HEAD')).stdout.trim();
 
     const state = await closability(root, { scheme: 'date' });
     const shipped = state.problems.find((problem) => problem.includes('ZAVPN-QUAL-005'));
     assert.ok(shipped !== undefined, state.problems.join('\n'));
     assert.match(shipped, /уже отнесена к RELEASE-2026-08-1/);
     assert.match(shipped, /новой задачей/, 'назван законный выход при отнесённой задаче');
+    // REQ-RELEASE-041, REQ-RELEASE-042
+    assert.ok(shipped.includes(`release account ${shippedSha} --reason`), shipped);
+    assert.ok(!shipped.includes(`release account ${openSha}`), 'учёт предложен только для коммитов своей задачи');
 
     const open = state.problems.find((problem) => problem.includes('ZAVPN-QUAL-006'));
     assert.ok(open !== undefined, state.problems.join('\n'));
     assert.match(open, /доведите её до выполненного состояния/);
+    // REQ-RELEASE-041, REQ-RELEASE-042
+    assert.ok(open.includes(`release account ${openSha} --reason`), open);
+    assert.ok(open.includes(`release account ${nextSha} --reason`), 'учёт назван для каждого коммита задачи');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -1140,6 +1152,51 @@ test('запись решения в документе задачи закры�
     const after = await closability(root, { scheme: 'date' });
     assert.ok(
       after.problems.some((problem) => problem.includes('ZAVPN-OPS-021 вне состава выпуска')),
+      after.problems.join('\n'),
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-040, REQ-RELEASE-041, REQ-RELEASE-042
+test('запись хода задачи, задевшая документ рядом, — работа; отказ предлагает учёт, и учтённая закрытие не держит', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/ZAVPN-OPS-022-waiting.md'), ticket('ZAVPN-OPS-022', 'in_progress'));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
+
+    await writeFile(
+      path.join(root, 'docs/tickets/ZAVPN-OPS-022-waiting.md'),
+      `${ticket('ZAVPN-OPS-022', 'in_progress')}\n## Открытые вопросы\n\nОтвет владельца 2026-09-25: вопрос передан ядру.\n`,
+    );
+    await mkdir(path.join(root, 'docs/runbooks'), { recursive: true });
+    await writeFile(path.join(root, 'docs/runbooks/platform-core.md'), '# Ядро\n\n| Заявка | Задача |\n|---|---|\n| #1 | ZAVPN-OPS-022 |\n');
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-OPS-022 записан ответ владельца и строка заявки ядру');
+    const recorded = (await git('-C', root, 'rev-parse', 'HEAD')).stdout.trim();
+    await writeReceipt(root, RECEIPT(recorded, FIXED_DAY));
+
+    const state = await closability(root, { scheme: 'date' });
+    const held = state.problems.find((problem) => problem.includes('ZAVPN-OPS-022 вне состава выпуска'));
+    assert.ok(held !== undefined, 'документ вне каталога задач делает коммит работой (REQ-RELEASE-040)');
+    assert.ok(held.includes(`release account ${recorded.slice(0, 8)} --reason`), held);
+
+    const accounted = await accountCommit(root, { sha: recorded.slice(0, 8), reason: 'запись хода задачи, ждущей ответа ядра' });
+    assert.equal(accounted.accounted, true, accounted.problems?.join('\n'));
+    const after = await closability(root, { scheme: 'date' });
+    assert.deepEqual(
+      after.problems.filter((problem) => problem.includes('ZAVPN-OPS-022')),
+      [],
       after.problems.join('\n'),
     );
   } finally {

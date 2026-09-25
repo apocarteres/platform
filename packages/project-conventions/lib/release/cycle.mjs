@@ -217,7 +217,7 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
       (commit) => `Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`,
     );
     // REQ-RELEASE-039
-    named.push(wayIntoComposition(ticket, known.find((item) => ticketId(item) === ticket) ?? null));
+    named.push(wayIntoComposition(ticket, known.find((item) => ticketId(item) === ticket) ?? null, commits));
     problems.push(named.join('\n  '));
   }
   return problems;
@@ -289,12 +289,14 @@ function wayOutOfAnUnnamedCommit(releaseId, prefix, sha) {
 }
 
 // REQ-RELEASE-039
-function wayIntoComposition(ticket, known) {
+function wayIntoComposition(ticket, known, commits) {
   const assigned = known === null ? 'unassigned' : (known.metadata.get('release') ?? 'unassigned');
-  if (assigned !== 'unassigned') {
-    return `Задача ${ticket} уже отнесена к ${assigned} и в состав этого выпуска не вносится (REQ-RELEASE-007): работа после её выпуска оформляется новой задачей, а ненужная — отменяется коммитом с меткой !revert`;
-  }
-  return `Задача ${ticket} вносится в состав так: доведите её до выполненного состояния — состав подберёт её сам (REQ-RELEASE-007), — либо отмените её коммиты коммитом с меткой !revert`;
+  const way = assigned !== 'unassigned'
+    ? `Задача ${ticket} уже отнесена к ${assigned} и в состав этого выпуска не вносится (REQ-RELEASE-007): работа после её выпуска оформляется новой задачей, а ненужная — отменяется коммитом с меткой !revert`
+    : `Задача ${ticket} вносится в состав так: доведите её до выполненного состояния — состав подберёт её сам (REQ-RELEASE-007), — либо отмените её коммиты коммитом с меткой !revert`;
+  // REQ-RELEASE-041, REQ-RELEASE-042
+  const accounts = commits.map((commit) => `release account ${commit.sha.slice(0, 8)} --reason "<причина>"`).join('; ');
+  return `${way}. Коммит, который выпуску не мешает — например, запись хода задачи, задевшая документ рядом с ней (REQ-RELEASE-040), — учтите в выпуске: ${accounts} (REQ-RELEASE-041)`;
 }
 
 // REQ-RELEASE-036

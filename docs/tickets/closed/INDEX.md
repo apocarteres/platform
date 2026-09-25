@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 165. Включены самостоятельные задачи и этапы планов функций.
+Всего: 166. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -136,6 +136,7 @@ authority: navigation
 | [OpenAPI-контракт аутентификации ядра и типизированный профиль проекта](CORE-ARC-015-openapi-contract-for-core-auth.md) | P2 | Выполнена | [RELEASE-9-0-0](../../releases/RELEASE-9-0-0.md) | backend, frontend, api, tooling |
 | [Журнал клиента: пакет `@apocarteres/client-journal`](CORE-ARC-016-client-journal.md) | P2 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | frontend, typescript, personal-data |
 | [Центр поддержки: starter `platform-support` и пакет `@apocarteres/support`](CORE-ARC-017-support-centre.md) | P2 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | frontend, backend, architecture, personal-data |
+| [Колокольчик уведомлений: сервер и служебная часть клиента](CORE-ARC-018-notification-bell.md) | P2 | Выполнена | Не назначен | frontend, backend, notification, personal-data |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |

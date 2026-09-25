@@ -157,7 +157,7 @@ async function baseline(root, allowGrowth) {
     }
   }
   if (grown.length > 0 && !allowGrowth && !seeding) {
-    console.error('Храповик поднимается только явно (--allow-growth):');
+    console.error('Ограничитель поднимается только явно (--allow-growth):');
     for (const entry of grown) console.error(`- ${entry}`);
     process.exitCode = 1;
     return;

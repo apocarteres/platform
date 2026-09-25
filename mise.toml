@@ -29,7 +29,7 @@ description = "Вписать блок правил в AGENTS.md"
 run = "node packages/project-conventions/bin/conventions.mjs sync"
 
 [tasks.conventions-baseline]
-description = "Зафиксировать существующие комментарии храповиком"
+description = "Зафиксировать существующие комментарии ограничителем"
 run = "node packages/project-conventions/bin/conventions.mjs baseline \"$@\""
 
 [tasks.conventions-test]

@@ -11,7 +11,7 @@ const CORE = path.resolve(here, '../../..');
 const SELF = path.relative(CORE, fileURLToPath(import.meta.url));
 
 // REQ-QUALITY-017
-const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md', 'docs/requirements/support.md', 'docs/requirements/backups.md'];
+const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md', 'docs/requirements/support.md', 'docs/requirements/backups.md', 'docs/requirements/notifications.md'];
 
 // REQ-QUALITY-017
 const CONSUMER_SIDE = {
@@ -29,7 +29,7 @@ const CONSUMER_SIDE = {
 };
 
 // REQ-QUALITY-017
-const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH|SUPPORT|BACKUPS';
+const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH|SUPPORT|BACKUPS|NOTIFICATIONS';
 
 // REQ-QUALITY-017
 function citations() {

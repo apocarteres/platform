@@ -621,6 +621,8 @@ class SupportFlowTest {
     String id = submitted(new Tab().signIn("player@site.example"), request("вопрос"));
     new Tab().signIn("operator@site.example")
       .post("/api/support/operator/requests/" + id + "/messages", "{\"text\":\"ответ\"}").andExpect(status().isOk());
+    new Tab().signIn("player@site.example").post("/api/support/requests/" + id + "/messages", "{\"text\":\"спасибо\"}")
+      .andExpect(status().isOk());
     String guestId = submitted(new Tab("192.0.2.9"), guest("гость", "guest@mail.example"));
     List<String> rows = jdbc.sql("SELECT account_id || ' ' || kind || ' ' || COALESCE(link, '') FROM platform_notification ORDER BY seq")
       .query(String.class).list();
@@ -628,6 +630,8 @@ class SupportFlowTest {
       first + " support.arrived /support/operator/requests/" + id,
       second + " support.arrived /support/operator/requests/" + id,
       player + " support.answered /support/requests/" + id,
+      first + " support.arrived /support/operator/requests/" + id,
+      second + " support.arrived /support/operator/requests/" + id,
       first + " support.arrived /support/operator/requests/" + guestId,
       second + " support.arrived /support/operator/requests/" + guestId);
     assertThat(jdbc.sql("SELECT params FROM platform_notification WHERE kind = 'support.answered'").query(String.class).single())

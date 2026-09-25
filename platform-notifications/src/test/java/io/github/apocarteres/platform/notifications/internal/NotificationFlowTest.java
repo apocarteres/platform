@@ -193,7 +193,10 @@ class NotificationFlowTest {
     assertThat(first.get("read").asBoolean()).isFalse();
     assertThat(first.has("text")).isFalse();
     tab.get("/api/notifications?limit=5").andExpect(jsonPath("$.items.length()").value(5));
-    tab.get("/api/notifications?limit=500").andExpect(jsonPath("$.items.length()").value(25));
+    for (int index = 26; index <= 60; index++) {
+      notifications.notify(player, "order.shipped", Map.of("number", Integer.toString(index)), null);
+    }
+    tab.get("/api/notifications?limit=500").andExpect(jsonPath("$.items.length()").value(50));
   }
 
   @Test

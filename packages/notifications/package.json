@@ -1,0 +1,39 @@
+{
+  "name": "@apocarteres/notifications",
+  "version": "0.0.0",
+  "description": "Колокольчик уведомлений в клиенте без вида: число непрочитанного и последние уведомления сигналами, опрос раз в минуту, прочтение одного и всех. Вид колокольчика и текст по виду уведомления остаются проекту.",
+  "license": "MIT",
+  "publishable": true,
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@angular/common": "22.1.6",
+    "@angular/compiler": "22.1.6",
+    "@angular/compiler-cli": "22.1.6",
+    "@angular/core": "22.1.6",
+    "@angular/platform-browser": "22.1.6",
+    "@angular/router": "22.1.6",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "22.18.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
+    "jsdom": "28.0.0",
+    "ng-packagr": "22.1.1",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "4.0.6",
+    "zone.js": "0.15.1"
+  },
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "contract-types": "node scripts/contract-types.mjs"
+  }
+}

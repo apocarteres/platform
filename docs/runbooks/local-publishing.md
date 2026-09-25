@@ -12,7 +12,7 @@ related: REQ-PUBLISHING
 
 ## Что публикуется
 
-Ядро отдаёт потребителю Java-артефакты (`platform-bom`, `platform-persistence`, `platform-time`, `platform-web-errors`, `platform-api-version`, `platform-rate-limit`, `platform-auth`, `platform-support`) и npm-пакеты: правила `@apocarteres/project-conventions` и библиотеки для клиента — `@apocarteres/http`, `@apocarteres/routing`, `@apocarteres/modal`, `@apocarteres/action`, `@apocarteres/app-update`, `@apocarteres/auth`, `@apocarteres/client-journal`, `@apocarteres/support`. Registry не используется: артефакты попадают в локальный репозиторий Maven, npm-пакет собирается архивом. Координаты и версии не изменились: версия берётся из тега, `REQ-PUBLISHING-002`.
+Ядро отдаёт потребителю Java-артефакты (`platform-bom`, `platform-persistence`, `platform-time`, `platform-web-errors`, `platform-api-version`, `platform-rate-limit`, `platform-auth`, `platform-notifications`, `platform-support`) и npm-пакеты: правила `@apocarteres/project-conventions` и библиотеки для клиента — `@apocarteres/http`, `@apocarteres/routing`, `@apocarteres/modal`, `@apocarteres/action`, `@apocarteres/app-update`, `@apocarteres/auth`, `@apocarteres/client-journal`, `@apocarteres/support`, `@apocarteres/notifications`. Registry не используется: артефакты попадают в локальный репозиторий Maven, npm-пакет собирается архивом. Координаты и версии не изменились: версия берётся из тега, `REQ-PUBLISHING-002`.
 
 ## Публикация
 

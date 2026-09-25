@@ -19,7 +19,11 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 // REQ-AUTH-004, REQ-AUTH-006, REQ-AUTH-013
 final class TokenStore {
 
-  enum Purpose { EMAIL_VERIFICATION, PASSWORD_RESET }
+  enum Purpose { EMAIL_VERIFICATION, PASSWORD_RESET, EMAIL_CHANGE }
+
+  // REQ-AUTH-023
+  record PendingEmail(UUID account, String email) {
+  }
 
   private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -34,6 +38,11 @@ final class TokenStore {
   }
 
   String issue(UUID account, Purpose purpose, Duration ttl) {
+    return issue(account, purpose, ttl, null);
+  }
+
+  // REQ-AUTH-023
+  String issue(UUID account, Purpose purpose, Duration ttl, String email) {
     Instant now = clock.instant();
     jdbc.sql(sql.get("token-retire")).param("id", account).param("purpose", purpose.name())
       .param("now", StoredInstant.offsetOf(now)).update();
@@ -44,6 +53,7 @@ final class TokenStore {
       .param("digest", digest(token))
       .param("id", account)
       .param("purpose", purpose.name())
+      .param("email", email)
       .param("now", StoredInstant.offsetOf(now))
       .param("expires", StoredInstant.offsetOf(now.plus(ttl)))
       .update();
@@ -59,6 +69,18 @@ final class TokenStore {
       .param("purpose", purpose.name())
       .param("now", StoredInstant.offsetOf(clock))
       .query(UUID.class)
+      .optional();
+  }
+
+  // REQ-AUTH-023
+  Optional<PendingEmail> takeEmail(String token) {
+    if (token == null || token.isBlank()) {
+      return Optional.empty();
+    }
+    return jdbc.sql(sql.get("token-take-email"))
+      .param("digest", digest(token))
+      .param("now", StoredInstant.offsetOf(clock))
+      .query((row, index) -> new PendingEmail(row.getObject("account_id", UUID.class), row.getString("email")))
       .optional();
   }
 

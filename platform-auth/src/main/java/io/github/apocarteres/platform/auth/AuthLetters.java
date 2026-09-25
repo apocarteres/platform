@@ -9,4 +9,10 @@ public interface AuthLetters {
   void verification(String email, URI link, Locale locale);
 
   void passwordReset(String email, URI link, Locale locale);
+
+  // REQ-AUTH-023
+  void emailChange(String email, URI link, Locale locale);
+
+  // REQ-AUTH-023
+  void emailChanged(String previousEmail, Locale locale);
 }

@@ -13,12 +13,14 @@ import io.github.apocarteres.platform.auth.ApiAccess;
 import io.github.apocarteres.platform.auth.AccountVerified;
 import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.AuthRefused;
+import io.github.apocarteres.platform.auth.EmailChange;
 import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.Purged;
 import io.github.apocarteres.platform.auth.CurrentAccount;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.auth.RegistrationHook;
+import io.github.apocarteres.platform.auth.Removal;
 import io.github.apocarteres.platform.time.MutableClock;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.Cookie;
@@ -62,7 +64,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
-// REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022
+// REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
+// REQ-AUTH-023, REQ-AUTH-024
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -139,6 +142,8 @@ class AuthFlowTest {
     jdbc.sql("DELETE FROM platform_account WHERE email <> 'admin@site.example'").update();
     redis.getConnectionFactory().getConnection().serverCommands().flushAll();
     letters.sent.clear();
+    letters.changes.clear();
+    letters.notices.clear();
     hook.seen.clear();
     hook.failing = false;
     verified.seen.clear();
@@ -413,6 +418,114 @@ class AuthFlowTest {
     assertThat(accounts.findByEmail("rolled@player.example")).isEmpty();
   }
 
+  private String changeToken() {
+    Matcher found = TOKEN.matcher(letters.changes.get(letters.changes.size() - 1).link().toString());
+    assertThat(found.find()).isTrue();
+    return found.group(1);
+  }
+
+  // REQ-AUTH-023
+  @Test
+  @DisplayName("Человек меняет свою почту: пароль, письмо на новую, переход по ссылке, извещение прежней, прочие сессии завершены")
+  void userChangesOwnEmail() throws Exception {
+    registered("before@player.example");
+    Browser here = new Browser();
+    here.post("/api/auth/login", login("before@player.example", PASSWORD)).andExpect(status().isOk());
+    Browser elsewhere = new Browser();
+    elsewhere.post("/api/auth/login", login("before@player.example", PASSWORD)).andExpect(status().isOk());
+    UUID id = accounts.findByEmail("before@player.example").orElseThrow().id();
+
+    here.post("/api/auth/email", "{\"current\":\"wrong password here\",\"email\":\"after@player.example\"}")
+      .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("credentials-rejected"));
+    here.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"After@Player.Example\"}")
+      .andExpect(status().isAccepted());
+    assertThat(letters.changes).singleElement().satisfies(letter -> {
+      assertThat(letter.email()).isEqualTo("after@player.example");
+      assertThat(letter.link().toString()).startsWith("https://site.example/auth/email?token=");
+    });
+    assertThat(accounts.find(id).orElseThrow().email()).as("до ссылки почта прежняя").isEqualTo("before@player.example");
+
+    here.post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}").andExpect(status().isNoContent());
+    assertThat(accounts.find(id).orElseThrow().email()).isEqualTo("after@player.example");
+    assertThat(letters.notices).singleElement().satisfies(notice -> {
+      assertThat(notice.email()).isEqualTo("before@player.example");
+      assertThat(notice.committed()).as("извещение уходит после фиксации").isTrue();
+    });
+    here.get("/api/things").andExpect(status().isOk());
+    elsewhere.get("/api/things").andExpect(status().isUnauthorized());
+    new Browser().post("/api/auth/login", login("before@player.example", PASSWORD)).andExpect(status().isUnauthorized());
+    new Browser().post("/api/auth/login", login("after@player.example", PASSWORD)).andExpect(status().isOk());
+    here.post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}")
+      .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("token-rejected"));
+  }
+
+  // REQ-AUTH-003, REQ-AUTH-023
+  @Test
+  @DisplayName("Смена на занятую почту отвечает так же и ничего не шлёт; занятая за время ссылки — email-taken")
+  void emailChangeDoesNotReveal() throws Exception {
+    registered("first@player.example");
+    registered("second@player.example");
+    Browser first = new Browser();
+    first.post("/api/auth/login", login("first@player.example", PASSWORD)).andExpect(status().isOk());
+    first.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"second@player.example\"}")
+      .andExpect(status().isAccepted());
+    assertThat(letters.changes).isEmpty();
+    first.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"free@player.example\"}")
+      .andExpect(status().isAccepted());
+    accounts.create("free@player.example", PASSWORD, Set.of("USER"), true, Map.of());
+    first.post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}")
+      .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("email-taken"));
+    assertThat(accounts.findByEmail("first@player.example")).isPresent();
+    assertThat(letters.notices).isEmpty();
+  }
+
+  // REQ-AUTH-023
+  @Test
+  @DisplayName("Администратор проекта меняет почту сразу: исходы, нормализация, сессии завершены, прежняя почта извещена")
+  void adminChangesEmail() throws Exception {
+    registered("member@player.example");
+    registered("taken@player.example");
+    Browser member = new Browser();
+    member.post("/api/auth/login", login("member@player.example", PASSWORD)).andExpect(status().isOk());
+    UUID id = accounts.findByEmail("member@player.example").orElseThrow().id();
+
+    assertThat(accounts.changeEmail(id, "taken@player.example", Locale.ROOT)).isEqualTo(EmailChange.TAKEN);
+    assertThat(accounts.changeEmail(id, "member@player.example", Locale.ROOT)).isEqualTo(EmailChange.SAME);
+    assertThat(accounts.changeEmail(UUID.randomUUID(), "nobody@player.example", Locale.ROOT)).isEqualTo(EmailChange.ABSENT);
+    assertThatThrownBy(() -> accounts.changeEmail(id, "не почта", Locale.ROOT)).isInstanceOf(AuthRefused.class);
+    member.get("/api/things").andExpect(status().isOk());
+    assertThat(letters.notices).isEmpty();
+
+    assertThat(accounts.changeEmail(id, " Renamed@Player.Example ", Locale.forLanguageTag("ru"))).isEqualTo(EmailChange.CHANGED);
+    assertThat(accounts.find(id).orElseThrow().email()).isEqualTo("renamed@player.example");
+    member.get("/api/things").andExpect(status().isUnauthorized());
+    assertThat(letters.notices).singleElement().satisfies(notice -> {
+      assertThat(notice.email()).isEqualTo("member@player.example");
+      assertThat(notice.committed()).isTrue();
+      assertThat(notice.locale()).isEqualTo(Locale.forLanguageTag("ru"));
+    });
+  }
+
+  // REQ-AUTH-024
+  @Test
+  @DisplayName("Удаление учётной записи: REMOVED стирает роли и сессии, HELD — при внешнем ключе проекта, ABSENT — если записи нет")
+  void accountIsDeleted() throws Exception {
+    registered("gone@player.example");
+    Browser gone = new Browser();
+    gone.post("/api/auth/login", login("gone@player.example", PASSWORD)).andExpect(status().isOk());
+    UUID id = accounts.findByEmail("gone@player.example").orElseThrow().id();
+    Account held = accounts.create("held@player.example", PASSWORD, Set.of("USER"), true, Map.of("wallet", true));
+
+    assertThat(accounts.delete(held.id())).isEqualTo(Removal.HELD);
+    assertThat(accounts.find(held.id())).isPresent();
+    assertThat(accounts.delete(id)).isEqualTo(Removal.REMOVED);
+    assertThat(accounts.find(id)).isEmpty();
+    assertThat(JdbcClient.create(source).sql("SELECT COUNT(*) FROM platform_account_role WHERE account_id = :id").param("id", id)
+      .query(Long.class).single()).isZero();
+    gone.get("/api/things").andExpect(status().isUnauthorized());
+    assertThat(accounts.delete(id)).isEqualTo(Removal.ABSENT);
+  }
+
   // REQ-AUTH-022
   @Test
   @DisplayName("Открытая точка модуля ядра открыта раньше правил проекта, прочие пути модуля — по правилам проекта")
@@ -544,6 +657,8 @@ class AuthFlowTest {
   static final class Letters implements AuthLetters {
 
     final List<Letter> sent = new CopyOnWriteArrayList<>();
+    final List<Letter> changes = new CopyOnWriteArrayList<>();
+    final List<Letter> notices = new CopyOnWriteArrayList<>();
     private final DataSource source;
 
     Letters(DataSource source) {
@@ -558,6 +673,18 @@ class AuthFlowTest {
     @Override
     public void passwordReset(String email, URI link, Locale locale) {
       sent.add(new Letter(email, link, locale, visible(email)));
+    }
+
+    // REQ-AUTH-023
+    @Override
+    public void emailChange(String email, URI link, Locale locale) {
+      changes.add(new Letter(email, link, locale, !visible(email)));
+    }
+
+    // REQ-AUTH-023
+    @Override
+    public void emailChanged(String previousEmail, Locale locale) {
+      notices.add(new Letter(previousEmail, null, locale, !visible(previousEmail)));
     }
 
     // REQ-AUTH-010

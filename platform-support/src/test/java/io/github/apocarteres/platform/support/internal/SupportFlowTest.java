@@ -589,10 +589,9 @@ class SupportFlowTest {
     String guest = submitted(new Tab("192.0.2.3"), guest("гостевое", "Guest@Mail.Example"), PNG);
     Tab operator = new Tab().signIn("operator@site.example");
     operator.post("/api/support/operator/requests/" + mine + "/messages", "{\"text\":\"ответ с данными\"}").andExpect(status().isOk());
-    org.assertj.core.api.Assertions.assertThatThrownBy(() -> jdbc.sql("DELETE FROM platform_account WHERE id = :id").param("id", player).update())
-      .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    // REQ-AUTH-024
+    assertThat(accounts.delete(player)).isEqualTo(io.github.apocarteres.platform.auth.Removal.HELD);
     assertThat(retention.erase(player)).isEqualTo(1);
-    assertThat(jdbc.sql("DELETE FROM platform_account WHERE id = :id").param("id", player).update()).isEqualTo(1);
     assertThat(retention.erase(player)).isZero();
     assertThat(retention.erase("guest@mail.example")).isEqualTo(1);
     author.get("/api/support/requests/" + mine).andExpect(status().isNotFound());
@@ -608,6 +607,7 @@ class SupportFlowTest {
     assertThat(listed.get("total").asLong()).isEqualTo(2);
     assertThat(listed.get("items").get(0).get("excerpt").isNull()).isTrue();
     assertThat(guest).isNotBlank();
+    assertThat(accounts.delete(player)).isEqualTo(io.github.apocarteres.platform.auth.Removal.REMOVED);
   }
 
   // REQ-SUPPORT-012
@@ -670,6 +670,14 @@ class SupportFlowTest {
 
     @Override
     public void passwordReset(String email, URI link, Locale locale) {
+    }
+
+    @Override
+    public void emailChange(String email, URI link, Locale locale) {
+    }
+
+    @Override
+    public void emailChanged(String previousEmail, Locale locale) {
     }
   }
 

@@ -59,6 +59,10 @@ class AuthController {
   record PasswordChange(String current, String password) {
   }
 
+  // REQ-AUTH-023
+  record EmailChange(String current, String email) {
+  }
+
   record Policy(int passwordMinBytes, int passwordMaxBytes) {
   }
 
@@ -147,6 +151,23 @@ class AuthController {
     UUID id = CurrentAccount.id().orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Вход не выполнен"));
     HttpSession session = request.getSession(false);
     auth.changePassword(id, body.current(), body.password(), session == null ? null : session.getId());
+    return ResponseEntity.noContent().build();
+  }
+
+  // REQ-AUTH-023
+  @PostMapping("/email")
+  ResponseEntity<Void> changeEmail(@RequestBody EmailChange body, HttpServletRequest request) {
+    UUID id = CurrentAccount.id().orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Вход не выполнен"));
+    auth.requestEmailChange(id, body.current(), body.email(), request.getLocale());
+    return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+  }
+
+  // REQ-AUTH-023
+  @PostMapping("/email/confirm")
+  ResponseEntity<Void> confirmEmail(@RequestBody Token body, HttpServletRequest request) {
+    open(request);
+    HttpSession session = request.getSession(false);
+    auth.confirmEmailChange(body.token(), request.getRemoteAddr(), session == null ? null : session.getId(), request.getLocale());
     return ResponseEntity.noContent().build();
   }
 

@@ -111,8 +111,9 @@ public class AuthAutoConfiguration {
 
   @Bean
   Accounts accounts(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    PlatformTransactionManager transactions, AuthSettings settings, Clock clock) {
-    return new AccountsService(accounts, tokens, sessions, creation, passwords, new TransactionTemplate(transactions), settings, clock);
+    PlatformTransactionManager transactions, AuthLetters letters, AuthSettings settings, Clock clock) {
+    return new AccountsService(accounts, tokens, sessions, creation, passwords, new TransactionTemplate(transactions), letters, settings,
+      clock);
   }
 
   @Bean
@@ -159,7 +160,7 @@ public class AuthAutoConfiguration {
     http.securityMatcher("/api/**")
       .authorizeHttpRequests(rules -> {
         rules.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/verify", "/api/auth/resend",
-          "/api/auth/login", "/api/auth/password-reset/request", "/api/auth/password-reset/confirm").permitAll();
+          "/api/auth/login", "/api/auth/password-reset/request", "/api/auth/password-reset/confirm", "/api/auth/email/confirm").permitAll();
         rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/policy").permitAll();
         rules.requestMatchers("/api/auth/**").authenticated();
         modules.orderedStream().forEach(module -> module.rules(rules));

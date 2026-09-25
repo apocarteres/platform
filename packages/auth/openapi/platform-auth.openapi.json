@@ -667,6 +667,181 @@
           }
         }
       }
+    },
+    "/api/auth/email": {
+      "post": {
+        "summary": "Сменить свою почту",
+        "x-clause": "REQ-AUTH-023",
+        "description": "Письмо со ссылкой уходит на новую почту; запись переходит на неё только по ссылке. Ответ не раскрывает, занята ли почта (REQ-AUTH-003).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Принято: письмо ушло, если почта свободна"
+          },
+          "400": {
+            "description": "Почта не принята",
+            "x-codes": [
+              "email-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен либо текущий пароль не подошёл",
+            "x-codes": [
+              "authentication-required",
+              "credentials-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/email/confirm": {
+      "post": {
+        "summary": "Подтвердить новую почту по ссылке",
+        "x-clause": "REQ-AUTH-023",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Почта сменена; прежняя почта извещена, прочие сессии завершены"
+          },
+          "400": {
+            "description": "Ссылка недействительна или просрочена",
+            "x-codes": [
+              "token-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Точки закрыты проектом либо нет токена CSRF",
+            "x-codes": [
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Почта заняла другая учётная запись, пока шла ссылка",
+            "x-codes": [
+              "email-taken"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -863,6 +1038,22 @@
           "status",
           "detail",
           "code"
+        ]
+      },
+      "EmailChangeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "current",
+          "email"
         ]
       }
     },

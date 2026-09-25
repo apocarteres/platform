@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 import type { CanMatchFn, UrlTree } from '@angular/router';
 import { firstValueFrom, tap } from 'rxjs';
 import type {
-  Account, EmailRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest, ResetRequest, TokenRequest,
+  Account, EmailChangeRequest, EmailRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest, ResetRequest, TokenRequest,
 } from './contract';
 
 // REQ-AUTH-015, REQ-AUTH-020
@@ -104,6 +104,19 @@ export class AuthSession {
   async changePassword(current: string, password: string): Promise<void> {
     const body: PasswordChangeRequest = { current, password };
     await firstValueFrom(this.http.post(`${this.base}/password`, body));
+  }
+
+  // REQ-AUTH-023
+  async changeEmail(current: string, email: string): Promise<void> {
+    const body: EmailChangeRequest = { current, email };
+    await firstValueFrom(this.http.post(`${this.base}/email`, body));
+  }
+
+  // REQ-AUTH-023
+  async confirmEmail(token: string): Promise<void> {
+    const body: TokenRequest = { token };
+    await firstValueFrom(this.http.post(`${this.base}/email/confirm`, body));
+    if (this.current()) this.current.set(await firstValueFrom(this.http.get<SignedIn>(`${this.base}/me`)));
   }
 
   // REQ-AUTH-018

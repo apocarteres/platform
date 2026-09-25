@@ -57,3 +57,8 @@ export interface ProblemDetail {
   readonly instance?: string;
   readonly code: string;
 }
+
+export interface EmailChangeRequest {
+  readonly current: string;
+  readonly email: string;
+}

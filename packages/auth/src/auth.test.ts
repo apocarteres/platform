@@ -128,6 +128,8 @@ describe('состояние сессии', () => {
       [session.requestReset('new@site.example', 'h'), '/api/auth/password-reset/request', { email: 'new@site.example', human: 'h' }],
       [session.confirmReset('tok', 'another password'), '/api/auth/password-reset/confirm', { token: 'tok', password: 'another password' }],
       [session.changePassword('old password', 'new password'), '/api/auth/password', { current: 'old password', password: 'new password' }],
+      [session.changeEmail('old password', 'next@site.example'), '/api/auth/email', { current: 'old password', email: 'next@site.example' }],
+      [session.confirmEmail('tok'), '/api/auth/email/confirm', { token: 'tok' }],
     ] as const;
     for (const [promise, url, body] of calls) {
       const request = http.expectOne(url);
@@ -136,6 +138,20 @@ describe('состояние сессии', () => {
       request.flush(null, { status: 202, statusText: 'Accepted' });
       await promise;
     }
+  });
+});
+
+// REQ-AUTH-023
+describe('смена почты', () => {
+  it('после подтверждения вошедший клиент перечитывает учётную запись', async () => {
+    const { http, session } = setUp();
+    await start(http, { id: 'a', email: 'before@site.example', roles: ['USER'] });
+    const confirmed = session.confirmEmail('tok');
+    http.expectOne('/api/auth/email/confirm').flush(null, { status: 204, statusText: 'No Content' });
+    await flushes();
+    http.expectOne('/api/auth/me').flush({ id: 'a', email: 'after@site.example', roles: ['USER'] });
+    await confirmed;
+    expect(session.account()?.email).toBe('after@site.example');
   });
 });
 

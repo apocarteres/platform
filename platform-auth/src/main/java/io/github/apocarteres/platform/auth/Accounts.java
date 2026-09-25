@@ -2,6 +2,7 @@ package io.github.apocarteres.platform.auth;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -24,6 +25,12 @@ public interface Accounts {
 
   // REQ-AUTH-009
   long count(String emailPart);
+
+  // REQ-AUTH-023
+  EmailChange changeEmail(UUID id, String email, Locale locale);
+
+  // REQ-AUTH-024
+  Removal delete(UUID id);
 
   void block(UUID id);
 

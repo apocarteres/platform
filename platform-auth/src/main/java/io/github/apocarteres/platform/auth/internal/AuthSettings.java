@@ -11,17 +11,19 @@ import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
-// REQ-AUTH-002, REQ-AUTH-004, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010
+// REQ-AUTH-002, REQ-AUTH-004, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-023
 record AuthSettings(
   Set<String> roles,
   Set<String> defaultRoles,
   URI linkBase,
   String verificationLink,
   String resetLink,
+  String emailChangeLink,
   int passwordMinBytes,
   int passwordMaxBytes,
   Duration verificationTtl,
   Duration resetTtl,
+  Duration emailChangeTtl,
   Duration resendInterval,
   Duration sessionTimeout,
   boolean cookieSecure,
@@ -60,10 +62,12 @@ record AuthSettings(
       linkBase(binder),
       binder.bind(PREFIX + "links.verification", String.class).orElse("/auth/verify?token={token}"),
       binder.bind(PREFIX + "links.password-reset", String.class).orElse("/auth/password-reset?token={token}"),
+      binder.bind(PREFIX + "links.email-change", String.class).orElse("/auth/email?token={token}"),
       min,
       max,
       duration(binder, "tokens.verification", Duration.ofHours(24)),
       duration(binder, "tokens.password-reset", Duration.ofMinutes(30)),
+      duration(binder, "tokens.email-change", Duration.ofHours(24)),
       duration(binder, "tokens.resend-interval", Duration.ofMinutes(1)),
       duration(binder, "session.timeout", Duration.ofHours(8)),
       binder.bind(PREFIX + "session.cookie-secure", Boolean.class).orElse(true),

@@ -37,6 +37,7 @@ class ContractTest {
     "TokenRequest", AuthController.Token.class,
     "ResetRequest", AuthController.Reset.class,
     "PasswordChangeRequest", AuthController.PasswordChange.class,
+    "EmailChangeRequest", AuthController.EmailChange.class,
     "Account", AuthController.Me.class,
     "Csrf", AuthController.Csrf.class,
     "Policy", AuthController.Policy.class

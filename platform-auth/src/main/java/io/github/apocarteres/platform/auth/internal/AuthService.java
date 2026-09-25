@@ -13,12 +13,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-010
+// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-010, REQ-AUTH-023
 final class AuthService {
 
   private final AccountStore accounts;
@@ -168,6 +169,50 @@ final class AuthService {
     String password = Credentials.password(declaredPassword, settings);
     accounts.password(id, passwords.encode(password));
     limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+    sessions.terminateExcept(id, keptSession);
+  }
+
+  // REQ-AUTH-023
+  void requestEmailChange(UUID id, String current, String declaredEmail, Locale locale) {
+    limiter.consume(AuthLimits.EMAIL_CHANGE_BY_ACCOUNT, id.toString());
+    limiter.require(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+    AccountStore.Stored stored = accounts.find(id).orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Учётной записи нет"));
+    if (current == null || !passwords.matches(current, stored.passwordHash())) {
+      limiter.count(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+      throw new AuthRefused(AuthRefused.CREDENTIALS, "Текущий пароль не подошёл");
+    }
+    limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
+    String email = Credentials.email(declaredEmail);
+    // REQ-AUTH-003
+    if (email.equals(stored.account().email()) || accounts.findByEmail(email).isPresent()) {
+      return;
+    }
+    transactions.executeWithoutResult(status -> {
+      String token = tokens.issue(id, Purpose.EMAIL_CHANGE, settings.emailChangeTtl(), email);
+      afterCommit(() -> letters.emailChange(email, settings.link(settings.emailChangeLink(), token), locale));
+    });
+  }
+
+  // REQ-AUTH-023
+  void confirmEmailChange(String token, String address, String keptSession, Locale locale) {
+    limiter.consume(AuthLimits.TOKEN_BY_ADDRESS, address);
+    UUID id;
+    try {
+      id = transactions.execute(status -> {
+      TokenStore.PendingEmail pending = tokens.takeEmail(token)
+        .orElseThrow(() -> new AuthRefused(AuthRefused.TOKEN, "Ссылка смены почты недействительна или просрочена"));
+      String previous = accounts.find(pending.account()).orElseThrow(
+        () -> new AuthRefused(AuthRefused.TOKEN, "Учётной записи больше нет")).account().email();
+      if (accounts.findByEmail(pending.email()).isPresent()) {
+        throw new AuthRefused(AuthRefused.EMAIL_TAKEN, "Почта уже занята другой учётной записью");
+      }
+      accounts.email(pending.account(), pending.email());
+      afterCommit(() -> letters.emailChanged(previous, locale));
+      return pending.account();
+      });
+    } catch (DuplicateKeyException raced) {
+      throw new AuthRefused(AuthRefused.EMAIL_TAKEN, "Почта уже занята другой учётной записью");
+    }
     sessions.terminateExcept(id, keptSession);
   }
 

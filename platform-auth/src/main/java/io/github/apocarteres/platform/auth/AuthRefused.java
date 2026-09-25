@@ -20,6 +20,8 @@ public final class AuthRefused extends RuntimeException implements CodedFailure 
   public static final ErrorCode PROFILE = ErrorCode.of("profile-rejected", HttpStatus.BAD_REQUEST);
   // REQ-AUTH-016
   public static final ErrorCode ENTRY = ErrorCode.of("entry-closed", HttpStatus.FORBIDDEN);
+  // REQ-AUTH-023
+  public static final ErrorCode EMAIL_TAKEN = ErrorCode.of("email-taken", HttpStatus.CONFLICT);
 
   private final transient ErrorCode code;
 

@@ -97,6 +97,16 @@ final class AccountStore {
     return jdbc.sql(sql.get("account-unverified")).param("before", StoredInstant.offsetOf(before)).query(UUID.class).list();
   }
 
+  // REQ-AUTH-023
+  boolean email(UUID id, String email) {
+    return jdbc.sql(sql.get("account-email")).param("id", id).param("email", email).update() == 1;
+  }
+
+  // REQ-AUTH-024
+  int remove(UUID id) {
+    return jdbc.sql(sql.get("account-remove")).param("id", id).update();
+  }
+
   // REQ-AUTH-013
   int deleteUnverified(UUID id) {
     return jdbc.sql(sql.get("account-delete")).param("id", id).update();

@@ -6,6 +6,7 @@ scope: release, tooling, testing
 authority: supporting
 priority: P2
 related: REQ-RELEASE
+release: RELEASE-11-4-0
 ---
 
 # Отказ коммиту задачи вне состава молчит об учёте

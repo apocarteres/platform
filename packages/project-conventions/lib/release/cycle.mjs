@@ -639,8 +639,10 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
   const named = await namedTickets(root, names);
   if (named.problems.length > 0) return { opened: false, problems: named.problems };
 
+  // REQ-RELEASE-021, CORE-OPS-095
+  const carriedIds = new Set(carried.map((entry) => ticketId(entry.ticket)));
   const planned = [
-    ...named.found.map((ticket) => `| [${ticketId(ticket)}](${ticketLinkTarget(root, ticket)}) | Указана при открытии выпуска |`),
+    ...named.found.filter((ticket) => !carriedIds.has(ticketId(ticket))).map((ticket) => `| [${ticketId(ticket)}](${ticketLinkTarget(root, ticket)}) | Указана при открытии выпуска |`),
     ...created.map((ticket) => `| [${ticket.id}](../tickets/${path.basename(ticket.file)}) | Обязательство ядра \`${ticket.obligation.id}\`, срок ${ticket.obligation.dueReleases} выпуск(ов) |`),
     ...carried.map((entry) => `| [${ticketId(entry.ticket)}](${ticketLinkTarget(root, entry.ticket)}) | Обязательство ядра \`${entry.obligation.id}\`, перенесено из предыдущего выпуска |`),
   ];

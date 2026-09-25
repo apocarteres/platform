@@ -211,6 +211,28 @@ test('закрытие записывает состав, коммит и рез
   }
 });
 
+// REQ-RELEASE-021, CORE-OPS-095
+test('задача обязательства, названная при открытии, входит в состав одной строкой — с причиной обязательства', async () => {
+  const root = await project();
+  try {
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await writeFile(path.join(root, 'docs/tickets/closed/done-one.md'), ticket('TICKET-DONE-ONE', 'done'));
+    const commit = await commitAll(root);
+    await writeReceipt(root, RECEIPT(commit, '2026-09-07T10:00:00Z'));
+    await closeRelease(root, { scheme: 'date' });
+    await finishRelease(root, { scheme: 'date', today: FIXED_DAY, note: 'развёртывание' });
+    await commitAll(root);
+    const opened = await openNext(root, { scheme: 'date', today: NEXT_DAY, tickets: ['QUAL-001'] });
+    assert.equal(opened.opened, true, opened.problems?.join('\n'));
+    const document = await readFile(path.join(root, 'docs/releases/RELEASE-2026-09-2.md'), 'utf8');
+    const rows = document.split('\n').filter((line) => line.includes('[QUAL-001]'));
+    assert.equal(rows.length, 1, rows.join('\n'));
+    assert.match(rows[0], /Обязательство ядра `sample`, перенесено/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 // REQ-RELEASE-019, CORE-OPS-094
 test('задача, закрытая после тега, не засчитывается выпуску при завершающем шаге', async () => {
   const root = await project();

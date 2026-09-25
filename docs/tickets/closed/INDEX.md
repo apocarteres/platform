@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 168. Включены самостоятельные задачи и этапы планов функций.
+Всего: 169. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -169,6 +169,7 @@ authority: navigation
 | [Исправление слепой проверки — не несовместимость, но и не молчание](CORE-OPS-082-sharper-check-is-not-incompatible.md) | P2 | Выполнена | [RELEASE-3-1-0](../../releases/RELEASE-3-1-0.md) | publishing, release, tooling |
 | [Задачи с открытыми вопросами копятся без напоминания](CORE-OPS-086-open-questions-pile-up.md) | P2 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | release, tickets, tooling |
 | [Идеи с вопросами держали выпуск наравне с задачами](CORE-OPS-090-ideas-are-not-tickets.md) | P2 | Выполнена | [RELEASE-8-1-0](../../releases/RELEASE-8-1-0.md) | tickets, release, tooling |
+| [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | Не назначен | release, tooling |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

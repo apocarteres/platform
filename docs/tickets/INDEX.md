@@ -14,11 +14,10 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 6. Включены самостоятельные задачи и этапы планов функций.
+Всего: 5. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
-| [Смена почты и удаление учётной записи ядра](CORE-ARC-019-change-email-and-delete-account.md) | P1 | Запланирована | Не назначен | backend, frontend, security, personal-data |
 | [Резервные копии данных службы: объявление и проверки](CORE-OPS-093-service-backups.md) | P1 | Запланирована | Не назначен | deployment, operations, personal-data |
 | [Колокольчик уведомлений: сервер и служебная часть клиента](CORE-ARC-018-notification-bell.md) | P2 | Запланирована | Не назначен | frontend, backend, notification, personal-data |
 | [Правило, включаемое объявлением проекта, требует старшей версии зря](CORE-OPS-087-opt-in-rule-is-not-incompatible.md) | P2 | Запланирована | Не назначен | publishing, release, tooling |

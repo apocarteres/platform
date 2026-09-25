@@ -103,9 +103,6 @@ final class AccountsService implements Accounts {
         if (previous.equals(email)) {
           return EmailChange.SAME;
         }
-        if (accounts.findByEmail(email).isPresent()) {
-          return EmailChange.TAKEN;
-        }
         accounts.email(id, email);
         afterCommit(() -> letters.emailChanged(previous, locale));
         return EmailChange.CHANGED;

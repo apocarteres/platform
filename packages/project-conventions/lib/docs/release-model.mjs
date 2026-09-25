@@ -102,7 +102,9 @@ export function validateReleases(documents) {
   for (const [id, ticket] of tickets) {
     const release = ticket.metadata.get('release');
     if (release === 'unassigned' || release === 'before-cycle') continue;
-    if (!release || !releases.has(release)) { errors.push(`${ticket.file}: назначенный выпуск не существует`); continue; }
+    // REQ-TICKETS-009, CORE-OPS-102
+    if (!releaseIdPattern.test(release ?? '')) continue;
+    if (!releases.has(release)) { errors.push(`${ticket.file}: назначенный выпуск не существует`); continue; }
     if (releases.get(release).metadata.get('status') !== 'released') continue;
     if (membership.get(id) !== release) errors.push(`${ticket.file}: задача отсутствует в составе назначенного выпуска`);
   }

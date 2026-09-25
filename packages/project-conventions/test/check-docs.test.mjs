@@ -5,6 +5,8 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { checkDocumentation } from '../lib/docs/check-docs.mjs';
+import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
+import { readFile } from 'node:fs/promises';
 
 function metadata(id, type, status, scope, authority) {
   return [
@@ -251,6 +253,22 @@ test('общая проверка сверяет назначение выпус
       metadata('REF-RELEASE-RULES', 'reference', 'active', 'planning', 'supporting') + '# Правила\n');
     const updated = await checkDocumentation(root);
     assert(updated.errors.some(error => error.includes('отсутствует ссылка на docs/releases/rules.md')));
+  });
+});
+
+// REQ-TICKETS-009, REQ-QUALITY-005, CORE-OPS-102
+test('задача без поля release получает один отказ — о поле, — а сводка не ссылается в никуда', async () => {
+  await withFixture(async (root) => {
+    const header = metadata('TICKET-NORELEASE', 'ticket', 'backlog', 'testing', 'supporting')
+      .replace('authority: supporting\n', 'authority: supporting\npriority: P2\n');
+    await writeFixtureFile(root, 'docs/tickets/no-release.md', header + '# Задача без выпуска\n');
+    await updateTicketIndexes(root);
+
+    const index = await readFile(path.join(root, 'docs/tickets/INDEX.md'), 'utf8');
+    assert.ok(!index.includes('undefined'), index);
+
+    const about = (await checkDocumentation(root)).errors.filter((error) => error.includes('no-release.md'));
+    assert.deepEqual(about, ['docs/tickets/no-release.md: release должен быть unassigned, before-cycle или идентификатором RELEASE-...']);
   });
 });
 

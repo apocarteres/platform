@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 177. Включены самостоятельные задачи и этапы планов функций.
+Всего: 178. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -192,6 +192,7 @@ authority: navigation
 | [Шлагбаум перед отправкой не видит отказов проводки](CORE-OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Выполнена | [RELEASE-1-3-0](../../releases/RELEASE-1-3-0.md) | quality, operations |
 | [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |
 | [Кеш AOT: сказать положением, а не молчанием](CORE-OPS-051-aot-cache-as-a-recommendation.md) | P3 | Выполнена | [RELEASE-1-22-0](../../releases/RELEASE-1-22-0.md) | deployment |
+| [Пропущенное поле `release` даёт лишний отказ и ссылку в никуда](CORE-OPS-102-missing-release-field-reads-as-unknown-release.md) | P3 | Выполнена | Не назначен | tickets, tooling, documentation |
 | [Отказ по документу задачи печатается дважды](CORE-QUAL-005-ticket-refusal-printed-twice.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | quality, tooling, documentation |
 | [Доменные существительные `Player`, `Character`, `Ledger`](CORE-QUAL-027-domain-nouns-player-character-ledger.md) | P3 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | quality, java |
 | [Шифр секрета повторяется у каждого потребителя](CORE-SEC-001-secret-cipher-belongs-to-the-platform.md) | P3 | Выполнена | [RELEASE-1-6-0](../../releases/RELEASE-1-6-0.md) | backend, security |

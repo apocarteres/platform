@@ -88,6 +88,8 @@ async function exists(file) {
 function releaseCell(root, release, href) {
   if (release === 'unassigned') return 'Не назначен';
   if (release === 'before-cycle') return 'До цикла выпусков';
+  // REQ-TICKETS-009, CORE-OPS-102
+  if (release === undefined) return 'Не указан';
   return `[${release}](${href(path.join(root, 'docs/releases', `${release}.md`))})`;
 }
 

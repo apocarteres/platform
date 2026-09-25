@@ -61,6 +61,11 @@
         <artifactId>platform-support</artifactId>
         <version>${revision}</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.apocarteres.platform</groupId>
+        <artifactId>platform-notifications</artifactId>
+        <version>${revision}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

@@ -65,7 +65,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
-// REQ-AUTH-023, REQ-AUTH-024
+// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -528,6 +528,19 @@ class AuthFlowTest {
       assertThat(notice.committed()).isTrue();
       assertThat(notice.locale()).isEqualTo(Locale.forLanguageTag("ru"));
     });
+  }
+
+  // REQ-AUTH-025
+  @Test
+  @DisplayName("Учётные записи с ролью: только незаблокированные, необъявленная роль — отказ")
+  void accountsWithRole() throws Exception {
+    Account first = accounts.create("first-admin@player.example", PASSWORD, Set.of("USER", "ADMIN"), true, Map.of());
+    Account blocked = accounts.create("blocked-admin@player.example", PASSWORD, Set.of("ADMIN"), true, Map.of());
+    accounts.create("user@player.example", PASSWORD, Set.of("USER"), true, Map.of());
+    accounts.block(blocked.id());
+    UUID admin = accounts.findByEmail("admin@site.example").orElseThrow().id();
+    assertThat(accounts.withRole("ADMIN")).containsExactlyInAnyOrder(admin, first.id());
+    assertThatThrownBy(() -> accounts.withRole("SUPPORT")).isInstanceOf(IllegalArgumentException.class);
   }
 
   // REQ-AUTH-024

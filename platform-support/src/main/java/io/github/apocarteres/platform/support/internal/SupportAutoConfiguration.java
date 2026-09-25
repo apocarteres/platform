@@ -14,10 +14,12 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -32,6 +34,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
   "io.github.apocarteres.platform.time.internal.TimeAutoConfiguration",
   "io.github.apocarteres.platform.ratelimit.internal.RateLimitAutoConfiguration",
   "org.springframework.boot.servlet.autoconfigure.MultipartAutoConfiguration",
+  "io.github.apocarteres.platform.notifications.internal.NotificationsAutoConfiguration",
 })
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class SupportAutoConfiguration {
@@ -70,8 +73,22 @@ public class SupportAutoConfiguration {
 
   @Bean
   SupportService supportService(RequestStore requests, AttachmentStore files, Accounts accounts, RateLimiter limiter,
-    SupportLetters letters, PlatformTransactionManager transactions, SupportSettings settings, Clock clock) {
-    return new SupportService(requests, files, accounts, limiter, letters, new TransactionTemplate(transactions), settings, clock);
+    SupportLetters letters, ObjectProvider<SupportBell> bell, PlatformTransactionManager transactions, SupportSettings settings,
+    Clock clock) {
+    return new SupportService(requests, files, accounts, limiter, letters, bell.getIfAvailable(() -> SupportBell.SILENT),
+      new TransactionTemplate(transactions), settings, clock);
+  }
+
+  // REQ-SUPPORT-015
+  @Configuration(proxyBeanMethods = false)
+  @ConditionalOnClass(name = "io.github.apocarteres.platform.notifications.Notifications")
+  static class BellConfiguration {
+
+    @Bean
+    SupportBell supportBell(io.github.apocarteres.platform.notifications.Notifications notifications, Accounts accounts,
+      SupportSettings settings) {
+      return new NotificationBell(notifications, accounts, settings);
+    }
   }
 
   // REQ-SUPPORT-010, REQ-SUPPORT-011

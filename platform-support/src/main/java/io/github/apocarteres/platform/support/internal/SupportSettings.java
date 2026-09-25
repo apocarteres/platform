@@ -60,6 +60,16 @@ record SupportSettings(
     return new IllegalStateException("Настройка " + PREFIX + key + ": " + reason);
   }
 
+  // REQ-SUPPORT-015
+  String requestPath(UUID id) {
+    return requestLink.replace("{id}", id.toString());
+  }
+
+  // REQ-SUPPORT-015
+  String operatorPath(UUID id) {
+    return operatorLink.replace("{id}", id.toString());
+  }
+
   URI request(UUID id) {
     return linkBase.resolve(requestLink.replace("{id}", id.toString()));
   }

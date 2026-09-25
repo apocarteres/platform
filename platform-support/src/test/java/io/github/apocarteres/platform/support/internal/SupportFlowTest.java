@@ -93,7 +93,8 @@ class SupportFlowTest {
       var statement = connection.createStatement()) {
       for (String table : List.of("platform-auth/create-account", "platform-auth/create-role", "platform-auth/create-token",
         "platform-support/create-request", "platform-support/create-entry", "platform-support/create-attachment",
-        "platform-support/create-attachment-content", "platform-support/create-answer-link")) {
+        "platform-support/create-attachment-content", "platform-support/create-answer-link",
+        "platform-notifications/create-notification")) {
         try (var input = SupportFlowTest.class.getResourceAsStream("/sql/" + table + ".sql")) {
           statement.execute(new String(input.readAllBytes(), StandardCharsets.UTF_8));
         }
@@ -608,6 +609,29 @@ class SupportFlowTest {
     assertThat(listed.get("items").get(0).get("excerpt").isNull()).isTrue();
     assertThat(guest).isNotBlank();
     assertThat(accounts.delete(player)).isEqualTo(io.github.apocarteres.platform.auth.Removal.REMOVED);
+  }
+
+  // REQ-SUPPORT-015, REQ-NOTIFICATIONS-007
+  @Test
+  @DisplayName("С колокольчиком: операторы узнают о новом обращении и сообщении автора, автор с учётной записью — об ответе")
+  void bellRingsForBothSides() throws Exception {
+    UUID player = account("player@site.example", "USER");
+    UUID first = account("operator@site.example", "USER", "ADMIN");
+    UUID second = account("second@site.example", "USER", "ADMIN");
+    String id = submitted(new Tab().signIn("player@site.example"), request("вопрос"));
+    new Tab().signIn("operator@site.example")
+      .post("/api/support/operator/requests/" + id + "/messages", "{\"text\":\"ответ\"}").andExpect(status().isOk());
+    String guestId = submitted(new Tab("192.0.2.9"), guest("гость", "guest@mail.example"));
+    List<String> rows = jdbc.sql("SELECT account_id || ' ' || kind || ' ' || COALESCE(link, '') FROM platform_notification ORDER BY seq")
+      .query(String.class).list();
+    assertThat(rows).containsExactly(
+      first + " support.arrived /support/operator/requests/" + id,
+      second + " support.arrived /support/operator/requests/" + id,
+      player + " support.answered /support/requests/" + id,
+      first + " support.arrived /support/operator/requests/" + guestId,
+      second + " support.arrived /support/operator/requests/" + guestId);
+    assertThat(jdbc.sql("SELECT params FROM platform_notification WHERE kind = 'support.answered'").query(String.class).single())
+      .contains("\"number\"");
   }
 
   // REQ-SUPPORT-012

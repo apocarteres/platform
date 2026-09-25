@@ -78,6 +78,12 @@ final class AccountsService implements Accounts {
     return accounts.count(emailPart);
   }
 
+  // REQ-AUTH-025
+  @Override
+  public List<UUID> withRole(String role) {
+    return accounts.withRole(declared(role), 1000);
+  }
+
   @Override
   public Optional<Account> find(UUID id) {
     return accounts.find(id).map(AccountStore.Stored::account);

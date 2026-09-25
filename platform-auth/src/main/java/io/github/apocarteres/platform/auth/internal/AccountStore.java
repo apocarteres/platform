@@ -92,6 +92,11 @@ final class AccountStore {
     return jdbc.sql(sql.get("account-count")).param("pattern", pattern(emailPart)).query(Long.class).single();
   }
 
+  // REQ-AUTH-025
+  List<UUID> withRole(String role, int limit) {
+    return jdbc.sql(sql.get("account-with-role")).param("role", role).param("limit", limit).query(UUID.class).list();
+  }
+
   // REQ-AUTH-013
   List<UUID> unverifiedBefore(Instant before) {
     return jdbc.sql(sql.get("account-unverified")).param("before", StoredInstant.offsetOf(before)).query(UUID.class).list();

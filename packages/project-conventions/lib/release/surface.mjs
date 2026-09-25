@@ -85,10 +85,11 @@ function obligationsOf(catalogue) {
   }
 }
 
-// REQ-PUBLISHING-015, REQ-AUTH-020, REQ-SUPPORT-013
+// REQ-PUBLISHING-015, REQ-AUTH-020, REQ-SUPPORT-013, REQ-NOTIFICATIONS-008
 export const CONTRACTS = [
   'platform-auth/src/main/resources/openapi/platform-auth.openapi.json',
   'platform-support/src/main/resources/openapi/platform-support.openapi.json',
+  'platform-notifications/src/main/resources/openapi/platform-notifications.openapi.json',
 ];
 
 // REQ-PUBLISHING-015, REQ-AUTH-020

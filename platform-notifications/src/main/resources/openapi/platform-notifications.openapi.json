@@ -1,0 +1,296 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Уведомления ядра",
+    "version": "0.0.0",
+    "description": "Контракт точек platform-notifications (REQ-NOTIFICATIONS-008). Версия документа — версия ядра. Изменяющие запросы требуют токена CSRF; запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006)."
+  },
+  "paths": {
+    "/api/notifications": {
+      "get": {
+        "summary": "Последние уведомления и число непрочитанного",
+        "x-clause": "REQ-NOTIFICATIONS-004",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bell"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/unread": {
+      "get": {
+        "summary": "Число непрочитанного",
+        "x-clause": "REQ-NOTIFICATIONS-004",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unread"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "post": {
+        "summary": "Прочитать одно",
+        "x-clause": "REQ-NOTIFICATIONS-004",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Прочитано"
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Уведомления нет или оно чужое",
+            "x-codes": [
+              "notification-not-found"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/read-all": {
+      "post": {
+        "summary": "Прочитать все",
+        "x-clause": "REQ-NOTIFICATIONS-004",
+        "responses": {
+          "204": {
+            "description": "Прочитаны все"
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProblemDetail": {
+        "type": "object",
+        "description": "RFC 9457 с расширением code (REQ-API-001)",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code"
+        ]
+      },
+      "Notice": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Текст по виду и параметрам собирает клиент проекта (REQ-NOTIFICATIONS-003)",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "read": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "params",
+          "createdAt",
+          "read"
+        ]
+      },
+      "Bell": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notice"
+            }
+          },
+          "unread": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "unread"
+        ]
+      },
+      "Unread": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "SESSION"
+      }
+    }
+  }
+}

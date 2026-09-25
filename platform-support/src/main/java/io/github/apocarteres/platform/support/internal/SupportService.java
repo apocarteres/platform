@@ -83,18 +83,20 @@ final class SupportService {
   private final Accounts accounts;
   private final RateLimiter limiter;
   private final SupportLetters letters;
+  private final SupportBell bell;
   private final TransactionTemplate transactions;
   private final SupportSettings settings;
   private final Clock clock;
   private final JsonMapper json = JsonMapper.builder().build();
 
   SupportService(RequestStore requests, AttachmentStore files, Accounts accounts, RateLimiter limiter, SupportLetters letters,
-    TransactionTemplate transactions, SupportSettings settings, Clock clock) {
+    SupportBell bell, TransactionTemplate transactions, SupportSettings settings, Clock clock) {
     this.requests = requests;
     this.files = files;
     this.accounts = accounts;
     this.limiter = limiter;
     this.letters = letters;
+    this.bell = bell;
     this.transactions = transactions;
     this.settings = settings;
     this.clock = clock;
@@ -133,6 +135,8 @@ final class SupportService {
         files.put(file, upload.content(), types.get(index));
       }
       afterCommit(() -> letters.arrived(new ArrivalNotice(id, assigned, settings.operator(id), true)), assigned);
+      // REQ-SUPPORT-015
+      bell.arrived(assigned, id);
       return assigned;
     }));
     return new Submitted(id, number);
@@ -174,6 +178,8 @@ final class SupportService {
       requests.entry(id, Kind.MESSAGE, Side.AUTHOR, author, text, null, null, now);
       move(request, request.state().afterAuthorMessage(), Side.AUTHOR, author, now);
       afterCommit(() -> letters.arrived(new ArrivalNotice(id, request.number(), settings.operator(id), false)), request.number());
+      // REQ-SUPPORT-015
+      bell.arrived(request.number(), id);
     });
     return authorView(author, id);
   }
@@ -190,6 +196,10 @@ final class SupportService {
       requests.entry(id, Kind.MESSAGE, Side.OPERATOR, operator, text, null, null, now);
       move(request, request.state().afterOperatorMessage(), Side.OPERATOR, operator, now);
       letter(request, text, now).ifPresent(letter -> afterCommit(() -> letters.answered(letter), request.number()));
+      // REQ-SUPPORT-015
+      if (request.author() != null) {
+        bell.answered(request.author(), request.number(), id);
+      }
     });
     return operatorView(id);
   }

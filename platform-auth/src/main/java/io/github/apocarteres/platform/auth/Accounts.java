@@ -26,6 +26,9 @@ public interface Accounts {
   // REQ-AUTH-009
   long count(String emailPart);
 
+  // REQ-AUTH-025
+  List<UUID> withRole(String role);
+
   // REQ-AUTH-023
   EmailChange changeEmail(UUID id, String email, Locale locale);
 

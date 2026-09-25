@@ -11,21 +11,15 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>platform-support</artifactId>
-  <name>platform-support</name>
-  <description>Центр поддержки поверх аутентификации ядра: обращения со снимком, журналом клиента и вложениями, ход обращения, рабочее место оператора, приём без входа по явному решению проекта, сроки хранения и удаление по запросу субъекта. Автоконфигурация Spring Boot.</description>
+  <artifactId>platform-notifications</artifactId>
+  <name>platform-notifications</name>
+  <description>Уведомления внутри приложения поверх аутентификации ядра: колокольчик с числом непрочитанного и списком последних, Java API создания, прочтение, сроки хранения и удаление по запросу субъекта. Автоконфигурация Spring Boot.</description>
 
   <dependencies>
     <dependency>
       <groupId>io.github.apocarteres.platform</groupId>
       <artifactId>platform-auth</artifactId>
       <version>${revision}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.github.apocarteres.platform</groupId>
-      <artifactId>platform-notifications</artifactId>
-      <version>${revision}</version>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

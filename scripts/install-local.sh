@@ -38,6 +38,25 @@ log "Maven: установка в локальный репозиторий"
 DIST_DIR="$ROOT_DIR/target/local-packages"
 mkdir -p "$DIST_DIR"
 
+publishable() {
+  node -e "process.exit(require('$1').publishable === false ? 1 : 0)"
+}
+
+built() {
+  node -e "process.exit(require('$1').scripts?.build ? 0 : 1)"
+}
+
+# CORE-OPS-101: web.sh build собирает все пакеты сразу, поэтому вызывается один раз,
+# а не для каждого пакета — иначе сборок становится квадрат числа пакетов.
+for manifest in "$ROOT_DIR"/packages/*/package.json; do
+  [ -f "$manifest" ] || continue
+  if publishable "$manifest" && built "$manifest"; then
+    log "npm: сборка пакетов"
+    (cd "$ROOT_DIR" && scripts/web.sh build > /dev/null)
+    break
+  fi
+done
+
 # REQ-PUBLISHING-011: публикуется каждый пакет, объявивший себя публикуемым.
 pack_package() {
   local source_dir="$1"
@@ -45,9 +64,7 @@ pack_package() {
   name="$(basename "$source_dir")"
   local pack_dir="$source_dir"
 
-  if node -e "process.exit(require('$source_dir/package.json').scripts?.build ? 0 : 1)"; then
-    log "npm: сборка пакета $name"
-    (cd "$ROOT_DIR" && scripts/web.sh build > /dev/null)
+  if built "$source_dir/package.json"; then
     pack_dir="$ROOT_DIR/target/packages/$name"
   fi
 
@@ -61,7 +78,7 @@ pack_package() {
 
 for manifest in "$ROOT_DIR"/packages/*/package.json; do
   [ -f "$manifest" ] || continue
-  node -e "process.exit(require('$manifest').publishable === false ? 1 : 0)" || continue
+  publishable "$manifest" || continue
   pack_package "$(dirname "$manifest")"
 done
 

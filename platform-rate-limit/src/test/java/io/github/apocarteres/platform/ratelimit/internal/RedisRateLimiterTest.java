@@ -135,4 +135,37 @@ class RedisRateLimiterTest {
     assertThatThrownBy(() -> new RateLimit("login", Duration.ofMinutes(1), 0)).hasMessageContaining("не меньше 1");
     assertThatThrownBy(() -> limiter.consume(LOGIN, " ")).hasMessageContaining("нужен субъект");
   }
+
+  // REQ-AUTH-027
+  @Test
+  @DisplayName("Множитель стенда увеличивает каждый предел, не меняя окна")
+  void scaleMultipliesTheLimit() {
+    RedisRateLimiter scaled = new RedisRateLimiter(redis, 2);
+    for (int attempt = 0; attempt < 6; attempt++) {
+      scaled.consume(LOGIN, "198.51.100.9");
+    }
+    assertThatThrownBy(() -> scaled.consume(LOGIN, "198.51.100.9")).isInstanceOf(RateLimited.class);
+    assertThatThrownBy(() -> scaled.require(LOGIN, "198.51.100.9")).isInstanceOf(RateLimited.class);
+  }
+
+  // REQ-AUTH-027
+  @Test
+  @DisplayName("Множитель — от 1 до 1000 и не в профиле production: там служба не стартует")
+  void scaleIsRefusedInProduction() {
+    org.springframework.mock.env.MockEnvironment stand = new org.springframework.mock.env.MockEnvironment()
+      .withProperty("platform.rate-limit.scale", "20");
+    assertThat(RateLimitSettings.of(stand).scale()).isEqualTo(20);
+    assertThat(RateLimitSettings.of(new org.springframework.mock.env.MockEnvironment()).scale()).isEqualTo(1);
+    org.springframework.mock.env.MockEnvironment production = new org.springframework.mock.env.MockEnvironment()
+      .withProperty("platform.rate-limit.scale", "20");
+    production.setActiveProfiles("production");
+    assertThatThrownBy(() -> RateLimitSettings.of(production)).hasMessageContaining("production");
+    org.springframework.mock.env.MockEnvironment plain = new org.springframework.mock.env.MockEnvironment();
+    plain.setActiveProfiles("production");
+    assertThat(RateLimitSettings.of(plain).scale()).isEqualTo(1);
+    assertThatThrownBy(() -> RateLimitSettings.of(new org.springframework.mock.env.MockEnvironment()
+      .withProperty("platform.rate-limit.scale", "0"))).hasMessageContaining("от 1 до 1000");
+    assertThatThrownBy(() -> RateLimitSettings.of(new org.springframework.mock.env.MockEnvironment()
+      .withProperty("platform.rate-limit.scale", "1001"))).hasMessageContaining("от 1 до 1000");
+  }
 }

@@ -179,6 +179,40 @@ export const appUpdateInterceptor: HttpInterceptorFn = (request, next) => {
   }));
 };
 
+// REQ-CLIENT-UPDATE-011
+export type ApiFetch = (input: string | URL, init?: RequestInit) => Promise<Response>;
+
+// REQ-CLIENT-UPDATE-011, REQ-TYPESCRIPT-CLOCK-002
+export const APP_FETCH = new InjectionToken<ApiFetch>('APP_FETCH', {
+  providedIn: 'root',
+  factory: () => {
+    const view = inject(DOCUMENT).defaultView;
+    return (input, init) => {
+      if (view === null) return Promise.reject(new Error('apiFetch вне браузера: окна нет'));
+      return view.fetch(input, init);
+    };
+  },
+});
+
+// REQ-CLIENT-UPDATE-011
+export function apiFetch(): ApiFetch {
+  const update = inject(AppUpdate, { optional: true });
+  if (update === null) throw new Error(NOT_PROVIDED.replace('Перехватчик appUpdateInterceptor подключён', 'apiFetch вызван'));
+  const base = inject(DOCUMENT).baseURI;
+  const send = inject(APP_FETCH);
+  return async (input, init = {}) => {
+    const url = input.toString();
+    const headers = new Headers(init.headers);
+    if (sameOrigin(url, base)) headers.set(API_VERSION_HEADER, apiVersionHeader(update.apiVersion));
+    const response = await send(url, { ...init, headers });
+    if (response.status === 426) {
+      const body: unknown = await response.clone().json().catch(() => null);
+      if (outdated(body)) update.require();
+    }
+    return response;
+  };
+}
+
 // REQ-CLIENT-UPDATE-006
 function outdated(body: unknown): boolean {
   return body !== null && typeof body === 'object' && (body as Record<string, unknown>)['code'] === OUTDATED_CODE;

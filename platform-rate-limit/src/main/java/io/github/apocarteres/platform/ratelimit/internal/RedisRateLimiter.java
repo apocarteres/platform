@@ -28,15 +28,27 @@ final class RedisRateLimiter implements RateLimiter {
   );
 
   private final StringRedisTemplate redis;
+  private final int scale;
 
   RedisRateLimiter(StringRedisTemplate redis) {
+    this(redis, 1);
+  }
+
+  // REQ-AUTH-027
+  RedisRateLimiter(StringRedisTemplate redis, int scale) {
     this.redis = redis;
+    this.scale = scale;
+  }
+
+  // REQ-AUTH-027
+  private long allowed(RateLimit limit) {
+    return (long) limit.limit() * scale;
   }
 
   @Override
   public void consume(RateLimit limit, String subject) {
     long[] state = increment(limit, subject);
-    if (state[0] > limit.limit()) {
+    if (state[0] > allowed(limit)) {
       throw new RateLimited(limit.action(), Duration.ofMillis(Math.max(state[1], 1)));
     }
   }
@@ -46,7 +58,7 @@ final class RedisRateLimiter implements RateLimiter {
     String key = keyOf(limit, subject);
     try {
       String value = redis.opsForValue().get(key);
-      if (value != null && Long.parseLong(value) >= limit.limit()) {
+      if (value != null && Long.parseLong(value) >= allowed(limit)) {
         Long left = redis.getExpire(key, java.util.concurrent.TimeUnit.MILLISECONDS);
         throw new RateLimited(limit.action(), Duration.ofMillis(left == null || left < 1 ? limit.window().toMillis() : left));
       }

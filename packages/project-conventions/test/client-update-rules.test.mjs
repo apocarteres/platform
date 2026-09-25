@@ -3,7 +3,7 @@ import test from 'node:test';
 import os from 'node:os';
 import path from 'node:path';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { findClientsWithoutUpdate, runtimeDependencies } from '../lib/client-update.mjs';
+import { findClientsWithoutUpdate, rawCalls, runtimeDependencies } from '../lib/client-update.mjs';
 import { defersWithoutError } from '../lib/defer-error.mjs';
 import { findUnguardedBudgets } from '../lib/bundle-budgets.mjs';
 
@@ -135,3 +135,35 @@ test('бюджет начального пакета с порогом ошиб�
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// REQ-CLIENT-UPDATE-011
+test('голый fetch и XMLHttpRequest к своему API находятся, чужой адрес, apiFetch, комментарий и тест — нет', async () => {
+  const service = [
+    "const token = await fetch('/api/auth/csrf');",
+    'const page = await fetch(`/api/items/${id}`);',
+    "const outside = await fetch('https://maps.example/tiles');",
+    "const scheme = await fetch('//cdn.example/x.js');",
+    "const bound = await this.fetch('/api/items');",
+    "const api = apiFetch(); await api('/api/items');",
+    "// fetch('/api/old') был здесь",
+    'const request = new XMLHttpRequest();',
+    "request.open('POST', '/api/upload');",
+    "request.open('GET', 'https://elsewhere.example/');",
+  ].join('\n');
+  assert.deepEqual(rawCalls(service).map((one) => one.line), [1, 2, 9]);
+  const root = await project({
+    'frontend/angular.json': workspace([{ type: 'initial', maximumError: '1mb' }]),
+    'frontend/src/app/app.config.ts': CONFIG,
+    'frontend/src/app/session.ts': service,
+    'frontend/src/app/session.spec.ts': "await fetch('/api/auth/csrf');\n",
+  });
+  try {
+    const found = await findClientsWithoutUpdate(root, {});
+    assert.deepEqual(found.get('frontend/src/app/session.ts').map((one) => one.line), [1, 2, 9]);
+    assert.match(found.get('frontend/src/app/session.ts')[0].text, /apiFetch\(\)/);
+    assert.equal(found.has('frontend/src/app/session.spec.ts'), false);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+

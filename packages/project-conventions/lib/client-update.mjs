@@ -10,6 +10,28 @@ const DECLARATION = /\bprovideAppUpdate\s*\(/;
 // REQ-CLIENT-UPDATE-008
 const INTERCEPTOR = /\bwithInterceptors\s*\(\s*\[[^\]]*\bappUpdateInterceptor\b/;
 
+// REQ-CLIENT-UPDATE-011
+const RAW_FETCH = /(?<![\w$.])fetch\s*\(\s*[`'"]\/(?!\/)/;
+
+// REQ-CLIENT-UPDATE-011
+const RAW_XHR = /\.open\s*\(\s*[`'"][A-Za-z]+[`'"]\s*,\s*[`'"]\/(?!\/)/;
+
+// REQ-CLIENT-UPDATE-011
+const TEST_FILE = /\.(?:spec|test)\.ts$/;
+
+// REQ-CLIENT-UPDATE-011
+export function rawCalls(source) {
+  const found = [];
+  const xhr = source.includes('XMLHttpRequest');
+  source.split('\n').forEach((line, index) => {
+    const code = line.trim();
+    if (code.startsWith('//') || code.startsWith('*') || code.startsWith('/*')) return;
+    if (RAW_FETCH.test(line)) found.push({ line: index + 1, text: 'fetch к своему API без X-Api-Version: вызовите функцию apiFetch() из @apocarteres/app-update' });
+    if (xhr && RAW_XHR.test(line)) found.push({ line: index + 1, text: 'XMLHttpRequest к своему API без X-Api-Version: вызовите функцию apiFetch() из @apocarteres/app-update' });
+  });
+  return found;
+}
+
 // REQ-CLIENT-UPDATE-008
 const WEB = new Set(['spring-boot-starter-web', 'spring-boot-starter-webmvc']);
 
@@ -34,7 +56,7 @@ export function runtimeDependencies(source) {
 }
 
 // REQ-CLIENT-UPDATE-008
-async function clientProblems(root, config, application) {
+async function clientProblems(root, config, application, violations) {
   const missing = [];
   let declared = false;
   let intercepted = false;
@@ -43,6 +65,8 @@ async function clientProblems(root, config, application) {
     const source = await readFile(path.join(root, file), 'utf8');
     declared ||= DECLARATION.test(source);
     intercepted ||= INTERCEPTOR.test(source);
+    // REQ-CLIENT-UPDATE-011
+    if (!TEST_FILE.test(file)) for (const call of rawCalls(source)) add(violations, file, call);
   }
   if (!declared) missing.push('provideAppUpdate({ apiVersion, available, required })');
   if (!intercepted) missing.push('appUpdateInterceptor в provideHttpClient(withInterceptors([...]))');
@@ -54,7 +78,7 @@ export async function findClientsWithoutUpdate(root, config) {
   const violations = new Map();
   for (const application of await angularApplications(root)) {
     if (application.broken) continue;
-    const missing = await clientProblems(root, config, application);
+    const missing = await clientProblems(root, config, application, violations);
     if (missing.length > 0) {
       add(violations, application.file, {
         line: application.line,

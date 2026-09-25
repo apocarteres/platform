@@ -1,0 +1,56 @@
+---
+id: CORE-QUAL-029
+type: ticket
+status: done
+scope: frontend, quality
+authority: supporting
+priority: P1
+release: unassigned
+related: REQ-CLIENT-UPDATE
+---
+
+# Голый `fetch` без версии API находится только на стенде
+
+## Проблема
+
+`appUpdateInterceptor` ставит `X-Api-Version` запросам `HttpClient`. Запрос
+браузера в обход `HttpClient` — `fetch`, `XMLHttpRequest` — идёт без заголовка
+и получает `426 client-outdated`. Правило `client-update` таких вызовов не
+искало: проверка проходила, отказ находился только на стенде.
+
+## Подтверждение
+
+Заявка потребителя [issue #55](https://github.com/apocarteres/platform/issues/55)
+(clanlog): весь набор сценариев упал на входе — токен CSRF брался голым
+`fetch`.
+
+## Последствия при сохранении текущего поведения
+
+Каждый обход `HttpClient` ломает клиент после раската, а проверка молчит.
+
+## Решение владельца
+
+Решение владельца от 2026-09-25: ядро даёт `apiFetch()`, правило находит голые
+вызовы к своему API. Правило строже — старшая версия.
+
+## Требуется
+
+1. `apiFetch()` в `@apocarteres/app-update`.
+2. Правило `client-update` находит `fetch('/…')` и `XMLHttpRequest.open(…, '/…')`.
+
+## Критерии приёмки
+
+- Тесты обёртки и правила; пробы.
+
+## Что сделано
+
+- `apiFetch()` и порт `APP_FETCH`: заголовок к своему источнику, свои заголовки
+  сохраняются, `client-outdated` показывает `required`.
+- Правило находит голые вызовы с адресом литералом от корня, пропускает
+  чужие адреса, `this.fetch`, комментарии и тесты; `REQ-CLIENT-UPDATE-011`.
+- Пробы: 6 на правило и 4 на обёртку — все пойманы; одна сначала не ловилась
+  (тест не проверял, что свои заголовки доходят) — тест дополнен.
+
+## Откуда пришла задача
+
+[issue #55](https://github.com/apocarteres/platform/issues/55).

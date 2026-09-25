@@ -123,7 +123,7 @@ authority: navigation
 | [Положения о поведении при работе писались раньше запуска](CORE-QUAL-024-runtime-clauses-written-before-a-run.md) | P1 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | quality, deployment |
 | [Правила ядра не видят девяти его модулей](CORE-QUAL-026-core-rules-miss-nine-modules.md) | P1 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | quality, tooling |
 | [Код отказа не читается за `sanitisingInterceptor` ядра](CORE-QUAL-028-auth-code-behind-sanitising-interceptor.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | frontend, typescript |
-| [Голый `fetch` без версии API находится только на стенде](CORE-QUAL-029-raw-fetch-without-api-version.md) | P1 | Выполнена | Не назначен | frontend, quality |
+| [Голый `fetch` без версии API находится только на стенде](CORE-QUAL-029-raw-fetch-without-api-version.md) | P1 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | frontend, quality |
 | [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | security, backend |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
@@ -173,7 +173,7 @@ authority: navigation
 | [Идеи с вопросами держали выпуск наравне с задачами](CORE-OPS-090-ideas-are-not-tickets.md) | P2 | Выполнена | [RELEASE-8-1-0](../../releases/RELEASE-8-1-0.md) | tickets, release, tooling |
 | [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | release, tooling |
 | [`static-check` падает на сборке без `index.html`](CORE-OPS-096-static-check-crashes-without-index.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | deployment, tooling |
-| [Стенд сценариев упирается в предел входа](CORE-OPS-097-stand-rate-limit-scale.md) | P2 | Выполнена | Не назначен | security, backend, testing |
+| [Стенд сценариев упирается в предел входа](CORE-OPS-097-stand-rate-limit-scale.md) | P2 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | security, backend, testing |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

@@ -92,7 +92,8 @@ export async function checkStatic(base, { artifact, previous = [], timeoutSecond
   const files = await builtFiles(artifact);
   const reasons = [];
   const warnings = [];
-  if (!files.includes(ENTRY)) return { proved: false, reasons: [`в сборке ${artifact} нет ${ENTRY}: назовите составляющую клиента`], asked: 0 };
+  // CORE-OPS-096
+  if (!files.includes(ENTRY)) return { proved: false, reasons: [`в сборке ${artifact} нет ${ENTRY}: назовите составляющую клиента`], warnings, asked: 0 };
   const hashed = files.find((file) => HASHED.test(file) && file.endsWith('.js')) ?? files.find((file) => HASHED.test(file));
   if (hashed === undefined) {
     reasons.push(`в сборке ${artifact} нет файлов с отпечатком в имени: вечный кэш и архив держатся на отпечатке, включите outputHashing`);

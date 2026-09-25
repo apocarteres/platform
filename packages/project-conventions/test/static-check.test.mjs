@@ -153,3 +153,18 @@ test('политика no-referrer — предупреждение, а не о�
   assert.match(referrerWarning({ referrerPolicy: null, body: "<meta content='no-referrer' name='referrer'>" }), /no-referrer/);
   assert.equal(referrerWarning({ referrerPolicy: 'no-referrer-when-downgrade', body: '' }), null, 'no-referrer-when-downgrade — другая политика');
 });
+
+// REQ-DEPLOYMENT-024, CORE-OPS-096
+test('сборка без index.html — отказ с причиной, а не падение команды', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'static-empty-'));
+  try {
+    await writeFile(path.join(dir, 'main-AAAAAAAA.js'), 'x');
+    const answer = await checkStatic('http://127.0.0.1:9', { artifact: dir, token: 'проба' });
+    assert.equal(answer.proved, false);
+    assert.match(answer.reasons[0], /нет index.html: назовите составляющую клиента/);
+    assert.deepEqual(answer.warnings, []);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+

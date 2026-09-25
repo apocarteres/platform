@@ -5,7 +5,7 @@ status: done
 scope: frontend, typescript
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-11-1-0
 related: REQ-AUTH, REQ-API, REQ-SUPPORT, REQ-NOTIFICATIONS
 ---
 

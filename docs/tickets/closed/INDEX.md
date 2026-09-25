@@ -122,8 +122,8 @@ authority: navigation
 | [У Rust нет средства засева, хотя правило его разрешает](CORE-QUAL-020-rust-has-no-seeding-mechanism.md) | P1 | Выполнена | [RELEASE-1-27-0](../../releases/RELEASE-1-27-0.md) | rust, quality |
 | [Положения о поведении при работе писались раньше запуска](CORE-QUAL-024-runtime-clauses-written-before-a-run.md) | P1 | Выполнена | [RELEASE-1-50-0](../../releases/RELEASE-1-50-0.md) | quality, deployment |
 | [Правила ядра не видят девяти его модулей](CORE-QUAL-026-core-rules-miss-nine-modules.md) | P1 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | quality, tooling |
-| [Код отказа не читается за `sanitisingInterceptor` ядра](CORE-QUAL-028-auth-code-behind-sanitising-interceptor.md) | P1 | Выполнена | Не назначен | frontend, typescript |
-| [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | Не назначен | security, backend |
+| [Код отказа не читается за `sanitisingInterceptor` ядра](CORE-QUAL-028-auth-code-behind-sanitising-interceptor.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | frontend, typescript |
+| [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | security, backend |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |
@@ -138,7 +138,7 @@ authority: navigation
 | [OpenAPI-контракт аутентификации ядра и типизированный профиль проекта](CORE-ARC-015-openapi-contract-for-core-auth.md) | P2 | Выполнена | [RELEASE-9-0-0](../../releases/RELEASE-9-0-0.md) | backend, frontend, api, tooling |
 | [Журнал клиента: пакет `@apocarteres/client-journal`](CORE-ARC-016-client-journal.md) | P2 | Выполнена | [RELEASE-9-1-0](../../releases/RELEASE-9-1-0.md) | frontend, typescript, personal-data |
 | [Центр поддержки: starter `platform-support` и пакет `@apocarteres/support`](CORE-ARC-017-support-centre.md) | P2 | Выполнена | [RELEASE-9-2-0](../../releases/RELEASE-9-2-0.md) | frontend, backend, architecture, personal-data |
-| [Колокольчик уведомлений: сервер и служебная часть клиента](CORE-ARC-018-notification-bell.md) | P2 | Выполнена | Не назначен | frontend, backend, notification, personal-data |
+| [Колокольчик уведомлений: сервер и служебная часть клиента](CORE-ARC-018-notification-bell.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | frontend, backend, notification, personal-data |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |
@@ -151,7 +151,7 @@ authority: navigation
 | [Три образа вместо терминов](CORE-DOC-013-three-images-instead-of-terms.md) | P2 | Выполнена | [RELEASE-1-18-0](../../releases/RELEASE-1-18-0.md) | documentation |
 | [Не сказано, где живёт опись поведений](CORE-DOC-016-where-the-inventory-lives.md) | P2 | Выполнена | [RELEASE-1-30-0](../../releases/RELEASE-1-30-0.md) | process, documentation |
 | [Выпуск интеграции был записан дефектом](CORE-DOC-017-integration-release-was-called-a-defect.md) | P2 | Выполнена | [RELEASE-1-52-0](../../releases/RELEASE-1-52-0.md) | adoption, documentation |
-| [Ядро пишет слово, запрещённое своим словарём](CORE-DOC-018-core-writes-its-own-forbidden-word.md) | P2 | Выполнена | Не назначен | documentation, tooling |
+| [Ядро пишет слово, запрещённое своим словарём](CORE-DOC-018-core-writes-its-own-forbidden-word.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | documentation, tooling |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |
@@ -170,8 +170,8 @@ authority: navigation
 | [Исправление слепой проверки — не несовместимость, но и не молчание](CORE-OPS-082-sharper-check-is-not-incompatible.md) | P2 | Выполнена | [RELEASE-3-1-0](../../releases/RELEASE-3-1-0.md) | publishing, release, tooling |
 | [Задачи с открытыми вопросами копятся без напоминания](CORE-OPS-086-open-questions-pile-up.md) | P2 | Выполнена | [RELEASE-6-0-0](../../releases/RELEASE-6-0-0.md) | release, tickets, tooling |
 | [Идеи с вопросами держали выпуск наравне с задачами](CORE-OPS-090-ideas-are-not-tickets.md) | P2 | Выполнена | [RELEASE-8-1-0](../../releases/RELEASE-8-1-0.md) | tickets, release, tooling |
-| [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | Не назначен | release, tooling |
-| [`static-check` падает на сборке без `index.html`](CORE-OPS-096-static-check-crashes-without-index.md) | P2 | Выполнена | Не назначен | deployment, tooling |
+| [Задача обязательства, названная при открытии, входит в состав дважды](CORE-OPS-095-obligation-ticket-listed-twice-at-open.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | release, tooling |
+| [`static-check` падает на сборке без `index.html`](CORE-OPS-096-static-check-crashes-without-index.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | deployment, tooling |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

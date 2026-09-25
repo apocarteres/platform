@@ -5,7 +5,7 @@ status: done
 scope: security, backend
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-11-1-0
 related: REQ-AUTH, CORE-ARC-018
 ---
 

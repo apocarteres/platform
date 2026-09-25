@@ -5,7 +5,7 @@ status: done
 scope: frontend, backend, notification, personal-data
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-11-1-0
 depends-on: CORE-ARC-017
 related: CORE-ARC-001, CORE-ARC-017, ADR-0001, REQ-AUTH
 ---

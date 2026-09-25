@@ -95,7 +95,7 @@ async function check(root) {
   const debts = await findObligationDebts(root);
   problems.push(...debts.problems);
   advisories.push(...debts.advisories);
-  // REQ-DEPLOYMENT-027
+  // REQ-DEPLOYMENT-030
   const expands = await findExpandDebts(root, config);
   problems.push(...expands.problems);
   advisories.push(...expands.advisories);
@@ -412,7 +412,7 @@ const USAGE = {
     + '\n  Печатает переходы базы, которых нет ни в одном выпущенном выпуске, и порядок развёртывания: order=switch или order=downtime.',
   'static-check': 'conventions static-check --url <адрес сайта> --component <составляющая клиента> [--previous <путь>,<путь>] [--timeout <с>]',
   'upgrade-report': 'conventions upgrade-report --from X.Y.Z [--to X.Y.Z]',
-  'jvm-args': 'conventions jvm-args --archive <путь> | --aot <путь>',
+  'jvm-args': 'conventions jvm-args --env <среда> --archive <путь> | --aot <путь>',
   'deploy-args': 'conventions deploy-args [--root <path>] -- <доводы скрипта>   |   conventions deploy-args --usage',
   manifest: 'conventions manifest --env <среда> [--only a,b] [--instance <экземпляр>] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
@@ -475,7 +475,7 @@ const SPEC = {
   migrations: { flags: ['--unreleased'] },
   attested: { values: ['--commit'] },
   'upgrade-report': { values: ['--from', '--to'] },
-  'jvm-args': { values: ['--archive', '--aot'] },
+  'jvm-args': { values: ['--env', '--archive', '--aot'] },
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
   components: { flags: ['--environments', '--full'] },
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
@@ -552,8 +552,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'backups') await backupsCommand(root, parsed, { usage: USAGE, refuse });
     // REQ-PUBLISHING-015
     else if (command === 'upgrade-report') await upgradeReport(parsed, { usage: USAGE, refuse });
-    // REQ-DEPLOYMENT-011
-    else if (command === 'jvm-args') jvmArgs(parsed, { usage: USAGE, refuse });
+    // REQ-DEPLOYMENT-011, REQ-DEPLOYMENT-030
+    else if (command === 'jvm-args') await jvmArgs(root, parsed, { usage: USAGE, refuse });
     else if (command === 'manifest') await deployManifest(root, parsed, { usage: USAGE, refuse });
     else await naming(root, parsed.positional[0], parsed.values.get('--map'));
   }

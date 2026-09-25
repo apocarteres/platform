@@ -96,8 +96,11 @@ test('каждый отказ называет выход: команду, кл�
     await cliRefusal('static-check', shape.root, 'static-check', '--url', 'http://127.0.0.1:1/', '--component', 'frontend');
     await cliRefusal('upgrade-report', shape.root, 'upgrade-report');
     await cliRefusal('upgrade-report', shape.root, 'upgrade-report', '--from', 'один');
-    await cliRefusal('jvm-args', shape.root, 'jvm-args');
-    await cliRefusal('jvm-args', shape.root, 'jvm-args', '--archive', 'a.jsa', '--aot', 'a.aot');
+    await cliRefusal('jvm-args', shape.root, 'jvm-args', '--env', 'qa');
+    await cliRefusal('jvm-args', shape.root, 'jvm-args', '--env', 'qa', '--archive', 'a.jsa', '--aot', 'a.aot');
+    // REQ-DEPLOYMENT-030
+    await cliRefusal('jvm-args', shape.root, 'jvm-args', '--archive', 'a.jsa');
+    await cliRefusal('jvm-args', shape.root, 'jvm-args', '--env', 'prodution', '--archive', 'a.jsa');
   } finally {
     await rm(plain.root, { recursive: true, force: true });
     await rm(shape.root, { recursive: true, force: true });

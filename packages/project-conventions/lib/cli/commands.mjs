@@ -250,9 +250,14 @@ export async function upgradeReport(parsed, { usage, refuse }) {
   for (const line of reportLines(history, { from, to })) console.log(line);
 }
 
-// REQ-DEPLOYMENT-011
-export function jvmArgs(parsed, { usage, refuse }) {
-  const answer = launchKeys({ archive: parsed.values.get('--archive'), aot: parsed.values.get('--aot') });
+// REQ-DEPLOYMENT-011, REQ-DEPLOYMENT-030
+export async function jvmArgs(root, parsed, { usage, refuse }) {
+  const answer = launchKeys({
+    archive: parsed.values.get('--archive'),
+    aot: parsed.values.get('--aot'),
+    environment: parsed.values.get('--env'),
+    environments: deployment(await readConfig(root)).environments,
+  });
   if (answer.problems.length > 0) {
     refuse(usage['jvm-args'], answer.problems[0]);
     return;

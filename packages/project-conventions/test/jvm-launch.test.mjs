@@ -42,11 +42,67 @@ async function launch(keys, jar) {
   }
 }
 
+// REQ-DEPLOYMENT-011, REQ-DEPLOYMENT-030
+async function declaring(environments) {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'jvm-args-'));
+  await writeFile(path.join(root, '.conventions.json'),
+    JSON.stringify({ sources: [], deployment: { environments, components: { backend: { artifact: 'target/app.jar' } } } }));
+  return root;
+}
+
 // REQ-DEPLOYMENT-011
 async function delivered(...args) {
-  const { stdout } = await run(process.execPath, [cli, 'jvm-args', ...args]);
-  return stdout.trim().split('\n');
+  const root = await declaring(['qa', 'production']);
+  try {
+    const { stdout } = await run(process.execPath, [cli, 'jvm-args', ...args, '--root', root]);
+    return stdout.trim().split('\n');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 }
+
+// REQ-DEPLOYMENT-030
+async function refused(environments, ...args) {
+  const root = await declaring(environments);
+  try {
+    await run(process.execPath, [cli, 'jvm-args', ...args, '--root', root]);
+    return { code: 0, output: '' };
+  } catch (failure) {
+    return { code: failure.code, output: `${failure.stdout ?? ''}${failure.stderr ?? ''}` };
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+// REQ-DEPLOYMENT-030
+test('рабочей среде поставка добавляет профиль production, не затирая профилей проекта', async () => {
+  assert.deepEqual(await delivered('--env', 'production', '--archive', 'app.jsa'),
+    ['-XX:+AutoCreateSharedArchive', '-XX:SharedArchiveFile=app.jsa', '-Dspring.profiles.include=production']);
+  assert.deepEqual(await delivered('--env', 'production', '--aot', 'app.aot'),
+    ['-XX:AOTCache=app.aot', '-Dspring.profiles.include=production']);
+});
+
+// REQ-DEPLOYMENT-030
+test('прочим средам профиль production не поставляется', async () => {
+  assert.deepEqual(await delivered('--env', 'qa', '--archive', 'app.jsa'),
+    ['-XX:+AutoCreateSharedArchive', '-XX:SharedArchiveFile=app.jsa']);
+});
+
+// REQ-DEPLOYMENT-030, REQ-RELEASE-039
+test('без среды и с необъявленной средой поставка отказывает и называет объявленные', async () => {
+  const missing = await refused(['qa', 'production'], '--archive', 'app.jsa');
+  assert.notEqual(missing.code, 0, missing.output);
+  assert.match(missing.output, /--env/);
+  assert.match(missing.output, /qa, production/);
+
+  const typo = await refused(['qa', 'production'], '--env', 'prodution', '--archive', 'app.jsa');
+  assert.notEqual(typo.code, 0, 'опечатка в имени среды не должна молча снимать профиль');
+  assert.match(typo.output, /prodution/);
+  assert.match(typo.output, /qa, production/);
+
+  const undeclared = await refused([], '--env', 'production', '--archive', 'app.jsa');
+  assert.notEqual(undeclared.code, 0, undeclared.output);
+});
 
 const jdk = await jdkHere();
 const skip = jdk ? false : 'JDK здесь не установлен: проверка запуском требует javac и jar закреплённой версии';
@@ -56,7 +112,7 @@ test('поставленные ключи запускают службу и з�
   const root = await service();
   const archive = path.join(root, 'app.jsa');
   try {
-    const keys = await delivered('--archive', archive);
+    const keys = await delivered('--env', 'qa', '--archive', archive);
     const first = await launch(keys, path.join(root, 'app.jar'));
     assert.equal(first.code, 0, first.output);
     assert.match(first.output, /служба поднялась/);
@@ -81,8 +137,9 @@ test('архив классов и кеш AOT несовместимы: вирт
     assert.notEqual(both.code, 0, 'сочетание не запускается');
     assert.match(both.output, /AOTCache cannot be used at the same time with .*SharedArchiveFile/);
 
-    assert.match(launchKeys({ archive: 'a', aot: 'b' }).problems[0], /взаимно исключают/);
-    assert.deepEqual(launchKeys({ aot: 'app.aot' }).keys, ['-XX:AOTCache=app.aot']);
+    const qa = { environment: 'qa', environments: ['qa'] };
+    assert.match(launchKeys({ archive: 'a', aot: 'b', ...qa }).problems[0], /взаимно исключают/);
+    assert.deepEqual(launchKeys({ aot: 'app.aot', ...qa }).keys, ['-XX:AOTCache=app.aot']);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

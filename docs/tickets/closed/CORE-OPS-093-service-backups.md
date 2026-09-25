@@ -5,7 +5,7 @@ status: done
 scope: deployment, operations, personal-data
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-11-0-0
 depends-on: CORE-ARC-017
 related: REQ-DEPLOYMENT, REQ-ADOPTION
 ---

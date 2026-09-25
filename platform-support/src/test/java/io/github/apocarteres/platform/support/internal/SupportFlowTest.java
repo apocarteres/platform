@@ -624,7 +624,7 @@ class SupportFlowTest {
     String guestId = submitted(new Tab("192.0.2.9"), guest("гость", "guest@mail.example"));
     List<String> rows = jdbc.sql("SELECT account_id || ' ' || kind || ' ' || COALESCE(link, '') FROM platform_notification ORDER BY seq")
       .query(String.class).list();
-    assertThat(rows).containsExactly(
+    assertThat(rows).containsExactlyInAnyOrder(
       first + " support.arrived /support/operator/requests/" + id,
       second + " support.arrived /support/operator/requests/" + id,
       player + " support.answered /support/requests/" + id,

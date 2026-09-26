@@ -5,7 +5,7 @@ status: done
 scope: release, tickets, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-12-1-0
 related: REQ-RELEASE, REQ-TICKETS
 ---
 

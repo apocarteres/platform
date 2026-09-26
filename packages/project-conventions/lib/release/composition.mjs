@@ -1,6 +1,19 @@
 import {
-  openRelease, replaceMetadata, replaceSection, sectionLines, ticketId, tickets, writeDocument,
+  openRelease, replaceMetadata, replaceSection, sectionLines, shipsResult, ticketId, tickets, writeDocument,
 } from './documents.mjs';
+
+// REQ-RELEASE-007, REQ-RELEASE-021, REQ-RELEASE-031, REQ-RELEASE-046
+export function settledComposition(candidates, id) {
+  const composition = candidates.filter(shipsResult);
+  const carriedOn = candidates.filter((ticket) => !shipsResult(ticket));
+  return {
+    composition,
+    stamps: [
+      ...composition.map((ticket) => ({ file: ticket.file, content: replaceMetadata(ticket.content, { release: id }) })),
+      ...carriedOn.map((ticket) => ({ file: ticket.file, content: replaceMetadata(ticket.content, { release: 'unassigned' }) })),
+    ],
+  };
+}
 
 // REQ-RELEASE-029
 export async function cancelRelease(root, { reason }) {

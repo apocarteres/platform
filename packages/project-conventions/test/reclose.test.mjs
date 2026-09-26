@@ -3,11 +3,12 @@ import test from 'node:test';
 import path from 'node:path';
 import { rm, writeFile } from 'node:fs/promises';
 import { PREFIX, referenceConsumer } from './reference-consumer.mjs';
-import { closeRelease, finishRelease, openNext, recloseRelease } from '../lib/release/cycle.mjs';
+import { closeRelease, dropFromComposition, finishRelease, openNext, recloseRelease } from '../lib/release/cycle.mjs';
 import { writeReceipt } from '../lib/release/receipt.mjs';
 import { headCommit, tagCommit } from '../lib/release/git.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
+import { checkDocumentation } from '../lib/docs/check-docs.mjs';
 
 const DAY = new Date('2026-09-12T00:00:00Z');
 const TAG = '2026.09.11';
@@ -78,6 +79,55 @@ test('тег переносится на исправленный коммит, 
     await commit(consumer, `${id} перенос записан`);
     const finished = await finishRelease(root, { scheme: 'date', today: DAY, note: 'раскат' });
     assert.equal(finished.finished, true, JSON.stringify(finished.problems));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-RELEASE-046, REQ-RELEASE-007
+test('перенос тега пересобирает состав: задачи, доделанные после первого шага, входят в выпуск без ручной правки', async () => {
+  const consumer = await referenceConsumer();
+  const root = consumer.root;
+  const id = `${PREFIX}-QUAL-503`;
+  const later = `${PREFIX}-QUAL-504`;
+  const stamped = `${PREFIX}-QUAL-505`;
+  const unfinished = `${PREFIX}-QUAL-506`;
+  try {
+    await closedFirstStep(consumer, id);
+
+    await writeFile(path.join(root, `docs/tickets/closed/${later}-work.md`), doneTicket(later));
+    await writeFile(path.join(root, `docs/tickets/closed/${stamped}-work.md`),
+      doneTicket(stamped).replace('release: unassigned', 'release: RELEASE-2026-09-11'));
+    await writeFile(path.join(root, `docs/tickets/${unfinished}-work.md`),
+      doneTicket(unfinished).replace('status: done', 'status: in_progress').replace('release: unassigned', 'release: RELEASE-2026-09-11'));
+    await summaries(root);
+    const fixed = await commit(consumer, `${later} ${stamped} ${unfinished} доработка в тот же выпуск`);
+    await receipt(root, fixed);
+
+    const held = await recloseRelease(root, { scheme: 'date', reason: 'владелец добавил задачи в неразвёрнутый выпуск' });
+    assert.equal(held.reclosed, false, 'невыполненная задача состава держит перенос, как и первый шаг (REQ-RELEASE-031)');
+    assert.match(held.problems.join('\n'), new RegExp(`${unfinished}[^\n]*release drop`));
+    const dropped = await dropFromComposition(root, { ticketId: unfinished, reason: 'проверка после развёртывания — отдельной задачей' });
+    assert.equal(dropped.dropped, true, JSON.stringify(dropped.problems));
+    await summaries(root);
+    const recorded = await commit(consumer, `Снятие из состава записано\n\nRelease-cycle: RELEASE-2026-09-11`);
+    await receipt(root, recorded);
+
+    const again = await recloseRelease(root, { scheme: 'date', reason: 'владелец добавил задачи в неразвёрнутый выпуск' });
+    assert.equal(again.reclosed, true, JSON.stringify(again.problems));
+    const document = await readRelease(root);
+    const composition = document.slice(document.indexOf('## Состав'), document.indexOf('## Критерии выхода'));
+    for (const one of [id, later, stamped]) assert.ok(composition.includes(one), `${one} в составе:\n${composition}`);
+    assert.ok(!composition.includes(unfinished), 'невыполненная задача выпуска не несёт');
+    const { readFile } = await import('node:fs/promises');
+    assert.match(await readFile(path.join(root, `docs/tickets/closed/${later}-work.md`), 'utf8'), /^release: RELEASE-2026-09-11$/m);
+
+    await summaries(root);
+    await commit(consumer, `${id} перенос записан`);
+    assert.equal((await finishRelease(root, { scheme: 'date', today: DAY, note: 'раскат' })).finished, true);
+    await summaries(root);
+    const errors = (await checkDocumentation(root)).errors;
+    assert.deepEqual(errors.filter((error) => error.includes('составе')), [], errors.join('\n'));
   } finally {
     await rm(root, { recursive: true, force: true });
   }

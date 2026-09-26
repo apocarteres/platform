@@ -18,6 +18,7 @@ import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { findExpandDebts } from '../migrations.mjs';
 import { questionStanding } from './questions.mjs';
+import { settledComposition } from './composition.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -325,9 +326,7 @@ export async function closeRelease(root, { scheme }) {
   if (state.problems.length > 0) return { closed: false, problems: state.problems, reminders: state.reminders };
   const { release, commit, receipt, tag } = state;
   const id = release.metadata.get('id');
-  // REQ-RELEASE-021, REQ-RELEASE-031
-  const composition = state.composition.filter(shipsResult);
-  const carriedOn = state.composition.filter((ticket) => !shipsResult(ticket));
+  const { composition, stamps } = settledComposition(state.composition, id);
 
   // REQ-RELEASE-001
   let content = replaceMetadata(release.content, { status: 'in_progress' });
@@ -347,15 +346,7 @@ export async function closeRelease(root, { scheme }) {
     '## Критерии выхода',
     criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore)),
   );
-  const writes = [{ file: release.file, content }];
-
-  for (const ticket of composition) {
-    writes.push({ file: ticket.file, content: replaceMetadata(ticket.content, { release: id }) });
-  }
-  // REQ-RELEASE-021
-  for (const ticket of carriedOn) {
-    writes.push({ file: ticket.file, content: replaceMetadata(ticket.content, { release: 'unassigned' }) });
-  }
+  const writes = [{ file: release.file, content }, ...stamps];
 
   // REQ-RELEASE-005
   await createTag(root, tag, commit, `Выпуск ${id}`);
@@ -759,8 +750,11 @@ export async function recloseRelease(root, { scheme, reason }) {
   }
   const state = await closability(root, { scheme, retagging: true });
   if (state.problems.length > 0) return { reclosed: false, problems: state.problems };
-  const { receipt, composition } = state;
-  let content = replaceSection(release.content, '## Результат', resultLines(receipt, head, tag));
+  const { receipt } = state;
+  // REQ-RELEASE-007, REQ-RELEASE-046
+  const { composition, stamps } = settledComposition(state.composition, id);
+  let content = replaceSection(release.content, '## Состав', compositionRows(root, composition));
+  content = replaceSection(content, '## Результат', resultLines(receipt, head, tag));
   // REQ-PUBLISHING-015
   if (state.cost !== null) {
     content = withSection(content, COST_SECTION, costSection(state.cost.changes, state.cost.declared, state.cost.seesMore), '## Результат');
@@ -782,7 +776,9 @@ export async function recloseRelease(root, { scheme, reason }) {
   ], '## Результат');
   await moveTag(root, tag, head, `Выпуск ${id}`);
   await writeDocument(release.file, content);
-  return { reclosed: true, id, tag, from: tagged, to: head };
+  // REQ-RELEASE-007, REQ-RELEASE-046
+  for (const stamp of stamps) await writeDocument(stamp.file, stamp.content);
+  return { reclosed: true, id, tag, from: tagged, to: head, composition: composition.map(ticketId) };
 }
 
 // REQ-RELEASE-046

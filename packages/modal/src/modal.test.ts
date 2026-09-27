@@ -17,7 +17,7 @@ function escape(): KeyboardEvent {
   template: `
     <div apcrModal [apcrModalEscape]="closeOuter">внешнее</div>
     @if (innerOpen()) {
-      <div apcrModal [apcrModalEscape]="closeInner">внутреннее</div>
+      <div apcrModal apcrModalOver="child" [apcrModalEscape]="closeInner">внутреннее</div>
     }
   `,
 })

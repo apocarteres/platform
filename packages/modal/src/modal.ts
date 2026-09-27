@@ -1,4 +1,5 @@
-import { DOCUMENT, Directive, ElementRef, Injectable, OnDestroy, OnInit, inject } from '@angular/core';
+import { DOCUMENT, Directive, ElementRef, Injectable, OnDestroy, OnInit, inject, isDevMode, signal } from '@angular/core';
+import type { Signal } from '@angular/core';
 
 // REQ-CLIENT-MODAL-001
 export type EscapeHandler = (event: KeyboardEvent) => void;
@@ -24,6 +25,32 @@ const UNDECLARED = 'Модальное окно объявлено без реш
 const NO_BACKDROP = 'Фон модального окна объявлен без решения о щелчке: укажите [apcrModalBackdrop] —'
   + ' обработчик, который закрывает окно, либо BACKDROP_IGNORED, если щелчок по фону окно не закрывает';
 
+// REQ-CLIENT-MODAL-011
+export type ModalLayer = 'child' | 'blocking';
+
+// REQ-CLIENT-MODAL-011
+const LAYERS: readonly string[] = ['child', 'blocking'];
+
+// REQ-CLIENT-MODAL-011
+const UNKNOWN_LAYER = 'Слой модального окна apcrModalOver: допустимы child — окно, открытое верхним окном,'
+  + ' и blocking — окно, держащее экран до события';
+
+// REQ-CLIENT-MODAL-011
+const OVERLAID = 'Модальное окно открыто поверх открытого без объявления (REQ-CLIENT-MODAL-011): одновременно показывается одно окно.'
+  + ' Окно, открытое верхним окном, объявляется apcrModalOver="child", окно, держащее экран, — apcrModalOver="blocking";'
+  + ' окно, появляющееся само, открывается после ModalStack.whenFree() либо не открывается, пока ModalStack.active()';
+
+// REQ-CLIENT-MODAL-012
+const EXPANDED_OWNER = '[role="combobox"][aria-expanded="true"]';
+
+// REQ-CLIENT-MODAL-012
+function ownsEscape(element: Element | null): boolean {
+  if (element === null) return false;
+  if (element.closest(EXPANDED_OWNER) !== null) return true;
+  const popup = element.getAttribute('aria-haspopup');
+  return element.getAttribute('aria-expanded') === 'true' && popup !== null && popup !== 'false';
+}
+
 // REQ-CLIENT-MODAL-008
 function busy(element: Element): boolean {
   return element.querySelector(PENDING_SELECTOR) !== null;
@@ -32,6 +59,7 @@ function busy(element: Element): boolean {
 interface Open {
   readonly escape: () => EscapeHandler;
   readonly busy: () => boolean;
+  readonly layer?: ModalLayer;
 }
 
 // REQ-CLIENT-MODAL-003
@@ -40,20 +68,44 @@ export class ModalStack {
   private readonly document = inject(DOCUMENT);
   private readonly open: Open[] = [];
   private readonly listener = (event: KeyboardEvent): void => this.keydown(event);
+  private readonly shown = signal(false);
+  private waiting: (() => void)[] = [];
+
+  // REQ-CLIENT-MODAL-011
+  readonly active: Signal<boolean> = this.shown.asReadonly();
+
+  // REQ-CLIENT-MODAL-011
+  whenFree(): Promise<void> {
+    if (this.open.length === 0) return Promise.resolve();
+    return new Promise((resolve) => this.waiting.push(resolve));
+  }
 
   push(entry: Open): () => void {
+    // REQ-CLIENT-MODAL-011
+    if (this.open.length > 0 && entry.layer === undefined && isDevMode()) console.error(OVERLAID);
     if (this.open.length === 0) this.document.addEventListener('keydown', this.listener, true);
     this.open.push(entry);
+    this.shown.set(true);
     return () => {
       const at = this.open.lastIndexOf(entry);
       if (at !== -1) this.open.splice(at, 1);
-      if (this.open.length === 0) this.document.removeEventListener('keydown', this.listener, true);
+      if (this.open.length === 0) this.freed();
     };
   }
 
-  // REQ-CLIENT-MODAL-003, REQ-CLIENT-MODAL-008
+  // REQ-CLIENT-MODAL-011
+  private freed(): void {
+    this.document.removeEventListener('keydown', this.listener, true);
+    this.shown.set(false);
+    const waiting = this.waiting;
+    this.waiting = [];
+    for (const resolve of waiting) resolve();
+  }
+
+  // REQ-CLIENT-MODAL-003, REQ-CLIENT-MODAL-008, REQ-CLIENT-MODAL-012
   private keydown(event: KeyboardEvent): void {
     if (event.key !== 'Escape' || this.open.length === 0) return;
+    if (ownsEscape(this.document.activeElement)) return;
     event.preventDefault();
     event.stopPropagation();
     const top = this.open[this.open.length - 1];
@@ -66,10 +118,12 @@ export class ModalStack {
 @Directive({
   selector: '[apcrModal]',
   standalone: true,
-  inputs: [{ name: 'apcrModalEscape', required: true }],
+  inputs: [{ name: 'apcrModalEscape', required: true }, 'apcrModalOver'],
 })
 export class ApcrModal implements OnInit, OnDestroy {
   apcrModalEscape: EscapeHandler | undefined;
+  // REQ-CLIENT-MODAL-011
+  apcrModalOver: ModalLayer | undefined;
   private readonly stack = inject(ModalStack);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private release: (() => void) | null = null;
@@ -83,10 +137,13 @@ export class ApcrModal implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (typeof this.apcrModalEscape !== 'function') throw new Error(UNDECLARED);
+    // REQ-CLIENT-MODAL-011
+    if (this.apcrModalOver !== undefined && !LAYERS.includes(this.apcrModalOver)) throw new Error(UNKNOWN_LAYER);
     this.host.nativeElement.addEventListener('click', this.local, true);
     this.release = this.stack.push({
       escape: () => this.apcrModalEscape ?? ESCAPE_IGNORED,
       busy: () => this.busy(),
+      layer: this.apcrModalOver,
     });
   }
 

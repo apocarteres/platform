@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 182. Включены самостоятельные задачи и этапы планов функций.
+Всего: 184. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -190,6 +190,8 @@ authority: navigation
 | [Модульность Rust: сказать, что даёт язык и где остаётся дыра](CORE-QUAL-015-rust-modules.md) | P2 | Выполнена | [RELEASE-1-23-0](../../releases/RELEASE-1-23-0.md) | rust, architecture |
 | [Правило денежных величин слепо к Rust](CORE-QUAL-017-money-rule-is-blind-to-rust.md) | P2 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, quality |
 | [Именование Rust: сказать, чего ядро не требует, и почему](CORE-QUAL-018-rust-naming-is-not-java-naming.md) | P2 | Выполнена | [RELEASE-1-24-0](../../releases/RELEASE-1-24-0.md) | rust, documentation |
+| [Окно поверх окна считалось законным](CORE-QUAL-030-one-modal-at-a-time.md) | P2 | Выполнена | Не назначен | frontend, client |
+| [Escape в раскрытом списке внутри окна закрывал окно](CORE-QUAL-031-escape-to-expanded-list.md) | P2 | Выполнена | Не назначен | frontend, client, accessibility |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |

@@ -1,0 +1,9 @@
+CREATE TABLE platform_access_key (
+  id UUID PRIMARY KEY,
+  account_id UUID NOT NULL REFERENCES platform_account (id) ON DELETE CASCADE,
+  name VARCHAR(100) NOT NULL,
+  digest CHAR(64) NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  last_used_at TIMESTAMP WITH TIME ZONE
+)

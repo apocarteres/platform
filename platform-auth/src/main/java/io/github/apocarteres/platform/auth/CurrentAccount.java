@@ -23,4 +23,13 @@ public final class CurrentAccount {
       return Optional.empty();
     }
   }
+
+  // REQ-AUTH-032
+  public static Optional<UsedKey> key() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication != null && authentication.getDetails() instanceof UsedKey used) {
+      return Optional.of(used);
+    }
+    return Optional.empty();
+  }
 }

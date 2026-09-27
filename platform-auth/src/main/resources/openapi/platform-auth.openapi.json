@@ -3,7 +3,7 @@
   "info": {
     "title": "Аутентификация ядра",
     "version": "0.0.0",
-    "description": "Контракт точек platform-auth (REQ-AUTH-020). Версия документа — версия ядра. Изменяющие запросы требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN. Запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006)."
+    "description": "Контракт точек platform-auth (REQ-AUTH-020). Версия документа — версия ядра. Изменяющие запросы требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN. Запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006). Программный клиент удостоверяется ключом доступа: заголовок Authorization: Bearer <ключ>, без cookie и CSRF (REQ-AUTH-030)."
   },
   "paths": {
     "/api/auth/register": {
@@ -842,6 +842,212 @@
           }
         }
       }
+    },
+    "/api/auth/keys": {
+      "get": {
+        "summary": "Свои ключи доступа, без значений",
+        "x-clause": "REQ-AUTH-029",
+        "description": "Имя, выпуск, срок и последнее использование. Точки есть, только когда ключи включены настройкой platform.auth.keys.enabled (REQ-AUTH-028).",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessKey"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход сессией не выполнен либо предъявлен неверный ключ",
+            "x-codes": [
+              "authentication-required",
+              "key-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Запрос сделан ключом: точки ключей по ключу закрыты (REQ-AUTH-031)",
+            "x-codes": [
+              "key-closed"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Выпустить ключ доступа своей учётной записи",
+        "x-clause": "REQ-AUTH-029",
+        "description": "Значение ключа отдаётся один раз, в этом ответе; хранится только отпечаток. Точки есть, только когда ключи включены настройкой platform.auth.keys.enabled (REQ-AUTH-028).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Выпущен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Имя, срок или число ключей не приняты",
+            "x-codes": [
+              "key-request-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход сессией не выполнен либо предъявлен неверный ключ",
+            "x-codes": [
+              "authentication-required",
+              "key-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF либо запрос сделан ключом: точки ключей по ключу закрыты (REQ-AUTH-031)",
+            "x-codes": [
+              "csrf-rejected",
+              "key-closed"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Отозвать все свои ключи доступа",
+        "x-clause": "REQ-AUTH-029",
+        "description": "Отзыв действует на следующем же запросе. Точки есть, только когда ключи включены настройкой platform.auth.keys.enabled (REQ-AUTH-028).",
+        "responses": {
+          "204": {
+            "description": "Отозваны"
+          },
+          "401": {
+            "description": "Вход сессией не выполнен либо предъявлен неверный ключ",
+            "x-codes": [
+              "authentication-required",
+              "key-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF либо запрос сделан ключом: точки ключей по ключу закрыты (REQ-AUTH-031)",
+            "x-codes": [
+              "csrf-rejected",
+              "key-closed"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/keys/{id}": {
+      "delete": {
+        "summary": "Отозвать свой ключ доступа",
+        "x-clause": "REQ-AUTH-029",
+        "description": "Отзыв действует на следующем же запросе; чужой или неизвестный ключ — тот же ответ. Точки есть, только когда ключи включены настройкой platform.auth.keys.enabled (REQ-AUTH-028).",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Отозван либо не было"
+          },
+          "401": {
+            "description": "Вход сессией не выполнен либо предъявлен неверный ключ",
+            "x-codes": [
+              "authentication-required",
+              "key-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF либо запрос сделан ключом: точки ключей по ключу закрыты (REQ-AUTH-031)",
+            "x-codes": [
+              "csrf-rejected",
+              "key-closed"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1055,6 +1261,93 @@
           "current",
           "email"
         ]
+      },
+      "KeyRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365
+          }
+        },
+        "required": [
+          "name",
+          "days"
+        ]
+      },
+      "AccessKey": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "createdAt",
+          "expiresAt",
+          "lastUsedAt"
+        ]
+      },
+      "IssuedKey": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^pak_[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "createdAt",
+          "expiresAt",
+          "value"
+        ]
       }
     },
     "parameters": {
@@ -1074,6 +1367,11 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "SESSION"
+      },
+      "accessKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Ключ доступа учётной записи, REQ-AUTH-030"
       }
     }
   }

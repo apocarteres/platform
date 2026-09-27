@@ -20,6 +20,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,17 +31,21 @@ import tools.jackson.databind.json.JsonMapper;
 // REQ-AUTH-020
 class ContractTest {
 
-  private static final Map<String, Class<?>> SCHEMAS = Map.of(
-    "RegisterRequest", AuthController.Registration.class,
-    "LoginRequest", AuthController.Login.class,
-    "EmailRequest", AuthController.Email.class,
-    "TokenRequest", AuthController.Token.class,
-    "ResetRequest", AuthController.Reset.class,
-    "PasswordChangeRequest", AuthController.PasswordChange.class,
-    "EmailChangeRequest", AuthController.EmailChange.class,
-    "Account", AuthController.Me.class,
-    "Csrf", AuthController.Csrf.class,
-    "Policy", AuthController.Policy.class
+  private static final Map<String, Class<?>> SCHEMAS = Map.ofEntries(
+    Map.entry("RegisterRequest", AuthController.Registration.class),
+    Map.entry("LoginRequest", AuthController.Login.class),
+    Map.entry("EmailRequest", AuthController.Email.class),
+    Map.entry("TokenRequest", AuthController.Token.class),
+    Map.entry("ResetRequest", AuthController.Reset.class),
+    Map.entry("PasswordChangeRequest", AuthController.PasswordChange.class),
+    Map.entry("EmailChangeRequest", AuthController.EmailChange.class),
+    Map.entry("Account", AuthController.Me.class),
+    Map.entry("Csrf", AuthController.Csrf.class),
+    Map.entry("Policy", AuthController.Policy.class),
+    // REQ-AUTH-029
+    Map.entry("KeyRequest", AccessKeyController.KeyRequest.class),
+    Map.entry("AccessKey", AccessKeyController.Key.class),
+    Map.entry("IssuedKey", AccessKeyController.Issued.class)
   );
 
   private final JsonNode contract = read();
@@ -54,13 +59,17 @@ class ContractTest {
   }
 
   private static Map<String, Method> endpoints() {
-    String base = AuthController.class.getAnnotation(RequestMapping.class).value()[0];
     Map<String, Method> found = new HashMap<>();
-    for (Method method : AuthController.class.getDeclaredMethods()) {
-      PostMapping post = method.getAnnotation(PostMapping.class);
-      GetMapping get = method.getAnnotation(GetMapping.class);
-      if (post != null) found.put("post " + base + post.value()[0], method);
-      if (get != null) found.put("get " + base + get.value()[0], method);
+    for (Class<?> controller : new Class<?>[] {AuthController.class, AccessKeyController.class}) {
+      String base = controller.getAnnotation(RequestMapping.class).value()[0];
+      for (Method method : controller.getDeclaredMethods()) {
+        PostMapping post = method.getAnnotation(PostMapping.class);
+        GetMapping get = method.getAnnotation(GetMapping.class);
+        DeleteMapping delete = method.getAnnotation(DeleteMapping.class);
+        if (post != null) found.put("post " + base + post.value()[0], method);
+        if (get != null) found.put("get " + base + get.value()[0], method);
+        if (delete != null) found.put("delete " + base + delete.value()[0], method);
+      }
     }
     return found;
   }

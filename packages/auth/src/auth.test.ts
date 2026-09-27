@@ -156,6 +156,40 @@ describe('смена почты', () => {
   });
 });
 
+// REQ-AUTH-029
+describe('ключи доступа', () => {
+  it('список, выпуск и отзыв уходят на точки ядра; значение ключа приходит только в ответе выпуска', async () => {
+    const { http, session } = setUp();
+    await start(http, ME);
+    const key = { id: 'k-1', name: 'агент', createdAt: '2026-09-27T10:00:00Z', expiresAt: '2026-10-27T10:00:00Z', lastUsedAt: null };
+
+    const listed = session.keys();
+    const list = http.expectOne('/api/auth/keys');
+    expect(list.request.method).toBe('GET');
+    list.flush([key]);
+    await expect(listed).resolves.toEqual([key]);
+
+    const issued = session.issueKey('агент', 30);
+    const issue = http.expectOne('/api/auth/keys');
+    expect(issue.request.method).toBe('POST');
+    expect(issue.request.body).toEqual({ name: 'агент', days: 30 });
+    issue.flush({ id: 'k-1', name: 'агент', createdAt: key.createdAt, expiresAt: key.expiresAt, value: 'pak_x' }, { status: 201, statusText: 'Created' });
+    await expect(issued).resolves.toMatchObject({ value: 'pak_x' });
+
+    const revoked = session.revokeKey('k/1');
+    const revoke = http.expectOne('/api/auth/keys/k%2F1');
+    expect(revoke.request.method).toBe('DELETE');
+    revoke.flush(null, { status: 204, statusText: 'No Content' });
+    await revoked;
+
+    const all = session.revokeKeys();
+    const revokeAll = http.expectOne('/api/auth/keys');
+    expect(revokeAll.request.method).toBe('DELETE');
+    revokeAll.flush(null, { status: 204, statusText: 'No Content' });
+    await all;
+  });
+});
+
 // REQ-AUTH-018
 describe('правило пароля', () => {
   it('читается открытой точкой ядра', async () => {

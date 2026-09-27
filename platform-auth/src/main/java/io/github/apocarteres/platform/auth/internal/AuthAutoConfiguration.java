@@ -1,10 +1,12 @@
 package io.github.apocarteres.platform.auth.internal;
 
+import io.github.apocarteres.platform.auth.AccessKeys;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.ApiAccess;
 import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.HumanCheck;
+import io.github.apocarteres.platform.auth.KeyAccess;
 import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.persistence.SqlStatements;
@@ -15,7 +17,9 @@ import java.util.UUID;
 import jakarta.validation.Validator;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
@@ -39,6 +43,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
@@ -49,6 +54,7 @@ import org.springframework.session.web.http.CookieSerializer;
 import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 // REQ-AUTH-001, REQ-AUTH-008, REQ-AUTH-014, REQ-QUALITY-012
 @AutoConfiguration(
@@ -111,9 +117,10 @@ public class AuthAutoConfiguration {
 
   @Bean
   Accounts accounts(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    PlatformTransactionManager transactions, AuthLetters letters, AuthSettings settings, Clock clock) {
+    PlatformTransactionManager transactions, AuthLetters letters, AuthSettings settings, Clock clock, ObjectProvider<AccessKeyStore> keys) {
+    AccessKeyStore store = keys.getIfAvailable();
     return new AccountsService(accounts, tokens, sessions, creation, passwords, new TransactionTemplate(transactions), letters, settings,
-      clock);
+      clock, store == null ? ExpiredKeys.NONE : store::purge);
   }
 
   @Bean
@@ -155,8 +162,14 @@ public class AuthAutoConfiguration {
   // REQ-AUTH-008, REQ-AUTH-014, REQ-AUTH-022
   @Bean
   SecurityFilterChain platformApiSecurity(HttpSecurity http, ApiAccess access, ObjectProvider<ModuleApiAccess> modules,
-    ErrorMessages messages, SecurityContextRepository contexts) throws Exception {
+    ErrorMessages messages, SecurityContextRepository contexts, ObjectProvider<AccessKeyGuard> keys,
+    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) throws Exception {
     ProblemResponses problems = new ProblemResponses(messages);
+    AccessKeyGuard guard = keys.getIfAvailable();
+    // REQ-AUTH-030
+    if (guard != null) {
+      http.addFilterBefore(new AccessKeyFilter(guard, resolver), CsrfFilter.class);
+    }
     http.securityMatcher("/api/**")
       .authorizeHttpRequests(rules -> {
         rules.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/verify", "/api/auth/resend",
@@ -167,9 +180,14 @@ public class AuthAutoConfiguration {
         access.rules(rules);
         rules.anyRequest().authenticated();
       })
-      .csrf(csrf -> csrf
-        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
+      .csrf(csrf -> {
+        csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+          .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler());
+        // REQ-AUTH-030
+        if (guard != null) {
+          csrf.ignoringRequestMatchers(AccessKeyFilter::bearer);
+        }
+      })
       .securityContext(context -> context.securityContextRepository(contexts))
       .exceptionHandling(failures -> failures
         .authenticationEntryPoint(problems.entryPoint())
@@ -178,6 +196,38 @@ public class AuthAutoConfiguration {
       .httpBasic(basic -> basic.disable())
       .logout(logout -> logout.disable());
     return http.build();
+  }
+
+  // REQ-AUTH-028
+  @Configuration(proxyBeanMethods = false)
+  @ConditionalOnProperty(name = "platform.auth.keys.enabled", havingValue = "true")
+  static class AccessKeyConfiguration {
+
+    @Bean
+    KeySettings keySettings(Environment environment, ObjectProvider<KeyAccess> access) {
+      return KeySettings.of(environment, access.getIfAvailable());
+    }
+
+    @Bean
+    AccessKeyStore accessKeyStore(DataSource source, SqlStatements statements) {
+      return new AccessKeyStore(JdbcClient.create(source), statements.catalog(CATALOG));
+    }
+
+    @Bean
+    AccessKeys accessKeys(AccessKeyStore keys, AccountStore accounts, PlatformTransactionManager transactions, KeySettings settings,
+      Clock clock) {
+      return new AccessKeysService(keys, accounts, new TransactionTemplate(transactions), settings, clock);
+    }
+
+    @Bean
+    AccessKeyGuard accessKeyGuard(AccessKeyStore keys, AccountStore accounts, RateLimiter limiter, KeySettings settings, Clock clock) {
+      return new AccessKeyGuard(keys, accounts, limiter, settings, clock);
+    }
+
+    @Bean
+    AccessKeyController accessKeyController(AccessKeys keys) {
+      return new AccessKeyController(keys);
+    }
   }
 
   // REQ-AUTH-008

@@ -65,7 +65,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
-// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025
+// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -686,6 +686,16 @@ class AuthFlowTest {
     assertThat(accounts.purgeUnverified(Duration.ofDays(7))).isEqualTo(new Purged(1, 0));
     assertThat(accounts.findByEmail("idle@player.example")).isEmpty();
     assertThat(accounts.findByEmail("active@player.example")).isPresent();
+  }
+
+  @Test
+  @DisplayName("Без настройки ключей заголовок Bearer ничего не удостоверяет, а точек ключей нет")
+  void keysAreOffByDefault() throws Exception {
+    Browser browser = registered("plain@player.example");
+    browser.post("/api/auth/login", login("plain@player.example", PASSWORD)).andExpect(status().isOk());
+    mvc.perform(get("/api/things").header("Authorization", "Bearer pak_" + "A".repeat(43)))
+      .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("authentication-required"));
+    browser.get("/api/auth/keys").andExpect(status().isNotFound());
   }
 
   record Letter(String email, URI link, Locale locale, boolean committed) {

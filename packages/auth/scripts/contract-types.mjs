@@ -11,6 +11,8 @@ export const COPY = path.resolve(here, '../openapi/platform-auth.openapi.json');
 
 // REQ-AUTH-020
 function typeOf(schema) {
+  // REQ-AUTH-029
+  if (Array.isArray(schema.type)) return schema.type.map((one) => (one === 'null' ? 'null' : typeOf({ ...schema, type: one }))).join(' | ');
   if (schema.$ref) return schema.$ref.slice(schema.$ref.lastIndexOf('/') + 1);
   if (schema.type === 'integer' || schema.type === 'number') return 'number';
   if (schema.type === 'boolean') return 'boolean';

@@ -11,4 +11,10 @@ describe('типы клиента из контракта', () => {
   it('копия контракта в пакете совпадает с контрактом platform-auth', () => {
     expect(readFileSync(COPY, 'utf8')).toBe(readFileSync(CONTRACT, 'utf8'));
   });
+
+  // REQ-AUTH-029
+  it('поле, которое бывает null, получает тип с null', () => {
+    const contract = { components: { schemas: { Key: { properties: { lastUsedAt: { type: ['string', 'null'], format: 'date-time' } }, required: ['lastUsedAt'] } } } };
+    expect(contractTypes(contract)).toContain('readonly lastUsedAt: string | null;');
+  });
 });

@@ -22,6 +22,12 @@ public final class AuthRefused extends RuntimeException implements CodedFailure 
   public static final ErrorCode ENTRY = ErrorCode.of("entry-closed", HttpStatus.FORBIDDEN);
   // REQ-AUTH-023
   public static final ErrorCode EMAIL_TAKEN = ErrorCode.of("email-taken", HttpStatus.CONFLICT);
+  // REQ-AUTH-030
+  public static final ErrorCode KEY = ErrorCode.of("key-rejected", HttpStatus.UNAUTHORIZED);
+  // REQ-AUTH-031
+  public static final ErrorCode KEY_CLOSED = ErrorCode.of("key-closed", HttpStatus.FORBIDDEN);
+  // REQ-AUTH-029
+  public static final ErrorCode KEY_REQUEST = ErrorCode.of("key-request-rejected", HttpStatus.BAD_REQUEST);
 
   private final transient ErrorCode code;
 

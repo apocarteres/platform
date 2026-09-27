@@ -62,3 +62,24 @@ export interface EmailChangeRequest {
   readonly current: string;
   readonly email: string;
 }
+
+export interface KeyRequest {
+  readonly name: string;
+  readonly days: number;
+}
+
+export interface AccessKey {
+  readonly id: string;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly expiresAt: string;
+  readonly lastUsedAt: string | null;
+}
+
+export interface IssuedKey {
+  readonly id: string;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly expiresAt: string;
+  readonly value: string;
+}

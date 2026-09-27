@@ -8,7 +8,8 @@ import { Router } from '@angular/router';
 import type { CanMatchFn, UrlTree } from '@angular/router';
 import { firstValueFrom, tap } from 'rxjs';
 import type {
-  Account, EmailChangeRequest, EmailRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest, ResetRequest, TokenRequest,
+  AccessKey, Account, EmailChangeRequest, EmailRequest, IssuedKey, KeyRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest,
+  ResetRequest, TokenRequest,
 } from './contract';
 
 // REQ-AUTH-015, REQ-AUTH-020
@@ -122,6 +123,27 @@ export class AuthSession {
     const body: TokenRequest = { token };
     await firstValueFrom(this.http.post(`${this.base}/email/confirm`, body));
     if (this.current()) this.current.set(await firstValueFrom(this.http.get<SignedIn>(`${this.base}/me`)));
+  }
+
+  // REQ-AUTH-029
+  keys(): Promise<readonly AccessKey[]> {
+    return firstValueFrom(this.http.get<readonly AccessKey[]>(`${this.base}/keys`));
+  }
+
+  // REQ-AUTH-029
+  issueKey(name: string, days: number): Promise<IssuedKey> {
+    const body: KeyRequest = { name, days };
+    return firstValueFrom(this.http.post<IssuedKey>(`${this.base}/keys`, body));
+  }
+
+  // REQ-AUTH-029
+  async revokeKey(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.base}/keys/${encodeURIComponent(id)}`));
+  }
+
+  // REQ-AUTH-029
+  async revokeKeys(): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.base}/keys`));
   }
 
   // REQ-AUTH-018

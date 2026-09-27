@@ -8,6 +8,7 @@ import io.github.apocarteres.platform.auth.Removal;
 import io.github.apocarteres.platform.auth.Purged;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -36,9 +37,11 @@ final class AccountsService implements Accounts {
   private final AuthLetters letters;
   private final AuthSettings settings;
   private final Clock clock;
+  private final ExpiredKeys expiredKeys;
 
   AccountsService(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    TransactionTemplate transactions, AuthLetters letters, AuthSettings settings, Clock clock) {
+    TransactionTemplate transactions, AuthLetters letters, AuthSettings settings, Clock clock, ExpiredKeys expiredKeys) {
+    this.expiredKeys = expiredKeys;
     this.accounts = accounts;
     this.tokens = tokens;
     this.sessions = sessions;
@@ -193,7 +196,9 @@ final class AccountsService implements Accounts {
 
   @Override
   public int purgeTokens(Duration olderThan) {
-    return tokens.purge(clock.instant().minus(olderThan));
+    Instant before = clock.instant().minus(olderThan);
+    // REQ-AUTH-034
+    return tokens.purge(before) + expiredKeys.purge(before);
   }
 
   private String declared(String role) {

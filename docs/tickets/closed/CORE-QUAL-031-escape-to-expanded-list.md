@@ -5,7 +5,7 @@ status: done
 scope: frontend, client, accessibility
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-12-3-0
 related: REQ-CLIENT-MODAL
 ---
 

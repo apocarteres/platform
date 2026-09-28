@@ -17,6 +17,10 @@ final class NotificationViews {
   record Unread(long count) {
   }
 
+  // REQ-NOTIFICATIONS-009
+  record Page(List<Notice> items, long total, int page, int size) {
+  }
+
   private NotificationViews() {
   }
 }

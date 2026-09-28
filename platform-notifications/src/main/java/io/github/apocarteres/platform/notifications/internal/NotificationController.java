@@ -4,6 +4,7 @@ import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.CurrentAccount;
 import io.github.apocarteres.platform.notifications.NotificationRefused;
 import io.github.apocarteres.platform.notifications.internal.NotificationViews.Bell;
+import io.github.apocarteres.platform.notifications.internal.NotificationViews.Page;
 import io.github.apocarteres.platform.notifications.internal.NotificationViews.Unread;
 import java.time.Clock;
 import java.util.UUID;
@@ -40,6 +41,18 @@ class NotificationController {
     UUID account = signedIn();
     int size = limit == null || limit < 1 ? settings.listSize() : Math.min(limit, NotificationSettings.LIST_MAX);
     return new Bell(store.latest(account, size), store.unread(account));
+  }
+
+  // REQ-NOTIFICATIONS-009
+  @GetMapping("/page")
+  Page page(@RequestParam(defaultValue = "0") int page, @RequestParam(required = false) Integer size,
+    @RequestParam(defaultValue = "false") boolean unread) {
+    int rows = size == null ? settings.listSize() : size;
+    if (page < 0 || rows < 1 || rows > NotificationSettings.LIST_MAX) {
+      throw new NotificationRefused(NotificationRefused.PAGE, "Страница — номер от 0, размер от 1 до " + NotificationSettings.LIST_MAX);
+    }
+    UUID account = signedIn();
+    return new Page(store.page(account, unread, page, rows), store.count(account, unread), page, rows);
   }
 
   @PostMapping("/{id}/read")

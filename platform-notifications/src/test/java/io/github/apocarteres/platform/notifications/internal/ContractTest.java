@@ -31,7 +31,8 @@ class ContractTest {
   private static final Map<String, Class<?>> SCHEMAS = Map.of(
     "Notice", NotificationViews.Notice.class,
     "Bell", NotificationViews.Bell.class,
-    "Unread", NotificationViews.Unread.class
+    "Unread", NotificationViews.Unread.class,
+    "Page", NotificationViews.Page.class
   );
 
 

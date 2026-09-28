@@ -3,6 +3,8 @@ package io.github.apocarteres.platform.notifications.internal;
 import io.github.apocarteres.platform.notifications.internal.NotificationViews.Notice;
 import io.github.apocarteres.platform.persistence.SqlCatalog;
 import io.github.apocarteres.platform.persistence.StoredInstant;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -29,15 +31,31 @@ final class NotificationStore {
       .param("params", json.writeValueAsString(params)).param("link", link).param("now", StoredInstant.offsetOf(now)).update();
   }
 
+  // REQ-NOTIFICATIONS-004
   List<Notice> latest(UUID account, int limit) {
-    return jdbc.sql(sql.get("notification-latest")).param("account", account).param("limit", limit).query((row, index) -> new Notice(
+    return jdbc.sql(sql.get("notification-latest")).param("account", account).param("limit", limit).query(this::notice).list();
+  }
+
+  // REQ-NOTIFICATIONS-009
+  List<Notice> page(UUID account, boolean unreadOnly, int page, int size) {
+    return jdbc.sql(sql.get("notification-page")).param("account", account).param("all", !unreadOnly)
+      .param("size", size).param("offset", (long) page * size).query(this::notice).list();
+  }
+
+  // REQ-NOTIFICATIONS-009
+  long count(UUID account, boolean unreadOnly) {
+    return jdbc.sql(sql.get("notification-count")).param("account", account).param("all", !unreadOnly).query(Long.class).single();
+  }
+
+  private Notice notice(ResultSet row, int index) throws SQLException {
+    return new Notice(
       row.getObject("id", UUID.class),
       row.getString("kind"),
       json.readValue(row.getString("params"), new TypeReference<Map<String, String>>() { }),
       row.getString("link"),
       row.getObject("created_at", OffsetDateTime.class).toInstant(),
       row.getObject("read_at", OffsetDateTime.class) != null
-    )).list();
+    );
   }
 
   long unread(UUID account) {

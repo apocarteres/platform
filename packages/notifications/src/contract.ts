@@ -26,3 +26,10 @@ export interface Bell {
 export interface Unread {
   readonly count: number;
 }
+
+export interface Page {
+  readonly items: readonly Notice[];
+  readonly total: number;
+  readonly page: number;
+  readonly size: number;
+}

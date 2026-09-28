@@ -10,6 +10,8 @@ public final class NotificationRefused extends RuntimeException implements Coded
   private static final long serialVersionUID = 1L;
 
   public static final ErrorCode NOT_FOUND = ErrorCode.of("notification-not-found", HttpStatus.NOT_FOUND);
+  // REQ-NOTIFICATIONS-009
+  public static final ErrorCode PAGE = ErrorCode.of("notification-page-rejected", HttpStatus.BAD_REQUEST);
 
   private final transient ErrorCode code;
 

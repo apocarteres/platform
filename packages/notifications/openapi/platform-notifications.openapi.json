@@ -8,7 +8,7 @@
   "paths": {
     "/api/notifications": {
       "get": {
-        "summary": "Последние уведомления и число непрочитанного",
+        "summary": "Последние непрочитанные уведомления и число непрочитанного — для панели колокольчика",
         "x-clause": "REQ-NOTIFICATIONS-004",
         "parameters": [
           {
@@ -47,7 +47,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Только непрочитанные: прочитанное уходит из панели и видно через /api/notifications/page (REQ-NOTIFICATIONS-009)."
       }
     },
     "/api/notifications/unread": {
@@ -178,6 +179,83 @@
           }
         }
       }
+    },
+    "/api/notifications/page": {
+      "get": {
+        "summary": "Страница своих уведомлений свежими сверху, с числом всего",
+        "x-clause": "REQ-NOTIFICATIONS-009",
+        "description": "Прочитанные и непрочитанные; unread=true — только непрочитанные.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Номер или размер страницы вне пределов",
+            "x-codes": [
+              "notification-page-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -282,6 +360,37 @@
         },
         "required": [
           "count"
+        ]
+      },
+      "Page": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notice"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "size"
         ]
       }
     },

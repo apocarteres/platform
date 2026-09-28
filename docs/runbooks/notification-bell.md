@@ -32,7 +32,7 @@ related: REQ-NOTIFICATIONS, REQ-AUTH
 provideNotifications({ limit: 10 }),
 ```
 
-`NotificationBell`: сигналы `unread`, `items`; `open()` по щелчку на колокольчик, `read(id)`, `readAll()`. Текст — по `kind` и `params` своим переводом:
+`NotificationBell`: сигналы `unread`, `items` — только непрочитанные; `open()` по щелчку на колокольчик, `read(id)` — уведомление уходит из панели, `readAll()`. Страница «Все уведомления» — `page(page, size, unread)`: прочитанные и непрочитанные, число всего для переключателя страниц; прочтение на странице — тот же `read(id)`, и число в колокольчике уменьшится. Текст — по `kind` и `params` своим переводом:
 
 ```ts
 const TEXT: Record<string, (params: Readonly<Record<string, string>>) => string> = {

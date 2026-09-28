@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import type { EnvironmentProviders, Signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { Bell, Notice, Unread } from './contract';
+import type { Bell, Notice, Page, Unread } from './contract';
 
 // REQ-NOTIFICATIONS-005
 export interface NotificationOptions {
@@ -68,19 +68,24 @@ export class NotificationBell {
     }
   }
 
+  // REQ-NOTIFICATIONS-009
+  page(page: number, size: number, unread = false): Promise<Page> {
+    const params = new HttpParams().set('page', page).set('size', size).set('unread', unread);
+    return firstValueFrom(this.http.get<Page>(`${this.options.base}/page`, { params }));
+  }
+
+  // REQ-NOTIFICATIONS-004
   async read(id: string): Promise<void> {
     await firstValueFrom(this.http.post(`${this.options.base}/${id}/read`, {}));
     const items = this.list();
-    if (items !== null && items.some((one) => one.id === id && !one.read)) {
-      this.list.set(items.map((one) => (one.id === id ? { ...one, read: true } : one)));
-    }
+    if (items !== null) this.list.set(items.filter((one) => one.id !== id));
     await this.refresh();
   }
 
+  // REQ-NOTIFICATIONS-004
   async readAll(): Promise<void> {
     await firstValueFrom(this.http.post(`${this.options.base}/read-all`, {}));
-    const items = this.list();
-    if (items !== null) this.list.set(items.map((one) => ({ ...one, read: true })));
+    if (this.list() !== null) this.list.set([]);
     this.count.set(0);
   }
 

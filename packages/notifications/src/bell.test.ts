@@ -71,13 +71,40 @@ describe('колокольчик', () => {
     await settle();
     http.expectOne('/api/notifications/unread').flush({ count: 1 });
     await read;
-    expect(bell.items()?.map((one) => one.read)).toEqual([true, false]);
+    expect(bell.items()?.map((one) => one.id), 'прочитанное уходит из панели').toEqual(['n2']);
     expect(bell.unread()).toBe(1);
     const all = bell.readAll();
     http.expectOne({ method: 'POST', url: '/api/notifications/read-all' }).flush(null);
     await all;
-    expect(bell.items()?.every((one) => one.read)).toBe(true);
+    expect(bell.items()).toEqual([]);
     expect(bell.unread()).toBe(0);
+  });
+
+  // REQ-NOTIFICATIONS-009
+  it('страница уведомлений читается тем же колокольчиком, и прочтение на странице уменьшает число', async () => {
+    const { http, bell } = setUp();
+    await settle();
+    const page = { items: [{ ...NOTICE, read: true }], total: 31, page: 1, size: 25 };
+    const loaded = bell.page(1, 25, true);
+    const request = http.expectOne((one) => one.url === '/api/notifications/page');
+    expect(request.request.params.get('page')).toBe('1');
+    expect(request.request.params.get('size')).toBe('25');
+    expect(request.request.params.get('unread')).toBe('true');
+    request.flush(page);
+    await expect(loaded).resolves.toEqual(page);
+
+    const all = bell.page(0, 25);
+    const every = http.expectOne((one) => one.url === '/api/notifications/page');
+    expect(every.request.params.get('unread')).toBe('false');
+    every.flush({ items: [], total: 0, page: 0, size: 25 });
+    await all;
+
+    const read = bell.read('n9');
+    http.expectOne({ method: 'POST', url: '/api/notifications/n9/read' }).flush(null);
+    await settle();
+    http.expectOne('/api/notifications/unread').flush({ count: 2 });
+    await read;
+    expect(bell.unread()).toBe(2);
   });
 
   it('предел списка объявляется от 1 до 50', () => {

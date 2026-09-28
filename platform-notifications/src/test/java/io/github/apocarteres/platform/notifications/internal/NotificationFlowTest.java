@@ -56,7 +56,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-// REQ-NOTIFICATIONS-001, REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-004, REQ-NOTIFICATIONS-006
+// REQ-NOTIFICATIONS-001, REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-004, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-009
 @SpringBootTest(
   classes = NotificationFlowTest.Service.class,
   properties = {
@@ -215,9 +215,62 @@ class NotificationFlowTest {
     tab.get("/api/notifications/unread").andExpect(jsonPath("$.count").value(1));
     tab.post("/api/notifications/read-all", "{}").andExpect(status().isNoContent());
     tab.get("/api/notifications/unread").andExpect(jsonPath("$.count").value(0));
-    assertThat(bell(tab).get("items")).hasSize(2);
+    assertThat(bell(tab).get("items")).as("колокольчик — только непрочитанные (REQ-NOTIFICATIONS-004)").isEmpty();
     assertThat(bell(new Tab("other@site.example")).get("unread").asLong()).isEqualTo(1);
     mvc.perform(MockMvcRequestBuilders.get("/api/notifications")).andExpect(status().isUnauthorized());
+  }
+
+  // REQ-NOTIFICATIONS-004
+  @Test
+  @DisplayName("Колокольчик показывает только непрочитанные: прочитанное уходит из списка, число — то же")
+  void bellShowsOnlyUnread() throws Exception {
+    UUID player = account("player@site.example");
+    UUID older = notifications.notify(player, "a", Map.of(), null);
+    clock.advance(Duration.ofMinutes(1));
+    notifications.notify(player, "b", Map.of(), null);
+    Tab tab = new Tab("player@site.example");
+    tab.post("/api/notifications/" + older + "/read", "{}").andExpect(status().isNoContent());
+    JsonNode bell = bell(tab);
+    assertThat(bell.get("unread").asLong()).isEqualTo(1);
+    assertThat(bell.get("items")).hasSize(1);
+    assertThat(bell.get("items").get(0).get("kind").asString()).isEqualTo("b");
+  }
+
+  // REQ-NOTIFICATIONS-009
+  @Test
+  @DisplayName("Страница уведомлений: все свои свежими сверху с числом всего, отбор непрочитанных, пределы страницы")
+  void pagesReadEverything() throws Exception {
+    UUID player = account("player@site.example");
+    UUID other = account("other@site.example");
+    List<UUID> made = new ArrayList<>();
+    for (int index = 1; index <= 30; index++) {
+      clock.advance(Duration.ofMinutes(1));
+      made.add(notifications.notify(player, "order.shipped", Map.of("number", Integer.toString(index)), null));
+    }
+    notifications.notify(other, "c", Map.of(), null);
+    notifications.notify(other, "c", Map.of(), null);
+    Tab tab = new Tab("player@site.example");
+    for (UUID id : made.subList(0, 3)) {
+      tab.post("/api/notifications/" + id + "/read", "{}").andExpect(status().isNoContent());
+    }
+
+    tab.get("/api/notifications/page?page=0&size=25").andExpect(status().isOk())
+      .andExpect(jsonPath("$.total").value(30)).andExpect(jsonPath("$.page").value(0)).andExpect(jsonPath("$.size").value(25))
+      .andExpect(jsonPath("$.items.length()").value(25))
+      .andExpect(jsonPath("$.items[0].params.number").value("30"));
+    tab.get("/api/notifications/page?page=1&size=25").andExpect(jsonPath("$.items.length()").value(5))
+      .andExpect(jsonPath("$.items[4].params.number").value("1")).andExpect(jsonPath("$.items[4].read").value(true));
+    tab.get("/api/notifications/page?page=0&size=50&unread=true").andExpect(jsonPath("$.total").value(27))
+      .andExpect(jsonPath("$.items.length()").value(27))
+      .andExpect(jsonPath("$.items[26].params.number").value("4"));
+    tab.get("/api/notifications/page").andExpect(jsonPath("$.size").value(20)).andExpect(jsonPath("$.items.length()").value(20));
+    tab.get("/api/notifications/page?page=9&size=25").andExpect(jsonPath("$.items.length()").value(0)).andExpect(jsonPath("$.total").value(30));
+    for (String wrong : List.of("page=-1", "size=0", "size=51")) {
+      tab.get("/api/notifications/page?" + wrong).andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("notification-page-rejected"));
+    }
+    new Tab("other@site.example").get("/api/notifications/page").andExpect(jsonPath("$.total").value(2));
+    mvc.perform(MockMvcRequestBuilders.get("/api/notifications/page")).andExpect(status().isUnauthorized());
   }
 
   @Test

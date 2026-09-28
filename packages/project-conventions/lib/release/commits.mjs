@@ -10,9 +10,18 @@ export const CYCLE_TRAILER = 'Release-cycle';
 const RECORD = '';
 const FIELD = '';
 
+// REQ-RELEASE-036, REQ-QUALITY-004
+const HISTORY_BUFFER = 256 * 1024 * 1024;
+
 async function git(root, args) {
-  const { stdout } = await run('git', ['-C', root, ...args], { env: environmentWithoutGit() });
+  const { stdout } = await run('git', ['-C', root, ...args], { env: environmentWithoutGit(), maxBuffer: HISTORY_BUFFER });
   return stdout;
+}
+
+// REQ-RELEASE-036
+export async function reachableSince(root, baseline) {
+  const output = await git(root, ['rev-list', `${baseline}..HEAD`]);
+  return new Set(output.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
 }
 
 export async function commitsInRange(root, since) {

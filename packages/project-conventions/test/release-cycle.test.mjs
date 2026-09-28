@@ -1110,6 +1110,39 @@ test('коммит слияния задачи не называет и закр
   }
 });
 
+// REQ-RELEASE-036, REQ-QUALITY-004
+test('история от основы больше мегабайта не роняет ни закрытие, ни сверку отправляемого диапазона', async () => {
+  const root = await project();
+  try {
+    await writeFile(
+      path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
+      JSON.stringify({ obligations: [] }),
+    );
+    const baseline = await commitAll(root);
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await git('-C', root, 'add', '-A');
+    const message = path.join(root, '..', `${path.basename(root)}-message.txt`);
+    await writeFile(message, `ZAVPN-QUAL-007 долгая история\n\n${'строка тела сообщения коммита\n'.repeat(40000)}`);
+    await git('-C', root, 'commit', '--quiet', '-F', message);
+    await rm(message);
+    await openNext(root, { scheme: 'date', today: FIXED_DAY });
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
+    const head = await git('-C', root, 'rev-parse', 'HEAD');
+    await writeReceipt(root, RECEIPT(head.stdout.trim(), FIXED_DAY));
+    const log = await run('git', ['-C', root, 'log', '--name-only', '--format=%H%s%b', `${baseline}..HEAD`],
+      { env: environmentWithoutGit(), maxBuffer: 64 * 1024 * 1024 });
+    assert.ok(log.stdout.length > 1024 * 1024, `история от основы должна быть больше мегабайта: ${log.stdout.length}`);
+
+    const state = await closability(root, { scheme: 'date' });
+    assert.deepEqual(state.problems.filter((problem) => problem.includes('Коммит')), [], state.problems.join('\n'));
+    assert.deepEqual(await commitsWithoutATicket(root, `${baseline}..HEAD`), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 // REQ-RELEASE-040
 test('запись решения в документе задачи закрытие не удерживает, а работа по ней — удерживает', async () => {
   const root = await project();

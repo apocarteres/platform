@@ -13,7 +13,9 @@ import { costSection, majorProblem, upgradeCost } from './changes.mjs';
 
 // REQ-PUBLISHING-015
 const COST_SECTION = '## Цена обновления';
-import { CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, ideaRecord, mergeCommit, recordCommit, revertCommit, ticketOf, ticketsOf } from './commits.mjs';
+import {
+  CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, ideaRecord, mergeCommit, reachableSince, recordCommit, revertCommit, ticketOf, ticketsOf,
+} from './commits.mjs';
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { findExpandDebts } from '../migrations.mjs';
@@ -315,8 +317,7 @@ async function previousReleaseTag(root, existing, scheme) {
 }
 
 async function withoutOlderThan(root, commits, baseline) {
-  const reachable = await commitsInRange(root, baseline);
-  const allowed = new Set(reachable.map((commit) => commit.sha));
+  const allowed = await reachableSince(root, baseline);
   return commits.filter((commit) => allowed.has(commit.sha));
 }
 

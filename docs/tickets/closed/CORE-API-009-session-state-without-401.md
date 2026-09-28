@@ -5,7 +5,7 @@ status: done
 scope: backend, frontend, client
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-13-1-0
 related: REQ-AUTH
 ---
 

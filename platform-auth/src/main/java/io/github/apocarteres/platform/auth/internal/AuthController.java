@@ -56,6 +56,10 @@ class AuthController {
   record Csrf(String headerName, String parameterName, String token) {
   }
 
+  // REQ-AUTH-035
+  record Session(Me account) {
+  }
+
   record PasswordChange(String current, String password) {
   }
 
@@ -137,6 +141,12 @@ class AuthController {
   Me me() {
     UUID id = CurrentAccount.id().orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Вход не выполнен"));
     return accounts.find(id).map(Me::of).orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Учётной записи нет"));
+  }
+
+  // REQ-AUTH-035
+  @GetMapping("/session")
+  Session session() {
+    return new Session(CurrentAccount.id().flatMap(accounts::find).map(Me::of).orElse(null));
   }
 
   // REQ-AUTH-008

@@ -65,7 +65,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
-// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028
+// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -686,6 +686,21 @@ class AuthFlowTest {
     assertThat(accounts.purgeUnverified(Duration.ofDays(7))).isEqualTo(new Purged(1, 0));
     assertThat(accounts.findByEmail("idle@player.example")).isEmpty();
     assertThat(accounts.findByEmail("active@player.example")).isPresent();
+  }
+
+  // REQ-AUTH-035
+  @Test
+  @DisplayName("Состояние входа гостю — 200 с пустой учётной записью, а не отказ 401; вошедшему — его запись")
+  void sessionStateWithoutRefusal() throws Exception {
+    Browser guest = new Browser();
+    guest.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.account").isEmpty());
+    Browser browser = registered("state@player.example");
+    browser.post("/api/auth/login", login("state@player.example", PASSWORD)).andExpect(status().isOk());
+    browser.get("/api/auth/session").andExpect(status().isOk())
+      .andExpect(jsonPath("$.account.email").value("state@player.example")).andExpect(jsonPath("$.account.roles[0]").value("USER"));
+    browser.post("/api/auth/logout", "{}").andExpect(status().isNoContent());
+    browser.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.account").isEmpty());
+    guest.get("/api/auth/me").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("authentication-required"));
   }
 
   @Test

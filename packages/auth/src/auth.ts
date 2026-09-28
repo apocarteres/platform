@@ -9,7 +9,7 @@ import type { CanMatchFn, UrlTree } from '@angular/router';
 import { firstValueFrom, tap } from 'rxjs';
 import type {
   AccessKey, Account, EmailChangeRequest, EmailRequest, IssuedKey, KeyRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest,
-  ResetRequest, TokenRequest,
+  ResetRequest, Session, TokenRequest,
 } from './contract';
 
 // REQ-AUTH-015, REQ-AUTH-020
@@ -158,12 +158,8 @@ export class AuthSession {
 
   private async load(): Promise<void> {
     await this.csrf();
-    try {
-      this.current.set(await firstValueFrom(this.http.get<SignedIn>(`${this.base}/me`)));
-    } catch (failure) {
-      if (authFailureCode(failure) !== REQUIRED) throw failure;
-      this.current.set(null);
-    }
+    // REQ-AUTH-035
+    this.current.set((await firstValueFrom(this.http.get<Session>(`${this.base}/session`))).account);
   }
 
   // REQ-AUTH-008

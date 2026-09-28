@@ -37,9 +37,7 @@ async function start(http: HttpTestingController, me: object | null): Promise<vo
   await flushes();
   http.expectOne('/api/auth/csrf').flush({ token: 't' });
   await flushes();
-  const request = http.expectOne('/api/auth/me');
-  if (me === null) request.flush({ code: 'authentication-required' }, { status: 401, statusText: 'Unauthorized' });
-  else request.flush(me);
+  http.expectOne('/api/auth/session').flush({ account: me });
   await flushes();
 }
 
@@ -59,11 +57,14 @@ describe('состояние сессии', () => {
     http.verify();
   });
 
-  it('без входа состояние — «не вошёл», а не отказ', async () => {
+  // REQ-AUTH-035
+  it('без входа состояние — «не вошёл», а не отказ: гостю ни одного ответа 401', async () => {
     const { http, session } = setUp();
     await start(http, null);
     await expect(session.ready()).resolves.toBeUndefined();
     expect(session.account()).toBeNull();
+    http.expectNone('/api/auth/me');
+    http.verify();
   });
 
   it('отказ сервера при запуске — не «не вошёл»: ожидание отвергается, состояние остаётся неизвестным', async () => {
@@ -71,7 +72,7 @@ describe('состояние сессии', () => {
     await flushes();
     http.expectOne('/api/auth/csrf').flush({ token: 't' });
     await flushes();
-    http.expectOne('/api/auth/me').flush({ code: 'unexpected' }, { status: 500, statusText: 'Server Error' });
+    http.expectOne('/api/auth/session').flush({ code: 'unexpected' }, { status: 500, statusText: 'Server Error' });
     await expect(session.ready()).rejects.toBeDefined();
     expect(session.account()).toBeUndefined();
   });
@@ -227,10 +228,10 @@ describe('охрана маршрутов', () => {
     await flushes();
     http.expectOne('/api/auth/csrf').flush({ token: 't' });
     await flushes();
-    const pending = http.expectOne('/api/auth/me');
+    const pending = http.expectOne('/api/auth/session');
     const navigation = router.navigateByUrl('/admin');
     for (let turn = 0; turn < 20; turn += 1) await flushes();
-    pending.flush({ ...ME, roles: ['USER', 'ADMIN'] });
+    pending.flush({ account: { ...ME, roles: ['USER', 'ADMIN'] } });
     await navigation;
     expect(router.url).toBe('/admin');
   });

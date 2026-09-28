@@ -174,7 +174,7 @@ public class AuthAutoConfiguration {
       .authorizeHttpRequests(rules -> {
         rules.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/verify", "/api/auth/resend",
           "/api/auth/login", "/api/auth/password-reset/request", "/api/auth/password-reset/confirm", "/api/auth/email/confirm").permitAll();
-        rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/policy").permitAll();
+        rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/policy", "/api/auth/session").permitAll();
         rules.requestMatchers("/api/auth/**").authenticated();
         modules.orderedStream().forEach(module -> module.rules(rules));
         access.rules(rules);

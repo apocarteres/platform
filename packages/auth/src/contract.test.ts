@@ -17,4 +17,10 @@ describe('типы клиента из контракта', () => {
     const contract = { components: { schemas: { Key: { properties: { lastUsedAt: { type: ['string', 'null'], format: 'date-time' } }, required: ['lastUsedAt'] } } } };
     expect(contractTypes(contract)).toContain('readonly lastUsedAt: string | null;');
   });
+
+  // REQ-AUTH-035
+  it('поле «одно из» получает объединение типов', () => {
+    const contract = { components: { schemas: { Session: { properties: { account: { oneOf: [{ $ref: '#/components/schemas/Account' }, { type: 'null' }] } }, required: ['account'] } } } };
+    expect(contractTypes(contract)).toContain('readonly account: Account | null;');
+  });
 });

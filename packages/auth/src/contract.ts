@@ -83,3 +83,7 @@ export interface IssuedKey {
   readonly expiresAt: string;
   readonly value: string;
 }
+
+export interface Session {
+  readonly account: Account | null;
+}

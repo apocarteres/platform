@@ -1048,6 +1048,25 @@
           }
         }
       }
+    },
+    "/api/auth/session": {
+      "get": {
+        "summary": "Состояние входа: учётная запись вошедшего либо пусто — без отказа гостю",
+        "x-clause": "REQ-AUTH-035",
+        "description": "Клиент ядра узнаёт по ней при запуске, вошёл ли человек, не получая ответа 401. Точка /api/auth/me для гостя по-прежнему отвечает 401.",
+        "responses": {
+          "200": {
+            "description": "Успех; account — null для гостя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1347,6 +1366,25 @@
           "createdAt",
           "expiresAt",
           "value"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "account": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Account"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "account"
         ]
       }
     },

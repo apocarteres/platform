@@ -40,6 +40,8 @@ class ContractTest {
     Map.entry("PasswordChangeRequest", AuthController.PasswordChange.class),
     Map.entry("EmailChangeRequest", AuthController.EmailChange.class),
     Map.entry("Account", AuthController.Me.class),
+    // REQ-AUTH-035
+    Map.entry("Session", AuthController.Session.class),
     Map.entry("Csrf", AuthController.Csrf.class),
     Map.entry("Policy", AuthController.Policy.class),
     // REQ-AUTH-029

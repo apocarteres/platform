@@ -186,7 +186,7 @@ authority: navigation
 | [Отказ коммиту задачи вне состава молчит об учёте](CORE-OPS-100-out-of-release-refusal-names-account.md) | P2 | Выполнена | [RELEASE-11-4-0](../../releases/RELEASE-11-4-0.md) | release, tooling, testing |
 | [Установка ядра собирает клиентские пакеты столько раз, сколько их](CORE-OPS-101-install-local-builds-once.md) | P2 | Выполнена | [RELEASE-11-4-1](../../releases/RELEASE-11-4-1.md) | publishing, tooling, testing |
 | [Перенос тега оставляет прежний состав; проверке после развёртывания нет места](CORE-OPS-103-reclose-rebuilds-the-composition.md) | P2 | Выполнена | [RELEASE-12-1-0](../../releases/RELEASE-12-1-0.md) | release, tickets, tooling |
-| [Смена версий компонентов ядром — обязательство полного прогона](CORE-OPS-106-full-run-obligation.md) | P2 | Выполнена | Не назначен | release, dependencies, tooling |
+| [Смена версий компонентов ядром — обязательство полного прогона](CORE-OPS-106-full-run-obligation.md) | P2 | Выполнена | [RELEASE-13-3-0](../../releases/RELEASE-13-3-0.md) | release, dependencies, tooling |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

@@ -200,8 +200,9 @@ async function releaseDocument(root, tag) {
 }
 
 // REQ-PUBLISHING-015
-export async function changesHistory(root, { since = 'v1.0.0' } = {}) {
-  const tags = (await releaseTags(root)).filter((tag) => compareVersions(versionOf(tag), versionOf(since)) >= 0);
+export async function changesHistory(root, { since = 'v1.0.0', until = null } = {}) {
+  const tags = (await releaseTags(root)).filter((tag) => compareVersions(versionOf(tag), versionOf(since)) >= 0
+    && (until === null || compareVersions(versionOf(tag), versionOf(until)) <= 0));
   const history = [];
   let before = null;
   for (const tag of tags) {
@@ -216,6 +217,12 @@ export async function changesHistory(root, { since = 'v1.0.0' } = {}) {
     before = after;
   }
   return history;
+}
+
+// REQ-PUBLISHING-015
+export async function packagedHistory(repository, packageRoot) {
+  const { version } = JSON.parse(await readFile(`${packageRoot}/package.json`, 'utf8'));
+  return changesHistory(repository, { until: `v${version}` });
 }
 
 // REQ-PUBLISHING-015

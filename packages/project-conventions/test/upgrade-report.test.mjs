@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { RULES } from '../lib/rules.mjs';
 import {
-  SEES_MORE_SECTION, breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, reportLines,
+  SEES_MORE_SECTION, breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, packagedHistory, reportLines,
 } from '../lib/release/changes.mjs';
 import { commandsOf, contractOf, rulesOf, surfaceAt } from '../lib/release/surface.mjs';
 import { environmentWithoutGit } from '../lib/release/git.mjs';
@@ -191,6 +191,30 @@ test('история собирается по тегам ядра, а не по
 
     const head = await surfaceAt(root, 'HEAD');
     assert.deepEqual(head.rules.map((rule) => rule.id), ['comments', 'wiring']);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// REQ-PUBLISHING-015
+test('история в архиве версии кончается этой версией: теги новее в клоне архива не меняют', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'core-history-'));
+  const git = (...args) => execFileSync('git', ['-C', root, ...args], { env: environmentWithoutGit(), stdio: 'pipe' });
+  try {
+    git('init', '-q');
+    git('config', 'user.email', 'core@example.net');
+    git('config', 'user.name', 'Ядро');
+    await coreAt(root, { rules: ['comments'], commands: ['check'], clauses: ['REQ-R-001'], tag: 'v1.0.0' });
+    await coreAt(root, { rules: ['comments'], commands: ['check', 'health'], clauses: ['REQ-R-001', 'REQ-R-002'], tag: 'v1.1.0' });
+    const packageRoot = path.join(root, 'packages/project-conventions');
+    await writeFile(path.join(packageRoot, 'package.json'), JSON.stringify({ name: '@core/rules', version: '1.1.0' }));
+    const alone = JSON.stringify(await packagedHistory(root, packageRoot));
+
+    await coreAt(root, { rules: ['comments', 'wiring'], commands: ['check', 'health'], clauses: ['REQ-R-002'], tag: 'v1.2.0' });
+    git('tag', 'v1.9.9');
+    const withNewer = await packagedHistory(root, packageRoot);
+    assert.deepEqual(withNewer.map((entry) => entry.version), ['1.1.0'], 'выпусков новее упаковываемой версии в истории нет');
+    assert.equal(JSON.stringify(withNewer), alone, 'содержимое то же, что без более новых тегов');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

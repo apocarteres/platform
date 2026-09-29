@@ -1,5 +1,6 @@
 package io.github.apocarteres.platform.persistence;
 
+import io.github.apocarteres.platform.persistence.internal.JobLockStore;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -11,8 +12,7 @@ public final class JdbcJobLock implements JobLock {
 
   public static final String CATALOG = "platform-job-lock";
 
-  private final JdbcClient jdbc;
-  private final SqlCatalog sql;
+  private final JobLockStore store;
   private final Clock clock;
   private final String holder;
 
@@ -20,33 +20,23 @@ public final class JdbcJobLock implements JobLock {
     if (holder == null || holder.isBlank()) {
       throw new IllegalArgumentException("Замку нужен держатель: имя экземпляра, который берёт работу");
     }
-    this.jdbc = jdbc;
-    this.sql = statements.catalog(CATALOG);
+    this.store = new JobLockStore(jdbc, statements.catalog(CATALOG));
     this.clock = clock;
     this.holder = holder;
   }
 
+  // REQ-DATA-ACCESS-002
   @Override
   public boolean claim(String job, Duration hold) {
     if (hold == null || hold.isNegative() || hold.isZero()) {
       throw new IllegalArgumentException("Срок замка должен быть положительным: замок без срока пережил бы упавший экземпляр");
     }
     Instant now = clock.instant();
-    int taken = jdbc.sql(sql.get("claim-held"))
-      .param("name", job)
-      .param("holder", holder)
-      .param("now", StoredInstant.offsetOf(now))
-      .param("until", StoredInstant.offsetOf(now.plus(hold)))
-      .update();
-    if (taken == 1) {
+    if (store.takeHeld(job, holder, now, now.plus(hold))) {
       return true;
     }
     try {
-      return jdbc.sql(sql.get("claim-new"))
-        .param("name", job)
-        .param("holder", holder)
-        .param("until", StoredInstant.offsetOf(now.plus(hold)))
-        .update() == 1;
+      return store.insertNew(job, holder, now.plus(hold));
     } catch (DuplicateKeyException held) {
       return false;
     }
@@ -54,10 +44,6 @@ public final class JdbcJobLock implements JobLock {
 
   @Override
   public void release(String job) {
-    jdbc.sql(sql.get("release"))
-      .param("name", job)
-      .param("holder", holder)
-      .param("now", StoredInstant.offsetOf(clock))
-      .update();
+    store.release(job, holder, clock.instant());
   }
 }

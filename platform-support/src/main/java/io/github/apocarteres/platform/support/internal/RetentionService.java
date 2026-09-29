@@ -67,6 +67,7 @@ final class RetentionService implements SupportRetention {
       int count = 0;
       for (UUID id : ids) {
         if (requests.erase(id, now)) {
+          requests.eraseEntries(id);
           requests.answerLinksDropped(id);
           requests.entry(id, Kind.ERASED, Side.CORE, null, null, null, null, now);
           count++;

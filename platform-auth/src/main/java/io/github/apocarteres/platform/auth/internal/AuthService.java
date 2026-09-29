@@ -68,6 +68,8 @@ final class AuthService {
         return;
       }
       Account account = creation.create(email, password, settings.defaultRoles(), false, parsed);
+      // REQ-DATA-ACCESS-002
+      tokens.retire(account.id(), Purpose.EMAIL_VERIFICATION);
       String token = tokens.issue(account.id(), Purpose.EMAIL_VERIFICATION, settings.verificationTtl());
       afterCommit(() -> letters.verification(email, settings.link(settings.verificationLink(), token), locale));
     });
@@ -102,6 +104,8 @@ final class AuthService {
       if (recent) {
         return;
       }
+      // REQ-DATA-ACCESS-002
+      tokens.retire(id, Purpose.EMAIL_VERIFICATION);
       String token = tokens.issue(id, Purpose.EMAIL_VERIFICATION, settings.verificationTtl());
       afterCommit(() -> letters.verification(email, settings.link(settings.verificationLink(), token), locale));
     });
@@ -140,6 +144,8 @@ final class AuthService {
     String email = Credentials.email(declaredEmail);
     limiter.consume(AuthLimits.RESET_BY_EMAIL, email);
     transactions.executeWithoutResult(status -> accounts.findByEmail(email).map(AccountStore.Stored::account).ifPresent(account -> {
+      // REQ-DATA-ACCESS-002
+      tokens.retire(account.id(), Purpose.PASSWORD_RESET);
       String token = tokens.issue(account.id(), Purpose.PASSWORD_RESET, settings.resetTtl());
       afterCommit(() -> letters.passwordReset(email, settings.link(settings.resetLink(), token), locale));
     }));
@@ -188,6 +194,8 @@ final class AuthService {
       return;
     }
     transactions.executeWithoutResult(status -> {
+      // REQ-DATA-ACCESS-002
+      tokens.retire(id, Purpose.EMAIL_CHANGE);
       String token = tokens.issue(id, Purpose.EMAIL_CHANGE, settings.emailChangeTtl(), email);
       afterCommit(() -> letters.emailChange(email, settings.link(settings.emailChangeLink(), token), locale));
     });

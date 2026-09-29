@@ -1,11 +1,14 @@
 package io.github.apocarteres.platform.arch;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.Dependency;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaMethodCall;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.lang.ArchRule;
@@ -13,6 +16,7 @@ import com.tngtech.archunit.lang.CompositeArchRule;
 import com.tngtech.archunit.lang.EvaluationResult;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 
@@ -24,6 +28,20 @@ public final class PlatformArchRules {
     "io.github.apocarteres.platform.persistence.SqlStatements",
   };
   private static final String LAZY = "org.springframework.context.annotation.Lazy";
+  // REQ-DATA-ACCESS-002
+  private static final String JDBC_CLIENT = "org.springframework.jdbc.core.simple.JdbcClient";
+  // REQ-DATA-ACCESS-002
+  private static final Set<String> JDBC_TEMPLATES = Set.of(
+    "org.springframework.jdbc.core.JdbcTemplate",
+    "org.springframework.jdbc.core.JdbcOperations",
+    "org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate",
+    "org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations"
+  );
+  // REQ-DATA-ACCESS-002
+  private static final Set<String> JDBC_EXECUTION = Set.of(
+    "query", "queryForObject", "queryForList", "queryForMap", "queryForRowSet", "queryForStream",
+    "update", "batchUpdate", "execute", "call"
+  );
   private static final String[] TRANSACTION_CONTROL = {
     "org.springframework.transaction.annotation.Transactional",
     "org.springframework.transaction.support.TransactionTemplate",
@@ -186,6 +204,39 @@ public final class PlatformArchRules {
     return noClasses()
       .should().dependOnClassesThat().resideInAnyPackage(MAPPING_LIBRARIES)
       .because("каталог запросов имеет смысл ровно потому, что другого пути к данным нет");
+  }
+
+  // REQ-DATA-ACCESS-002
+  public static ArchRule dataAccessMethodsRunOneStatement(DescribedPredicate<? super JavaClass> dataAccessLayer) {
+    return methods().that().areDeclaredInClassesThat(dataAccessLayer)
+      .should(runAtMostOneStatement())
+      .because("несколько обращений к базе — деловая операция, её место в прикладном слое")
+      // REQ-ADOPTION-022
+      .allowEmptyShould(true);
+  }
+
+  // REQ-DATA-ACCESS-002
+  private static ArchCondition<JavaMethod> runAtMostOneStatement() {
+    return new ArchCondition<>("выполнять не больше одного оператора к базе") {
+      @Override
+      public void check(JavaMethod method, ConditionEvents events) {
+        long statements = method.getMethodCallsFromSelf().stream().filter(PlatformArchRules::statement).count();
+        if (statements > 1) {
+          events.add(SimpleConditionEvent.violated(method, method.getFullName() + " обращается к базе " + statements
+            + " раза: метод слоя доступа выполняет один оператор, а собирает ответ из нескольких прикладной слой"));
+        }
+      }
+    };
+  }
+
+  // REQ-DATA-ACCESS-002
+  private static boolean statement(JavaMethodCall call) {
+    String owner = call.getTargetOwner().getFullName();
+    String name = call.getName();
+    if (owner.equals(JDBC_CLIENT)) {
+      return name.equals("sql");
+    }
+    return JDBC_TEMPLATES.contains(owner) && JDBC_EXECUTION.contains(name);
   }
 
   // REQ-DATA-ACCESS-005, REQ-DATA-ACCESS-004

@@ -155,6 +155,30 @@ class PlatformArchRulesTest {
       .hasMessageContaining("BookCatalogue");
   }
 
+  private static DescribedPredicate<JavaClass> daos() {
+    return DescribedPredicate.describe("слой доступа", type -> type.getSimpleName().endsWith("Dao"));
+  }
+
+  // REQ-DATA-ACCESS-002
+  @Test
+  void refusesADataAccessMethodWithTwoStatements() {
+    ArchRule rule = PlatformArchRules.dataAccessMethodsRunOneStatement(daos());
+
+    assertThatThrownBy(() -> rule.check(classesOf(FIXTURES + ".statements")))
+      .hasMessageContaining("CountThenPageDao.page")
+      .hasMessageContaining("BranchingDao.save")
+      .hasMessageContaining("TemplateDao.replace")
+      .satisfies(failure -> assertThat(failure.getMessage()).doesNotContain("OneStatementDao").doesNotContain("PagingService"));
+  }
+
+  // REQ-DATA-ACCESS-002
+  @Test
+  void passesOneStatementPerMethodAndLeavesTheApplicationLayerAlone() {
+    PlatformArchRules.dataAccessMethodsRunOneStatement(
+      DescribedPredicate.describe("слой доступа", type -> type.getSimpleName().equals("OneStatementDao"))
+    ).check(classesOf(FIXTURES + ".statements"));
+  }
+
   // REQ-DATA-ACCESS-001
   @Test
   void acceptsCodeWithoutObjectRelationalMapping() {

@@ -198,12 +198,14 @@ final class RequestStore {
   }
 
   // REQ-SUPPORT-011
+  // REQ-DATA-ACCESS-002
   boolean erase(UUID id, Instant now) {
-    boolean erased = jdbc.sql(sql.get("request-erase")).param("id", id).param("now", StoredInstant.offsetOf(now)).update() == 1;
-    if (erased) {
-      jdbc.sql(sql.get("entries-erase")).param("request", id).update();
-    }
-    return erased;
+    return jdbc.sql(sql.get("request-erase")).param("id", id).param("now", StoredInstant.offsetOf(now)).update() == 1;
+  }
+
+  // REQ-DATA-ACCESS-002
+  void eraseEntries(UUID id) {
+    jdbc.sql(sql.get("entries-erase")).param("request", id).update();
   }
 
   private static Stored stored(ResultSet row, int index) throws SQLException {

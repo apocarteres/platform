@@ -41,11 +41,15 @@ final class TokenStore {
     return issue(account, purpose, ttl, null);
   }
 
+  // REQ-AUTH-004, REQ-DATA-ACCESS-002
+  void retire(UUID account, Purpose purpose) {
+    jdbc.sql(sql.get("token-retire")).param("id", account).param("purpose", purpose.name())
+      .param("now", StoredInstant.offsetOf(clock)).update();
+  }
+
   // REQ-AUTH-023
   String issue(UUID account, Purpose purpose, Duration ttl, String email) {
     Instant now = clock.instant();
-    jdbc.sql(sql.get("token-retire")).param("id", account).param("purpose", purpose.name())
-      .param("now", StoredInstant.offsetOf(now)).update();
     byte[] raw = new byte[32];
     RANDOM.nextBytes(raw);
     String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);

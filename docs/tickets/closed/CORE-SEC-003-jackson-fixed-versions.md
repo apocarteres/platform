@@ -5,7 +5,7 @@ status: done
 scope: security, java, dependencies
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-13-2-1
 related: REQ-DEPS
 ---
 

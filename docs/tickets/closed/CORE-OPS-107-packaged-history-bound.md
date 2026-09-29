@@ -5,7 +5,7 @@ status: done
 scope: publishing, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-13-3-1
 related: REQ-PUBLISHING
 ---
 

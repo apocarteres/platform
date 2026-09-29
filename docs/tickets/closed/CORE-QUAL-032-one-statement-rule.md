@@ -5,7 +5,7 @@ status: done
 scope: java, quality, data-access
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-13-2-0
 related: REQ-DATA-ACCESS
 ---
 

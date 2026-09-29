@@ -72,6 +72,8 @@ test('каждый отказ называет выход: команду, кл�
       refusals.push([scenario, answer.output]);
     };
     await cliRefusal('release status', bare, 'release', 'status');
+    // REQ-DEPS-010
+    await cliRefusal('release full-run', root, 'release', 'full-run');
     await cliRefusal('release defer', root, 'release', 'defer', 'nope', '--reason', 'x');
     await cliRefusal('components', root, 'components');
     await cliRefusal('deploy-args', root, 'deploy-args', '--', '--env', 'production');

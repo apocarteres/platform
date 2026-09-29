@@ -27,7 +27,7 @@ import {
 } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 import {
-  releaseAccount, releaseAdopt, releaseCancel, releaseClose, releaseDefer, releaseDrop, releaseFinish,
+  releaseAccount, releaseAdopt, releaseFullRun, releaseCancel, releaseClose, releaseDefer, releaseDrop, releaseFinish,
   closeCommitFiles, releaseOpen, releaseReclose, releaseSatisfy, releaseStatus, summariesAfterTheCycle, ticketList,
 } from '../lib/cli/release.mjs';
 
@@ -438,6 +438,8 @@ const RELEASE_USAGE = {
   defer: 'conventions release defer <обязательство> --reason "<причина>" [--root <path>]',
   satisfy: 'conventions release satisfy <обязательство> --ticket <TICKET-ID> [--root <path>]',
   account: 'conventions release account <хеш коммита> --reason "<причина>" [--root <path>]',
+  // REQ-DEPS-010
+  'full-run': 'conventions release full-run [--root <path>]',
 };
 
 // REQ-RELEASE-028
@@ -453,6 +455,7 @@ const RELEASE_SPEC = {
   defer: { values: ['--reason'], positional: 1 },
   satisfy: { values: ['--ticket'], positional: 1 },
   account: { values: ['--reason'], positional: 1 },
+  'full-run': {},
 };
 
 // REQ-RELEASE-043
@@ -596,6 +599,8 @@ async function release(argv) {
   else if (subcommand === 'adopt') await releaseAdopt(root, valueOf('--version'));
   else if (subcommand === 'drop') await releaseDrop(root, first, valueOf('--reason'));
   else if (subcommand === 'satisfy') await releaseSatisfy(root, first, valueOf('--ticket'));
+  // REQ-DEPS-010
+  else if (subcommand === 'full-run') await releaseFullRun(root);
   else await releaseAccount(root, first, valueOf('--reason'));
   // REQ-RELEASE-043
   if (!RELEASE_READS.has(subcommand) && !process.exitCode) await summariesAfterTheCycle(root);

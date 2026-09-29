@@ -21,6 +21,7 @@ import { readConfig } from '../config.mjs';
 import { findExpandDebts } from '../migrations.mjs';
 import { questionStanding } from './questions.mjs';
 import { settledComposition } from './composition.mjs';
+import { fullRunProblem } from './full-run.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -84,6 +85,9 @@ export async function closability(root, { scheme, retagging = false }) {
     : await upgradeCost(root, { from: await previousReleaseTag(root, existing, scheme), content: release.content });
   const major = cost === null ? null : majorProblem(cost, { from: await previousReleaseTag(root, existing, scheme), tag });
   if (major !== null) problems.push(major);
+  // REQ-DEPS-010
+  const fullRun = fullRunProblem(cost, obligations, tag === null ? null : tag.replace(/^v/, ''));
+  if (fullRun !== null) problems.push(fullRun);
   // REQ-RELEASE-039, REQ-RELEASE-046
   if (!retagging && tag !== null && await tagExists(root, tag)) {
     problems.push(`Тег ${tag} уже существует: номер не переиспользуется.`

@@ -11,6 +11,7 @@ import {
 } from '../release/cycle.mjs';
 import { declaredObligations, obligationState, readState, writeState } from '../release/obligations.mjs';
 import { OUTSIDE_THE_CODE, tagCommit, uncommitted } from '../release/git.mjs';
+import { declareFullRun } from '../release/full-run.mjs';
 
 // REQ-CODE-DESIGN-009
 export function releaseScheme(config) {
@@ -283,4 +284,15 @@ export async function closeCommitFiles(root) {
   if (files.length === 0) return;
   console.log(`В коммит закрытия входят: ${files.join(', ')}.`);
   console.log(`  git add ${files.join(' ')} && git commit — признак цикла Release-cycle: close в теле`);
+}
+
+// REQ-DEPS-010
+export async function releaseFullRun(root) {
+  const result = await declareFullRun(root, { scheme: releaseScheme(await readConfig(root)) });
+  if (!result.declared) {
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Обязательство ${result.id} объявлено в ${result.file}: зафиксируйте его до записи расписки о verify`);
 }

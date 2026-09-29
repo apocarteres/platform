@@ -49,9 +49,25 @@ export function changesBetween(before, after) {
     obligations: difference(before.obligations, after.obligations, (one) => one.id),
     // REQ-AUTH-020
     contract: difference(before.contract ?? [], after.contract ?? []),
+    // REQ-DEPS-010
+    components: componentChanges(before.components ?? [], after.components ?? []),
     // REQ-AUTH-020
     schemasBefore: [...new Set((before.contract ?? []).map((entry) => schemaOf(entry, 'поле')).filter(Boolean))],
   };
+}
+
+// REQ-DEPS-010
+function componentChanges(before, after) {
+  const was = new Map(before.map((one) => [one.id, one.version]));
+  const lines = [];
+  for (const one of after) {
+    const previous = was.get(one.id);
+    if (previous === undefined) lines.push(`${one.id} закреплено ядром: ${one.version}`);
+    else if (previous !== one.version) lines.push(`${one.id} ${previous} → ${one.version}`);
+  }
+  const kept = new Set(after.map((one) => one.id));
+  for (const one of before) if (!kept.has(one.id)) lines.push(`${one.id} ${one.version}: закрепление снято`);
+  return lines;
 }
 
 // REQ-PUBLISHING-004, REQ-PUBLISHING-015
@@ -129,6 +145,12 @@ export function costSection(changes, declared = [], seesMore = []) {
   if (seesMore.length > 0) {
     lines.push('', `Проверка видит больше (${seesMore.length}) — нарушение, прежде невидимое, может найтись:`,
       ...seesMore.map((line) => `- ${line}`));
+  }
+  // REQ-DEPS-010
+  const components = changes.components ?? [];
+  if (components.length > 0) {
+    lines.push('', `Версии компонентов (${components.length}) — полный прогон потребителя обязателен (REQ-DEPS-010):`,
+      ...components.map((line) => `- ${line}`));
   }
   // CORE-OPS-087
   const optIn = optInLines(changes);

@@ -92,6 +92,27 @@ function obligationsOf(catalogue) {
   }
 }
 
+// REQ-DEPS-010
+const CORE_GROUP = 'io.github.apocarteres.platform';
+
+// REQ-DEPS-010
+export function componentsOf(pom) {
+  if (pom === null || pom === undefined) return [];
+  const properties = new Map([...pom.matchAll(/<([A-Za-z0-9.-]+)>([^<$]+)<\/\1>/g)].map((match) => [match[1], match[2].trim()]));
+  const managed = /<dependencyManagement>([\s\S]*?)<\/dependencyManagement>/.exec(pom)?.[1] ?? '';
+  const found = [];
+  for (const [, block] of managed.matchAll(/<dependency>([\s\S]*?)<\/dependency>/g)) {
+    const field = (name) => new RegExp(`<${name}>([^<]+)</${name}>`).exec(block)?.[1]?.trim();
+    const group = field('groupId');
+    const artifact = field('artifactId');
+    const declared = field('version');
+    if (!group || !artifact || !declared || group === CORE_GROUP) continue;
+    const property = /^\$\{(.+)\}$/.exec(declared)?.[1];
+    found.push({ id: `${group}:${artifact}`, version: property === undefined ? declared : (properties.get(property) ?? declared) });
+  }
+  return found.sort((one, other) => (one.id < other.id ? -1 : 1));
+}
+
 // REQ-PUBLISHING-015, REQ-AUTH-020, REQ-SUPPORT-013, REQ-NOTIFICATIONS-008
 export const CONTRACTS = [
   'platform-auth/src/main/resources/openapi/platform-auth.openapi.json',
@@ -137,5 +158,7 @@ export async function surfaceAt(root, ref) {
   const obligations = obligationsOf(await shown(root, ref, `${PACKAGE}/obligations.json`));
   const contract = [];
   for (const file of CONTRACTS) contract.push(...contractOf(await shown(root, ref, file), path.basename(file, '.openapi.json')));
-  return { ...commandsOf(cli), rules, clauses: [...new Set(clauses)].sort(), obligations, contract };
+  // REQ-DEPS-010
+  const components = componentsOf(await shown(root, ref, 'pom.xml'));
+  return { ...commandsOf(cli), rules, clauses: [...new Set(clauses)].sort(), obligations, contract, components };
 }

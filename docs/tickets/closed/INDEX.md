@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 188. Включены самостоятельные задачи и этапы планов функций.
+Всего: 189. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -127,6 +127,7 @@ authority: navigation
 | [Код отказа не читается за `sanitisingInterceptor` ядра](CORE-QUAL-028-auth-code-behind-sanitising-interceptor.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | frontend, typescript |
 | [Голый `fetch` без версии API находится только на стенде](CORE-QUAL-029-raw-fetch-without-api-version.md) | P1 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | frontend, quality |
 | [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | security, backend |
+| [Ядро отдавало уязвимый jackson-databind 3.1.5](CORE-SEC-003-jackson-fixed-versions.md) | P1 | Выполнена | Не назначен | security, java, dependencies |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |

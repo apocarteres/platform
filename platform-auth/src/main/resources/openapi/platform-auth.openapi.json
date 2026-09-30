@@ -3,7 +3,7 @@
   "info": {
     "title": "Аутентификация ядра",
     "version": "0.0.0",
-    "description": "Контракт точек platform-auth (REQ-AUTH-020). Версия документа — версия ядра. Изменяющие запросы требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN. Запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006). Программный клиент удостоверяется ключом доступа: заголовок Authorization: Bearer <ключ>, без cookie и CSRF (REQ-AUTH-030)."
+    "description": "Контракт точек platform-auth (REQ-AUTH-020). Версия документа — версия ядра. Изменяющие запросы требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN. Запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006). Программный клиент удостоверяется ключом доступа: заголовок Authorization: Bearer <ключ>, без cookie и CSRF (REQ-AUTH-030). На путях порта внешней личности проекта отказ — identity-rejected с кодом 401 (REQ-AUTH-038); эти пути описывает контракт проекта."
   },
   "paths": {
     "/api/auth/register": {

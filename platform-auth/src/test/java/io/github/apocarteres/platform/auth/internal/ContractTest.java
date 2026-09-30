@@ -131,6 +131,8 @@ class ContractTest {
       }
     }
     codes.remove("access-denied");
+    // REQ-AUTH-038
+    codes.remove("identity-rejected");
     Set<String> listed = new HashSet<>();
     contract.get("paths").properties().forEach(path -> path.getValue().properties().forEach(operation ->
       operation.getValue().get("responses").properties().forEach(response -> {

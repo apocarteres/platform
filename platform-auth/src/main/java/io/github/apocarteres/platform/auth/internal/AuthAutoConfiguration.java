@@ -9,6 +9,7 @@ import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.KeyAccess;
 import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.auth.RegistrationHook;
+import io.github.apocarteres.platform.auth.RequestAuthenticator;
 import io.github.apocarteres.platform.persistence.SqlStatements;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
@@ -169,12 +170,18 @@ public class AuthAutoConfiguration {
   @Bean
   SecurityFilterChain platformApiSecurity(HttpSecurity http, ApiAccess access, ObjectProvider<ModuleApiAccess> modules,
     ErrorMessages messages, SecurityContextRepository contexts, ObjectProvider<AccessKeyGuard> keys,
-    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, HstsSettings hsts) throws Exception {
+    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, HstsSettings hsts,
+    ExternalIdentityGuard identities) throws Exception {
     ProblemResponses problems = new ProblemResponses(messages);
     AccessKeyGuard guard = keys.getIfAvailable();
+    ExternalIdentityGuard external = identities.active() ? identities : null;
+    // REQ-AUTH-038
+    if (external != null) {
+      http.addFilterBefore(new ExternalIdentityFilter(external, resolver), CsrfFilter.class);
+    }
     // REQ-AUTH-030
     if (guard != null) {
-      http.addFilterBefore(new AccessKeyFilter(guard, resolver), CsrfFilter.class);
+      http.addFilterBefore(new AccessKeyFilter(guard, resolver, request -> external != null && external.covers(request)), CsrfFilter.class);
     }
     http.securityMatcher("/api/**")
       .authorizeHttpRequests(rules -> {
@@ -193,6 +200,10 @@ public class AuthAutoConfiguration {
         if (guard != null) {
           csrf.ignoringRequestMatchers(AccessKeyFilter::bearer);
         }
+        // REQ-AUTH-038
+        if (external != null) {
+          csrf.ignoringRequestMatchers(external::covers);
+        }
       })
       .securityContext(context -> context.securityContextRepository(contexts))
       .exceptionHandling(failures -> failures
@@ -210,6 +221,13 @@ public class AuthAutoConfiguration {
       .httpBasic(basic -> basic.disable())
       .logout(logout -> logout.disable());
     return http.build();
+  }
+
+  // REQ-AUTH-037
+  @Bean
+  ExternalIdentityGuard externalIdentityGuard(Environment environment, ObjectProvider<RequestAuthenticator> authenticators,
+    RateLimiter limiter) {
+    return new ExternalIdentityGuard(ExternalSettings.of(environment, authenticators.orderedStream().toList()), limiter);
   }
 
   // REQ-AUTH-028

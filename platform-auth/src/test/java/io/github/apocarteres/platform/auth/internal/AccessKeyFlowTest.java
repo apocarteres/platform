@@ -5,6 +5,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import io.github.apocarteres.platform.auth.AccessKey;
+import io.github.apocarteres.platform.auth.RequestAuthenticator;
+import io.github.apocarteres.platform.auth.ExternalIdentity;
+import io.github.apocarteres.platform.auth.CurrentIdentity;
 import io.github.apocarteres.platform.auth.AccessKeys;
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
@@ -18,8 +21,10 @@ import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.auth.UsedKey;
 import io.github.apocarteres.platform.time.MutableClock;
 import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Cookie;
 import java.net.URI;
+import java.util.Optional;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +77,7 @@ import tools.jackson.databind.json.JsonMapper;
     "platform.auth.keys.changes-per-minute=2",
     "platform.auth.headers.hsts.max-age=1d",
     "platform.auth.headers.hsts.include-sub-domains=false",
+    "platform.auth.external.roles=PARTNER",
   }
 )
 class AccessKeyFlowTest {
@@ -400,6 +406,18 @@ class AccessKeyFlowTest {
       .andExpect(result -> assertThat(result.getResponse().getHeader("Strict-Transport-Security")).isEqualTo("max-age=86400"));
   }
 
+  // REQ-AUTH-038
+  @Test
+  @DisplayName("На пути порта внешней личности ключ доступа не принимается: удостоверяет только порт")
+  void keyIsNotAcceptedOnThePortPaths() throws Exception {
+    person("owner@site.example", "USER");
+    String key = issue(signedIn("owner@site.example"), "агент", 30).get("value").asString();
+    byKey(key, MockMvcRequestBuilders.get("/api/partner/me").header("X-Partner", "p-9")).andExpect(status().isOk())
+      .andExpect(result -> assertThat(result.getResponse().getContentAsString()).isEqualTo("partner p-9"));
+    byKey(key, MockMvcRequestBuilders.get("/api/partner/me")).andExpect(status().isUnauthorized())
+      .andExpect(jsonPath("$.code").value("identity-rejected"));
+  }
+
   @Configuration(proxyBeanMethods = false)
   @EnableAutoConfiguration
   static class Service {
@@ -448,8 +466,24 @@ class AccessKeyFlowTest {
     // REQ-AUTH-031
     @Bean
     KeyAccess keyAccess() {
-      Set<String> opened = Set.of("/api/things", "/api/key-name", "/api/admin/panel", "/api/auth/me", "/api/auth/keys");
+      Set<String> opened = Set.of("/api/things", "/api/key-name", "/api/admin/panel", "/api/auth/me", "/api/auth/keys", "/api/partner/me");
       return request -> opened.contains(request.getRequestURI());
+    }
+
+    // REQ-AUTH-038
+    @Bean
+    RequestAuthenticator partner() {
+      return new RequestAuthenticator() {
+        @Override
+        public Set<String> paths() {
+          return Set.of("/api/partner/**");
+        }
+
+        @Override
+        public Optional<ExternalIdentity> authenticate(HttpServletRequest request) {
+          return Optional.ofNullable(request.getHeader("X-Partner")).map(id -> new ExternalIdentity("partner", id, Set.of("PARTNER")));
+        }
+      };
     }
 
     @Bean
@@ -480,6 +514,11 @@ class AccessKeyFlowTest {
     @GetMapping("/api/key-name")
     String keyName() {
       return CurrentAccount.key().map(UsedKey::id).map(id -> id + " " + CurrentAccount.key().map(UsedKey::name).orElseThrow()).orElse("сессия");
+    }
+
+    @GetMapping("/api/partner/me")
+    String partnerMe() {
+      return CurrentIdentity.get().map(one -> one.kind() + " " + one.id()).orElse("ключ");
     }
 
     @GetMapping("/api/admin/panel")

@@ -28,9 +28,12 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -52,7 +55,8 @@ import org.springframework.web.context.WebApplicationContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-// REQ-AUTH-037, REQ-AUTH-038, REQ-AUTH-039
+// REQ-AUTH-037, REQ-AUTH-038, REQ-AUTH-039, REQ-AUTH-040
+@ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest(
   classes = ExternalIdentityFlowTest.Service.class,
   properties = {
@@ -174,6 +178,16 @@ class ExternalIdentityFlowTest {
     signed("client-1", MockMvcRequestBuilders.get("/api/telegram/me")).andExpect(status().isTooManyRequests())
       .andExpect(jsonPath("$.code").value("rate-limited"));
     signed("client-2", MockMvcRequestBuilders.get("/api/telegram/me")).andExpect(status().isOk());
+  }
+
+  // REQ-AUTH-040
+  @Test
+  @DisplayName("Идентификатор внешней личности не попадает ни в журнал отказа, ни в ключи ограничителя")
+  void identifierStaysOutOfLogsAndLimiterKeys(CapturedOutput output) throws Exception {
+    signed("staff-secret-4711", MockMvcRequestBuilders.get("/api/telegram/me")).andExpect(status().isUnauthorized());
+    assertThat(output.getAll()).contains("с ролью вне platform.auth.external.roles").doesNotContain("secret-4711");
+    signed("client-uniq-8812", MockMvcRequestBuilders.get("/api/telegram/me")).andExpect(status().isOk());
+    assertThat(redis.keys("*")).isNotEmpty().noneMatch(key -> key.contains("uniq-8812"));
   }
 
   @Configuration(proxyBeanMethods = false)

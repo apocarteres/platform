@@ -34,17 +34,16 @@
       <artifactId>spring-jdbc</artifactId>
       <optional>true</optional>
     </dependency>
+    <!-- REQ-DATA-ACCESS-007 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-liquibase</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.github.apocarteres.platform</groupId>
       <artifactId>platform-arch-rules</artifactId>
       <version>${revision}</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- REQ-PERSISTENCE-016 -->
-    <dependency>
-      <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

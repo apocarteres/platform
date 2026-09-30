@@ -69,6 +69,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
+    "spring.liquibase.enabled=false",
     "platform.auth.roles=USER,ADMIN",
     "platform.auth.default-roles=USER",
     "platform.auth.link-base=https://site.example",

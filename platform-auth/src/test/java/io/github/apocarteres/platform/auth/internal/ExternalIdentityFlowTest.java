@@ -60,6 +60,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest(
   classes = ExternalIdentityFlowTest.Service.class,
   properties = {
+    "spring.liquibase.enabled=false",
     "platform.auth.roles=STAFF",
     "platform.auth.default-roles=STAFF",
     "platform.auth.link-base=https://site.example",

@@ -1,0 +1,10 @@
+# REQ-DATA-ACCESS-007
+databaseChangeLog:
+  - changeSet:
+      id: platform-job-lock:001-lock
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-job-lock/001-lock.sql
+            relativeToChangelogFile: true
+            splitStatements: false

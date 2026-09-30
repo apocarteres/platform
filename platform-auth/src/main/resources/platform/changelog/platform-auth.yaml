@@ -1,0 +1,34 @@
+# REQ-DATA-ACCESS-007
+databaseChangeLog:
+  - changeSet:
+      id: platform-auth:001-account
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-auth/001-account.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-auth:002-role
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-auth/002-role.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-auth:003-token
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-auth/003-token.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-auth:004-access-key
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-auth/004-access-key.sql
+            relativeToChangelogFile: true
+            splitStatements: false

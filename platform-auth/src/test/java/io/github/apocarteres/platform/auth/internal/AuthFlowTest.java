@@ -93,19 +93,26 @@ class AuthFlowTest {
   static void schema() {
     try (var connection = java.sql.DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
       var statement = connection.createStatement()) {
-      for (String table : List.of("create-account", "create-role", "create-token")) {
-        try (var input = AuthFlowTest.class.getResourceAsStream("/sql/platform-auth/" + table + ".sql")) {
-          statement.execute(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
-        }
-      }
+      changelogs(connection, "platform/changelog/platform-auth.yaml");
       statement.execute("CREATE TABLE player_wallet (account_id UUID NOT NULL REFERENCES platform_account (id) ON DELETE RESTRICT)");
-    } catch (java.sql.SQLException | java.io.IOException failure) {
+    } catch (java.sql.SQLException | liquibase.exception.LiquibaseException failure) {
       throw new IllegalStateException(failure);
     }
   }
 
   private static final Pattern TOKEN = Pattern.compile("token=([A-Za-z0-9_-]+)");
   private static final String PASSWORD = "correct horse battery";
+
+  // REQ-DATA-ACCESS-007
+  private static void changelogs(java.sql.Connection connection, String... files) throws liquibase.exception.LiquibaseException, java.sql.SQLException {
+    liquibase.database.Database database = liquibase.database.DatabaseFactory.getInstance()
+      .findCorrectDatabaseImplementation(new liquibase.database.jvm.JdbcConnection(connection));
+    for (String file : files) {
+      new liquibase.Liquibase(file, new liquibase.resource.ClassLoaderResourceAccessor(), database)
+        .update(new liquibase.Contexts(), new liquibase.LabelExpression());
+    }
+    connection.setAutoCommit(true);
+  }
 
   @DynamicPropertySource
   static void stores(DynamicPropertyRegistry registry) {

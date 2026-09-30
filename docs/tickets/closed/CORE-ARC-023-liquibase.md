@@ -1,12 +1,12 @@
 ---
 id: CORE-ARC-023
 type: ticket
-status: backlog
+status: done
 scope: persistence, java, deployment, dependencies
 authority: supporting
 priority: P2
 release: unassigned
-related: REQ-PERSISTENCE, REQ-DEPLOYMENT, REQ-DEPS
+related: REQ-DATA-ACCESS, REQ-DEPLOYMENT, REQ-DEPS
 ---
 
 # Инструмент переходов базы — Liquibase, журналы таблиц ядра — от ядра
@@ -49,7 +49,7 @@ Flyway, часть — в Liquibase. В требованиях ядра инст
 
 ## Требуется
 
-1. Директива в `REQ-PERSISTENCE`: инструмент переходов базы — Liquibase.
+1. Директива в `REQ-DATA-ACCESS`: инструмент переходов базы — Liquibase.
    Версию закрепляет ядро (`REQ-DEPS-001`).
 2. Журналы Liquibase для таблиц ядра в каждом модуле, владеющем таблицами:
    `platform-auth`, `platform-notifications`, `platform-support`,
@@ -84,6 +84,27 @@ Flyway, часть — в Liquibase. В требованиях ядра инст
    совпали с наборами проекта. Ответ: `<модуль>:<трёхзначный номер>-<предмет>`,
    например `platform-auth:001-account`, автор — `platform` (решение владельца
    от 2026-09-30).
+
+## Что сделано
+
+- `REQ-DATA-ACCESS-007`, `REQ-DATA-ACCESS-008` в доставляемом `data-access.md`.
+  Сначала положения были записаны в `persistence.md`, но этот документ
+  описывает контракт кода самого ядра и потребителям не доставляется.
+  Ссылки на таблицы в `REQ-AUTH`, `REQ-NOTIFICATIONS`, `REQ-SUPPORT`,
+  `REQ-DEPLOYMENT` и в инструкциях переведены на журналы ядра.
+- Журналы в YAML: `platform/changelog/platform-auth.yaml`,
+  `platform-notifications.yaml`, `platform-support.yaml`,
+  `platform-job-lock.yaml`. SQL наборов изменений — в неизменяемых файлах.
+- Тесты модулей строят схему из журналов, а не из образцов.
+- `CoreChangelogTest`: журналы дают ту же схему, что образцы; база,
+  созданная из образцов, после `changelogSync` принимает журналы без
+  изменения схемы. Тест падал до появления журналов.
+- Обязательство `liquibase-migrations` со сроком в 3 выпуска; правило
+  `migration-tool` на уровне рекомендации; инструкция
+  [перехода на журналы ядра](../../runbooks/liquibase-adoption.md).
+- Пункт 5 (`migration-labels` по `labels` Liquibase) вынесен в CORE-ARC-024.
+- Пробы: 3 на правиле и 3 на журналах — все пойманы. Проба «пропущенный
+  набор» сначала ломала разбор YAML, а не журнал, и переписана.
 
 ## Откуда пришла задача
 

@@ -89,17 +89,9 @@ class SupportFlowTest {
   }
 
   static void schema() {
-    try (var connection = java.sql.DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
-      var statement = connection.createStatement()) {
-      for (String table : List.of("platform-auth/create-account", "platform-auth/create-role", "platform-auth/create-token",
-        "platform-support/create-request", "platform-support/create-entry", "platform-support/create-attachment",
-        "platform-support/create-attachment-content", "platform-support/create-answer-link",
-        "platform-notifications/create-notification")) {
-        try (var input = SupportFlowTest.class.getResourceAsStream("/sql/" + table + ".sql")) {
-          statement.execute(new String(input.readAllBytes(), StandardCharsets.UTF_8));
-        }
-      }
-    } catch (java.sql.SQLException | java.io.IOException failure) {
+    try (var connection = java.sql.DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
+      changelogs(connection, "platform/changelog/platform-auth.yaml", "platform/changelog/platform-support.yaml", "platform/changelog/platform-notifications.yaml");
+    } catch (java.sql.SQLException | liquibase.exception.LiquibaseException failure) {
       throw new IllegalStateException(failure);
     }
   }
@@ -109,6 +101,17 @@ class SupportFlowTest {
   static final byte[] GIF = {'G', 'I', 'F', '8', '9', 'a', 0};
   static final String PASSWORD = "correct horse battery";
   static final Pattern TOKEN = Pattern.compile("token=([A-Za-z0-9_-]+)");
+
+  // REQ-DATA-ACCESS-007
+  private static void changelogs(java.sql.Connection connection, String... files) throws liquibase.exception.LiquibaseException, java.sql.SQLException {
+    liquibase.database.Database database = liquibase.database.DatabaseFactory.getInstance()
+      .findCorrectDatabaseImplementation(new liquibase.database.jvm.JdbcConnection(connection));
+    for (String file : files) {
+      new liquibase.Liquibase(file, new liquibase.resource.ClassLoaderResourceAccessor(), database)
+        .update(new liquibase.Contexts(), new liquibase.LabelExpression());
+    }
+    connection.setAutoCommit(true);
+  }
 
   @DynamicPropertySource
   static void stores(DynamicPropertyRegistry registry) {

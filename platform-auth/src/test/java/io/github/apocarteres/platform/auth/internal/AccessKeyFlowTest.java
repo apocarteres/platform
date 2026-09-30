@@ -90,16 +90,22 @@ class AccessKeyFlowTest {
   static {
     POSTGRES.start();
     REDIS.start();
-    try (var connection = java.sql.DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
-      var statement = connection.createStatement()) {
-      for (String table : List.of("create-account", "create-role", "create-token", "create-access-key")) {
-        try (var input = AccessKeyFlowTest.class.getResourceAsStream("/sql/platform-auth/" + table + ".sql")) {
-          statement.execute(new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
-        }
-      }
-    } catch (java.sql.SQLException | java.io.IOException failure) {
+    try (var connection = java.sql.DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
+      changelogs(connection, "platform/changelog/platform-auth.yaml");
+    } catch (java.sql.SQLException | liquibase.exception.LiquibaseException failure) {
       throw new IllegalStateException(failure);
     }
+  }
+
+  // REQ-DATA-ACCESS-007
+  private static void changelogs(java.sql.Connection connection, String... files) throws liquibase.exception.LiquibaseException, java.sql.SQLException {
+    liquibase.database.Database database = liquibase.database.DatabaseFactory.getInstance()
+      .findCorrectDatabaseImplementation(new liquibase.database.jvm.JdbcConnection(connection));
+    for (String file : files) {
+      new liquibase.Liquibase(file, new liquibase.resource.ClassLoaderResourceAccessor(), database)
+        .update(new liquibase.Contexts(), new liquibase.LabelExpression());
+    }
+    connection.setAutoCommit(true);
   }
 
   @DynamicPropertySource

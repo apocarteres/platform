@@ -31,7 +31,15 @@ class JdbcJobLockTest {
     JdbcDataSource source = new JdbcDataSource();
     source.setURL("jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1");
     jdbc = JdbcClient.create(source);
-    jdbc.sql(statements.catalog(JdbcJobLock.CATALOG).get("create-table")).update();
+    // REQ-DATA-ACCESS-007
+    try (var connection = source.getConnection()) {
+      liquibase.database.Database database = liquibase.database.DatabaseFactory.getInstance()
+        .findCorrectDatabaseImplementation(new liquibase.database.jvm.JdbcConnection(connection));
+      new liquibase.Liquibase("platform/changelog/platform-job-lock.yaml", new liquibase.resource.ClassLoaderResourceAccessor(), database)
+        .update(new liquibase.Contexts(), new liquibase.LabelExpression());
+    } catch (java.sql.SQLException | liquibase.exception.LiquibaseException failure) {
+      throw new IllegalStateException(failure);
+    }
   }
 
   private JobLock instance(String name) {

@@ -13,7 +13,7 @@ related: REQ-SUPPORT, REQ-CLIENT-JOURNAL, REQ-AUTH
 ## Сервер
 
 1. Зависимость `io.github.apocarteres.platform:platform-support` из BOM ядра.
-2. Таблицы — своими переходами базы по образцам `sql/platform-support/create-*.sql` из артефакта: `create-request`, `create-entry`, `create-attachment`, `create-answer-link`. `create-attachment-content` нужна, только если вложения остаются в базе. Таблица обращений ссылается на `platform_account`.
+2. Таблицы — журналом ядра `platform/changelog/platform-support.yaml` после `platform-auth.yaml` ([переход на журналы ядра](liquibase-adoption.md)).
 3. Настройки:
 
    ```yaml

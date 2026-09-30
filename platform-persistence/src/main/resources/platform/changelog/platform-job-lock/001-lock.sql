@@ -1,0 +1,5 @@
+CREATE TABLE platform_job_lock (
+  name VARCHAR(200) PRIMARY KEY,
+  holder VARCHAR(200) NOT NULL,
+  held_until TIMESTAMP WITH TIME ZONE NOT NULL
+)

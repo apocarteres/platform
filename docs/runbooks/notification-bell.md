@@ -13,7 +13,7 @@ related: REQ-NOTIFICATIONS, REQ-AUTH
 ## Сервер
 
 1. Зависимость `io.github.apocarteres.platform:platform-notifications` из BOM ядра.
-2. Таблица — своим переходом базы по образцу `sql/platform-notifications/create-notification.sql`.
+2. Таблица — журналом ядра `platform/changelog/platform-notifications.yaml` в главном журнале Liquibase проекта ([переход на журналы ядра](liquibase-adoption.md)).
 3. Настройки по желанию: `platform.notifications.keep` (по умолчанию `90d`), `platform.notifications.list-size` (20, не больше 50).
 4. Создание — в той же транзакции, что и работа:
 

@@ -90,6 +90,8 @@ export const PLANTED = {
     await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
     await put(root, 'src/main/resources/db/migration/V2__rename_stock.sql', 'alter table stock rename column qty to quantity;\n');
   }),
+  // REQ-DATA-ACCESS-008
+  'migration-tool': BOTH((root) => put(root, 'tools/build.gradle.kts', 'dependencies {\n  implementation("org.flywaydb:flyway-core")\n}\n')),
   'wiring-conditions': BOTH((root) => put(root, 'src/main/java/net/example/inventory/Wiring.java',
     java('Wiring', '@AutoConfiguration\npublic final class NAME {\n  @Bean\n  @ConditionalOnBean(Object.class)\n  Object bean() {\n    return null;\n  }\n}'))),
   'rust-exemptions': {

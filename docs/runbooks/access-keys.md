@@ -12,7 +12,7 @@ related: REQ-AUTH
 
 ## Сервер
 
-1. Таблица — своим переходом базы по образцу `sql/platform-auth/create-access-key.sql`.
+1. Таблица — журналом ядра `platform/changelog/platform-auth.yaml` ([переход на журналы ядра](liquibase-adoption.md)).
 2. Настройка `platform.auth.keys.enabled=true`. По желанию: `platform.auth.keys.max-days` (365, не больше 365), `platform.auth.keys.max-per-account` (10), `platform.auth.keys.requests-per-minute` (60), `platform.auth.keys.changes-per-minute` (20).
 3. Бин `KeyAccess` — что открыто по ключу. Без него служба не стартует; `/api/auth/**` по ключу закрыты всегда.
 

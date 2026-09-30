@@ -1,0 +1,42 @@
+# REQ-DATA-ACCESS-007
+databaseChangeLog:
+  - changeSet:
+      id: platform-support:001-request
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-support/001-request.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-support:002-entry
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-support/002-entry.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-support:003-attachment
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-support/003-attachment.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-support:004-attachment-content
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-support/004-attachment-content.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-support:005-answer-link
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-support/005-answer-link.sql
+            relativeToChangelogFile: true
+            splitStatements: false

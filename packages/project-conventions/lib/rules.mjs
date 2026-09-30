@@ -21,6 +21,7 @@ import { findDefersWithoutError } from './defer-error.mjs';
 import { findUnguardedBudgets } from './bundle-budgets.mjs';
 import { findUnlabelledMigrations } from './migrations.mjs';
 import { findBackupProblems } from './backups.mjs';
+import { findFlyway } from './migration-tool.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
 
@@ -198,6 +199,16 @@ export const RULES = [
     enabledBy: 'deployment.withoutDowntime',
     title: 'переходов базы без метки или с неверной парой',
     find: findUnlabelledMigrations,
+  },
+  // REQ-DATA-ACCESS-008
+  {
+    id: 'migration-tool',
+    level: RECOMMENDATION,
+    document: 'REQ-DATA-ACCESS',
+    file: 'data-access.md',
+    summary: 'Переходы базы ведёт Liquibase; Flyway в зависимостях — переезд по обязательству liquibase-migrations',
+    title: 'переходов базы не в Liquibase',
+    find: findFlyway,
   },
   // REQ-BACKUPS-001
   {

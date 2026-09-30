@@ -1,0 +1,10 @@
+# REQ-DATA-ACCESS-007
+databaseChangeLog:
+  - changeSet:
+      id: platform-notifications:001-notification
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-notifications/001-notification.sql
+            relativeToChangelogFile: true
+            splitStatements: false

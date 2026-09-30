@@ -64,6 +64,7 @@ import tools.jackson.databind.json.JsonMapper;
     "platform.auth.default-roles=USER",
     "platform.auth.link-base=https://site.example",
     "platform.auth.session.cookie-secure=false",
+    "platform.auth.headers.hsts.enabled=false",
   }
 )
 class NotificationFlowTest {
@@ -218,6 +219,15 @@ class NotificationFlowTest {
     assertThat(bell(tab).get("items")).as("колокольчик — только непрочитанные (REQ-NOTIFICATIONS-004)").isEmpty();
     assertThat(bell(new Tab("other@site.example")).get("unread").asLong()).isEqualTo(1);
     mvc.perform(MockMvcRequestBuilders.get("/api/notifications")).andExpect(status().isUnauthorized());
+  }
+
+  // REQ-AUTH-036
+  @Test
+  @DisplayName("Выключенный HSTS не уходит и на защищённый запрос: заголовок ставит прокси проекта")
+  void hstsCanBeLeftToTheProxy() throws Exception {
+    mvc.perform(MockMvcRequestBuilders.get("/api/auth/policy").secure(true))
+      .andExpect(result -> assertThat(result.getResponse().getHeader("Strict-Transport-Security")).isNull())
+      .andExpect(result -> assertThat(result.getResponse().getHeader("X-Content-Type-Options")).isEqualTo("nosniff"));
   }
 
   // REQ-NOTIFICATIONS-004

@@ -65,7 +65,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
-// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035
+// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035, REQ-AUTH-036
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -701,6 +701,16 @@ class AuthFlowTest {
     browser.post("/api/auth/logout", "{}").andExpect(status().isNoContent());
     browser.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.account").isEmpty());
     guest.get("/api/auth/me").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("authentication-required"));
+  }
+
+  // REQ-AUTH-036
+  @Test
+  @DisplayName("HSTS цепочки API по умолчанию — прежний: год с поддоменами, и только на защищённый запрос")
+  void hstsByDefault() throws Exception {
+    mvc.perform(get("/api/auth/policy").secure(true))
+      .andExpect(result -> assertThat(result.getResponse().getHeader("Strict-Transport-Security")).isEqualTo("max-age=31536000 ; includeSubDomains"));
+    mvc.perform(get("/api/auth/policy"))
+      .andExpect(result -> assertThat(result.getResponse().getHeader("Strict-Transport-Security")).isNull());
   }
 
   @Test

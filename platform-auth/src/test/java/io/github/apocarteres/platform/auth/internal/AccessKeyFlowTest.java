@@ -57,7 +57,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-// REQ-AUTH-028, REQ-AUTH-029, REQ-AUTH-030, REQ-AUTH-031, REQ-AUTH-032, REQ-AUTH-033, REQ-AUTH-034
+// REQ-AUTH-028, REQ-AUTH-029, REQ-AUTH-030, REQ-AUTH-031, REQ-AUTH-032, REQ-AUTH-033, REQ-AUTH-034, REQ-AUTH-036
 @SpringBootTest(
   classes = AccessKeyFlowTest.Service.class,
   properties = {
@@ -70,6 +70,8 @@ import tools.jackson.databind.json.JsonMapper;
     "platform.auth.keys.max-per-account=3",
     "platform.auth.keys.requests-per-minute=6",
     "platform.auth.keys.changes-per-minute=2",
+    "platform.auth.headers.hsts.max-age=1d",
+    "platform.auth.headers.hsts.include-sub-domains=false",
   }
 )
 class AccessKeyFlowTest {
@@ -388,6 +390,14 @@ class AccessKeyFlowTest {
     accounts.delete(owner.id());
     assertThat(JdbcClient.create(source).sql("SELECT count(*) FROM platform_access_key").query(Long.class).single())
       .as("удаление учётной записи удаляет её ключи").isZero();
+  }
+
+  // REQ-AUTH-036
+  @Test
+  @DisplayName("Срок и поддомены HSTS задаёт проект: сутки без поддоменов")
+  void hstsIsConfigured() throws Exception {
+    mvc.perform(MockMvcRequestBuilders.get("/api/auth/policy").secure(true))
+      .andExpect(result -> assertThat(result.getResponse().getHeader("Strict-Transport-Security")).isEqualTo("max-age=86400"));
   }
 
   @Configuration(proxyBeanMethods = false)

@@ -78,6 +78,12 @@ public class AuthAutoConfiguration {
     return AuthSettings.of(environment);
   }
 
+  // REQ-AUTH-036
+  @Bean
+  HstsSettings hstsSettings(Environment environment) {
+    return HstsSettings.of(environment);
+  }
+
   // REQ-AUTH-007
   @Bean
   PasswordEncoder passwordEncoder() {
@@ -163,7 +169,7 @@ public class AuthAutoConfiguration {
   @Bean
   SecurityFilterChain platformApiSecurity(HttpSecurity http, ApiAccess access, ObjectProvider<ModuleApiAccess> modules,
     ErrorMessages messages, SecurityContextRepository contexts, ObjectProvider<AccessKeyGuard> keys,
-    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) throws Exception {
+    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, HstsSettings hsts) throws Exception {
     ProblemResponses problems = new ProblemResponses(messages);
     AccessKeyGuard guard = keys.getIfAvailable();
     // REQ-AUTH-030
@@ -192,6 +198,14 @@ public class AuthAutoConfiguration {
       .exceptionHandling(failures -> failures
         .authenticationEntryPoint(problems.entryPoint())
         .accessDeniedHandler(problems.denied()))
+      // REQ-AUTH-036
+      .headers(headers -> headers.httpStrictTransportSecurity(strict -> {
+        if (hsts.enabled()) {
+          strict.maxAgeInSeconds(hsts.maxAge().toSeconds()).includeSubDomains(hsts.includeSubDomains());
+        } else {
+          strict.disable();
+        }
+      }))
       .formLogin(form -> form.disable())
       .httpBasic(basic -> basic.disable())
       .logout(logout -> logout.disable());

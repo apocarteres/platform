@@ -147,7 +147,7 @@ authority: navigation
 | [Ключ доступа — второй способ аутентификации ядра](CORE-ARC-020-access-keys.md) | P2 | Выполнена | [RELEASE-12-2-0](../../releases/RELEASE-12-2-0.md) | security, backend, frontend, personal-data |
 | [Страница уведомлений и панель только с непрочитанными](CORE-ARC-021-notification-pages.md) | P2 | Выполнена | [RELEASE-13-0-0](../../releases/RELEASE-13-0-0.md) | backend, frontend, client |
 | [Порт внешней личности — клиент без учётной записи ядра](CORE-ARC-022-external-identity.md) | P2 | Выполнена | [RELEASE-13-5-0](../../releases/RELEASE-13-5-0.md) | security, backend, personal-data |
-| [Инструмент переходов базы — Liquibase, журналы таблиц ядра — от ядра](CORE-ARC-023-liquibase.md) | P2 | Выполнена | Не назначен | persistence, java, deployment, dependencies |
+| [Инструмент переходов базы — Liquibase, журналы таблиц ядра — от ядра](CORE-ARC-023-liquibase.md) | P2 | Выполнена | [RELEASE-13-6-0](../../releases/RELEASE-13-6-0.md) | persistence, java, deployment, dependencies |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |
 | [Правила каталогов задач и выпусков жили копиями в каждом репозитории](CORE-DOC-002-catalog-rules-into-the-core.md) | P2 | Выполнена | [RELEASE-0-26-0](../../releases/RELEASE-0-26-0.md) | documentation, process |

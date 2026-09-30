@@ -5,7 +5,7 @@ status: done
 scope: persistence, java, deployment, dependencies
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-13-6-0
 related: REQ-DATA-ACCESS, REQ-DEPLOYMENT, REQ-DEPS
 ---
 

@@ -2,7 +2,6 @@ import { execFile } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { parse } from 'yaml';
 import { environmentWithoutGit } from './release/git.mjs';
 
 const run = promisify(execFile);
@@ -27,7 +26,9 @@ export function labelsOf(labels, kinds) {
   return { kind, target: target === undefined ? null : target.slice(TARGET.length) };
 }
 
-function entriesOf(text) {
+// REQ-DEPLOYMENT-026
+async function entriesOf(text) {
+  const { parse } = await import('yaml');
   const document = parse(text);
   return Array.isArray(document?.databaseChangeLog) ? document.databaseChangeLog : [];
 }
@@ -48,7 +49,7 @@ async function exists(root, file) {
 
 // REQ-DEPLOYMENT-026, REQ-DATA-ACCESS-007
 async function walk(root, file, kinds, found) {
-  for (const entry of entriesOf(await readFile(path.join(root, file), 'utf8'))) {
+  for (const entry of await entriesOf(await readFile(path.join(root, file), 'utf8'))) {
     if (entry.changeSet !== undefined) {
       const id = String(entry.changeSet.id);
       found.push({ file: `${file}#${id}`, source: file, set: id, version: id, names: new Set([id]), label: labelsOf(entry.changeSet.labels, kinds) });
@@ -87,7 +88,7 @@ export async function changeSets(root, master, kinds) {
 export async function setCarriedAt(root, commit, migration) {
   try {
     const { stdout } = await run('git', ['-C', root, 'show', `${commit}:${migration.source}`], { env: environmentWithoutGit(), maxBuffer: 64 * 1024 * 1024 });
-    return entriesOf(stdout).some((entry) => entry.changeSet !== undefined && String(entry.changeSet.id) === migration.set);
+    return (await entriesOf(stdout)).some((entry) => entry.changeSet !== undefined && String(entry.changeSet.id) === migration.set);
   } catch {
     return false;
   }

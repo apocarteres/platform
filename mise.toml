@@ -32,9 +32,16 @@ run = "node packages/project-conventions/bin/conventions.mjs sync"
 description = "Зафиксировать существующие комментарии ограничителем"
 run = "node packages/project-conventions/bin/conventions.mjs baseline \"$@\""
 
+# REQ-DEPLOYMENT-026: зависимости пакета правил — на чистом клоне до его тестов
+[tasks.conventions-install]
+description = "Поставить зависимости пакета правил по файлу блокировки"
+dir = "packages/project-conventions"
+run = "[ -d node_modules/yaml ] || npm ci --silent"
+
 [tasks.conventions-test]
 description = "Тесты пакета правил"
 dir = "packages/project-conventions"
+depends = ["conventions-install"]
 run = "node --test test/*.test.mjs"
 
 [tasks.web-test]

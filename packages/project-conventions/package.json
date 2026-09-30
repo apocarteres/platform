@@ -40,5 +40,8 @@
     "./configs/clippy": "./configs/clippy.toml",
     "./configs/spotbugs-exclude": "./configs/spotbugs-exclude.xml",
     "./configs/cargo-lints": "./configs/cargo-lints.toml"
+  },
+  "dependencies": {
+    "yaml": "2.9.1"
   }
 }

@@ -195,7 +195,7 @@ export const RULES = [
     level: DIRECTIVE,
     document: 'REQ-DEPLOYMENT',
     file: 'deployment.md',
-    summary: 'У проекта, выбравшего развёртывание без простоя, каждый переход базы помечен: additive, expand, contract <переход> или breaking',
+    summary: 'У проекта, выбравшего развёртывание без простоя, каждый переход базы помечен: additive, expand, contract <переход> или breaking — labels набора Liquibase либо первой строкой SQL',
     enabledBy: 'deployment.withoutDowntime',
     title: 'переходов базы без метки или с неверной парой',
     find: findUnlabelledMigrations,

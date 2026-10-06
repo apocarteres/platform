@@ -48,8 +48,11 @@ prepare() {
     docker volume inspect "$volume" >/dev/null 2>&1 || docker volume create "$volume" >/dev/null
   done
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  # CORE-OPS-110: PID 1 контейнера — sleep, он не собирает осиротевшие процессы
+  # docker exec; init делает это за него, и зомби не копятся за сессию.
   docker create \
     --name "$CONTAINER" \
+    --init \
     --user 1000:1000 \
     --group-add "$socket_gid" \
     --add-host host.docker.internal:host-gateway \
@@ -70,6 +73,9 @@ require_container() {
   require_docker
   docker container inspect "$CONTAINER" >/dev/null 2>&1 \
     || fail "сборочного контейнера $CONTAINER нет: подготовьте его командой mise run verify-runner-prepare"
+  # CORE-OPS-110
+  [ "$(docker inspect -f '{{.HostConfig.Init}}' "$CONTAINER")" = "true" ] \
+    || fail "сборочный контейнер $CONTAINER создан без init и копит зомби-процессы: пересоздайте его командой mise run verify-runner-prepare"
   [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER")" = "true" ] || docker start "$CONTAINER" >/dev/null
 }
 

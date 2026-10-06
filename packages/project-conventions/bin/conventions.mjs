@@ -12,7 +12,7 @@ import { DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, report, runWithLimits } fr
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, grewOver, readBaseline, sizeOf, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
-import { feedbackChannel, feedbackLine } from '../lib/feedback.mjs';
+import { REPORT_TEMPLATE, feedbackChannel, feedbackLine, writeReportTemplate } from '../lib/feedback.mjs';
 import { collisions, dictionary } from '../lib/terms.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { documentationProblems } from '../lib/docs/documentation.mjs';
@@ -387,9 +387,24 @@ async function sync(root) {
   console.log(`AGENTS.md: блок правил v${markerVersion(version)} записан.`);
 }
 
+// REQ-ADOPTION-027
+async function feedbackTemplate(root) {
+  const result = await writeReportTemplate(root);
+  if (result.refused) {
+    refuse(USAGE['feedback-template'], result.refused);
+    return;
+  }
+  if (result.differs) {
+    console.error(`Шаблон заявки не записан: ${result.differs}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(result.unchanged ? `Шаблон заявки уже на месте: ${REPORT_TEMPLATE}` : `Шаблон заявки записан: ${REPORT_TEMPLATE}`);
+}
+
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|release> [--root <path>]';
+  + '|feedback-template|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -398,6 +413,8 @@ const USAGE = {
   'tickets-index': 'conventions tickets-index [--root <path>]',
   'releases-index': 'conventions releases-index [--root <path>]',
   sync: 'conventions sync [--root <path>]',
+  'feedback-template': 'conventions feedback-template [--root <path>]'
+    + '\n  Пишет шаблон заявки для потребителей проекта по адресу feedback.url из .conventions.json.',
   obligations: 'conventions obligations [--root <path>]',
   baseline: 'conventions baseline [--allow-growth] [--root <path>]',
   naming: 'conventions naming <plan|apply> [--map <файл>] [--root <path>]',
@@ -468,6 +485,7 @@ const SPEC = {
   'tickets-index': {},
   'releases-index': {},
   sync: {},
+  'feedback-template': {},
   obligations: {},
   baseline: { flags: ['--allow-growth'] },
   naming: { values: ['--map'], positional: 1 },
@@ -531,6 +549,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'tickets-index') await ticketsIndex(root);
     else if (command === 'releases-index') await releasesIndex(root);
     else if (command === 'sync') await sync(root);
+    // REQ-ADOPTION-027
+    else if (command === 'feedback-template') await feedbackTemplate(root);
     else if (command === 'obligations') await obligations(root);
     else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
     else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);

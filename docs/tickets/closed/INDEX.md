@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 196. Включены самостоятельные задачи и этапы планов функций.
+Всего: 197. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -163,6 +163,7 @@ authority: navigation
 | [Не сказано, где живёт опись поведений](CORE-DOC-016-where-the-inventory-lives.md) | P2 | Выполнена | [RELEASE-1-30-0](../../releases/RELEASE-1-30-0.md) | process, documentation |
 | [Выпуск интеграции был записан дефектом](CORE-DOC-017-integration-release-was-called-a-defect.md) | P2 | Выполнена | [RELEASE-1-52-0](../../releases/RELEASE-1-52-0.md) | adoption, documentation |
 | [Ядро пишет слово, запрещённое своим словарём](CORE-DOC-018-core-writes-its-own-forbidden-word.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | documentation, tooling |
+| [Потребитель не может открыть своим потребителям тот же канал заявок](CORE-DOC-019-consumer-declares-its-own-feedback-channel.md) | P2 | Выполнена | Не назначен | process, documentation |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

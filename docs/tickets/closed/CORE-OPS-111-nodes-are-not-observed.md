@@ -5,7 +5,7 @@ status: done
 scope: deployment, operations
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-15-0-0
 related: REQ-TELEMETRY, REQ-BACKUPS
 ---
 

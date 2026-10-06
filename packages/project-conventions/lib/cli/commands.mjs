@@ -18,6 +18,7 @@ import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
 import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
 import { backups as backupSection, checkBackups, writeReceipt, writeRestored } from '../backups.mjs';
 import { systemNow } from '../now.mjs';
+import { alertRules, checkTelemetry, telemetry } from '../telemetry.mjs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -429,3 +430,42 @@ export async function backupsCommand(root, parsed, { usage, refuse }) {
   console.log(`Копии в порядке: ${section.sets.map((one) => one.name).join(', ')}; восстановление проверено в срок`);
 }
 
+
+// REQ-TELEMETRY-003, REQ-TELEMETRY-004
+export async function telemetryCommand(root, parsed, { usage, refuse }) {
+  const check = parsed.flags.has('--check');
+  const alerts = parsed.values.get('--alerts');
+  if ([check, alerts !== undefined].filter(Boolean).length !== 1) {
+    refuse(usage.telemetry, 'назовите одно действие: --check или --alerts <prometheus|loki>');
+    return;
+  }
+  const section = telemetry(await readConfig(root));
+  if (!section.declared) {
+    console.error('Узлы не объявлены: добавьте раздел telemetry в .conventions.json (REQ-TELEMETRY-001)');
+    process.exitCode = 1;
+    return;
+  }
+  if (section.problems.length > 0) {
+    console.error('Объявление узлов не принято:');
+    for (const problem of section.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (alerts !== undefined) {
+    const rules = alertRules(section, alerts);
+    if (rules === null) {
+      refuse(usage.telemetry, `правила оповещений — для prometheus или loki, а не ${alerts}`);
+      return;
+    }
+    process.stdout.write(rules);
+    return;
+  }
+  const problems = await checkTelemetry(section);
+  if (problems.length > 0) {
+    console.error('Наблюдение за узлами не подтверждено:');
+    for (const problem of problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Узлы видны: ${section.nodes.length} — отвечают в Prometheus и пишут журнал в Loki.`);
+}

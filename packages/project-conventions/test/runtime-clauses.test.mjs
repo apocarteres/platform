@@ -11,10 +11,11 @@ const CORE = path.resolve(here, '../../..');
 const SELF = path.relative(CORE, fileURLToPath(import.meta.url));
 
 // REQ-QUALITY-017
-const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md', 'docs/requirements/support.md', 'docs/requirements/backups.md', 'docs/requirements/notifications.md'];
+const RUNTIME_DOCUMENTS = ['docs/requirements/deployment.md', 'docs/requirements/api-errors.md', 'docs/requirements/client-modals.md', 'docs/requirements/client-actions.md', 'docs/requirements/client-update.md', 'docs/requirements/auth.md', 'docs/requirements/client-journal.md', 'docs/requirements/support.md', 'docs/requirements/backups.md', 'docs/requirements/telemetry.md', 'docs/requirements/notifications.md'];
 
 // REQ-QUALITY-017
 const CONSUMER_SIDE = {
+  'REQ-TELEMETRY-005': 'общий хост наблюдения настраивает репозиторий его владельца; ядро на хостах ничего не меняет',
   'REQ-BACKUPS-002': 'копию своей базы снимает задание проекта на его хосте; ядро задания не поставляет и его не запускает',
   'REQ-DEPLOYMENT-001': 'исполняется скриптом развёртывания потребителя; ядро его не запускает',
   'REQ-DEPLOYMENT-003': 'исполняется скриптом развёртывания потребителя; ядро его не запускает',
@@ -29,7 +30,7 @@ const CONSUMER_SIDE = {
 };
 
 // REQ-QUALITY-017
-const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH|SUPPORT|BACKUPS|NOTIFICATIONS';
+const PREFIXES = 'DEPLOYMENT|API|CLIENT-MODAL|CLIENT-ACTION|CLIENT-UPDATE|CLIENT-JOURNAL|AUTH|SUPPORT|BACKUPS|TELEMETRY|NOTIFICATIONS';
 
 // REQ-QUALITY-017
 function citations() {

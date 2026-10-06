@@ -707,6 +707,33 @@
           "Проект без базы закрывает обязательство задачей, которая это называет."
         ]
       }
+    },
+    {
+      "id": "telemetry",
+      "title": "Узлы проекта объявлены и видны в Prometheus и Loki",
+      "requirement": "REQ-TELEMETRY-006",
+      "declares": "telemetry",
+      "level": "директива",
+      "since": "15.0.0",
+      "dueReleases": 3,
+      "slug": "declare-observed-nodes",
+      "ticket": {
+        "scope": "deployment, operations",
+        "priority": "P1",
+        "problem": "Узлы проекта не объявлены ядру: отвечает ли каждый в Prometheus и доходит ли его журнал до Loki, известно только по пустой Grafana.",
+        "required": [
+          "Раздел `telemetry` в `.conventions.json`: имена узлов, адреса Prometheus и Loki, при нужде срок свежести журнала `logsWithin` (REQ-TELEMETRY-001).",
+          "Каждый узел опознаётся меткой `node` с объявленным именем в цели опроса Prometheus и в потоках журнала Loki (REQ-TELEMETRY-002).",
+          "Правила `conventions telemetry --alerts prometheus` и `--alerts loki` поставлены в правила хоста наблюдения его владельцем (REQ-TELEMETRY-004).",
+          "Своя часть настройки общего хоста наблюдения — отдельными файлами; общее правит только владелец хоста (REQ-TELEMETRY-005)."
+        ],
+        "acceptance": [
+          "`conventions telemetry --check` проходит на рабочей среде.",
+          "Развёртывание рабочей среды вызывает `--check` и сообщает отказ.",
+          "Проект без своих узлов закрывает обязательство задачей, которая это называет."
+        ]
+      },
+      "area": "OPS"
     }
   ]
 }

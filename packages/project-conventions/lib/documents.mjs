@@ -8,6 +8,7 @@ export const DELIVERED_DOCUMENTS = [
   'dependencies.md',
   'deployment.md',
   'backups.md',
+  'telemetry.md',
   'release-cycle.md',
   'api-errors.md',
   'code-design.md',

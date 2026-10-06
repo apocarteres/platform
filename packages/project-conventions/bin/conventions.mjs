@@ -23,7 +23,8 @@ import { attestation, writeReceipt } from '../lib/release/receipt.mjs';
 import { codeTree, headCommit, resolveCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
 import {
-  backupsCommand, commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, unknown, upgradeReport,
+  backupsCommand, commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, telemetryCommand,
+  unknown, upgradeReport,
 } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 import {
@@ -404,7 +405,7 @@ async function feedbackTemplate(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|feedback-template|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|release> [--root <path>]';
+  + '|feedback-template|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|telemetry|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -435,6 +436,8 @@ const USAGE = {
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
   backups: 'conventions backups (--check | --receipt <копия> --file <путь> | --restored --note "<чем проверено>") [--root <path>]'
     + '\n  --check на хосте отказывает, если копия просрочена, пуста, ушла не туда, таймер выключен или восстановление давно не проверялось.',
+  telemetry: 'conventions telemetry (--check | --alerts <prometheus|loki>) [--root <path>]'
+    + '\n  --check отказывает, если объявленный узел не отвечает в Prometheus или не пишет журнал в Loki.',
   components: 'conventions components [--environments|--full] [--root <path>]'
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
@@ -501,6 +504,7 @@ const SPEC = {
   components: { flags: ['--environments', '--full'] },
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
   backups: { values: ['--receipt', '--file', '--note'], flags: ['--check', '--restored'] },
+  telemetry: { values: ['--alerts'], flags: ['--check'] },
   manifest: { values: ['--env', '--only', '--instance', '--file', '--journal', '--untagged-reason'] },
 };
 
@@ -573,6 +577,8 @@ if (command === undefined || command === '--help') {
     }
     else if (command === 'deployed') await deployed(root, parsed, { usage: USAGE, refuse });
     else if (command === 'backups') await backupsCommand(root, parsed, { usage: USAGE, refuse });
+    // REQ-TELEMETRY-003
+    else if (command === 'telemetry') await telemetryCommand(root, parsed, { usage: USAGE, refuse });
     // REQ-PUBLISHING-015
     else if (command === 'upgrade-report') await upgradeReport(parsed, { usage: USAGE, refuse });
     // REQ-DEPLOYMENT-011, REQ-DEPLOYMENT-030

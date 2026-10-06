@@ -83,6 +83,13 @@ export const PLANTED = {
       restoreRecord: '/var/lib/r.json' };
     await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
   }),
+  // REQ-TELEMETRY-001
+  'telemetry': BOTH(async (root) => {
+    const file = path.join(root, '.conventions.json');
+    const config = JSON.parse(await readFile(file, 'utf8'));
+    config.telemetry = { nodes: ['Node One'], prometheus: 'metrics.example.test', loki: 'https://logs.example.test' };
+    await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
+  }),
   'migration-labels': BOTH(async (root) => {
     const file = path.join(root, '.conventions.json');
     const config = JSON.parse(await readFile(file, 'utf8'));

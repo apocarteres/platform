@@ -21,6 +21,7 @@ import { findDefersWithoutError } from './defer-error.mjs';
 import { findUnguardedBudgets } from './bundle-budgets.mjs';
 import { findUnlabelledMigrations } from './migrations.mjs';
 import { findBackupProblems } from './backups.mjs';
+import { findTelemetryProblems } from './telemetry.mjs';
 import { findFlyway } from './migration-tool.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
@@ -219,6 +220,16 @@ export const RULES = [
     summary: 'Объявленные копии данных службы названы полностью: вид, расписание, конечный срок, внешнее хранилище, квитанция',
     title: 'изъянов в объявлении копий',
     find: findBackupProblems,
+  },
+  // REQ-TELEMETRY-001
+  {
+    id: 'telemetry',
+    level: DIRECTIVE,
+    document: 'REQ-TELEMETRY',
+    file: 'telemetry.md',
+    summary: 'Объявленные узлы названы полностью: имена, адреса Prometheus и Loki, срок свежести журнала',
+    title: 'изъянов в объявлении узлов',
+    find: findTelemetryProblems,
   },
   {
     id: 'wiring-conditions',

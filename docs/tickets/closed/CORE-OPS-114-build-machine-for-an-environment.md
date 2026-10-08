@@ -5,7 +5,7 @@ status: done
 scope: build, deployment, operations
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-15-1-0
 related: REQ-BUILD, REQ-DEPLOYMENT
 ---
 

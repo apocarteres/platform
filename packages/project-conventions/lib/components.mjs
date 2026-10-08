@@ -114,6 +114,16 @@ export function deployment(config) {
   const components = Object.entries(declared.components ?? {});
   if (components.length === 0) problems.push('составляющие не объявлены: разворачивать нечего');
   for (const [name, one] of components) problems.push(...componentProblems(name, one));
+  // REQ-DEPLOYMENT-031
+  const builtElsewhere = declared.builtElsewhere ?? [];
+  if (!Array.isArray(builtElsewhere)) problems.push('builtElsewhere — перечень сред, чьи артефакты собирает машина сборки проекта');
+  else {
+    for (const environment of builtElsewhere) {
+      if (!Array.isArray(environments) || !environments.includes(environment)) {
+        problems.push(`builtElsewhere: среда ${environment} не объявлена в deployment.environments`);
+      }
+    }
+  }
   // REQ-DEPLOYMENT-021
   const named = declaredArguments(declared);
   problems.push(...named.problems);
@@ -125,6 +135,8 @@ export function deployment(config) {
       name, artifact: one?.artifact, install: one?.install ?? null, verify: one?.verify ?? null, enable: one?.enable === true,
     })),
     environments: Array.isArray(environments) ? environments : [],
+    // REQ-DEPLOYMENT-031
+    builtElsewhere: Array.isArray(builtElsewhere) ? builtElsewhere : [],
     problems,
   };
 }

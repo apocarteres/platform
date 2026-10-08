@@ -1,4 +1,4 @@
-import { appendFile, mkdir, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { deployment, knownEnvironment } from './components.mjs';
 import { checksum } from './deployed.mjs';
@@ -83,4 +83,48 @@ export async function appendJournal(file, manifest) {
   await mkdir(path.dirname(path.resolve(file)), { recursive: true });
   await appendFile(path.resolve(file), journalLine(manifest));
   return path.resolve(file);
+}
+
+const short = (sum) => `${String(sum).slice(0, 12)}…`;
+
+// REQ-DEPLOYMENT-031
+export async function acceptManifest(root, config, { file, environment }) {
+  const problems = [];
+  let shipped;
+  try {
+    shipped = JSON.parse(await readFile(path.resolve(root, file), 'utf8'));
+  } catch {
+    return { problems: [`манифест ${file} не читается: принимать нечего`] };
+  }
+  const declared = deployment(config);
+  if (!declared.builtElsewhere.includes(environment)) {
+    problems.push(`среда ${environment} не объявлена в deployment.builtElsewhere: её артефакты собирает машина развёртывания`);
+  }
+  if (shipped.environment !== environment) {
+    problems.push(`манифест собран для среды ${shipped.environment}, а принимается в ${environment}`);
+  }
+  const head = await headCommit(root);
+  if (shipped.commit !== head) {
+    problems.push(`собрано из коммита ${String(shipped.commit).slice(0, 8)}, а здесь ${head.slice(0, 8)}: переключитесь на затребованный тег`);
+  }
+  const tag = await tagOfHead(root);
+  if (shipped.releaseTag === null || shipped.releaseTag === undefined) {
+    problems.push('манифест без тега выпуска: собранное на другой машине принимается только для помеченного коммита');
+  } else if (shipped.releaseTag !== tag) {
+    problems.push(`манифест помечен ${shipped.releaseTag}, а здесь ${tag ?? 'тега нет'}`);
+  }
+  for (const one of shipped.components ?? []) {
+    const own = declared.components.find((component) => component.name === one.name);
+    if (own === undefined) {
+      problems.push(`составляющая ${one.name} не объявлена: принимать её некуда`);
+      continue;
+    }
+    const sum = await checksum(path.resolve(root, own.artifact));
+    if (sum.error !== undefined) problems.push(`${one.name}: ${sum.error}`);
+    else if (sum.value !== one.sha256) {
+      problems.push(`${one.name}: ${own.artifact} — сумма ${short(sum.value)}, в манифесте ${short(one.sha256)}: файл не тот, что собран`);
+    }
+  }
+  if (problems.length === 0) await writeManifest(root, shipped);
+  return { problems };
 }

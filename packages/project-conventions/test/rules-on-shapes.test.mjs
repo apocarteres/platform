@@ -90,6 +90,13 @@ export const PLANTED = {
     config.telemetry = { nodes: ['Node One'], prometheus: 'metrics.example.test', loki: 'https://logs.example.test' };
     await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
   }),
+  // REQ-MAIL-001
+  'mail': BOTH(async (root) => {
+    const file = path.join(root, '.conventions.json');
+    const config = JSON.parse(await readFile(file, 'utf8'));
+    config.mail = { domain: 'shop.example.test', dkim: [], returnPath: 'elsewhere.example.test' };
+    await writeFile(file, `${JSON.stringify(config, null, 2)}\n`);
+  }),
   'migration-labels': BOTH(async (root) => {
     const file = path.join(root, '.conventions.json');
     const config = JSON.parse(await readFile(file, 'utf8'));

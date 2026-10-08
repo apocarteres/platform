@@ -10,6 +10,7 @@ import { TICKET_AREAS } from '../lib/document-naming.mjs';
 import { migrate, plan } from '../lib/naming-migration.mjs';
 import { DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, report, runWithLimits } from '../lib/run.mjs';
 import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
+import { buildLimits } from '../lib/build-limits.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, grewOver, readBaseline, sizeOf, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 import { REPORT_TEMPLATE, feedbackChannel, feedbackLine, writeReportTemplate } from '../lib/feedback.mjs';
@@ -23,7 +24,7 @@ import { attestation, writeReceipt } from '../lib/release/receipt.mjs';
 import { codeTree, headCommit, resolveCommit } from '../lib/release/git.mjs';
 import { systemNow } from '../lib/now.mjs';
 import {
-  backupsCommand, commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, telemetryCommand,
+  backupsCommand, commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, telemetryCommand, mailCommand,
   unknown, upgradeReport,
 } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
@@ -320,6 +321,36 @@ async function obligations(root) {
   }
 }
 
+// REQ-BUILD-015
+async function build(root, argv) {
+  const separator = argv.indexOf('--');
+  const command = separator === -1 ? [] : argv.slice(separator + 1);
+  if (command.length === 0) {
+    console.error(USAGE.build);
+    process.exitCode = 2;
+    return;
+  }
+  const limits = buildLimits(process.env);
+  if (limits.problems.length > 0) {
+    console.error('Пределы сборки этой машины не приняты:');
+    for (const problem of limits.problems) console.error(`- ${problem}`);
+    process.exitCode = 2;
+    return;
+  }
+  if (limits.prefix.length > 0) console.error(`Сборка под пределом машины: ${limits.prefix.join(' ')}`);
+  const [program, ...rest] = [...limits.prefix, ...command];
+  process.exitCode = await new Promise((resolve) => {
+    const child = spawn(program, rest, { cwd: root, stdio: 'inherit' });
+    child.on('error', (error) => {
+      console.error(error.code === 'ENOENT' && limits.prefix.includes(program)
+        ? `${program} не найден: предел сборки этой машины не исполнить, а сборка без предела не запускается`
+        : String(error.message ?? error));
+      resolve(1);
+    });
+    child.on('close', (code, signal) => resolve(signal === null ? code ?? 1 : 1));
+  });
+}
+
 // REQ-AGENT-WORK-018
 async function run(root, argv) {
   const separator = argv.indexOf('--');
@@ -405,7 +436,7 @@ async function feedbackTemplate(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
-  + '|feedback-template|baseline|receipt|run|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|telemetry|release> [--root <path>]';
+  + '|feedback-template|baseline|receipt|run|build|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|telemetry|mail|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -421,6 +452,8 @@ const USAGE = {
   naming: 'conventions naming <plan|apply> [--map <файл>] [--root <path>]',
   receipt: RECEIPT_USAGE,
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
+  build: 'conventions build [--root <path>] -- <команда сборки>'
+    + '\n  Запускает сборку под пределами машины: CONVENTIONS_BUILD_CPUS — ядер, CONVENTIONS_BUILD_NICE — приоритет.',
   commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
   unknown: 'conventions unknown --url <адрес сайта> [--timeout <с>]',
@@ -432,12 +465,15 @@ const USAGE = {
   'upgrade-report': 'conventions upgrade-report --from X.Y.Z [--to X.Y.Z]',
   'jvm-args': 'conventions jvm-args --env <среда> --archive <путь> | --aot <путь>',
   'deploy-args': 'conventions deploy-args [--root <path>] -- <доводы скрипта>   |   conventions deploy-args --usage',
-  manifest: 'conventions manifest --env <среда> [--only a,b] [--instance <экземпляр>] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]',
+  manifest: 'conventions manifest --env <среда> [--only a,b] [--instance <экземпляр>] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]'
+    + '\n  conventions manifest --env <среда> --accept <манифест машины сборки> — принять собранное на машине сборки сверкой коммита, тега и сумм.',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
   backups: 'conventions backups (--check | --receipt <копия> --file <путь> | --restored --note "<чем проверено>") [--root <path>]'
     + '\n  --check на хосте отказывает, если копия просрочена, пуста, ушла не туда, таймер выключен или восстановление давно не проверялось.',
   telemetry: 'conventions telemetry (--check | --alerts <prometheus|loki>) [--root <path>]'
     + '\n  --check отказывает, если объявленный узел не отвечает в Prometheus или не пишет журнал в Loki.',
+  mail: 'conventions mail --check [--root <path>]'
+    + '\n  Спрашивает авторитетные серверы зоны о DKIM, SPF и MX адреса возврата и DMARC объявленного почтового домена.',
   components: 'conventions components [--environments|--full] [--root <path>]'
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
@@ -505,7 +541,8 @@ const SPEC = {
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
   backups: { values: ['--receipt', '--file', '--note'], flags: ['--check', '--restored'] },
   telemetry: { values: ['--alerts'], flags: ['--check'] },
-  manifest: { values: ['--env', '--only', '--instance', '--file', '--journal', '--untagged-reason'] },
+  mail: { flags: ['--check'] },
+  manifest: { values: ['--env', '--only', '--instance', '--file', '--journal', '--untagged-reason', '--accept'] },
 };
 
 // REQ-RELEASE-028
@@ -529,12 +566,14 @@ if (command === undefined || command === '--help') {
   for (const line of Object.values(USAGE)) console.log(`  ${line}`);
 } else if (!Object.hasOwn(USAGE, command)) {
   refuse(COMMANDS, `неизвестная команда: ${command}`);
-} else if (command === 'receipt' || command === 'run') {
+} else if (command === 'receipt' || command === 'run' || command === 'build') {
   // REQ-RELEASE-027, REQ-RELEASE-028
   const separator = argv.indexOf('--');
   const options = withoutRoot(separator === -1 ? argv : argv.slice(0, separator));
   if (options.includes('--help')) console.log(USAGE[command]);
   else if (command === 'receipt') await receipt(rootOf(argv), argv);
+  // REQ-BUILD-015
+  else if (command === 'build') await build(rootOf(argv), withoutRoot(argv));
   else await run(rootOf(argv), withoutRoot(argv));
 } else if (command === 'release') {
   await release(argv);
@@ -579,6 +618,8 @@ if (command === undefined || command === '--help') {
     else if (command === 'backups') await backupsCommand(root, parsed, { usage: USAGE, refuse });
     // REQ-TELEMETRY-003
     else if (command === 'telemetry') await telemetryCommand(root, parsed, { usage: USAGE, refuse });
+    // REQ-MAIL-002
+    else if (command === 'mail') await mailCommand(root, parsed, { usage: USAGE, refuse });
     // REQ-PUBLISHING-015
     else if (command === 'upgrade-report') await upgradeReport(parsed, { usage: USAGE, refuse });
     // REQ-DEPLOYMENT-011, REQ-DEPLOYMENT-030

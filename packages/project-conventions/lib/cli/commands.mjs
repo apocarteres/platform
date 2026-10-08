@@ -15,10 +15,11 @@ import { deployCall, deployLines, deployUsage } from '../deploy-entry.mjs';
 import { HELP } from './arguments.mjs';
 import { launchKeys } from '../jvm.mjs';
 import { deployedAsFile, deployedInContainer } from '../deployed.mjs';
-import { MANIFEST, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
+import { MANIFEST, acceptManifest, appendJournal, buildManifest, writeManifest } from '../manifest.mjs';
 import { backups as backupSection, checkBackups, writeReceipt, writeRestored } from '../backups.mjs';
 import { systemNow } from '../now.mjs';
 import { alertRules, checkTelemetry, telemetry } from '../telemetry.mjs';
+import { checkMail, mail } from '../mail.mjs';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -346,6 +347,19 @@ export async function manifest(root, parsed, { usage, refuse }) {
     refuse(usage.manifest, 'манифест требует имени среды: ключ --env');
     return;
   }
+  // REQ-DEPLOYMENT-031
+  const accept = parsed.values.get('--accept');
+  if (accept !== undefined) {
+    const accepted = await acceptManifest(root, await readConfig(root), { file: accept, environment });
+    if (accepted.problems.length > 0) {
+      console.error('Собранное на машине сборки не принято:');
+      for (const problem of accepted.problems) console.error(`- ${problem}`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log(`Собранное на машине сборки принято: ${MANIFEST}`);
+    return;
+  }
   const only = parsed.values.get('--only')?.split(',').map((one) => one.trim()).filter(Boolean) ?? null;
   const built = await buildManifest(root, await readConfig(root), {
     environment,
@@ -468,4 +482,33 @@ export async function telemetryCommand(root, parsed, { usage, refuse }) {
     return;
   }
   console.log(`Узлы видны: ${section.nodes.length} — отвечают в Prometheus и пишут журнал в Loki.`);
+}
+
+// REQ-MAIL-002, REQ-MAIL-003
+export async function mailCommand(root, parsed, { usage, refuse }) {
+  if (!parsed.flags.has('--check')) {
+    refuse(usage.mail, 'назовите действие: --check');
+    return;
+  }
+  const section = mail(await readConfig(root));
+  if (!section.declared) {
+    console.error('Почтовый домен не объявлен: добавьте раздел mail в .conventions.json (REQ-MAIL-001)');
+    process.exitCode = 1;
+    return;
+  }
+  if (section.problems.length > 0) {
+    console.error('Объявление почтового домена не принято:');
+    for (const problem of section.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  const { problems, advisories } = await checkMail(section);
+  for (const advisory of advisories) console.log(`Совет: ${advisory}`);
+  if (problems.length > 0) {
+    console.error(`Почтовый домен ${section.domain} не готов:`);
+    for (const problem of problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Почтовый домен ${section.domain}: DKIM, SPF, MX адреса возврата и DMARC на месте.`);
 }

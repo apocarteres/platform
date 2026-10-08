@@ -22,6 +22,7 @@ import { findUnguardedBudgets } from './bundle-budgets.mjs';
 import { findUnlabelledMigrations } from './migrations.mjs';
 import { findBackupProblems } from './backups.mjs';
 import { findTelemetryProblems } from './telemetry.mjs';
+import { findMailProblems } from './mail.mjs';
 import { findFlyway } from './migration-tool.mjs';
 import { DIRECTIVE, RECOMMENDATION } from './levels.mjs';
 import { SET } from './baseline.mjs';
@@ -230,6 +231,16 @@ export const RULES = [
     summary: 'Объявленные узлы названы полностью: имена, адреса Prometheus и Loki, срок свежести журнала',
     title: 'изъянов в объявлении узлов',
     find: findTelemetryProblems,
+  },
+  // REQ-MAIL-001
+  {
+    id: 'mail',
+    level: RECOMMENDATION,
+    document: 'REQ-MAIL',
+    file: 'mail.md',
+    summary: 'Объявленный почтовый домен назван полностью: домен, селекторы DKIM, адрес возврата',
+    title: 'изъянов в объявлении почтового домена',
+    find: findMailProblems,
   },
   {
     id: 'wiring-conditions',

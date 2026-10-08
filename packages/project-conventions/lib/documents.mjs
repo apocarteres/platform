@@ -9,6 +9,7 @@ export const DELIVERED_DOCUMENTS = [
   'deployment.md',
   'backups.md',
   'telemetry.md',
+  'mail.md',
   'release-cycle.md',
   'api-errors.md',
   'code-design.md',

@@ -5,7 +5,7 @@ status: done
 scope: api, security, logging
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-15-0-1
 related: REQ-API
 ---
 

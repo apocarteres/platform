@@ -129,7 +129,7 @@ authority: navigation
 | [Голый `fetch` без версии API находится только на стенде](CORE-QUAL-029-raw-fetch-without-api-version.md) | P1 | Выполнена | [RELEASE-11-2-0](../../releases/RELEASE-11-2-0.md) | frontend, quality |
 | [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | security, backend |
 | [Ядро отдавало уязвимый jackson-databind 3.1.5](CORE-SEC-003-jackson-fixed-versions.md) | P1 | Выполнена | [RELEASE-13-2-1](../../releases/RELEASE-13-2-1.md) | security, java, dependencies |
-| [Секрет из переменной пути попадает в журнал службы](CORE-SEC-004-path-secrets-reach-the-log.md) | P1 | Выполнена | Не назначен | api, security, logging |
+| [Секрет из переменной пути попадает в журнал службы](CORE-SEC-004-path-secrets-reach-the-log.md) | P1 | Выполнена | [RELEASE-15-0-1](../../releases/RELEASE-15-0-1.md) | api, security, logging |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |

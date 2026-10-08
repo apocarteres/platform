@@ -22,6 +22,7 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.context.request.WebRequest;
 
 // REQ-API-001, REQ-API-005
@@ -77,9 +78,15 @@ class ApiErrorAdvice {
   // REQ-API-010
   private static String unexplained(ErrorCode code, WebRequest request) {
     HttpServletRequest servlet = servletRequestOf(request);
-    String where = servlet == null ? "вне запроса" : servlet.getMethod() + " " + servlet.getRequestURI();
+    String where = servlet == null ? "вне запроса" : servlet.getMethod() + " " + pathOf(servlet);
     return "Отказ без объявленного кода: " + where + " отдан как " + code.status().value()
       + " с кодом " + code.value() + ". Причина сохранена здесь, потому что клиенту она не отдаётся";
+  }
+
+  // REQ-API-012
+  private static String pathOf(HttpServletRequest servlet) {
+    Object pattern = servlet.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+    return pattern instanceof String template && !template.isBlank() ? template : servlet.getRequestURI();
   }
 
   // REQ-API-007

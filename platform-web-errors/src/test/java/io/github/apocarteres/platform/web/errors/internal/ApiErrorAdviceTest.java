@@ -24,11 +24,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 // REQ-API-001, REQ-API-002, REQ-API-003
@@ -110,6 +112,12 @@ class ApiErrorAdviceTest {
       throw new NoSuchElementException("игрок " + id + " не найден, пароль администратора не подходит");
     }
 
+    // REQ-API-012
+    @GetMapping("/links/{secret}")
+    String link(@PathVariable String secret) {
+      throw new IllegalStateException("ссылка не разобрана");
+    }
+
     @GetMapping("/rejected")
     String rejected() {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "тело запроса не разобрано");
@@ -165,12 +173,39 @@ class ApiErrorAdviceTest {
     Assertions.assertThat(failures()).hasSize(1);
     ILoggingEvent kept = failures().get(0);
     Assertions.assertThat(kept.getFormattedMessage())
-      .contains("GET /players/17")
+      .contains("GET /players/{id}")
       .contains("500")
       .contains("unexpected");
     Assertions.assertThat(kept.getThrowableProxy()).isNotNull();
     Assertions.assertThat(kept.getThrowableProxy().getClassName()).isEqualTo(NoSuchElementException.class.getName());
     Assertions.assertThat(kept.getThrowableProxy().getMessage()).contains("пароль администратора");
+  }
+
+  // REQ-API-012
+  @Test
+  @DisplayName("В журнал идёт шаблон пути, и секрет из переменной пути в журнал не попадает")
+  void logsTheTemplateNotTheSecret() throws Exception {
+    mockMvc(failure -> Optional.empty(), new StatusErrorMessages())
+      .perform(get("/links/s3cr3t-subscription-key"))
+      .andExpect(status().isInternalServerError())
+      .andExpect(jsonPath("$.instance").value("/links/s3cr3t-subscription-key"));
+
+    Assertions.assertThat(failures()).hasSize(1);
+    Assertions.assertThat(failures().get(0).getFormattedMessage())
+      .contains("GET /links/{secret}")
+      .doesNotContain("s3cr3t-subscription-key");
+  }
+
+  // REQ-API-012
+  @Test
+  @DisplayName("Запрос, не дошедший до обработчика, пишется фактическим путём: шаблона у него нет")
+  void logsThePathWhenThereIsNoTemplate() {
+    MockHttpServletRequest request = new MockHttpServletRequest("POST", "/beyond/handlers");
+    new ApiErrorAdvice(failure -> Optional.empty(), new StatusErrorMessages(), Optional.empty(), Optional.empty(), Optional.empty())
+      .onFailure(new IllegalStateException("фильтр упал"), new ServletWebRequest(request));
+
+    Assertions.assertThat(failures()).hasSize(1);
+    Assertions.assertThat(failures().get(0).getFormattedMessage()).contains("POST /beyond/handlers");
   }
 
   // REQ-API-010

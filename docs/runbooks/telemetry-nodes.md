@@ -70,7 +70,8 @@ conventions telemetry --alerts prometheus > shop-nodes.rules.yaml
 conventions telemetry --alerts loki > shop-logs.rules.yaml
 ```
 
-Файлы передаются владельцу хоста наблюдения как своя часть правил. После
+Файлы передаются владельцу хоста наблюдения как своя часть правил; правила
+Prometheus проходят `promtool check rules --lint-fatal`. После
 изменения перечня узлов правила печатаются заново.
 
 ## Проверка

@@ -131,7 +131,7 @@ export function alertRules(section, kind) {
       '      - alert: TelemetryNodeAbsent',
       `        expr: absent(up{node="${node}"})`,
       '        for: 5m',
-      '        labels: { severity: critical }',
+      `        labels: { severity: critical, node: "${node}" }`,
       `        annotations: { summary: "Узел ${node} пропал из опроса Prometheus" }`,
     ].join('\n'));
     return [
@@ -152,7 +152,7 @@ export function alertRules(section, kind) {
     const silent = section.nodes.map((node) => [
       '      - alert: TelemetryNodeSilent',
       `        expr: absent_over_time({node="${node}"}[${window}])`,
-      '        labels: { severity: warning }',
+      `        labels: { severity: warning, node: "${node}" }`,
       `        annotations: { summary: "Узел ${node} не пишет журнал дольше ${window}" }`,
     ].join('\n'));
     return ['groups:', '  - name: telemetry-logs', '    rules:', ...silent, ''].join('\n');

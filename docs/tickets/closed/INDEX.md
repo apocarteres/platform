@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 202. Включены самостоятельные задачи и этапы планов функций.
+Всего: 203. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -198,6 +198,7 @@ authority: navigation
 | [HSTS цепочки API нельзя было настроить](CORE-OPS-109-configurable-hsts.md) | P2 | Выполнена | [RELEASE-13-4-0](../../releases/RELEASE-13-4-0.md) | security, backend |
 | [Почтовый домен отправителя живёт без DMARC, и этого никто не видит](CORE-OPS-113-mail-domain-has-no-dmarc.md) | P2 | Выполнена | [RELEASE-15-1-0](../../releases/RELEASE-15-1-0.md) | deployment, operations, security |
 | [Сборка рабочей среды делит машину с работающими службами](CORE-OPS-114-build-machine-for-an-environment.md) | P2 | Выполнена | [RELEASE-15-1-0](../../releases/RELEASE-15-1-0.md) | build, deployment, operations |
+| [Правила оповещений telemetry не проходят линтер promtool](CORE-OPS-115-telemetry-alerts-fail-promtool-lint.md) | P2 | Выполнена | Не назначен | deployment, operations |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

@@ -171,3 +171,16 @@ test('обязательство telemetry объявлено на 3 выпус�
   assert.equal(found.dueReleases, 3);
   assert.equal(found.declares, 'telemetry');
 });
+
+// REQ-TELEMETRY-004
+test('правило на узел несёт метку node: promtool не видит дублей, оповещения различимы по меткам', () => {
+  const section = telemetry(declared({ prometheus: 'https://m.example.test', loki: 'https://l.example.test' }));
+  const identities = (text) => [...text.matchAll(/- alert: (\S+)\n(?:\s+(?:expr|for): .*\n)*\s+labels: (\{[^}]*\})/g)]
+    .map((match) => `${match[1]} ${match[2]}`);
+  for (const kind of ['prometheus', 'loki']) {
+    const found = identities(alertRules(section, kind));
+    assert.equal(new Set(found).size, found.length, `${kind}: правила с одинаковым именем и метками\n${found.join('\n')}`);
+  }
+  assert.match(alertRules(section, 'prometheus'), /expr: absent\(up\{node="ledger-2"\}\)\n\s+for: 5m\n\s+labels: \{ severity: critical, node: "ledger-2" \}/);
+  assert.match(alertRules(section, 'loki'), /labels: \{ severity: warning, node: "ledger-1" \}/);
+});

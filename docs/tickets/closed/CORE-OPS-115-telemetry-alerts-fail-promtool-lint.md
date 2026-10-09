@@ -5,7 +5,7 @@ status: done
 scope: deployment, operations
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-15-1-1
 related: REQ-TELEMETRY
 ---
 

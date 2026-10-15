@@ -37,6 +37,9 @@ test('внешний читатель находит README на двух язы
   assert.match(readme, /^## Русский$/m);
   assert.match(readme, /FSL-1\.1-ALv2/, 'README называет лицензию Liquibase, которую ядро тянет транзитивно');
   assert.match(readme, /Apache-2\.0/);
+  // REQ-ADOPTION-028
+  assert.match(readme, /"stack": \[\]/, 'README говорит, что можно взять только правила');
+  assert.ok(readme.indexOf('project-conventions') < readme.indexOf('platform-auth'), 'правила — первыми, библиотеки — по желанию');
   const security = await read('SECURITY.md');
   assert.match(security, /security\/advisories\/new/, 'уязвимость сообщается закрыто, не публичной заявкой');
   assert.match(await read('CONTRIBUTING.md'), /REQ-ADOPTION-019/);

@@ -32,6 +32,7 @@
   "release": {
     "scheme": "semver"
   },
+  "stack": ["java", "angular"],
   "ticketPrefix": "CORE",
   "commitRuleSince": "4eee830"
 }

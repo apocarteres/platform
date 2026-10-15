@@ -102,6 +102,9 @@
       "title": "Сборка потребителя идёт на Java 25, как и сборка ядра",
       "requirement": "REQ-BUILD-004",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "1.0.0",
       "dueReleases": 1,
       "slug": "adopt-java-25",
@@ -126,6 +129,9 @@
       "title": "Проверка проводки входит в набор check",
       "requirement": "REQ-QUALITY-012",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "1.3.0",
       "dueReleases": 2,
       "slug": "adopt-wiring-check",
@@ -178,6 +184,10 @@
       "title": "Ошибки API отдаются одним контрактом ProblemDetail",
       "requirement": "REQ-API-001",
       "level": "директива",
+      "stack": [
+        "java",
+        "angular"
+      ],
       "since": "1.5.0",
       "dueReleases": 2,
       "area": "API",
@@ -260,6 +270,9 @@
       "title": "Java-код разделён на модули, граф связей ациклический",
       "requirement": "REQ-JAVA-MODULES-003",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "1.9.0",
       "dueReleases": 3,
       "slug": "adopt-java-modules",
@@ -288,6 +301,9 @@
       "title": "Доступ к данным: без ORM, простой DAO, транзакция в прикладном слое",
       "requirement": "REQ-DATA-ACCESS-002",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "1.11.0",
       "dueReleases": 3,
       "slug": "adopt-data-access",
@@ -346,6 +362,9 @@
       "title": "Неизвестный адрес отвечает как неизвестный: порт клиента и 404 на сервере",
       "requirement": "REQ-DEPLOYMENT-018",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "1.42.0",
       "dueReleases": 3,
       "slug": "adopt-unknown-path",
@@ -431,6 +450,9 @@
       "title": "Каждое модальное окно явно решает, что делать по Escape",
       "requirement": "REQ-CLIENT-MODAL-001",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "2.0.0",
       "dueReleases": 3,
       "slug": "adopt-modal-escape",
@@ -457,6 +479,9 @@
       "title": "Окно с удалённым действием закрывается после успеха, каждая кнопка окна объявляет своё действие",
       "requirement": "REQ-CLIENT-MODAL-005",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "3.0.0",
       "dueReleases": 3,
       "slug": "adopt-modal-actions",
@@ -484,6 +509,9 @@
       "title": "Окно не закрывается во время вызова, фон решает явно, отказ показывается в окне",
       "requirement": "REQ-CLIENT-MODAL-008",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "4.0.0",
       "dueReleases": 3,
       "slug": "adopt-modal-busy-backdrop",
@@ -510,6 +538,9 @@
       "title": "Клиент узнаёт о новой сборке и об устаревшем API механизмом ядра",
       "requirement": "REQ-CLIENT-UPDATE-001",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "5.0.0",
       "dueReleases": 3,
       "slug": "adopt-client-update",
@@ -536,6 +567,9 @@
       "title": "Каждый блок @defer объявляет @error",
       "requirement": "REQ-CLIENT-UPDATE-009",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "5.0.0",
       "dueReleases": 3,
       "slug": "adopt-defer-error",
@@ -558,6 +592,9 @@
       "title": "Размер сборки клиента держит проверка",
       "requirement": "REQ-BUILD-014",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "5.0.0",
       "dueReleases": 3,
       "slug": "adopt-bundle-budgets",
@@ -581,6 +618,9 @@
       "title": "Куски прежней сборки клиента переживают раскат",
       "requirement": "REQ-DEPLOYMENT-022",
       "level": "директива",
+      "stack": [
+        "angular"
+      ],
       "since": "5.0.0",
       "dueReleases": 3,
       "slug": "adopt-static-archive",
@@ -606,6 +646,9 @@
       "title": "Своя аутентификация проекта заменена аутентификацией ядра",
       "requirement": "REQ-AUTH-001",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "6.1.0",
       "dueReleases": 3,
       "slug": "adopt-core-auth",
@@ -663,6 +706,9 @@
       "title": "Полный прогон после смены версий компонентов ядром 13.2.1",
       "requirement": "REQ-DEPS-010",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "13.2.1",
       "dueReleases": 1,
       "slug": "full-run-13-2-1",
@@ -687,6 +733,9 @@
       "title": "Переходы базы — Liquibase, таблицы ядра — журналами ядра",
       "requirement": "REQ-DATA-ACCESS-008",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "13.6.0",
       "dueReleases": 3,
       "slug": "liquibase-migrations",

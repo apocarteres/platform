@@ -19,6 +19,8 @@ export function fullRunObligation(version, components) {
     title: `Полный прогон после смены версий компонентов ядром ${version}`,
     requirement: 'REQ-DEPS-010',
     level: 'директива',
+    // REQ-ADOPTION-028
+    stack: ['java'],
     since: version,
     dueReleases: 1,
     slug: `full-run-${version.replaceAll('.', '-')}`,

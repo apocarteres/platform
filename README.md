@@ -2,43 +2,59 @@
 
 ## English
 
-A shared core for Spring Boot services and Angular clients: Java starters, client
-libraries, and a package of process rules with documentation tooling. The core
-knows nothing about the domains of the projects that adopt it; they extend it
-through ports.
+**An AI-friendly way to run a software project.** The core is a rules package,
+`@apocarteres/project-conventions`, that turns how a project is built, checked,
+documented and released into checks a coding agent can read, follow and
+cannot quietly bypass. It does not depend on your stack: a project in any
+language can adopt only the rules.
 
-**What is inside**
+**Why agents work well with it**
 
-- Java (Spring Boot 4, Java 25): `platform-bom`, `platform-service-parent`,
-  `platform-arch-rules`, `platform-persistence`, `platform-time`,
-  `platform-web-errors`, `platform-api-version`, `platform-rate-limit`,
-  `platform-auth`, `platform-notifications`, `platform-support`.
-- Angular libraries: `@apocarteres/http`, `routing`, `modal`, `action`,
-  `app-update`, `auth`, `client-journal`, `support`, `notifications`.
-- `@apocarteres/project-conventions`: the rules package. It checks code and
-  documentation, runs the release cycle, and ships the normative texts.
+- **The rules travel with the package.** Normative texts with stable clause
+  IDs are installed next to the code. `conventions sync` writes a pointer into
+  `AGENTS.md`, so an agent reads the rules locally instead of guessing them.
+- **Every refusal names the way out.** A failed check names the file, the line,
+  the clause and what to do next, not just "failed".
+- **Violations can only go down.** A baseline records existing findings; an
+  agent cannot add new ones silently, and lowering the baseline is a command.
+- **"Tests passed" is proven, not claimed.** The full suite writes a receipt
+  for the exact code tree; the push gate and the release check the receipt.
+- **Agents' commands have limits.** `conventions run` stops a hung process by
+  overall and idle time and reports what happened.
+- **Rules for the agent itself.** Confirm a hypothesis before changing code,
+  prove a fix by reproducing the failure before and its absence after, and ask
+  before anything irreversible: a release, a push, a published answer
+  (`REQ-AGENT-WORK`).
+- **The process is code.** Tickets, releases, obligations and documentation
+  indexes are files the package checks. A release closes only with a receipt
+  and with every obligation handled.
 
-**Using it**
+**Adopting the rules.** Add the package, run `conventions sync`, declare your
+sources and your stack in `.conventions.json` (`"stack": []` if you only want
+the rules), wire `check` and `verify` into your task runner and a `pre-push`
+hook, then open the first release with `conventions release adopt`. Only
+obligations that apply to your declared stack become tickets.
 
-Artifacts are not published to Maven Central or npm. A project pins a release
-tag and builds the core from it: check out the tag and run
-`mise run install-local`. Java artifacts land in the local Maven repository;
-npm packages are packed into `target/local-packages`. See
-[local publishing](docs/runbooks/local-publishing.md) and
-[ADR-0003](docs/decisions/ADR-0003-local-artifact-publishing.md).
+**Optional libraries.** For projects that want them, the core also ships
+Spring Boot starters (`platform-auth`, `platform-persistence`,
+`platform-web-errors`, `platform-notifications`, `platform-support` and
+others) and Angular libraries (`@apocarteres/http`, `modal`, `auth` and
+others). They are an offer, not a condition: a project may use its own
+implementation of the same contract.
 
-The tools are pinned in `mise.toml`. `mise run check` is the quick gate and
-`mise run verify` is the full suite.
+**Getting the artifacts.** Nothing is published to Maven Central or npm. Pin a
+release tag, check it out and run `mise run install-local`; see
+[local publishing](docs/runbooks/local-publishing.md). Tools are pinned in
+`mise.toml`.
 
-**Documentation** is written in Russian: [docs/INDEX.md](docs/INDEX.md).
-Rules for AI agents are in [AGENTS.md](AGENTS.md).
+**Documentation** is written in Russian: [docs/INDEX.md](docs/INDEX.md). The
+rules for agents working on the core itself are in [AGENTS.md](AGENTS.md).
 
-**Reporting problems.** Defects and rules a project ran into are reported as
-issues using the issue template; see [CONTRIBUTING.md](CONTRIBUTING.md).
-Vulnerabilities are reported privately; see [SECURITY.md](SECURITY.md).
+**Reporting problems.** See [CONTRIBUTING.md](CONTRIBUTING.md); vulnerabilities
+privately, see [SECURITY.md](SECURITY.md).
 
 **License.** Apache-2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE).
-Dependencies keep their own licenses. Note that Liquibase 5.x, which
+Dependencies keep their own licenses. Liquibase 5.x, which
 `platform-persistence` brings in, is licensed under **FSL-1.1-ALv2**
 (Functional Source License). It is not an OSI-approved license: it forbids
 building a product that competes with Liquibase, and each version converts to
@@ -46,40 +62,55 @@ Apache-2.0 two years after its release.
 
 ## Русский
 
-Общее ядро сервисов на Spring Boot и клиентов на Angular: Java-стартеры,
-клиентские библиотеки и пакет процессных правил с инструментами документации.
-Ядро не знает о предметных областях подключивших его проектов; они расширяют
-его через порты.
+**Порядок ведения проекта, удобный для AI-агентов.** Основа ядра — пакет
+правил `@apocarteres/project-conventions`. Он превращает то, как проект
+собирается, проверяется, документируется и выпускается, в проверки, которые
+агент читает, исполняет и не может тихо обойти. Пакет не зависит от стека:
+проект на любом языке может подключить только правила.
 
-**Состав**
+**Почему агентам с ним удобно**
 
-- Java (Spring Boot 4, Java 25): `platform-bom`, `platform-service-parent`,
-  `platform-arch-rules`, `platform-persistence`, `platform-time`,
-  `platform-web-errors`, `platform-api-version`, `platform-rate-limit`,
-  `platform-auth`, `platform-notifications`, `platform-support`.
-- Библиотеки Angular: `@apocarteres/http`, `routing`, `modal`, `action`,
-  `app-update`, `auth`, `client-journal`, `support`, `notifications`.
-- `@apocarteres/project-conventions` — пакет правил: проверки кода и
-  документации, цикл выпуска, доставка нормативных текстов.
+- **Правила приходят вместе с пакетом.** Нормативные тексты с постоянными
+  номерами положений лежат рядом с кодом, `conventions sync` вписывает указатель
+  на них в `AGENTS.md`: агент читает правила, а не угадывает их.
+- **Каждый отказ называет выход.** Непройденная проверка называет файл,
+  строку, положение и что делать дальше, а не только «не пройдено».
+- **Нарушения могут только убывать.** Ограничитель фиксирует существующие
+  находки: новую агент молча не добавит, а опускается ограничитель командой.
+- **«Тесты прошли» доказывается, а не утверждается.** Полный набор пишет
+  расписку на точное дерево кода; её проверяют шлагбаум перед отправкой и
+  выпуск.
+- **У команд агента есть пределы.** `conventions run` останавливает зависший
+  процесс по общему времени и по бездействию и сообщает, что произошло.
+- **Правила для самого агента.** Подтвердить гипотезу до правки кода, доказать
+  исправление отказом до и его отсутствием после, спросить перед необратимым:
+  выпуском, отправкой, публикацией ответа (`REQ-AGENT-WORK`).
+- **Процесс — тоже код.** Задачи, выпуски, обязательства и сводки
+  документации — файлы, которые пакет проверяет. Выпуск закрывается только с
+  распиской и разобранными обязательствами.
 
-**Подключение**
+**Подключение правил.** Поставить пакет, выполнить `conventions sync`, объявить
+в `.conventions.json` каталоги с исходниками и свой стек (`"stack": []`, если
+нужны только правила), подключить `check` и `verify` к задачам и хуку
+`pre-push`, открыть первый выпуск командой `conventions release adopt`.
+Задачами заводятся только обязательства, относящиеся к объявленному стеку.
 
-Артефакты не публикуются ни в Maven Central, ни в npm. Проект закрепляет тег
-выпуска и собирает ядро из него: переключиться на тег и выполнить
-`mise run install-local`. Java-артефакты попадают в локальный репозиторий
-Maven, npm-пакеты собираются архивами в `target/local-packages`. Подробно —
-[локальная публикация](docs/runbooks/local-publishing.md) и
-[ADR-0003](docs/decisions/ADR-0003-local-artifact-publishing.md).
+**Библиотеки по желанию.** Тем, кому они нужны, ядро даёт стартеры Spring Boot
+(`platform-auth`, `platform-persistence`, `platform-web-errors`,
+`platform-notifications`, `platform-support` и другие) и библиотеки Angular
+(`@apocarteres/http`, `modal`, `auth` и другие). Это предложение, а не
+условие: проект вправе держать свою реализацию того же контракта.
 
-Инструменты закреплены в `mise.toml`. `mise run check` — быстрый шлагбаум,
-`mise run verify` — полный набор.
+**Получение артефактов.** Ничего не публикуется в Maven Central и npm.
+Закрепить тег выпуска, переключиться на него и выполнить
+`mise run install-local`, см. [локальная публикация](docs/runbooks/local-publishing.md).
+Инструменты закреплены в `mise.toml`.
 
-**Документация** — [docs/INDEX.md](docs/INDEX.md). Правила для AI-агентов —
-[AGENTS.md](AGENTS.md).
+**Документация** — [docs/INDEX.md](docs/INDEX.md). Правила для агентов,
+работающих над самим ядром, — [AGENTS.md](AGENTS.md).
 
-**Сообщить о проблеме.** Дефект ядра или правило, в которое упёрся проект, —
-заявкой по шаблону, см. [CONTRIBUTING.md](CONTRIBUTING.md). Уязвимость —
-закрыто, см. [SECURITY.md](SECURITY.md).
+**Сообщить о проблеме** — см. [CONTRIBUTING.md](CONTRIBUTING.md); об
+уязвимости — закрыто, см. [SECURITY.md](SECURITY.md).
 
 **Лицензия** — Apache-2.0, см. [LICENSE](LICENSE) и [NOTICE](NOTICE).
 Зависимости сохраняют свои лицензии. Liquibase 5.x, который приносит

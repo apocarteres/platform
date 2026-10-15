@@ -15,6 +15,7 @@ import { BASELINE_FILE, baselineExists, compare, counts, grewOver, readBaseline,
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
 import { REPORT_TEMPLATE, feedbackChannel, feedbackLine, writeReportTemplate } from '../lib/feedback.mjs';
 import { collisions, dictionary } from '../lib/terms.mjs';
+import { stackProblems } from '../lib/stack.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
 import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
@@ -81,6 +82,8 @@ async function check(root) {
   problems.push(...await findToolchainMismatches(root));
   // REQ-TERMS-003
   problems.push(...collisions(await dictionary(root)));
+  // REQ-ADOPTION-028
+  problems.push(...await stackProblems(root, config));
 
   // REQ-ADOPTION-009
   const scanned = await collectSourceFiles(root, config);
@@ -292,7 +295,7 @@ async function attestedCommand(root, parsed) {
 
 async function obligations(root) {
   const state = await readState(root);
-  const { obligations: declared, isCore } = await loadObligations(root);
+  const { obligations: declared, notApplicable, isCore } = await loadObligations(root);
   if (declared.length === 0) {
     console.log('Ядро не объявляет обязательств.');
     return;
@@ -305,6 +308,11 @@ async function obligations(root) {
     return;
   }
   console.log(`Выпусков закрыто: ${state.releaseCount ?? 0}. Обязательства ядра:`);
+  // REQ-ADOPTION-028
+  for (const obligation of notApplicable) {
+    const missing = obligation.stack.join(' или ');
+    console.log(`- ${obligation.id} (${obligation.level}, ${obligation.requirement}): не относится: стек ${missing} не объявлен`);
+  }
   for (const obligation of declared) {
     const current = obligationState(obligation, state);
     const detail = current.status === 'closed'

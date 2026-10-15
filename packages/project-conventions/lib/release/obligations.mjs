@@ -1,6 +1,8 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readConfig } from '../config.mjs';
+import { STACKS, declaredStack } from '../stack.mjs';
 
 // REQ-RELEASE-012, REQ-RELEASE-015
 export const STATE_FILE = '.conventions/obligations.json';
@@ -27,6 +29,10 @@ export function catalogueProblems(obligations) {
     for (const field of TICKET_FIELDS) {
       if (one?.ticket?.[field] === undefined) problems.push(`${named}: нет поля ticket.${field}`);
     }
+    // REQ-ADOPTION-028
+    if (one?.stack !== undefined && !(Array.isArray(one.stack) && one.stack.length > 0 && one.stack.every((stack) => STACKS.includes(stack)))) {
+      problems.push(`${named}: stack не перечень известных стеков`);
+    }
     for (const field of ['required', 'acceptance']) {
       const value = one?.ticket?.[field];
       if (value !== undefined && !Array.isArray(value)) problems.push(`${named}: ticket.${field} не перечень`);
@@ -49,12 +55,20 @@ export async function loadObligations(root) {
       if (problems.length > 0) {
         throw new Error(`Каталог обязательств ${candidate.file} не принят:\n- ${problems.join('\n- ')}`);
       }
-      return { obligations: parsed.obligations, isCore: candidate.core };
+      // REQ-ADOPTION-028
+      if (candidate.core) return { obligations: parsed.obligations, notApplicable: [], isCore: true };
+      const stack = declaredStack(await readConfig(root));
+      const applies = (one) => stack === null || one.stack === undefined || one.stack.some((name) => stack.includes(name));
+      return {
+        obligations: parsed.obligations.filter(applies),
+        notApplicable: parsed.obligations.filter((one) => !applies(one)),
+        isCore: false,
+      };
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
   }
-  return { obligations: [], isCore: false };
+  return { obligations: [], notApplicable: [], isCore: false };
 }
 
 export async function declaredObligations(root) {

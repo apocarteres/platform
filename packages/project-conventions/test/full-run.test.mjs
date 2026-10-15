@@ -83,6 +83,8 @@ test('обязательство полного прогона — полноц�
   assert.equal(entry.since, '13.2.1');
   assert.equal(entry.dueReleases, 1);
   assert.equal(entry.requirement, 'REQ-DEPS-010');
+  // REQ-ADOPTION-028
+  assert.deepEqual(entry.stack, ['java'], 'версии компонентов — управление зависимостями Maven');
   assert.deepEqual(catalogueProblems([entry]), []);
   assert.ok(entry.ticket.problem.includes('tools.jackson:jackson-bom'));
   assert.ok(entry.ticket.required.some((line) => /[Сс]канер/.test(line)) && entry.ticket.required.some((line) => /verify/.test(line)));

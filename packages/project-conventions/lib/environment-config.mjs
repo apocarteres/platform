@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 import { DEFAULT_EXCLUDE } from './comments.mjs';
 import { deployment } from './components.mjs';
 import { CONFIG_FILE } from './config.mjs';
-import { environmentWithoutGit } from './release/git.mjs';
+import { OUTPUT_BUFFER, environmentWithoutGit } from './release/git.mjs';
 
 const run = promisify(execFile);
 
@@ -29,7 +29,8 @@ export function environmentConfiguration(file) {
 // REQ-DEPLOYMENT-020
 async function tracked(root) {
   try {
-    const { stdout } = await run('git', ['-C', root, 'ls-files', '-z'], { env: environmentWithoutGit() });
+    // CORE-OPS-116
+    const { stdout } = await run('git', ['-C', root, 'ls-files', '-z'], { env: environmentWithoutGit(), maxBuffer: OUTPUT_BUFFER });
     return stdout.split('\0').filter((line) => line.length > 0);
   } catch {
     return null;

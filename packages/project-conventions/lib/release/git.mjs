@@ -8,8 +8,11 @@ export function environmentWithoutGit(environment = process.env) {
   return Object.fromEntries(Object.entries(environment).filter(([name]) => !name.startsWith('GIT_')));
 }
 
+// CORE-OPS-116
+export const OUTPUT_BUFFER = 256 * 1024 * 1024;
+
 async function git(root, args) {
-  const { stdout } = await run('git', ['-C', root, ...args], { env: environmentWithoutGit() });
+  const { stdout } = await run('git', ['-C', root, ...args], { env: environmentWithoutGit(), maxBuffer: OUTPUT_BUFFER });
   return stdout.trim();
 }
 
@@ -50,7 +53,8 @@ export const STATE_DIRECTORY = '.conventions/';
 
 // REQ-RELEASE-048
 export async function uncommitted(root, prefixes) {
-  const { stdout } = await run('git', ['-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'], { env: environmentWithoutGit() });
+  const { stdout } = await run('git', ['-C', root, 'status', '--porcelain', '-z', '--untracked-files=all'],
+    { env: environmentWithoutGit(), maxBuffer: OUTPUT_BUFFER });
   return stdout.split('\0')
     .filter((entry) => entry.length > 3)
     .map((entry) => entry.slice(3))

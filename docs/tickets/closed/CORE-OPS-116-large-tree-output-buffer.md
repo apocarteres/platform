@@ -5,7 +5,7 @@ status: done
 scope: tooling, release
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-15-1-2
 related: REQ-RELEASE, REQ-QUALITY, REQ-DEPLOYMENT
 ---
 

@@ -57,7 +57,7 @@ authority: navigation
 | [Терминология ядра не закреплена](CORE-DOC-011-terminology-is-not-fixed.md) | P1 | Выполнена | [RELEASE-1-16-0](../../releases/RELEASE-1-16-0.md) | documentation, process |
 | [Продолжение закрытой заявки теряется](CORE-DOC-014-a-closed-report-swallows-its-continuation.md) | P1 | Выполнена | [RELEASE-1-28-0](../../releases/RELEASE-1-28-0.md) | process, documentation |
 | [Запрет на комментарии к закрытой заявке вместо обещания их читать](CORE-DOC-015-closed-report-accepts-no-comments.md) | P1 | Выполнена | [RELEASE-1-29-0](../../releases/RELEASE-1-29-0.md) | process, documentation |
-| [Публичный репозиторий ядра без лицензии](CORE-DOC-020-repository-has-no-license.md) | P1 | Выполнена | Не назначен | delivery, licensing |
+| [Публичный репозиторий ядра без лицензии](CORE-DOC-020-repository-has-no-license.md) | P1 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | delivery, licensing |
 | [Версия платформы приложений задавалась дважды и разошлась](CORE-OPS-001-application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](CORE-OPS-002-code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
 | [Пакет процессных правил и инструментов документации](CORE-OPS-003-conventions-package.md) | P1 | Выполнена | [RELEASE-0-29-0](../../releases/RELEASE-0-29-0.md) | process, documentation, tooling |
@@ -168,8 +168,8 @@ authority: navigation
 | [Выпуск интеграции был записан дефектом](CORE-DOC-017-integration-release-was-called-a-defect.md) | P2 | Выполнена | [RELEASE-1-52-0](../../releases/RELEASE-1-52-0.md) | adoption, documentation |
 | [Ядро пишет слово, запрещённое своим словарём](CORE-DOC-018-core-writes-its-own-forbidden-word.md) | P2 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | documentation, tooling |
 | [Потребитель не может открыть своим потребителям тот же канал заявок](CORE-DOC-019-consumer-declares-its-own-feedback-channel.md) | P2 | Выполнена | [RELEASE-14-1-0](../../releases/RELEASE-14-1-0.md) | process, documentation |
-| [Названия проектов-потребителей в рабочих файлах ядра](CORE-DOC-021-consumer-names-in-working-files.md) | P2 | Выполнена | Не назначен | documentation, delivery |
-| [Внешнему читателю не с чего начать](CORE-DOC-022-no-readme-for-an-outside-reader.md) | P2 | Выполнена | Не назначен | documentation, delivery, security |
+| [Названия проектов-потребителей в рабочих файлах ядра](CORE-DOC-021-consumer-names-in-working-files.md) | P2 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | documentation, delivery |
+| [Внешнему читателю не с чего начать](CORE-DOC-022-no-readme-for-an-outside-reader.md) | P2 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | documentation, delivery, security |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

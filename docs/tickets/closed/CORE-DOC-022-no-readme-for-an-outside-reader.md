@@ -5,7 +5,7 @@ status: done
 scope: documentation, delivery, security
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-15-3-0
 related: ADR-0008, REQ-ADOPTION
 ---
 

@@ -5,7 +5,7 @@ status: done
 scope: delivery, licensing
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-15-3-0
 related: ADR-0008
 ---
 

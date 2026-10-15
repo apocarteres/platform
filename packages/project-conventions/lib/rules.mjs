@@ -266,7 +266,7 @@ export const RULES = [
     level: RECOMMENDATION,
     document: 'REQ-JAVA-NAMING',
     file: 'java-naming.md',
-    summary: 'Имя типа не оканчивается на -er вне перечня образцов и доменных существительных',
+    summary: 'Тип не называется по действию: класс и интерфейс на -er — только из перечней ядра и javaNaming.nouns проекта',
     title: 'имён с суффиксом -er вне перечня',
     find: findNamingViolations,
   },

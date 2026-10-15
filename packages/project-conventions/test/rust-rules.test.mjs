@@ -104,7 +104,7 @@ test('правило денежных величин читает Rust и Java, 
 test('суффикс -er в Rust правилом не рассматривается: это норма стандартной библиотеки', async () => {
   const declaration = 'pub enum Fetcher {\n    Opened,\n}\n';
   const rust = await project({ 'src/lib.rs': `//! Учёт.\n\n/// Состояние учёта.\n${declaration}` });
-  const java = await project({ 'src/Fetcher.java': declaration.replace('pub enum', 'enum') });
+  const java = await project({ 'src/Fetcher.java': 'class Fetcher {\n}\n' });
   try {
     assert.deepEqual([...await findNamingViolations(rust, { sources: ['.'] })], [],
       'Reader, Builder и Parser принадлежат языку; правило Java заставило бы расходиться с ним');

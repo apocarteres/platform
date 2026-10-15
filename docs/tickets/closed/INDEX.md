@@ -219,7 +219,7 @@ authority: navigation
 | [Правило о суффиксе -er читается буквально](CORE-QUAL-033-naming-er-read-literally.md) | P2 | Выполнена | [RELEASE-15-2-0](../../releases/RELEASE-15-2-0.md) | quality, java, naming |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
-| [Англоязычный читатель не может понять, на чём держится порядок](CORE-DOC-023-no-english-overview.md) | P3 | Выполнена | Не назначен | documentation, delivery |
+| [Англоязычный читатель не может понять, на чём держится порядок](CORE-DOC-023-no-english-overview.md) | P3 | Выполнена | [RELEASE-15-5-1](../../releases/RELEASE-15-5-1.md) | documentation, delivery |
 | [Прежний идентификатор оставался внутри нового имени файла](CORE-OPS-019-old-identifier-stayed-in-the-slug.md) | P3 | Выполнена | [RELEASE-0-40-0](../../releases/RELEASE-0-40-0.md) | documentation, tooling |
 | [Шлагбаум перед отправкой не видит отказов проводки](CORE-OPS-021-push-gate-cannot-see-wiring-failures.md) | P3 | Выполнена | [RELEASE-1-3-0](../../releases/RELEASE-1-3-0.md) | quality, operations |
 | [Задача менеджера окружения объявляет аргументы устаревшим способом](CORE-OPS-026-deprecated-task-arguments.md) | P3 | Выполнена | [RELEASE-1-4-0](../../releases/RELEASE-1-4-0.md) | build, tooling |

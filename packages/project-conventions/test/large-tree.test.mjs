@@ -10,16 +10,30 @@ import { codeTree, environmentWithoutGit, uncommitted } from '../lib/release/git
 const run = promisify(execFile);
 const LINE_BUDGET = 1024 * 1024;
 
-function feed(root, args, input) {
+// CORE-TEST-001
+function pipeTo(program, args, input) {
   return new Promise((resolve, reject) => {
-    const child = spawn('git', ['-C', root, ...args], { env: environmentWithoutGit(), stdio: ['pipe', 'pipe', 'inherit'] });
+    const child = spawn(program, args, { env: environmentWithoutGit(), stdio: ['pipe', 'pipe', 'inherit'] });
     let out = '';
     child.stdout.on('data', (chunk) => { out += chunk; });
     child.on('error', reject);
-    child.on('close', (code) => (code === 0 ? resolve(out.trim()) : reject(new Error(`git ${args.join(' ')}: ${code}`))));
+    // CORE-TEST-001
+    child.stdin.on('error', (failure) => {
+      if (failure.code !== 'EPIPE') reject(failure);
+    });
+    child.on('close', (code) => (code === 0 ? resolve(out.trim()) : reject(new Error(`${program} ${args.join(' ')}: ${code}`))));
     child.stdin.end(input);
   });
 }
+
+function feed(root, args, input) {
+  return pipeTo('git', ['-C', root, ...args], input);
+}
+
+// CORE-TEST-001
+test('подача ввода процессу, который не читает stdin, не роняет прогон', async () => {
+  assert.equal(await pipeTo('sh', ['-c', 'exec 0<&-; sleep 0.3; echo done'], 'x'.repeat(1024 * 1024)), 'done');
+});
 
 // CORE-OPS-116
 async function repositoryWithALargeTree() {

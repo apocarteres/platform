@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 4. Включены самостоятельные задачи и этапы планов функций.
+Всего: 5. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -22,3 +22,4 @@ authority: navigation
 | [У Rust нет языковых документов, которые есть у Java и TypeScript](CORE-QUAL-012-rust-has-no-language-documents.md) | P2 | Запланирована | Не назначен | documentation, rust |
 | [Цена обновления молчит об изменённом поведении](CORE-OPS-104-cost-misses-changed-behaviour.md) | P3 | Запланирована | Не назначен | release, publishing, tooling |
 | [Сборочный контейнер не работает с rootless Docker](CORE-OPS-108-verify-runner-rootless-docker.md) | P3 | Запланирована | Не назначен | tooling, testing |
+| [web.sh не переставляет зависимости пакета при устаревшем node_modules](CORE-OPS-117-web-sh-stale-node-modules.md) | P3 | Запланирована | Не назначен | tooling, build |

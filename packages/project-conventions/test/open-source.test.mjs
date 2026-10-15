@@ -64,3 +64,15 @@ test('названия проектов-потребителей осталис�
   const outside = listed.filter((file) => file !== SELF && !RECORDS.some((prefix) => file.startsWith(prefix)));
   assert.deepEqual(outside, []);
 });
+
+// CORE-DOC-023
+test('английский обзор ключевых идей: README ведёт к нему, текст целиком английский, названы все опоры порядка', async () => {
+  assert.match(await read('README.md'), /\(docs\/OVERVIEW\.md\)/);
+  const overview = await read('docs/OVERVIEW.md');
+  const body = overview.replace(/^---[\s\S]*?---\n/, '');
+  assert.doesNotMatch(body, /[А-Яа-яЁё]/, 'обзор для англоязычного читателя');
+  for (const heading of ['Requirements and clause IDs', 'Checks: check and verify', 'Baseline', 'Receipts', 'Release cycle',
+    'Obligations', 'Tickets', 'Stack', 'Agents', 'Reports']) {
+    assert.match(body, new RegExp(`^## ${heading}`, 'm'), heading);
+  }
+});

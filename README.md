@@ -47,7 +47,9 @@ release tag, check it out and run `mise run install-local`; see
 [local publishing](docs/runbooks/local-publishing.md). Tools are pinned in
 `mise.toml`.
 
-**Documentation** is written in Russian: [docs/INDEX.md](docs/INDEX.md). The
+**Documentation** is written in Russian: [docs/INDEX.md](docs/INDEX.md).
+The ideas behind the rules are explained in English in
+[docs/OVERVIEW.md](docs/OVERVIEW.md). The
 rules for agents working on the core itself are in [AGENTS.md](AGENTS.md).
 
 **Reporting problems.** See [CONTRIBUTING.md](CONTRIBUTING.md); vulnerabilities
@@ -106,7 +108,8 @@ Apache-2.0 two years after its release.
 `mise run install-local`, см. [локальная публикация](docs/runbooks/local-publishing.md).
 Инструменты закреплены в `mise.toml`.
 
-**Документация** — [docs/INDEX.md](docs/INDEX.md). Правила для агентов,
+**Документация** — [docs/INDEX.md](docs/INDEX.md); обзор идей на английском —
+[docs/OVERVIEW.md](docs/OVERVIEW.md). Правила для агентов,
 работающих над самим ядром, — [AGENTS.md](AGENTS.md).
 
 **Сообщить о проблеме** — см. [CONTRIBUTING.md](CONTRIBUTING.md); об

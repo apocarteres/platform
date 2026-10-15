@@ -2,7 +2,7 @@
   "name": "@apocarteres/notifications",
   "version": "0.0.0",
   "description": "Колокольчик уведомлений в клиенте без вида: число непрочитанного и последние уведомления сигналами, опрос раз в минуту, прочтение одного и всех. Вид колокольчика и текст по виду уведомления остаются проекту.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/common": "^22.0.0",

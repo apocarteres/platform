@@ -2,7 +2,7 @@
   "name": "@apocarteres/support",
   "version": "0.0.0",
   "description": "Центр поддержки в клиенте без вида: отправка обращения со снимком и журналом, свои обращения и ход, ответ по ссылке, рабочее место оператора, счётчики нового. Экраны остаются проекту.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/common": "^22.0.0",

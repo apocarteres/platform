@@ -2,7 +2,7 @@
   "name": "@apocarteres/routing",
   "version": "0.0.0",
   "description": "Порты маршрутизации одностраничного клиента: обработка неизвестного адреса.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/core": "^22.0.0",

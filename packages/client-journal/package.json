@@ -2,7 +2,7 @@
   "name": "@apocarteres/client-journal",
   "version": "0.0.0",
   "description": "Журнал клиента для разбора отказов: сетевые вызовы, переходы и необработанные ошибки с маскированием до записи и пределом объёма. Журнал не покидает браузер без проекта.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/common": "^22.0.0",

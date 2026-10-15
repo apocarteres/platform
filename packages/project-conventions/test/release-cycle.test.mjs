@@ -793,22 +793,22 @@ test('проверка правил роняет сборку на просро�
 test('задача обязательства получает имя по правилу именования проекта', async () => {
   const root = await project();
   try {
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
 
     const opened = await openNext(root, { scheme: 'date', today: FIXED_DAY });
     assert.equal(opened.opened, true, opened.problems?.join('\n'));
-    assert.deepEqual(opened.created, ['ZAVPN-QUAL-008'], 'номер следующий свободный в своей области');
+    assert.deepEqual(opened.created, ['SHOP-QUAL-008'], 'номер следующий свободный в своей области');
 
-    const file = path.join(root, 'docs/tickets/ZAVPN-QUAL-008-adopt-sample.md');
+    const file = path.join(root, 'docs/tickets/SHOP-QUAL-008-adopt-sample.md');
     const body = await readFile(file, 'utf8');
-    assert.match(body, /^id: ZAVPN-QUAL-008$/m);
+    assert.match(body, /^id: SHOP-QUAL-008$/m);
     assert.match(body, /^obligation: sample$/m);
     assert.doesNotMatch(body, /TICKET-ADOPT/, 'прежней формы идентификатора не остаётся');
     assert.doesNotMatch(path.basename(file), /\d{4}-\d{2}-\d{2}/, 'даты в имени файла нет');
 
     const release = (await openRelease(root)).content;
-    assert.match(release, /\| \[ZAVPN-QUAL-008\]\(\.\.\/tickets\/ZAVPN-QUAL-008-adopt-sample\.md\)/);
+    assert.match(release, /\| \[SHOP-QUAL-008\]\(\.\.\/tickets\/SHOP-QUAL-008-adopt-sample\.md\)/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -834,17 +834,17 @@ test('закрытие сверяет коммиты диапазона с со�
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-008-other.md'), ticket('ZAVPN-QUAL-008', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-008-other.md'), ticket('SHOP-QUAL-008', 'done'));
 
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче состава');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче состава');
 
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-010-stray.md'), ticket('ZAVPN-QUAL-010', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-010-stray.md'), ticket('SHOP-QUAL-010', 'done'));
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
 
@@ -867,14 +867,14 @@ test('коммит с признаком цикла и коммит задачи
       JSON.stringify({ obligations: [] }),
     );
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
 
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче состава');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче состава');
     const head = await git('-C', root, 'rev-parse', 'HEAD');
     await writeReceipt(root, RECEIPT(head.stdout.trim(), FIXED_DAY));
 
@@ -898,24 +898,24 @@ test('снятая из состава задача удерживает вып�
       JSON.stringify({ obligations: [] }),
     );
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
-    await writeFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-009-work.md'), ticket('ZAVPN-QUAL-009', 'in_progress'));
-    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['ZAVPN-QUAL-009'] });
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/SHOP-QUAL-009-work.md'), ticket('SHOP-QUAL-009', 'in_progress'));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['SHOP-QUAL-009'] });
     await mkdir(path.join(root, 'src'), { recursive: true });
     await writeFile(path.join(root, 'src/Work.java'), 'class Work {}\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 работа по указанной задаче');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-009 работа по указанной задаче');
 
-    const dropped = await dropFromComposition(root, { ticketId: 'ZAVPN-QUAL-009', reason: 'работа отложена' });
+    const dropped = await dropFromComposition(root, { ticketId: 'SHOP-QUAL-009', reason: 'работа отложена' });
     assert.equal(dropped.dropped, true, dropped.problems?.join('\n'));
 
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     const commit = await commitAll(root);
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
 
     const state = await closability(root, { scheme: 'date' });
     assert.ok(
-      state.problems.some((problem) => problem.includes('ZAVPN-QUAL-009 вне состава выпуска')),
+      state.problems.some((problem) => problem.includes('SHOP-QUAL-009 вне состава выпуска')),
       state.problems.join('\n'),
     );
   } finally {
@@ -931,28 +931,28 @@ test('отменённая работа снятой задачи выпуск �
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
-    await writeFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-009-work.md'), ticket('ZAVPN-QUAL-009', 'in_progress'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
+    await writeFile(path.join(root, 'docs/tickets/SHOP-QUAL-009-work.md'), ticket('SHOP-QUAL-009', 'in_progress'));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
-    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['ZAVPN-QUAL-009'] });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
+    await openNext(root, { scheme: 'date', today: FIXED_DAY, tickets: ['SHOP-QUAL-009'] });
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 работа по указанной задаче');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-009 работа по указанной задаче');
 
     assert.equal(
-      (await dropFromComposition(root, { ticketId: 'ZAVPN-QUAL-009', reason: 'работа отложена' })).dropped,
+      (await dropFromComposition(root, { ticketId: 'SHOP-QUAL-009', reason: 'работа отложена' })).dropped,
       true,
     );
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 !revert отмена отложенной работы');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-009 !revert отмена отложенной работы');
 
     const commit = await commitAll(root).catch(() => git('-C', root, 'rev-parse', 'HEAD').then((r) => r.stdout.trim()));
     await writeReceipt(root, RECEIPT(commit, FIXED_DAY));
 
     const reverted = await closability(root, { scheme: 'date' });
     assert.deepEqual(
-      reverted.problems.filter((problem) => problem.includes('ZAVPN-QUAL-009')),
+      reverted.problems.filter((problem) => problem.includes('SHOP-QUAL-009')),
       [],
       reverted.problems.join('\n'),
     );
@@ -960,11 +960,11 @@ test('отменённая работа снятой задачи выпуск �
     await mkdir(path.join(root, 'src'), { recursive: true });
     await writeFile(path.join(root, 'src/Resumed.java'), 'class Resumed {}\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-009 работа после отмены');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-009 работа после отмены');
 
     const again = await closability(root, { scheme: 'date' });
     assert.ok(
-      again.problems.some((problem) => problem.includes('ZAVPN-QUAL-009 вне состава выпуска')),
+      again.problems.some((problem) => problem.includes('SHOP-QUAL-009 вне состава выпуска')),
       again.problems.join('\n'),
     );
   } finally {
@@ -980,9 +980,9 @@ test('закрытие не требует задач выпуска, вышед
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
 
     const ship = async (version, id) => {
       assert.equal((await openNext(root, { scheme: 'semver', version, today: FIXED_DAY })).opened, true);
@@ -999,15 +999,15 @@ test('закрытие не требует задач выпуска, вышед
       await git('-C', root, 'commit', '--quiet', '-m', `Выпущен ${version}\n\nRelease-cycle: RELEASE-${version.replaceAll('.', '-')}`);
     };
 
-    await ship('1.2.0', 'ZAVPN-QUAL-002');
-    await ship('1.10.0', 'ZAVPN-QUAL-003');
+    await ship('1.2.0', 'SHOP-QUAL-002');
+    await ship('1.10.0', 'SHOP-QUAL-003');
 
     assert.equal((await openNext(root, { scheme: 'semver', version: '1.11.0', today: NEXT_DAY })).opened, true);
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск 1.11.0\n\nRelease-cycle: RELEASE-1-11-0');
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-004-work.md'), ticket('ZAVPN-QUAL-004', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-004-work.md'), ticket('SHOP-QUAL-004', 'done'));
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-004 работа по задаче состава');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-004 работа по задаче состава');
 
     const state = await closability(root, { scheme: 'semver' });
     assert.deepEqual(
@@ -1028,11 +1028,11 @@ test('отказ называет способ внести задачу в со
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-005-shipped.md'), ticket('ZAVPN-QUAL-005', 'done', 'RELEASE-2026-08-1'));
-    await writeFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-006-work.md'), ticket('ZAVPN-QUAL-006', 'in_progress'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-005-shipped.md'), ticket('SHOP-QUAL-005', 'done', 'RELEASE-2026-08-1'));
+    await writeFile(path.join(root, 'docs/tickets/SHOP-QUAL-006-work.md'), ticket('SHOP-QUAL-006', 'in_progress'));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
@@ -1040,19 +1040,19 @@ test('отказ называет способ внести задачу в со
     await mkdir(path.join(root, 'src'), { recursive: true });
     await writeFile(path.join(root, 'src/Shipped.java'), 'class Shipped {}\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-005 правка после выпуска задачи');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-005 правка после выпуска задачи');
     await writeFile(path.join(root, 'src/Ongoing.java'), 'class Ongoing {}\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-006 работа по незаконченной задаче');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-006 работа по незаконченной задаче');
     await writeFile(path.join(root, 'src/Ongoing.java'), 'class Ongoing { int step; }\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-006 ещё шаг по незаконченной задаче');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-006 ещё шаг по незаконченной задаче');
     const shippedSha = (await git('-C', root, 'rev-parse', '--short=8', 'HEAD~2')).stdout.trim();
     const openSha = (await git('-C', root, 'rev-parse', '--short=8', 'HEAD~1')).stdout.trim();
     const nextSha = (await git('-C', root, 'rev-parse', '--short=8', 'HEAD')).stdout.trim();
 
     const state = await closability(root, { scheme: 'date' });
-    const shipped = state.problems.find((problem) => problem.includes('ZAVPN-QUAL-005'));
+    const shipped = state.problems.find((problem) => problem.includes('SHOP-QUAL-005'));
     assert.ok(shipped !== undefined, state.problems.join('\n'));
     assert.match(shipped, /уже отнесена к RELEASE-2026-08-1/);
     assert.match(shipped, /новой задачей/, 'назван законный выход при отнесённой задаче');
@@ -1060,7 +1060,7 @@ test('отказ называет способ внести задачу в со
     assert.ok(shipped.includes(`release account ${shippedSha} --reason`), shipped);
     assert.ok(!shipped.includes(`release account ${openSha}`), 'учёт предложен только для коммитов своей задачи');
 
-    const open = state.problems.find((problem) => problem.includes('ZAVPN-QUAL-006'));
+    const open = state.problems.find((problem) => problem.includes('SHOP-QUAL-006'));
     assert.ok(open !== undefined, state.problems.join('\n'));
     assert.match(open, /доведите её до выполненного состояния/);
     // REQ-RELEASE-041, REQ-RELEASE-042
@@ -1080,20 +1080,20 @@ test('коммит слияния задачи не называет и закр
       JSON.stringify({ obligations: [] }),
     );
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
 
     await git('-C', root, 'checkout', '--quiet', '-b', 'side');
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче состава');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче состава');
     await git('-C', root, 'checkout', '--quiet', '-');
     await mkdir(path.join(root, 'docs/tickets/closed'), { recursive: true });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-008-other.md'), ticket('ZAVPN-QUAL-008', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-008-other.md'), ticket('SHOP-QUAL-008', 'done'));
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-QUAL-008 работа рядом');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-008 работа рядом');
     await git('-C', root, 'merge', '--quiet', '--no-ff', '--no-edit', 'side');
 
     const head = await git('-C', root, 'rev-parse', 'HEAD');
@@ -1119,11 +1119,11 @@ test('история от основы больше мегабайта не ро
       JSON.stringify({ obligations: [] }),
     );
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     await git('-C', root, 'add', '-A');
     const message = path.join(root, '..', `${path.basename(root)}-message.txt`);
-    await writeFile(message, `ZAVPN-QUAL-007 долгая история\n\n${'строка тела сообщения коммита\n'.repeat(40000)}`);
+    await writeFile(message, `SHOP-QUAL-007 долгая история\n\n${'строка тела сообщения коммита\n'.repeat(40000)}`);
     await git('-C', root, 'commit', '--quiet', '-F', message);
     await rm(message);
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
@@ -1152,19 +1152,19 @@ test('запись решения в документе задачи закры�
       JSON.stringify({ obligations: [] }),
     );
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
-    await writeFile(path.join(root, 'docs/tickets/ZAVPN-OPS-021-waiting.md'), ticket('ZAVPN-OPS-021', 'in_progress'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/SHOP-OPS-021-waiting.md'), ticket('SHOP-OPS-021', 'in_progress'));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
 
     await writeFile(
-      path.join(root, 'docs/tickets/ZAVPN-OPS-021-waiting.md'),
-      `${ticket('ZAVPN-OPS-021', 'in_progress')}\n## Открытые вопросы\n\nОтвет владельца 2026-09-12: ждём решения о владении метриками.\n`,
+      path.join(root, 'docs/tickets/SHOP-OPS-021-waiting.md'),
+      `${ticket('SHOP-OPS-021', 'in_progress')}\n## Открытые вопросы\n\nОтвет владельца 2026-09-12: ждём решения о владении метриками.\n`,
     );
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-OPS-021 записан ответ владельца, задача ждёт внешнего решения');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-OPS-021 записан ответ владельца, задача ждёт внешнего решения');
     const recorded = await git('-C', root, 'rev-parse', 'HEAD');
     await writeReceipt(root, RECEIPT(recorded.stdout.trim(), FIXED_DAY));
 
@@ -1178,13 +1178,13 @@ test('запись решения в документе задачи закры�
     await mkdir(path.join(root, 'src'), { recursive: true });
     await writeFile(path.join(root, 'src/Metrics.java'), 'class Metrics {}\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-OPS-021 работа по задаче вне состава');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-OPS-021 работа по задаче вне состава');
     const worked = await git('-C', root, 'rev-parse', 'HEAD');
     await writeReceipt(root, RECEIPT(worked.stdout.trim(), FIXED_DAY));
 
     const after = await closability(root, { scheme: 'date' });
     assert.ok(
-      after.problems.some((problem) => problem.includes('ZAVPN-OPS-021 вне состава выпуска')),
+      after.problems.some((problem) => problem.includes('SHOP-OPS-021 вне состава выпуска')),
       after.problems.join('\n'),
     );
   } finally {
@@ -1201,26 +1201,26 @@ test('запись хода задачи, задевшая документ ря
       JSON.stringify({ obligations: [] }),
     );
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
-    await writeFile(path.join(root, 'docs/tickets/ZAVPN-OPS-022-waiting.md'), ticket('ZAVPN-OPS-022', 'in_progress'));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
+    await writeFile(path.join(root, 'docs/tickets/SHOP-OPS-022-waiting.md'), ticket('SHOP-OPS-022', 'in_progress'));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-007-done.md'), ticket('ZAVPN-QUAL-007', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
     await git('-C', root, 'add', '-A');
     await git('-C', root, 'commit', '--quiet', '-m', 'Открыт выпуск\n\nRelease-cycle: RELEASE-2026-09-1');
 
     await writeFile(
-      path.join(root, 'docs/tickets/ZAVPN-OPS-022-waiting.md'),
-      `${ticket('ZAVPN-OPS-022', 'in_progress')}\n## Открытые вопросы\n\nОтвет владельца 2026-09-25: вопрос передан ядру.\n`,
+      path.join(root, 'docs/tickets/SHOP-OPS-022-waiting.md'),
+      `${ticket('SHOP-OPS-022', 'in_progress')}\n## Открытые вопросы\n\nОтвет владельца 2026-09-25: вопрос передан ядру.\n`,
     );
     await mkdir(path.join(root, 'docs/runbooks'), { recursive: true });
-    await writeFile(path.join(root, 'docs/runbooks/platform-core.md'), '# Ядро\n\n| Заявка | Задача |\n|---|---|\n| #1 | ZAVPN-OPS-022 |\n');
+    await writeFile(path.join(root, 'docs/runbooks/platform-core.md'), '# Ядро\n\n| Заявка | Задача |\n|---|---|\n| #1 | SHOP-OPS-022 |\n');
     await git('-C', root, 'add', '-A');
-    await git('-C', root, 'commit', '--quiet', '-m', 'ZAVPN-OPS-022 записан ответ владельца и строка заявки ядру');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-OPS-022 записан ответ владельца и строка заявки ядру');
     const recorded = (await git('-C', root, 'rev-parse', 'HEAD')).stdout.trim();
     await writeReceipt(root, RECEIPT(recorded, FIXED_DAY));
 
     const state = await closability(root, { scheme: 'date' });
-    const held = state.problems.find((problem) => problem.includes('ZAVPN-OPS-022 вне состава выпуска'));
+    const held = state.problems.find((problem) => problem.includes('SHOP-OPS-022 вне состава выпуска'));
     assert.ok(held !== undefined, 'документ вне каталога задач делает коммит работой (REQ-RELEASE-040)');
     assert.ok(held.includes(`release account ${recorded.slice(0, 8)} --reason`), held);
 
@@ -1228,7 +1228,7 @@ test('запись хода задачи, задевшая документ ря
     assert.equal(accounted.accounted, true, accounted.problems?.join('\n'));
     const after = await closability(root, { scheme: 'date' });
     assert.deepEqual(
-      after.problems.filter((problem) => problem.includes('ZAVPN-OPS-022')),
+      after.problems.filter((problem) => problem.includes('SHOP-OPS-022')),
       [],
       after.problems.join('\n'),
     );
@@ -1284,9 +1284,9 @@ test('отказ коммиту без задачи называет все тр
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'Rebuild the release index');
 
@@ -1294,7 +1294,7 @@ test('отказ коммиту без задачи называет все тр
 
     const refusal = state.problems.find((problem) => problem.includes('не называет задачу'));
     assert.ok(refusal, state.problems.join('\n'));
-    assert.match(refusal, /идентификатором в начале заголовка \(ZAVPN-OPS-001/);
+    assert.match(refusal, /идентификатором в начале заголовка \(SHOP-OPS-001/);
     assert.match(refusal, /Release-cycle: RELEASE-2026-09-1\b/);
     assert.match(refusal, /именно в тело, заголовок для этого не годится/);
     assert.match(refusal, /!revert/);
@@ -1342,10 +1342,10 @@ test('этапом плана называют коммит, и выполнен
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     await planStage(root, 'CAPS-01', 'done');
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'CAPS-01 работа по этапу плана');
 
@@ -1369,10 +1369,10 @@ test('идентификатор вида этапа без такого эта�
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     await planStage(root, 'CAPS-01', 'done');
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
     await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'CAPS-09 этапа с таким номером нет');
     await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'NOPE-01 плана с таким именем нет');
@@ -1396,9 +1396,9 @@ async function releaseWithUnnamedCommit(root) {
     path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
     JSON.stringify({ obligations: [] }),
   );
-  await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+  await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
   const baseline = await commitAll(root);
-  await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+  await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
   await openNext(root, { scheme: 'date', today: FIXED_DAY });
   await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'Record the composition of the previous release');
   const { stdout } = await git('-C', root, 'rev-parse', 'HEAD');
@@ -1436,7 +1436,7 @@ test('учёт принимает держащий закрытие коммит
   const root = await project();
   try {
     const sha = await releaseWithUnnamedCommit(root);
-    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче');
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче');
     const { stdout: named } = await git('-C', root, 'rev-parse', 'HEAD');
     await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'Служебный', '-m', 'Release-cycle: RELEASE-2026-09-1');
     const { stdout: cycle } = await git('-C', root, 'rev-parse', 'HEAD');
@@ -1480,7 +1480,7 @@ test('сверка диапазона называет только его ко�
   const root = await project();
   try {
     const sha = await releaseWithUnnamedCommit(root);
-    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'ZAVPN-QUAL-007 работа по задаче');
+    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче');
 
     const whole = await commitsWithoutATicket(root, null);
     assert.deepEqual(whole.map((commit) => commit.sha.slice(0, 8)), [sha]);
@@ -1501,20 +1501,20 @@ test('коммит принадлежит составу по любой из н
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-081-done.md'), ticket('ZAVPN-QUAL-081', 'done'));
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-070-shipped.md'),
-      ticket('ZAVPN-QUAL-070', 'done', 'RELEASE-2026-09-0'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-081-done.md'), ticket('SHOP-QUAL-081', 'done'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-070-shipped.md'),
+      ticket('SHOP-QUAL-070', 'done', 'RELEASE-2026-09-0'));
     await commitAll(root);
     await git('-C', root, 'commit', '--allow-empty', '--quiet',
-      '-m', 'ZAVPN-QUAL-070 ZAVPN-QUAL-081 работа, закрывшая обе задачи');
+      '-m', 'SHOP-QUAL-070 SHOP-QUAL-081 работа, закрывшая обе задачи');
 
     const state = await closability(root, { scheme: 'date' });
 
-    assert.ok(!state.problems.some((problem) => problem.includes('ZAVPN-QUAL-070')),
+    assert.ok(!state.problems.some((problem) => problem.includes('SHOP-QUAL-070')),
       'первая названная задача вышла в прошлом выпуске, вторая — в составе: судьбу решать должна вторая, '
       + `а не порядок слов:\n${state.problems.join('\n')}`);
   } finally {
@@ -1530,18 +1530,18 @@ test('коммит отменённой задачи закрытие не де�
       path.join(root, 'node_modules/@apocarteres/project-conventions/obligations.json'),
       JSON.stringify({ obligations: [] }),
     );
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN' }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP' }));
     const baseline = await commitAll(root);
-    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'ZAVPN', commitRuleSince: baseline }));
+    await writeFile(path.join(root, '.conventions.json'), JSON.stringify({ sources: [], ticketPrefix: 'SHOP', commitRuleSince: baseline }));
     await openNext(root, { scheme: 'date', today: FIXED_DAY });
-    await writeFile(path.join(root, 'docs/tickets/closed/ZAVPN-QUAL-080-cancelled.md'), cancelled('ZAVPN-QUAL-080'));
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-080-cancelled.md'), cancelled('SHOP-QUAL-080'));
     await commitAll(root);
     await git('-C', root, 'commit', '--allow-empty', '--quiet',
-      '-m', 'ZAVPN-QUAL-080 замер опроверг постановку, работа снята');
+      '-m', 'SHOP-QUAL-080 замер опроверг постановку, работа снята');
 
     const state = await closability(root, { scheme: 'date' });
 
-    assert.ok(!state.problems.some((problem) => problem.includes('ZAVPN-QUAL-080')),
+    assert.ok(!state.problems.some((problem) => problem.includes('SHOP-QUAL-080')),
       `REQ-RELEASE-031 запрещает вносить отменённую задачу в состав; требовать этого нельзя:\n${state.problems.join('\n')}`);
   } finally {
     await rm(root, { recursive: true, force: true });

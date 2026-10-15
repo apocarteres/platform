@@ -28,7 +28,7 @@ async function project(files) {
 
 // REQ-DEPLOYMENT-020
 test('настройкой среды считаются описание службы и настройка веб-сервера', () => {
-  assert.equal(environmentConfiguration('deploy/clanlog.service'), 'описание службы');
+  assert.equal(environmentConfiguration('deploy/shop.service'), 'описание службы');
   assert.equal(environmentConfiguration('ops/backup.timer'), 'описание службы');
   assert.equal(environmentConfiguration('deploy/nginx/site.conf'), 'настройка веб-сервера');
   assert.equal(environmentConfiguration('nginx.conf'), 'настройка веб-сервера');

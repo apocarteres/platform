@@ -97,7 +97,7 @@ test('чувствительность свойства определяется
   for (const key of ['token-validity-seconds', 'agent.signing.public-key', 'partition.name', 'password-policy-days']) {
     assert.equal(sensitiveKey(key), false, key);
   }
-  assert.equal(sensitiveKey('clanlog.mail.sender', ['clanlog.mail.sender']), true, 'перечень проекта дополняет правило');
+  assert.equal(sensitiveKey('shop.mail.sender', ['shop.mail.sender']), true, 'перечень проекта дополняет правило');
 });
 
 test('литеральное значение чувствительного свойства находится, подстановка и пустое — нет', () => {

@@ -13,6 +13,19 @@
   <description>Общий родительский POM библиотек ядра: версии инструментов, Spring Boot BOM, публикация.</description>
   <url>https://github.com/apocarteres/platform</url>
 
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>https://github.com/apocarteres/platform</url>
+    <connection>scm:git:https://github.com/apocarteres/platform.git</connection>
+  </scm>
+
   <modules>
     <module>platform-bom</module>
     <module>platform-service-parent</module>

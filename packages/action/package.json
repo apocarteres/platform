@@ -2,7 +2,7 @@
   "name": "@apocarteres/action",
   "version": "0.0.0",
   "description": "Кнопка, ждущая удалённого вызова: ожидание, повторный запуск и отказ ведёт ядро, оформление остаётся проекту.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/core": "^22.0.0",

@@ -2,7 +2,7 @@
   "name": "@apocarteres/http",
   "version": "0.0.0",
   "description": "Контракт ошибок API на клиенте: разбор ProblemDetail с расширением code.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/common": "^22.0.0",

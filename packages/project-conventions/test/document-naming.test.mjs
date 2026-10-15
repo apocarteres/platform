@@ -152,29 +152,29 @@ test('миграция приводит идентификаторы к объя
   const root = await project({
     'docs/tickets/closed/OPS-012-old-work.md': ticket('OPS-012', 'build'),
     'docs/tickets/OPS-013-other-work.md': `${ticket('OPS-013', 'build')}\nСсылка на \`OPS-012\` рядом.\n`,
-    'docs/tickets/ZAVPN-QUAL-001-ready.md': `${ticket('ZAVPN-QUAL-001', 'quality')}\nСсылка на \`OPS-013\` рядом.\n`,
-    'docs/tickets/ZAVPN-OPS-013-migrated-earlier.md': `${ticket('ZAVPN-OPS-013', 'build')}\nПереименована прошлым прогоном.\n`,
+    'docs/tickets/SHOP-QUAL-001-ready.md': `${ticket('SHOP-QUAL-001', 'quality')}\nСсылка на \`OPS-013\` рядом.\n`,
+    'docs/tickets/SHOP-OPS-013-migrated-earlier.md': `${ticket('SHOP-OPS-013', 'build')}\nПереименована прошлым прогоном.\n`,
   });
   try {
-    const moves = await plan(root, { prefix: 'ZAVPN' });
-    assert.deepEqual(moves.map((move) => move.id), ['ZAVPN-OPS-014', 'ZAVPN-OPS-015']);
-    assert.equal(moves[0].to, 'docs/tickets/closed/ZAVPN-OPS-014-old-work.md');
+    const moves = await plan(root, { prefix: 'SHOP' });
+    assert.deepEqual(moves.map((move) => move.id), ['SHOP-OPS-014', 'SHOP-OPS-015']);
+    assert.equal(moves[0].to, 'docs/tickets/closed/SHOP-OPS-014-old-work.md');
 
-    const { moves: applied } = await migrate(root, { prefix: 'ZAVPN' });
+    const { moves: applied } = await migrate(root, { prefix: 'SHOP' });
     assert.equal(applied.length, 2);
 
-    const other = await readFile(path.join(root, 'docs/tickets/ZAVPN-OPS-015-other-work.md'), 'utf8');
-    assert.match(other, /^id: ZAVPN-OPS-015$/m);
+    const other = await readFile(path.join(root, 'docs/tickets/SHOP-OPS-015-other-work.md'), 'utf8');
+    assert.match(other, /^id: SHOP-OPS-015$/m);
     assert.match(other, /^legacy-id: OPS-013$/m);
-    assert.match(other, /Ссылка на `ZAVPN-OPS-014` рядом/);
+    assert.match(other, /Ссылка на `SHOP-OPS-014` рядом/);
 
-    const ready = await readFile(path.join(root, 'docs/tickets/ZAVPN-QUAL-001-ready.md'), 'utf8');
-    assert.match(ready, /^id: ZAVPN-QUAL-001$/m, 'задача с префиксом остаётся на месте');
-    assert.match(ready, /Ссылка на `ZAVPN-OPS-015` рядом/);
+    const ready = await readFile(path.join(root, 'docs/tickets/SHOP-QUAL-001-ready.md'), 'utf8');
+    assert.match(ready, /^id: SHOP-QUAL-001$/m, 'задача с префиксом остаётся на месте');
+    assert.match(ready, /Ссылка на `SHOP-OPS-015` рядом/);
 
-    const earlier = await readFile(path.join(root, 'docs/tickets/ZAVPN-OPS-013-migrated-earlier.md'), 'utf8');
-    assert.match(earlier, /^id: ZAVPN-OPS-013$/m, 'переименованная прежде задача не трогается');
-    assert.doesNotMatch(earlier, /ZAVPN-ZAVPN/, 'идентификатор прежнего прогона не получает второго префикса');
+    const earlier = await readFile(path.join(root, 'docs/tickets/SHOP-OPS-013-migrated-earlier.md'), 'utf8');
+    assert.match(earlier, /^id: SHOP-OPS-013$/m, 'переименованная прежде задача не трогается');
+    assert.doesNotMatch(earlier, /SHOP-SHOP/, 'идентификатор прежнего прогона не получает второго префикса');
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -220,14 +220,14 @@ test('имя файла не получает второго префикса, �
 test('идентификатор чужого проекта, названный через его имя, префикса не получает', async () => {
   const root = await project({
     'docs/tickets/closed/OPS-001-our-work.md': ticket('OPS-001', 'build'),
-    'docs/tickets/QUAL-001-report.md': `${ticket('QUAL-001', 'quality')}\nНаша \`OPS-001\`, ядра \`platform/OPS-001\`, соседняя \`zavpn/OPS-001\`.\n`,
+    'docs/tickets/QUAL-001-report.md': `${ticket('QUAL-001', 'quality')}\nНаша \`OPS-001\`, ядра \`platform/OPS-001\`, соседняя \`shop/OPS-001\`.\n`,
   });
   try {
     await migrate(root, { prefix: 'CL' });
     const report = await readFile(path.join(root, 'docs/tickets/CL-QUAL-001-report.md'), 'utf8');
     assert.match(report, /Наша `CL-OPS-001`/);
     assert.match(report, /ядра `platform\/OPS-001`/, 'чужой идентификатор остаётся прежним');
-    assert.match(report, /соседняя `zavpn\/OPS-001`/);
+    assert.match(report, /соседняя `shop\/OPS-001`/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

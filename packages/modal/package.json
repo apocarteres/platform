@@ -2,7 +2,7 @@
   "name": "@apocarteres/modal",
   "version": "0.0.0",
   "description": "Поведение модальных окон без разметки и оформления: обязательное решение об Escape, стек открытых окон.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/core": "^22.0.0"

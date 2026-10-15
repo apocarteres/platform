@@ -13,6 +13,14 @@
 
   <name>platform-bom</name>
   <description>Согласованные версии всех Java-артефактов ядра. Потребитель импортирует BOM и подключает starters без версий.</description>
+
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
   <url>https://github.com/apocarteres/platform</url>
 
   <properties>

@@ -2,7 +2,7 @@
   "name": "@apocarteres/auth",
   "version": "0.0.0",
   "description": "Аутентификация ядра в клиенте без вида: состояние сессии, вход и выход, регистрация и сброс, охрана маршрутов по входу и роли, токен CSRF. Формы остаются проекту.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/common": "^22.0.0",

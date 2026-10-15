@@ -2,7 +2,7 @@
   "name": "@apocarteres/app-update",
   "version": "0.0.0",
   "description": "Клиент узнаёт о новой сборке и об устаревшем API: обнаружение, опрос и отказ ведёт ядро, вид уведомлений остаётся проекту.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "publishable": true,
   "peerDependencies": {
     "@angular/common": "^22.0.0",

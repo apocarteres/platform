@@ -24,22 +24,22 @@ related: REQ-AUTH
 ссылается и на свою спецификацию, и на контракт ядра:
 
 ```yaml
-# docs/openapi/published.yaml — для описания; генерация идёт из zavpn-api.yaml
+# docs/openapi/published.yaml — для описания; генерация идёт из shop-api.yaml
 openapi: 3.1.0
-info: { title: zavpn, version: 1.0.0 }
+info: { title: shop, version: 1.0.0 }
 paths:
   /api/auth/login:
     $ref: '../../frontend/node_modules/@apocarteres/auth/openapi/platform-auth.openapi.json#/paths/~1api~1auth~1login'
   # ... остальные точки ядра так же
 components:
   schemas:
-    ZavpnProfile:
+    ShopProfile:
       type: object
       properties: { displayName: { type: string, maxLength: 40 } }
     RegisterRequest:
       allOf:
         - $ref: '../../frontend/node_modules/@apocarteres/auth/openapi/platform-auth.openapi.json#/components/schemas/RegisterRequest'
-        - properties: { profile: { $ref: '#/components/schemas/ZavpnProfile' } }
+        - properties: { profile: { $ref: '#/components/schemas/ShopProfile' } }
 ```
 
 ## Спецификация строится из кода (springdoc)
@@ -66,4 +66,4 @@ OpenApiCustomizer coreAuthContract(ObjectMapper json) throws IOException {
 
 `@apocarteres/auth` экспортирует типы контракта: `Account`, `Policy`,
 `RegisterRequest` и прочие. Профиль передаётся своим типом:
-`session.register<ZavpnProfile>(email, password, profile)`.
+`session.register<ShopProfile>(email, password, profile)`.

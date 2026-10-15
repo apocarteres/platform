@@ -228,3 +228,91 @@ test('команда: квитанция, запись восстановлен�
   }
 });
 
+
+// REQ-BACKUPS-010
+function pulled(storage, extra = {}) {
+  const config = declared(storage, extra);
+  config.backups.sets.database.mode = 'pull';
+  config.backups.sets.files.mode = 'pull';
+  return config;
+}
+
+// REQ-BACKUPS-010
+test('pull: режим объявляется набору, неизвестный режим назван', () => {
+  assert.deepEqual(backups(pulled('/srv/backups')).problems, []);
+  assert.equal(backups(pulled('/srv/backups')).sets[0].mode, 'pull');
+  assert.equal(backups(declared('/var/lib/shop/backups')).sets[0].mode, 'push', 'по умолчанию — push, как прежде');
+  const odd = declared('/r');
+  odd.backups.sets.database.mode = 'rsync';
+  assert.ok(backups(odd).problems.some((problem) => /копия database: режим mode — push или pull/.test(problem)));
+});
+
+// REQ-BACKUPS-010
+test('pull: хост службы проверяет только своё задание, хранилище — квитанции и восстановление', async () => {
+  const storage = await host();
+  try {
+    const section = backups(pulled(storage));
+    const service = await checkBackups(section, { now: NOW, enabled: async (unit) => unit !== 'shop-db-backup.timer' });
+    assert.deepEqual(service, ['копия database: таймер shop-db-backup.timer не включён — задание лежит на хосте, но не работает'],
+      'хост службы не требует квитанции, которую пишет хранилище');
+
+    const empty = await checkBackups(section, { now: NOW, enabled: on, side: 'storage' });
+    assert.ok(empty.some((problem) => /копия database не снималась/.test(problem)), empty.join('\n'));
+    assert.ok(empty.some((problem) => /восстановление из копии не проверялось/.test(problem)), empty.join('\n'));
+    assert.ok(!empty.some((problem) => /таймер/.test(problem)), 'таймер службы на хранилище не проверяется');
+
+    const file = await dump(storage);
+    for (const name of ['database', 'files']) assert.equal((await writeReceipt(section, name, file, NOW)).written, true);
+    await writeRestored(section, 'восстановлено на стенде', NOW);
+    assert.deepEqual(await checkBackups(section, { now: NOW, enabled: on, side: 'storage' }), []);
+
+    const pushOnly = backups(declared(storage));
+    assert.match((await checkBackups(pushOnly, { now: NOW, enabled: on, side: 'storage' }))[0], /на хранилище проверять нечего: копий с mode pull нет/);
+  } finally {
+    await rm(storage, { recursive: true, force: true });
+  }
+});
+
+// REQ-BACKUPS-010
+test('pull: отпечаток с хоста службы сверяется при заборе; несовпадение — квитанции нет', async () => {
+  const storage = await host();
+  try {
+    const section = backups(pulled(storage));
+    const file = await dump(storage, 'дамп после забора');
+    const { createHash } = await import('node:crypto');
+    const sum = createHash('sha256').update('дамп после забора').digest('hex');
+    const source = path.join(storage, 'dump.sql.gz.sha256');
+    await writeFile(source, `${sum}  dump.sql.gz\n`);
+    assert.equal((await writeReceipt(section, 'database', file, NOW, { source })).written, true);
+
+    await writeFile(source, `${'0'.repeat(64)}  dump.sql.gz\n`);
+    const broken = await writeReceipt(section, 'files', file, NOW, { source });
+    assert.equal(broken.written, false);
+    assert.match(broken.problem, /отпечаток забранной копии [0-9a-f]{12}… не совпал с отпечатком хоста службы 000000000000…/);
+  } finally {
+    await rm(storage, { recursive: true, force: true });
+  }
+});
+
+// REQ-BACKUPS-010
+test('команда: --check --storage на хосте хранилища, --source при заборе', async () => {
+  const storage = await host();
+  try {
+    const config = pulled(storage);
+    await writeFile(path.join(storage, '.conventions.json'), JSON.stringify(config));
+    const missing = await conventions('--check', '--storage', '--root', storage);
+    assert.equal(missing.code, 1, missing.out);
+    assert.match(missing.out, /database не снималась/);
+    const file = await dump(storage);
+    await writeFile(path.join(storage, 'wrong.sha256'), `${'1'.repeat(64)}\n`);
+    assert.equal((await conventions('--receipt', 'database', '--file', file, '--source', path.join(storage, 'wrong.sha256'), '--root', storage)).code, 1);
+    assert.equal((await conventions('--receipt', 'database', '--file', file, '--root', storage)).code, 0);
+    assert.equal((await conventions('--receipt', 'files', '--file', file, '--root', storage)).code, 0);
+    assert.equal((await conventions('--restored', '--note', 'стенд', '--root', storage)).code, 0);
+    const fresh = await conventions('--check', '--storage', '--root', storage);
+    assert.equal(fresh.code, 0, fresh.out);
+    assert.match(fresh.out, /на хранилище/);
+  } finally {
+    await rm(storage, { recursive: true, force: true });
+  }
+});

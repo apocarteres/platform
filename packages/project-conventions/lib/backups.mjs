@@ -8,7 +8,10 @@ import { CONFIG_FILE } from './config.mjs';
 export const KINDS = ['database', 'files', 'other'];
 
 // REQ-BACKUPS-001
-const SET_FIELDS = new Set(['kind', 'every', 'keep', 'store', 'receipt', 'timer']);
+const SET_FIELDS = new Set(['kind', 'every', 'keep', 'store', 'receipt', 'timer', 'mode']);
+
+// REQ-BACKUPS-010
+export const MODES = ['push', 'pull'];
 
 // REQ-BACKUPS-001
 const SECTION_FIELDS = new Set(['sets', 'restoreEvery', 'restoreRecord']);
@@ -64,6 +67,8 @@ function setProblems(name, declared) {
   if (typeof declared?.receipt !== 'string' || !path.isAbsolute(declared.receipt)) {
     problems.push(`${where}: квитанция receipt — абсолютный путь на хосте`);
   }
+  // REQ-BACKUPS-010
+  if (declared?.mode !== undefined && !MODES.includes(declared.mode)) problems.push(`${where}: режим mode — ${MODES.join(' или ')}`);
   if (declared?.timer !== undefined && (typeof declared.timer !== 'string' || declared.timer.trim().length === 0)) {
     problems.push(`${where}: таймер timer называет юнит, а не пустое значение`);
   }
@@ -96,6 +101,8 @@ export function backups(config) {
       store: one?.store,
       receipt: one?.receipt,
       timer: one?.timer ?? null,
+      // REQ-BACKUPS-010
+      mode: one?.mode ?? 'push',
     })),
     restoreEvery,
     restoreRecord: declared.restoreRecord,
@@ -135,8 +142,18 @@ async function digestOf(file) {
   return hash.digest('hex');
 }
 
-// REQ-BACKUPS-004
-export async function writeReceipt(section, name, file, now) {
+// REQ-BACKUPS-010
+async function sourceDigest(source) {
+  try {
+    const found = /^[0-9a-f]{64}/i.exec((await readFile(source, 'utf8')).trim());
+    return found === null ? { problem: `в ${source} нет отпечатка SHA-256` } : { value: found[0].toLowerCase() };
+  } catch {
+    return { problem: `отпечатка хоста службы ${source} нет` };
+  }
+}
+
+// REQ-BACKUPS-004, REQ-BACKUPS-010
+export async function writeReceipt(section, name, file, now, { source = null } = {}) {
   const set = section.sets.find((one) => one.name === name);
   if (set === undefined) return { written: false, problem: `копия ${name} не объявлена в разделе backups` };
   let size;
@@ -146,7 +163,19 @@ export async function writeReceipt(section, name, file, now) {
     return { written: false, problem: `файла копии ${file} нет` };
   }
   if (size === 0) return { written: false, problem: `файл копии ${file} пуст — квитанция на пустую копию не пишется` };
-  const receipt = { set: name, at: now.toISOString(), bytes: size, sha256: await digestOf(file), store: set.store };
+  const sha256 = await digestOf(file);
+  // REQ-BACKUPS-010
+  if (source !== null) {
+    const expected = await sourceDigest(source);
+    if (expected.problem !== undefined) return { written: false, problem: expected.problem };
+    if (expected.value !== sha256) {
+      return {
+        written: false,
+        problem: `отпечаток забранной копии ${sha256.slice(0, 12)}… не совпал с отпечатком хоста службы ${expected.value.slice(0, 12)}…: копия повреждена или не та`,
+      };
+    }
+  }
+  const receipt = { set: name, at: now.toISOString(), bytes: size, sha256, store: set.store };
   await mkdir(path.dirname(set.receipt), { recursive: true });
   await writeFile(set.receipt, `${JSON.stringify(receipt, null, 2)}\n`);
   return { written: true, receipt };
@@ -164,10 +193,18 @@ function days(milliseconds) {
   return `${Math.floor(milliseconds / UNIT.d)} сут ${Math.floor((milliseconds % UNIT.d) / UNIT.h)} ч`;
 }
 
-// REQ-BACKUPS-005, REQ-BACKUPS-006, REQ-BACKUPS-007
-export async function checkBackups(section, { now, enabled }) {
+// REQ-BACKUPS-005, REQ-BACKUPS-006, REQ-BACKUPS-007, REQ-BACKUPS-010
+export async function checkBackups(section, { now, enabled, side = 'service' }) {
   const problems = [];
+  const pulls = section.sets.some((set) => set.mode === 'pull');
+  if (side === 'storage' && !pulls) return ['на хранилище проверять нечего: копий с mode pull нет — их сверяет хост службы'];
   for (const set of section.sets) {
+    // REQ-BACKUPS-010
+    const receiptHere = side === 'storage' ? set.mode === 'pull' : set.mode === 'push';
+    if (side === 'service' && set.timer !== null && !(await enabled(set.timer))) {
+      problems.push(`копия ${set.name}: таймер ${set.timer} не включён — задание лежит на хосте, но не работает`);
+    }
+    if (!receiptHere) continue;
     const read = await readJson(set.receipt);
     if (read.missing) {
       problems.push(`копия ${set.name} не снималась: квитанции ${set.receipt} нет`);
@@ -186,11 +223,9 @@ export async function checkBackups(section, { now, enabled }) {
         problems.push(`копия ${set.name} ушла в «${receipt?.store}», а объявлено хранилище «${set.store}»`);
       }
     }
-    // REQ-BACKUPS-005
-    if (set.timer !== null && !(await enabled(set.timer))) {
-      problems.push(`копия ${set.name}: таймер ${set.timer} не включён — задание лежит на хосте, но не работает`);
-    }
   }
+  // REQ-BACKUPS-010
+  if ((side === 'storage') !== pulls) return problems;
   const restored = await readJson(section.restoreRecord);
   if (restored.missing) {
     problems.push(`восстановление из копии не проверялось: записи ${section.restoreRecord} нет`);

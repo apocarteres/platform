@@ -476,7 +476,7 @@ const USAGE = {
   manifest: 'conventions manifest --env <среда> [--only a,b] [--instance <экземпляр>] [--file <путь>] [--journal <путь>] [--untagged-reason "<причина>"]'
     + '\n  conventions manifest --env <среда> --accept <манифест машины сборки> — принять собранное на машине сборки сверкой коммита, тега и сумм.',
   deployed: 'conventions deployed --artifact <путь> (--container <имя> --label <метка> | --installed <путь>)',
-  backups: 'conventions backups (--check | --receipt <копия> --file <путь> | --restored --note "<чем проверено>") [--root <path>]'
+  backups: 'conventions backups (--check [--storage] | --receipt <копия> --file <путь> [--source <отпечаток>] | --restored --note "<чем проверено>") [--root <path>]'
     + '\n  --check на хосте отказывает, если копия просрочена, пуста, ушла не туда, таймер выключен или восстановление давно не проверялось.',
   telemetry: 'conventions telemetry (--check | --alerts <prometheus|loki>) [--root <path>]'
     + '\n  --check отказывает, если объявленный узел не отвечает в Prometheus или не пишет журнал в Loki.',
@@ -547,7 +547,7 @@ const SPEC = {
   deps: { values: ['--dir', '--state', '--tools'], flags: ['--record'] },
   components: { flags: ['--environments', '--full'] },
   deployed: { values: ['--artifact', '--container', '--label', '--installed'] },
-  backups: { values: ['--receipt', '--file', '--note'], flags: ['--check', '--restored'] },
+  backups: { values: ['--receipt', '--file', '--note', '--source'], flags: ['--check', '--restored', '--storage'] },
   telemetry: { values: ['--alerts'], flags: ['--check'] },
   mail: { flags: ['--check'] },
   manifest: { values: ['--env', '--only', '--instance', '--file', '--journal', '--untagged-reason', '--accept'] },

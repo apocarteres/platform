@@ -416,7 +416,9 @@ export async function backupsCommand(root, parsed, { usage, refuse }) {
       refuse(usage.backups, 'квитанция пишется на файл копии: ключ --file');
       return;
     }
-    const written = await writeReceipt(section, receipt, path.resolve(file), now);
+    // REQ-BACKUPS-010
+    const source = parsed.values.get('--source');
+    const written = await writeReceipt(section, receipt, path.resolve(file), now, { source: source === undefined ? null : path.resolve(source) });
     if (!written.written) {
       console.error(`Квитанция не записана: ${written.problem}`);
       process.exitCode = 1;
@@ -434,14 +436,20 @@ export async function backupsCommand(root, parsed, { usage, refuse }) {
     console.log('Проверка восстановления записана');
     return;
   }
-  const problems = await checkBackups(section, { now, enabled: timerEnabled });
+  // REQ-BACKUPS-010
+  const side = parsed.flags.has('--storage') ? 'storage' : 'service';
+  const problems = await checkBackups(section, { now, enabled: timerEnabled, side });
   if (problems.length > 0) {
-    console.error('Копии данных не в порядке:');
+    console.error(side === 'storage' ? 'Копии данных на хранилище не в порядке:' : 'Копии данных не в порядке:');
     for (const problem of problems) console.error(`- ${problem}`);
     process.exitCode = 1;
     return;
   }
-  console.log(`Копии в порядке: ${section.sets.map((one) => one.name).join(', ')}; восстановление проверено в срок`);
+  const here = section.sets.filter((one) => (side === 'storage') === (one.mode === 'pull')).map((one) => one.name);
+  const pulled = section.sets.filter((one) => one.mode === 'pull').map((one) => one.name);
+  if (side === 'storage') console.log(`Копии в порядке на хранилище: ${here.join(', ')}; восстановление проверено в срок`);
+  else if (pulled.length > 0) console.log(`Задания копий включены; квитанции ${pulled.join(', ')} сверяет хранилище: conventions backups --check --storage`);
+  else console.log(`Копии в порядке: ${here.join(', ')}; восстановление проверено в срок`);
 }
 
 

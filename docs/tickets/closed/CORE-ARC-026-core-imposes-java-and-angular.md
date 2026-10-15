@@ -5,7 +5,7 @@ status: done
 scope: architecture, process, delivery
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-15-4-0
 related: REQ-ADOPTION, REQ-RELEASE
 ---
 

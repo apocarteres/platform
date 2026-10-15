@@ -5,7 +5,7 @@ status: done
 scope: quality, java, naming
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-15-2-0
 related: REQ-JAVA-NAMING
 ---
 

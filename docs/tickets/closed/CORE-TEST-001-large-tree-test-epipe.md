@@ -5,7 +5,7 @@ status: done
 scope: testing, quality
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-15-5-1
 related: REQ-QUALITY, CORE-OPS-116
 ---
 

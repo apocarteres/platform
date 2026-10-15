@@ -217,7 +217,7 @@ authority: navigation
 | [Escape в раскрытом списке внутри окна закрывал окно](CORE-QUAL-031-escape-to-expanded-list.md) | P2 | Выполнена | [RELEASE-12-3-0](../../releases/RELEASE-12-3-0.md) | frontend, client, accessibility |
 | [Правило «один оператор на метод DAO»](CORE-QUAL-032-one-statement-rule.md) | P2 | Выполнена | [RELEASE-13-2-0](../../releases/RELEASE-13-2-0.md) | java, quality, data-access |
 | [Правило о суффиксе -er читается буквально](CORE-QUAL-033-naming-er-read-literally.md) | P2 | Выполнена | [RELEASE-15-2-0](../../releases/RELEASE-15-2-0.md) | quality, java, naming |
-| [Тест крупного дерева роняет verify ошибкой EPIPE](CORE-TEST-001-large-tree-test-epipe.md) | P2 | Выполнена | Не назначен | testing, quality |
+| [Тест крупного дерева роняет verify ошибкой EPIPE](CORE-TEST-001-large-tree-test-epipe.md) | P2 | Выполнена | [RELEASE-15-5-1](../../releases/RELEASE-15-5-1.md) | testing, quality |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |
 | [Англоязычный читатель не может понять, на чём держится порядок](CORE-DOC-023-no-english-overview.md) | P3 | Выполнена | [RELEASE-15-5-1](../../releases/RELEASE-15-5-1.md) | documentation, delivery |

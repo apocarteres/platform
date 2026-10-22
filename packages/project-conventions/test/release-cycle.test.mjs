@@ -1480,7 +1480,10 @@ test('сверка диапазона называет только его ко�
   const root = await project();
   try {
     const sha = await releaseWithUnnamedCommit(root);
-    await git('-C', root, 'commit', '--allow-empty', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче');
+    // REQ-PROJECT-PROCESS-023
+    await writeFile(path.join(root, 'docs/tickets/closed/SHOP-QUAL-007-done.md'), ticket('SHOP-QUAL-007', 'done'));
+    await git('-C', root, 'add', '-A');
+    await git('-C', root, 'commit', '--quiet', '-m', 'SHOP-QUAL-007 работа по задаче');
 
     const whole = await commitsWithoutATicket(root, null);
     assert.deepEqual(whole.map((commit) => commit.sha.slice(0, 8)), [sha]);

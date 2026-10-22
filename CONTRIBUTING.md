@@ -16,6 +16,9 @@ comment on a closed issue; open a new one that links to it
 `docs/tickets`, requirements in `docs/requirements`, a test written before the
 change, and the full `mise run verify` before a release tag. Please start with
 an issue before a pull request, so the change gets a ticket and a requirement.
+A pull request carries its ticket: the ticket file is added in the same pull
+request, and every commit starts with its ID; see
+[working through pull requests](docs/runbooks/pull-requests.md).
 Documentation is written in Russian; names of technologies, identifiers and
 commands stay in English.
 
@@ -36,6 +39,9 @@ issues по шаблону «Заявка потребителя ядра». В 
 `docs/tickets`, требования — в `docs/requirements`, тест пишется до
 изменения, полный `mise run verify` проходит до тега выпуска. Перед
 pull request заведите заявку: изменение получит задачу и требование.
+Pull request несёт свою задачу: файл задачи добавляется в том же PR, и
+каждый коммит начинается с её идентификатора, см.
+[работу через pull request](docs/runbooks/pull-requests.md).
 Документация пишется на русском; названия технологий, идентификаторы и
 команды остаются английскими.
 

@@ -183,8 +183,16 @@ export async function commits(root, range) {
     console.log(range === null ? 'Все коммиты называют задачу.' : `Все коммиты диапазона ${range} называют задачу.`);
     return;
   }
-  console.error('Коммиты, не называющие задачу:');
-  for (const commit of found) console.error(`- ${commit.sha.slice(0, 8)}: «${commit.subject}»`);
+  console.error('Коммиты без заведённой задачи:');
+  for (const commit of found) {
+    // REQ-PROJECT-PROCESS-023
+    if (commit.standing === 'задача не заведена') {
+      console.error(`- ${commit.sha.slice(0, 8)}: называет ${commit.named}, а задачи нет в docs/tickets: «${commit.subject}»`);
+    } else console.error(`- ${commit.sha.slice(0, 8)}: не называет задачу: «${commit.subject}»`);
+  }
+  if (found.some((commit) => commit.standing === 'задача не заведена')) {
+    console.error('Задачи нет: заведите её в этом же изменении или назовите существующую; если номер занят в main — conventions tickets-renumber <ИД> --base main.');
+  }
   // REQ-RELEASE-039
   console.error('Пока коммит не отправлен, сообщение правится: git commit --amend либо интерактивное перебазирование.');
   console.error('После отправки правка сообщения переписала бы общую историю: такой коммит учитывается');

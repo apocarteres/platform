@@ -73,6 +73,9 @@ test('выпуск с двузначным номером закрывается
     // CORE-OPS-039
     await writeFile(path.join(root, `docs/tickets/closed/${id}-work.md`),
       `---\nid: ${id}\ntype: ticket\nstatus: done\nscope: quality\nauthority: supporting\npriority: P2\nrelease: unassigned\n---\n\n# ${id}\n\nОтвет владельца записан.\n`);
+    // REQ-PROJECT-PROCESS-023
+    await writeFile(path.join(root, `docs/tickets/${PREFIX}-QUAL-101-pending.md`),
+      `---\nid: ${PREFIX}-QUAL-101\ntype: ticket\nstatus: backlog\nscope: quality\nauthority: supporting\npriority: P2\nrelease: unassigned\n---\n\n# ${PREFIX}-QUAL-101\n`);
     await consumer.git('add', '-A');
     await consumer.git('commit', '--quiet', '-m', `${PREFIX}-QUAL-101 запись решения по незавершённой задаче`);
 

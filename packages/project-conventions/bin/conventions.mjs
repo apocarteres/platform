@@ -17,6 +17,7 @@ import { REPORT_TEMPLATE, feedbackChannel, feedbackLine, writeReportTemplate } f
 import { collisions, dictionary } from '../lib/terms.mjs';
 import { stackProblems } from '../lib/stack.mjs';
 import { updateTicketIndexes } from '../lib/docs/tickets-index.mjs';
+import { renumberTicket } from '../lib/release/renumber.mjs';
 import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../lib/docs/releases-index.mjs';
 import { findObligationDebts, loadObligations, obligationState, readState } from '../lib/release/obligations.mjs';
@@ -194,6 +195,24 @@ async function ticketsIndex(root) {
     return;
   }
   console.log('Сводки задач согласованы.');
+}
+
+// REQ-TICKETS-022
+async function ticketsRenumber(root, id, base) {
+  if (!id) {
+    refuse(USAGE['tickets-renumber'], 'назовите задачу, чей номер занят: conventions tickets-renumber <ИД> --base <ветка>');
+    return;
+  }
+  const result = await renumberTicket(root, { id, base });
+  if (result.problems.length > 0) {
+    console.error('Задача не перенумерована:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Задача перенумерована: ${result.from} → ${result.to}, файл ${result.file}.`);
+  console.log(`Сообщения коммитов ветки переписаны: ${result.rewritten}; ссылки поправлены в файлах ветки: ${result.touched.length}.`);
+  console.log('История ветки переписана: отправьте её командой git push --force-with-lease.');
 }
 
 async function releasesIndex(root) {
@@ -443,7 +462,7 @@ async function feedbackTemplate(root) {
 }
 
 // REQ-RELEASE-028
-const COMMANDS = 'conventions <check|docs-check|tickets-index|releases-index|sync'
+const COMMANDS = 'conventions <check|docs-check|tickets-index|tickets-renumber|releases-index|sync'
   + '|feedback-template|baseline|receipt|run|build|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|telemetry|mail|release> [--root <path>]';
 
 // REQ-RELEASE-028
@@ -451,6 +470,8 @@ const USAGE = {
   check: 'conventions check [--root <path>]',
   'docs-check': 'conventions docs-check [--root <path>]',
   'tickets-index': 'conventions tickets-index [--root <path>]',
+  'tickets-renumber': 'conventions tickets-renumber <ИД задачи> [--base <ветка>] [--root <path>]'
+    + '\n  Номер задачи ветки занят в основе: задача, ссылки ветки и сообщения её коммитов получают следующий свободный номер.',
   'releases-index': 'conventions releases-index [--root <path>]',
   sync: 'conventions sync [--root <path>]',
   'feedback-template': 'conventions feedback-template [--root <path>]'
@@ -530,6 +551,7 @@ const SPEC = {
   check: {},
   'docs-check': {},
   'tickets-index': {},
+  'tickets-renumber': { values: ['--base'], positional: 1 },
   'releases-index': {},
   sync: {},
   'feedback-template': {},
@@ -598,6 +620,8 @@ if (command === undefined || command === '--help') {
     if (command === 'check') await check(root);
     else if (command === 'docs-check') await docsCheck(root);
     else if (command === 'tickets-index') await ticketsIndex(root);
+    // REQ-TICKETS-022
+    else if (command === 'tickets-renumber') await ticketsRenumber(root, parsed.positional[0], parsed.values.get('--base') ?? 'main');
     else if (command === 'releases-index') await releasesIndex(root);
     else if (command === 'sync') await sync(root);
     // REQ-ADOPTION-027

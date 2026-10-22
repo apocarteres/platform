@@ -14,8 +14,10 @@ import { costSection, majorProblem, upgradeCost } from './changes.mjs';
 // REQ-PUBLISHING-015
 const COST_SECTION = '## Цена обновления';
 import {
-  CYCLE_TRAILER, REVERT_LABEL, commitsInRange, cycleCommit, ideaRecord, mergeCommit, reachableSince, recordCommit, revertCommit, ticketOf, ticketsOf,
+  CYCLE_TRAILER, REVERT_LABEL, commitStanding, commitsInRange, reachableSince, revertCommit, ticketIdsAt, ticketOf, tipOf,
 } from './commits.mjs';
+
+export { commitStanding };
 import { TICKET_AREAS } from '../document-naming.mjs';
 import { readConfig } from '../config.mjs';
 import { findExpandDebts } from '../migrations.mjs';
@@ -152,31 +154,15 @@ function obligationsSummary(closed, deferred, isCore) {
   return parts.length === 0 ? 'обязательств к исполнению в этом выпуске не было' : parts.join('; ');
 }
 
-// REQ-RELEASE-036, REQ-RELEASE-042
-export function commitStanding(commit, { members, cancelled, accounted, areas, prefix, stages }) {
-  // REQ-RELEASE-036
-  if (cycleCommit(commit) || mergeCommit(commit)) return 'обслуживает выпуск';
-  // REQ-RELEASE-041
-  if (accounted.some((sha) => commit.sha.startsWith(sha))) return 'учтён в выпуске';
-  // REQ-RELEASE-042
-  const named = ticketsOf(commit, areas, prefix, stages);
-  // REQ-TICKETS-020
-  if (named.length === 0) return ideaRecord(commit, prefix) ? 'запись об идее' : 'не называет задачу';
-  if (named.some((id) => members.has(id))) return 'задача состава';
-  // REQ-RELEASE-031
-  if (named.some((id) => cancelled.has(id))) return 'задача отменена';
-  // REQ-RELEASE-040
-  if (recordCommit(commit)) return 'запись о задаче';
-  return 'задача вне состава';
-}
-
 // REQ-RELEASE-042
-const HOLDS = new Set(['не называет задачу', 'задача вне состава']);
+const HOLDS = new Set(['не называет задачу', 'задача не заведена', 'задача вне состава']);
 
 // REQ-RELEASE-036, REQ-RELEASE-042
-async function standingContext(root, { config, composition, open }) {
+async function standingContext(root, { config, composition, open, tip = 'HEAD' }) {
   const known = await tickets(root);
   return {
+    // REQ-PROJECT-PROCESS-023
+    existing: await ticketIdsAt(root, tip),
     members: new Set(composition.map(ticketId)),
     // REQ-RELEASE-031
     cancelled: new Set(known
@@ -212,6 +198,12 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
         + wayOutOfAnUnnamedCommit(releaseId, prefix, commit.sha.slice(0, 8)));
       continue;
     }
+    // REQ-PROJECT-PROCESS-023
+    if (standing === 'задача не заведена') {
+      problems.push(`Коммит ${commit.sha.slice(0, 8)} называет ${ticketOf(commit, areas, prefix, stages)}, а задачи нет в docs/tickets: «${commit.subject}»\n  `
+        + `Заведите задачу с этим идентификатором либо учтите коммит: release account ${commit.sha.slice(0, 8)} --reason "<причина>"`);
+      continue;
+    }
     const ticket = ticketOf(commit, areas, prefix, stages);
     if (!outside.has(ticket)) outside.set(ticket, []);
     outside.get(ticket).push(commit);
@@ -242,9 +234,12 @@ export async function commitsWithoutATicket(root, range) {
   const beyondBaseline = await withoutOlderThan(root, commits, baseline);
   const open = await openRelease(root);
   const composition = open === null ? [] : await compositionTickets(root, open.metadata.get('id'));
-  const context = await standingContext(root, { config, composition, open });
+  // REQ-PROJECT-PROCESS-023
+  const context = await standingContext(root, { config, composition, open, tip: tipOf(range) });
   // REQ-QUALITY-004
-  return beyondBaseline.filter((commit) => commitStanding(commit, context) === 'не называет задачу');
+  return beyondBaseline
+    .map((commit) => ({ ...commit, standing: commitStanding(commit, context), named: ticketOf(commit, context.areas, context.prefix, context.stages) }))
+    .filter((commit) => commit.standing === 'не называет задачу' || commit.standing === 'задача не заведена');
 }
 
 // REQ-RELEASE-041
@@ -267,7 +262,7 @@ export async function accountCommit(root, { sha, reason }) {
   const composition = await compositionTickets(root, release.metadata.get('id'));
   const context = await standingContext(root, { config, composition, open: release });
   const standing = commitStanding(found, context);
-  if (standing !== 'не называет задачу' && standing !== 'задача вне состава') {
+  if (!HOLDS.has(standing)) {
     return {
       accounted: false,
       problems: [`Коммит ${found.sha.slice(0, 8)} закрытия не держит: ${standing}. Учёт нужен только тому, кто держит`],

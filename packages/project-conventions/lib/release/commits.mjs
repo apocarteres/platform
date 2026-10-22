@@ -110,3 +110,43 @@ export function ticketsOf(commit, areas, prefix, stages = new Set()) {
 export function ticketOf(commit, areas, prefix, stages = new Set()) {
   return ticketsOf(commit, areas, prefix, stages)[0] ?? null;
 }
+
+// REQ-PROJECT-PROCESS-023
+const TICKET_FILE = /^((?:[A-Z][A-Z0-9]{1,7}-)?[A-Z]{2,5}-\d{3})-[^/]*\.md$/;
+
+// REQ-PROJECT-PROCESS-023
+export async function ticketIdsAt(root, ref) {
+  const listed = await git(root, ['ls-tree', '-r', '--name-only', ref, '--', 'docs/tickets']);
+  const found = new Set();
+  for (const file of listed.split('\n')) {
+    const match = TICKET_FILE.exec(file.trim().split('/').at(-1) ?? '');
+    if (match !== null) found.add(match[1]);
+  }
+  return found;
+}
+
+// REQ-PROJECT-PROCESS-023
+export function tipOf(range) {
+  if (range === null || !range.includes('..')) return 'HEAD';
+  return range.split('..').at(-1) || 'HEAD';
+}
+
+// REQ-RELEASE-036, REQ-RELEASE-042
+export function commitStanding(commit, { members, cancelled, accounted, areas, prefix, stages, existing }) {
+  // REQ-RELEASE-036
+  if (cycleCommit(commit) || mergeCommit(commit)) return 'обслуживает выпуск';
+  // REQ-RELEASE-041
+  if (accounted.some((sha) => commit.sha.startsWith(sha))) return 'учтён в выпуске';
+  // REQ-RELEASE-042
+  const named = ticketsOf(commit, areas, prefix, stages);
+  // REQ-TICKETS-020
+  if (named.length === 0) return ideaRecord(commit, prefix) ? 'запись об идее' : 'не называет задачу';
+  // REQ-PROJECT-PROCESS-023
+  if (existing !== undefined && !named.some((id) => existing.has(id) || stages.has(id))) return 'задача не заведена';
+  if (named.some((id) => members.has(id))) return 'задача состава';
+  // REQ-RELEASE-031
+  if (named.some((id) => cancelled.has(id))) return 'задача отменена';
+  // REQ-RELEASE-040
+  if (recordCommit(commit)) return 'запись о задаче';
+  return 'задача вне состава';
+}

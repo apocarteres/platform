@@ -118,7 +118,7 @@ authority: navigation
 | [Закрытие выпуска переполняет буфер git log на длинной истории](CORE-OPS-105-history-buffer.md) | P1 | Выполнена | [RELEASE-13-1-1](../../releases/RELEASE-13-1-1.md) | release, tooling |
 | [Отпадение узла от наблюдения никто не видит](CORE-OPS-111-nodes-are-not-observed.md) | P1 | Выполнена | [RELEASE-15-0-0](../../releases/RELEASE-15-0-0.md) | deployment, operations |
 | [Расписка и выпуск отказывают на крупном репозитории: буфер вывода git](CORE-OPS-116-large-tree-output-buffer.md) | P1 | Выполнена | [RELEASE-15-1-2](../../releases/RELEASE-15-1-2.md) | tooling, release |
-| [Pull request называет задачу, которой нет](CORE-OPS-119-pull-request-names-a-missing-ticket.md) | P1 | Выполнена | Не назначен | process, release |
+| [Pull request называет задачу, которой нет](CORE-OPS-119-pull-request-names-a-missing-ticket.md) | P1 | Выполнена | [RELEASE-16-0-0](../../releases/RELEASE-16-0-0.md) | process, release |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

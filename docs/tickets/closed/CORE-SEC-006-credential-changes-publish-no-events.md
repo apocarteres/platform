@@ -5,7 +5,7 @@ status: done
 scope: auth, security
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-16-1-0
 related: REQ-AUTH
 ---
 

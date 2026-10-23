@@ -14,13 +14,14 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 6. Включены самостоятельные задачи и этапы планов функций.
+Всего: 7. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
 | [Проверка настройки nginx на общем хосте обрывает работу ZAVPN](CORE-OPS-112-nginx-check-on-a-shared-host.md) | P2 | Запланирована | Не назначен | deployment, operations |
 | [У Rust нет языковых документов, которые есть у Java и TypeScript](CORE-QUAL-012-rust-has-no-language-documents.md) | P2 | Запланирована | Не назначен | documentation, rust |
 | [Ядро не знает арендаторов](CORE-ARC-027-the-core-knows-no-tenants.md) | P3 | Запланирована | Не назначен | auth, persistence, architecture, client |
+| [У ядра нет общей локализации](CORE-ARC-028-no-shared-localization.md) | P3 | Запланирована | Не назначен | client, mail, api, conventions |
 | [Цена обновления молчит об изменённом поведении](CORE-OPS-104-cost-misses-changed-behaviour.md) | P3 | Запланирована | Не назначен | release, publishing, tooling |
 | [Сборочный контейнер не работает с rootless Docker](CORE-OPS-108-verify-runner-rootless-docker.md) | P3 | Запланирована | Не назначен | tooling, testing |
 | [web.sh не переставляет зависимости пакета при устаревшем node_modules](CORE-OPS-117-web-sh-stale-node-modules.md) | P3 | Запланирована | Не назначен | tooling, build |

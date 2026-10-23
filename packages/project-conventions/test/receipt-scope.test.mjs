@@ -114,9 +114,10 @@ test('перенесённая расписка требует согласов�
     const verified = await released(consumer, id);
 
     const stray = `${PREFIX}-QUAL-403`;
+    // REQ-PROJECT-PROCESS-013
     await writeFile(path.join(root, `docs/tickets/${stray}-work.md`),
-      doneTicket(stray).replace('status: done', 'status: in_progress'));
-    const service = await commit(consumer, `${id} задача добавлена без сводки`);
+      doneTicket(stray).replace('status: done', 'status: someday'));
+    const service = await commit(consumer, `${id} задача с неверным статусом`);
     assert.equal(await codeTree(root, service), await codeTree(root, verified), 'дерево кода то же');
 
     const state = await closability(root, { scheme: 'date' });

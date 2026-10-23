@@ -512,19 +512,8 @@ export async function checkDocumentation(projectRoot, options = {}) {
   await checkIndexCoverage(resolvedRoot, path.join(docsRoot, 'releases'),
     path.join(docsRoot, 'releases/INDEX.md'), errors);
 
+  // REQ-PROJECT-PROCESS-013
   const ticketsRoot = path.join(docsRoot, 'tickets');
-  await checkIndexCoverage(
-    resolvedRoot,
-    ticketsRoot,
-    path.join(ticketsRoot, 'INDEX.md'),
-    errors,
-  );
-  await checkIndexCoverage(
-    resolvedRoot,
-    path.join(ticketsRoot, 'closed'),
-    path.join(ticketsRoot, 'closed', 'INDEX.md'),
-    errors,
-  );
 
   const featuresRoot = path.join(ticketsRoot, 'features');
   const featuresIndex = path.join(featuresRoot, 'INDEX.md');

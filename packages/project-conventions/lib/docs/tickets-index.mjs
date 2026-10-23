@@ -103,7 +103,7 @@ export async function present(directory) {
   }
 }
 
-export async function updateTicketIndexes(root, { check = false } = {}) {
+export async function updateTicketIndexes(root, { check = false, stale = true } = {}) {
   // REQ-PROJECT-PROCESS-021
   if (!await present(path.join(root, 'docs/tickets'))) return [];
   const { errors, outputs } = await buildTicketIndexes(root);
@@ -114,6 +114,8 @@ export async function updateTicketIndexes(root, { check = false } = {}) {
     outputs.set(path.join(root, IDEAS_DIR, 'INDEX.md'), ideas.output);
   }
   if (errors.length) return errors;
+  // REQ-PROJECT-PROCESS-013
+  if (check && !stale) return errors;
   for (const [file, expected] of outputs) {
     if (check) {
       let actual;

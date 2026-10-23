@@ -130,6 +130,8 @@ test('перенумерация: своя задача ветки получа�
     assert.ok(branch.includes('Подробности SHOP-OPS-003.'), branch.join('\n'));
     assert.equal(await one.git('log', '-1', '--format=%s', 'main'), 'SHOP-OPS-002 Чужая работа');
     assert.equal(await one.git('status', '--porcelain'), '', 'перенумерация закоммичена');
+    // REQ-PROJECT-PROCESS-013
+    assert.equal(await one.git('diff', '--name-only', 'HEAD~1', 'HEAD', '--', 'docs/tickets/INDEX.md'), '', 'сводки перенумерация не трогает');
 
     assert.equal((await conventions(one.root, 'commits', '--range', 'main..HEAD')).code, 0);
   } finally {

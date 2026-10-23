@@ -17,8 +17,9 @@ related: REQ-PROJECT-PROCESS, REQ-TICKETS, REQ-RELEASE
 1. Перебазировать ветку на свежий `main`: задачи сверяются с тем, что в нём.
 2. Если задача уже есть в `docs/tickets`, взять её идентификатор. Если нет —
    завести файл задачи в этом же PR со следующим свободным номером области,
-   например `docs/tickets/SHOP-OPS-031-retry-export.md`, и выполнить
-   `conventions tickets-index`.
+   например `docs/tickets/SHOP-OPS-031-retry-export.md`. Сводки
+   `docs/tickets/INDEX.md` не трогать: их пересобирает выпуск, а правка в PR
+   только вызвала бы конфликт (`REQ-PROJECT-PROCESS-013`).
 3. Каждый коммит начинать с идентификатора: `SHOP-OPS-031 Retry the export on timeout`.
 4. Отправить ветку в свой форк. Хук `pre-push` откажет, если названной
    задачи нет на вершине ветки, и назовёт коммит.

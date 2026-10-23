@@ -4,7 +4,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { OUTPUT_BUFFER, environmentWithoutGit } from './git.mjs';
-import { updateTicketIndexes } from '../docs/tickets-index.mjs';
 
 const run = promisify(execFile);
 
@@ -110,12 +109,6 @@ export async function renumberTicket(root, { id, base }) {
   }
   const target = path.posix.join(path.posix.dirname(own[0]), path.posix.basename(own[0]).replace(id, to));
   await git(root, ['mv', own[0], target]);
-  try {
-    await readFile(path.join(root, TICKETS, 'INDEX.md'));
-    await updateTicketIndexes(root, { check: false });
-  } catch (failure) {
-    if (failure.code !== 'ENOENT') throw failure;
-  }
   await git(root, ['add', '-A']);
   await git(root, ['commit', '--quiet', '-m', `${to} Задача перенумерована: ${id} занят в ${base}`]);
   return { problems: [], from: id, to, rewritten: commits.length, touched, file: target };

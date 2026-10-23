@@ -5,7 +5,7 @@ status: done
 scope: process, documentation, release
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-16-2-0
 related: REQ-PROJECT-PROCESS, REQ-TICKETS
 ---
 

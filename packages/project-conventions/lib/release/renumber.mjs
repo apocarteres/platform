@@ -41,7 +41,24 @@ function nextFree(id, taken) {
 }
 
 // REQ-TICKETS-022
-async function rewriteMessages(root, commits, from, to) {
+function leading(message, from, to) {
+  return message.startsWith(`${from} `) || message.startsWith(`${from}\n`) ? `${to}${message.slice(from.length)}` : message;
+}
+
+// REQ-TICKETS-022
+async function addedLines(root, base, file) {
+  const diff = await git(root, ['diff', '-U0', base, 'HEAD', '--', file]);
+  const added = new Set();
+  for (const match of diff.matchAll(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/gm)) {
+    const start = Number(match[1]);
+    const count = match[2] === undefined ? 1 : Number(match[2]);
+    for (let line = start; line < start + count; line += 1) added.add(line);
+  }
+  return added;
+}
+
+// REQ-TICKETS-022
+async function rewriteMessages(root, commits, from, to, untouched) {
   const scratch = await mkdtemp(path.join(os.tmpdir(), 'renumber-'));
   try {
     const mapped = new Map();
@@ -49,7 +66,8 @@ async function rewriteMessages(root, commits, from, to) {
     for (const [sha, parent] of commits) {
       const [authorName, authorEmail, authorDate, committerName, committerEmail, committerDate] =
         (await git(root, ['log', '-1', '--format=%an%x00%ae%x00%aI%x00%cn%x00%ce%x00%cI', sha])).trim().split('\0');
-      const message = (await git(root, ['log', '-1', '--format=%B', sha])).replace(token(from), to);
+      const message = leading(await git(root, ['log', '-1', '--format=%B', sha]), from, to);
+      if (token(from).test(message)) untouched.push(`сообщение ${sha.slice(0, 8)} упоминает ${from} в теле — не тронуто, проверьте`);
       const file = path.join(scratch, 'message');
       await writeFile(file, message);
       const tree = (await git(root, ['rev-parse', `${sha}^{tree}`])).trim();
@@ -90,7 +108,8 @@ export async function renumberTicket(root, { id, base }) {
 
   const to = nextFree(id, new Set([...head, ...based].map(idOf)));
   const old = (await git(root, ['rev-parse', 'HEAD'])).trim();
-  const rewritten = await rewriteMessages(root, commits.map(([sha, parent]) => [sha, parent]), id, to);
+  const untouched = [];
+  const rewritten = await rewriteMessages(root, commits.map(([sha, parent]) => [sha, parent]), id, to, untouched);
   await git(root, ['update-ref', '-m', `tickets-renumber ${id} ${to}`, 'HEAD', rewritten, old]);
 
   const changed = (await git(root, ['diff', '--name-only', base, 'HEAD'])).split('\n').filter(Boolean);
@@ -102,7 +121,13 @@ export async function renumberTicket(root, { id, base }) {
     } catch {
       continue;
     }
-    const replaced = text.replace(token(id), to);
+    const added = file === own[0] ? null : await addedLines(root, base, file);
+    const replaced = text.split('\n').map((line, index) => {
+      if (!token(id).test(line)) return line;
+      if (added === null || added.has(index + 1)) return line.replace(token(id), to);
+      untouched.push(`${file}:${index + 1}: ${id} пришёл из ${base} — не тронут, проверьте`);
+      return line;
+    }).join('\n');
     if (replaced === text) continue;
     await writeFile(path.join(root, file), replaced);
     touched.push(file);
@@ -111,5 +136,5 @@ export async function renumberTicket(root, { id, base }) {
   await git(root, ['mv', own[0], target]);
   await git(root, ['add', '-A']);
   await git(root, ['commit', '--quiet', '-m', `${to} Задача перенумерована: ${id} занят в ${base}`]);
-  return { problems: [], from: id, to, rewritten: commits.length, touched, file: target };
+  return { problems: [], from: id, to, rewritten: commits.length, touched, untouched, file: target };
 }

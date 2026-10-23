@@ -212,6 +212,8 @@ async function ticketsRenumber(root, id, base) {
   }
   console.log(`Задача перенумерована: ${result.from} → ${result.to}, файл ${result.file}.`);
   console.log(`Сообщения коммитов ветки переписаны: ${result.rewritten}; ссылки поправлены в файлах ветки: ${result.touched.length}.`);
+  // REQ-TICKETS-022
+  for (const line of result.untouched) console.log(`- ${line}`);
   console.log('История ветки переписана: отправьте её командой git push --force-with-lease.');
 }
 

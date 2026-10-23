@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 216. Включены самостоятельные задачи и этапы планов функций.
+Всего: 217. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -120,6 +120,7 @@ authority: navigation
 | [Расписка и выпуск отказывают на крупном репозитории: буфер вывода git](CORE-OPS-116-large-tree-output-buffer.md) | P1 | Выполнена | [RELEASE-15-1-2](../../releases/RELEASE-15-1-2.md) | tooling, release |
 | [Pull request называет задачу, которой нет](CORE-OPS-119-pull-request-names-a-missing-ticket.md) | P1 | Выполнена | [RELEASE-16-0-0](../../releases/RELEASE-16-0-0.md) | process, release |
 | [Сводки задач конфликтуют почти в каждом pull request](CORE-OPS-120-ticket-summaries-conflict-in-pull-requests.md) | P1 | Выполнена | [RELEASE-16-2-0](../../releases/RELEASE-16-2-0.md) | process, documentation, release |
+| [tickets-renumber переписывает ссылки основы на её задачу](CORE-OPS-121-renumber-rewrites-base-references.md) | P1 | Выполнена | [RELEASE-16-2-1](../../releases/RELEASE-16-2-1.md) | process, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

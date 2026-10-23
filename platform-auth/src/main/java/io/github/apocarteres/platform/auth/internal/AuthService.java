@@ -3,11 +3,15 @@ package io.github.apocarteres.platform.auth.internal;
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.AuthRefused;
+import io.github.apocarteres.platform.auth.EmailChanged;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.AccountVerified;
+import io.github.apocarteres.platform.auth.PasswordChanged;
+import io.github.apocarteres.platform.auth.SecondFactor;
 import io.github.apocarteres.platform.auth.internal.TokenStore.Purpose;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -19,8 +23,11 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-010, REQ-AUTH-023
+// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-010, REQ-AUTH-023, REQ-AUTH-041, REQ-AUTH-044
 final class AuthService {
+
+  // REQ-AUTH-042
+  private static final Duration SECOND_FACTOR_TTL = Duration.ofMinutes(5);
 
   private final AccountStore accounts;
   private final TokenStore tokens;
@@ -34,11 +41,12 @@ final class AuthService {
   private final TransactionTemplate transactions;
   private final AuthSettings settings;
   private final Clock clock;
+  private final SecondFactor factor;
   private final String absentHash;
 
   AuthService(AccountStore accounts, TokenStore tokens, Sessions sessions, PasswordEncoder passwords, RateLimiter limiter,
     HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, AuthLetters letters,
-    TransactionTemplate transactions, AuthSettings settings, Clock clock) {
+    TransactionTemplate transactions, AuthSettings settings, Clock clock, SecondFactor factor) {
     this.accounts = accounts;
     this.tokens = tokens;
     this.sessions = sessions;
@@ -51,6 +59,7 @@ final class AuthService {
     this.transactions = transactions;
     this.settings = settings;
     this.clock = clock;
+    this.factor = factor;
     this.absentHash = passwords.encode("absent-account-" + UUID.randomUUID());
   }
 
@@ -132,7 +141,50 @@ final class AuthService {
     if (!account.verified()) {
       throw new AuthRefused(AuthRefused.UNVERIFIED, "Почта не подтверждена");
     }
-    limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, email);
+    return account;
+  }
+
+  // REQ-AUTH-041, REQ-AUTH-042
+  Optional<PendingLogin> secondStep(Account account) {
+    if (factor == null || !factor.required(account)) {
+      return Optional.empty();
+    }
+    return Optional.of(new PendingLogin(account.id(), clock.instant().plus(SECOND_FACTOR_TTL)));
+  }
+
+  // REQ-AUTH-043
+  boolean expired(PendingLogin pending) {
+    return !clock.instant().isBefore(pending.expires());
+  }
+
+  // REQ-AUTH-043
+  Account confirmSecondStep(PendingLogin pending, String code) {
+    Account account = accounts.find(pending.account()).map(AccountStore.Stored::account)
+      .orElseThrow(() -> new AuthRefused(AuthRefused.SECOND_FACTOR_EXPIRED, "Учётной записи больше нет"));
+    if (factor == null) {
+      throw new AuthRefused(AuthRefused.SECOND_FACTOR_EXPIRED, "Второй шаг входа проектом не объявлен");
+    }
+    limiter.require(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.email());
+    if (code == null || !factor.verify(account.id(), code)) {
+      limiter.count(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.email());
+      throw new AuthRefused(AuthRefused.SECOND_FACTOR_REJECTED, "Код второго шага не подошёл");
+    }
+    return account;
+  }
+
+  // REQ-AUTH-043
+  Account signInAfterSecondStep(UUID id) {
+    Account account = accounts.find(id).map(AccountStore.Stored::account)
+      .orElseThrow(() -> new AuthRefused(AuthRefused.SECOND_FACTOR_EXPIRED, "Учётной записи больше нет"));
+    if (account.blocked()) {
+      throw new AuthRefused(AuthRefused.BLOCKED, "Учётная запись заблокирована");
+    }
+    return signIn(account);
+  }
+
+  // REQ-AUTH-005
+  Account signIn(Account account) {
+    limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.email());
     accounts.loggedIn(account.id());
     return accounts.find(account.id()).orElseThrow().account();
   }
@@ -158,7 +210,10 @@ final class AuthService {
     UUID id = transactions.execute(status -> {
       UUID taken = tokens.take(token, Purpose.PASSWORD_RESET)
         .orElseThrow(() -> new AuthRefused(AuthRefused.TOKEN, "Ссылка сброса недействительна или просрочена"));
-      accounts.password(taken, passwords.encode(password));
+      if (accounts.password(taken, passwords.encode(password))) {
+        // REQ-AUTH-044
+        afterCommit(() -> events.publishEvent(new PasswordChanged(taken)));
+      }
       return taken;
     });
     sessions.terminate(id);
@@ -173,7 +228,13 @@ final class AuthService {
       throw new AuthRefused(AuthRefused.CREDENTIALS, "Текущий пароль не подошёл");
     }
     String password = Credentials.password(declaredPassword, settings);
-    accounts.password(id, passwords.encode(password));
+    String hash = passwords.encode(password);
+    transactions.executeWithoutResult(status -> {
+      if (accounts.password(id, hash)) {
+        // REQ-AUTH-044
+        afterCommit(() -> events.publishEvent(new PasswordChanged(id)));
+      }
+    });
     limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, id.toString());
     sessions.terminateExcept(id, keptSession);
   }
@@ -216,6 +277,8 @@ final class AuthService {
       }
       accounts.email(pending.account(), pending.email());
       afterCommit(() -> letters.emailChanged(previous, locale));
+      // REQ-AUTH-044
+      afterCommit(() -> events.publishEvent(new EmailChanged(pending.account(), previous, pending.email())));
       return pending.account();
       });
     } catch (DuplicateKeyException raced) {

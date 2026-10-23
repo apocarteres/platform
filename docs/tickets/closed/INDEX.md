@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 213. Включены самостоятельные задачи и этапы планов функций.
+Всего: 215. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -134,6 +134,8 @@ authority: navigation
 | [Завершённая сессия переживает шаг часов назад](CORE-SEC-002-terminated-session-survives-a-clock-step.md) | P1 | Выполнена | [RELEASE-11-1-0](../../releases/RELEASE-11-1-0.md) | security, backend |
 | [Ядро отдавало уязвимый jackson-databind 3.1.5](CORE-SEC-003-jackson-fixed-versions.md) | P1 | Выполнена | [RELEASE-13-2-1](../../releases/RELEASE-13-2-1.md) | security, java, dependencies |
 | [Секрет из переменной пути попадает в журнал службы](CORE-SEC-004-path-secrets-reach-the-log.md) | P1 | Выполнена | [RELEASE-15-0-1](../../releases/RELEASE-15-0-1.md) | api, security, logging |
+| [Вход не умеет второй шаг после пароля](CORE-SEC-005-login-has-no-second-step.md) | P1 | Выполнена | Не назначен | auth, security, api, client |
+| [Смена пароля и почты не публикуют событий](CORE-SEC-006-credential-changes-publish-no-events.md) | P1 | Выполнена | Не назначен | auth, security |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |

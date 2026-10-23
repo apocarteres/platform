@@ -87,3 +87,7 @@ export interface IssuedKey {
 export interface Session {
   readonly account: Account | null;
 }
+
+export interface SecondFactorRequest {
+  readonly code: string;
+}

@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -26,15 +27,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-008
+// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-042, REQ-AUTH-043
 @RestController
 @RequestMapping("/api/auth")
 class AuthController {
+
+  // REQ-AUTH-042
+  static final String SECOND_FACTOR = "platform.auth.second-factor";
 
   record Registration(String email, String password, String human, Map<String, Object> profile) {
   }
 
   record Login(String email, String password, String human) {
+  }
+
+  // REQ-AUTH-043
+  record SecondFactorCode(String code) {
   }
 
   record Email(String email, String human) {
@@ -116,15 +124,54 @@ class AuthController {
   @PostMapping("/login")
   Me login(@RequestBody Login body, HttpServletRequest request, HttpServletResponse response) {
     open(request);
-    Account account = auth.authenticate(body.email(), body.password(), body.human(), request.getRemoteAddr());
+    Account checked = auth.authenticate(body.email(), body.password(), body.human(), request.getRemoteAddr());
+    // REQ-AUTH-042
+    Optional<PendingLogin> pending = auth.secondStep(checked);
+    if (pending.isPresent()) {
+      HttpSession session = request.getSession(true);
+      request.changeSessionId();
+      session.setAttribute(SECOND_FACTOR, pending.get());
+      SecurityContextHolder.clearContext();
+      contexts.saveContext(SecurityContextHolder.createEmptyContext(), request, response);
+      throw new AuthRefused(AuthRefused.SECOND_FACTOR_REQUIRED, "Вход требует второго шага");
+    }
+    Account account = auth.signIn(checked);
+    signIn(account, request, response);
+    return Me.of(account);
+  }
+
+  // REQ-AUTH-043
+  @PostMapping("/login/second-factor")
+  Me secondFactor(@RequestBody SecondFactorCode body, HttpServletRequest request, HttpServletResponse response) {
+    open(request);
+    HttpSession session = request.getSession(false);
+    Object stored = session == null ? null : session.getAttribute(SECOND_FACTOR);
+    if (!(stored instanceof PendingLogin pending) || auth.expired(pending)) {
+      if (session != null) {
+        session.removeAttribute(SECOND_FACTOR);
+      }
+      throw new AuthRefused(AuthRefused.SECOND_FACTOR_EXPIRED, "Второй шаг входа не начат или просрочен");
+    }
+    Account confirmed = auth.confirmSecondStep(pending, body.code());
+    session.removeAttribute(SECOND_FACTOR);
+    Account account = auth.signInAfterSecondStep(confirmed.id());
+    signIn(account, request, response);
+    return Me.of(account);
+  }
+
+  // REQ-AUTH-005, REQ-AUTH-008
+  private void signIn(Account account, HttpServletRequest request, HttpServletResponse response) {
     List<SimpleGrantedAuthority> authorities = account.roles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
     SecurityContext context = SecurityContextHolder.createEmptyContext();
     context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(account.id().toString(), null, authorities));
-    request.getSession(true);
+    HttpSession session = request.getSession(true);
     request.changeSessionId();
+    // REQ-AUTH-042
+    if (session.getAttribute(SECOND_FACTOR) != null) {
+      session.removeAttribute(SECOND_FACTOR);
+    }
     SecurityContextHolder.setContext(context);
     contexts.saveContext(context, request, response);
-    return Me.of(account);
   }
 
   @PostMapping("/logout")

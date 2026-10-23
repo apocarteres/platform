@@ -30,6 +30,12 @@ public final class AuthRefused extends RuntimeException implements CodedFailure 
   public static final ErrorCode KEY_REQUEST = ErrorCode.of("key-request-rejected", HttpStatus.BAD_REQUEST);
   // REQ-AUTH-038
   public static final ErrorCode IDENTITY = ErrorCode.of("identity-rejected", HttpStatus.UNAUTHORIZED);
+  // REQ-AUTH-042
+  public static final ErrorCode SECOND_FACTOR_REQUIRED = ErrorCode.of("second-factor-required", HttpStatus.UNAUTHORIZED);
+  // REQ-AUTH-043
+  public static final ErrorCode SECOND_FACTOR_EXPIRED = ErrorCode.of("second-factor-expired", HttpStatus.UNAUTHORIZED);
+  // REQ-AUTH-043
+  public static final ErrorCode SECOND_FACTOR_REJECTED = ErrorCode.of("second-factor-rejected", HttpStatus.UNAUTHORIZED);
 
   private final transient ErrorCode code;
 

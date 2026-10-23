@@ -10,6 +10,7 @@ import io.github.apocarteres.platform.auth.KeyAccess;
 import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.auth.RequestAuthenticator;
+import io.github.apocarteres.platform.auth.SecondFactor;
 import io.github.apocarteres.platform.persistence.SqlStatements;
 import io.github.apocarteres.platform.ratelimit.RateLimiter;
 import io.github.apocarteres.platform.web.errors.ErrorMessages;
@@ -113,21 +114,23 @@ public class AuthAutoConfiguration {
     return new AccountCreation(accounts, passwords, new ProfileReader(hook, validator), settings);
   }
 
-  // REQ-AUTH-003, REQ-AUTH-010, REQ-AUTH-017
+  // REQ-AUTH-003, REQ-AUTH-010, REQ-AUTH-017, REQ-AUTH-041, REQ-AUTH-044
   @Bean
   AuthService authService(AccountStore accounts, TokenStore tokens, Sessions sessions, PasswordEncoder passwords,
     RateLimiter limiter, HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, AuthLetters letters,
-    PlatformTransactionManager transactions, AuthSettings settings, Clock clock) {
+    PlatformTransactionManager transactions, AuthSettings settings, Clock clock, ObjectProvider<SecondFactor> factor) {
     return new AuthService(accounts, tokens, sessions, passwords, limiter, human, creation, events, letters,
-      new TransactionTemplate(transactions), settings, clock);
+      new TransactionTemplate(transactions), settings, clock, factor.getIfAvailable());
   }
 
+  // REQ-AUTH-044, REQ-AUTH-045
   @Bean
   Accounts accounts(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    PlatformTransactionManager transactions, AuthLetters letters, AuthSettings settings, Clock clock, ObjectProvider<AccessKeyStore> keys) {
+    PlatformTransactionManager transactions, AuthLetters letters, AuthSettings settings, Clock clock, ObjectProvider<AccessKeyStore> keys,
+    ApplicationEventPublisher events, RateLimiter limiter) {
     AccessKeyStore store = keys.getIfAvailable();
     return new AccountsService(accounts, tokens, sessions, creation, passwords, new TransactionTemplate(transactions), letters, settings,
-      clock, store == null ? ExpiredKeys.NONE : store::purge);
+      clock, store == null ? ExpiredKeys.NONE : store::purge, events, limiter);
   }
 
   @Bean
@@ -187,6 +190,8 @@ public class AuthAutoConfiguration {
       .authorizeHttpRequests(rules -> {
         rules.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/verify", "/api/auth/resend",
           "/api/auth/login", "/api/auth/password-reset/request", "/api/auth/password-reset/confirm", "/api/auth/email/confirm").permitAll();
+        // REQ-AUTH-043
+        rules.requestMatchers(HttpMethod.POST, "/api/auth/login/second-factor").permitAll();
         rules.requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/auth/policy", "/api/auth/session").permitAll();
         rules.requestMatchers("/api/auth/**").authenticated();
         modules.orderedStream().forEach(module -> module.rules(rules));

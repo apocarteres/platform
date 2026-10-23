@@ -9,7 +9,7 @@ import type { CanMatchFn, UrlTree } from '@angular/router';
 import { firstValueFrom, tap } from 'rxjs';
 import type {
   AccessKey, Account, EmailChangeRequest, EmailRequest, IssuedKey, KeyRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest,
-  ResetRequest, Session, TokenRequest,
+  ResetRequest, SecondFactorRequest, Session, TokenRequest,
 } from './contract';
 
 // REQ-AUTH-015, REQ-AUTH-020
@@ -63,12 +63,16 @@ export class AuthSession {
     return this.current()?.roles.includes(role) ?? false;
   }
 
-  async login(email: string, password: string, human?: string): Promise<SignedIn> {
+  // REQ-AUTH-005, REQ-AUTH-042
+  login(email: string, password: string, human?: string): Promise<SignedIn> {
     const body: LoginRequest = { email, password, human };
-    const signed = await firstValueFrom(this.http.post<SignedIn>(`${this.base}/login`, body));
-    this.current.set(signed);
-    await this.csrf();
-    return signed;
+    return this.signIn(`${this.base}/login`, body);
+  }
+
+  // REQ-AUTH-043
+  secondFactor(code: string): Promise<SignedIn> {
+    const body: SecondFactorRequest = { code };
+    return this.signIn(`${this.base}/login/second-factor`, body);
   }
 
   async logout(): Promise<void> {
@@ -154,6 +158,14 @@ export class AuthSession {
   // REQ-AUTH-008
   expired(): void {
     this.current.set(null);
+  }
+
+  // REQ-AUTH-005, REQ-AUTH-043
+  private async signIn(url: string, body: LoginRequest | SecondFactorRequest): Promise<SignedIn> {
+    const signed = await firstValueFrom(this.http.post<SignedIn>(url, body));
+    this.current.set(signed);
+    await this.csrf();
+    return signed;
   }
 
   private async load(): Promise<void> {

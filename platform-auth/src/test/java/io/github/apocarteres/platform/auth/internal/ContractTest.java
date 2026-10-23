@@ -34,6 +34,8 @@ class ContractTest {
   private static final Map<String, Class<?>> SCHEMAS = Map.ofEntries(
     Map.entry("RegisterRequest", AuthController.Registration.class),
     Map.entry("LoginRequest", AuthController.Login.class),
+    // REQ-AUTH-043
+    Map.entry("SecondFactorRequest", AuthController.SecondFactorCode.class),
     Map.entry("EmailRequest", AuthController.Email.class),
     Map.entry("TokenRequest", AuthController.Token.class),
     Map.entry("ResetRequest", AuthController.Reset.class),

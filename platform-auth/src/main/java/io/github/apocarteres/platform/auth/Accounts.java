@@ -20,6 +20,9 @@ public interface Accounts {
   // REQ-AUTH-009
   void setPassword(UUID id, String password);
 
+  // REQ-AUTH-045
+  void confirmPassword(UUID account, String password);
+
   // REQ-AUTH-009
   List<Account> search(String emailPart, int offset, int limit);
 

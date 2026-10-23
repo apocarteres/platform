@@ -70,8 +70,9 @@ final class AccountStore {
     jdbc.sql(sql.get("account-blocked")).param("id", id).param("blocked", blocked).update();
   }
 
-  void password(UUID id, String passwordHash) {
-    jdbc.sql(sql.get("account-password")).param("id", id).param("passwordHash", passwordHash).update();
+  // REQ-AUTH-044
+  boolean password(UUID id, String passwordHash) {
+    return jdbc.sql(sql.get("account-password")).param("id", id).param("passwordHash", passwordHash).update() == 1;
   }
 
   void loggedIn(UUID id) {

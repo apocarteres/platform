@@ -14,13 +14,16 @@ import io.github.apocarteres.platform.auth.AccountVerified;
 import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.EmailChange;
+import io.github.apocarteres.platform.auth.EmailChanged;
 import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.Purged;
 import io.github.apocarteres.platform.auth.CurrentAccount;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.ModuleApiAccess;
+import io.github.apocarteres.platform.auth.PasswordChanged;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.auth.Removal;
+import io.github.apocarteres.platform.ratelimit.RateLimited;
 import io.github.apocarteres.platform.time.MutableClock;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.Cookie;
@@ -65,7 +68,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
-// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035, REQ-AUTH-036
+// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035, REQ-AUTH-036, REQ-AUTH-041, REQ-AUTH-044, REQ-AUTH-045
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -140,6 +143,8 @@ class AuthFlowTest {
   private DataSource source;
   @Autowired
   private Verified verified;
+  @Autowired
+  private Changes changes;
 
   private MockMvc mvc;
 
@@ -155,6 +160,8 @@ class AuthFlowTest {
     hook.seen.clear();
     hook.failing = false;
     verified.seen.clear();
+    changes.passwords.clear();
+    changes.emails.clear();
     mvc = MockMvcBuilders.webAppContextSetup(context)
       .addFilters(context.getBean("springSessionRepositoryFilter", Filter.class), context.getBean("springSecurityFilterChain", Filter.class))
       .build();
@@ -731,6 +738,107 @@ class AuthFlowTest {
     browser.get("/api/auth/keys").andExpect(status().isNotFound());
   }
 
+  // REQ-AUTH-044
+  @Test
+  @DisplayName("Смена пароля любым из трёх путей публикует PasswordChanged один раз и после фиксации; отказ события не даёт")
+  void passwordChangesAreAnnounced() throws Exception {
+    registered("events@player.example");
+    UUID id = accounts.findByEmail("events@player.example").orElseThrow().id();
+    Browser here = new Browser();
+    here.post("/api/auth/login", login("events@player.example", PASSWORD)).andExpect(status().isOk());
+
+    here.post("/api/auth/password", "{\"current\":\"wrong password here\",\"password\":\"own new password\"}")
+      .andExpect(status().isUnauthorized());
+    assertThat(changes.passwords).isEmpty();
+    here.post("/api/auth/password", "{\"current\":\"" + PASSWORD + "\",\"password\":\"own new password\"}")
+      .andExpect(status().isNoContent());
+    assertThat(changes.passwords).singleElement().satisfies(seen -> {
+      assertThat(seen.event()).isEqualTo(new PasswordChanged(id));
+      assertThat(seen.committed()).as("слушатель видит новый пароль").isEqualTo("own new password");
+    });
+
+    changes.passwords.clear();
+    Browser browser = new Browser();
+    browser.post("/api/auth/password-reset/request", "{\"email\":\"events@player.example\",\"human\":\"human\"}")
+      .andExpect(status().isAccepted());
+    String token = token(letters.sent.size() - 1);
+    browser.post("/api/auth/password-reset/confirm", "{\"token\":\"" + token + "\",\"password\":\"short\"}")
+      .andExpect(status().isBadRequest());
+    assertThat(changes.passwords).isEmpty();
+    browser.post("/api/auth/password-reset/confirm", "{\"token\":\"" + token + "\",\"password\":\"reset new password\"}")
+      .andExpect(status().isNoContent());
+    assertThat(changes.passwords).singleElement().satisfies(seen -> {
+      assertThat(seen.event()).isEqualTo(new PasswordChanged(id));
+      assertThat(seen.committed()).isEqualTo("reset new password");
+    });
+
+    changes.passwords.clear();
+    accounts.setPassword(id, "admin new password");
+    accounts.setPassword(UUID.randomUUID(), "admin new password");
+    assertThat(changes.passwords).singleElement().satisfies(seen -> {
+      assertThat(seen.event()).isEqualTo(new PasswordChanged(id));
+      assertThat(seen.committed()).isEqualTo("admin new password");
+    });
+    assertThat(changes.emails).isEmpty();
+  }
+
+  // REQ-AUTH-044
+  @Test
+  @DisplayName("Смена почты ссылкой и администратором публикует EmailChanged один раз и после фиксации; без смены события нет")
+  void emailChangesAreAnnounced() throws Exception {
+    registered("old@player.example");
+    registered("busy@player.example");
+    UUID id = accounts.findByEmail("old@player.example").orElseThrow().id();
+    Browser here = new Browser();
+    here.post("/api/auth/login", login("old@player.example", PASSWORD)).andExpect(status().isOk());
+
+    here.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"new@player.example\"}").andExpect(status().isAccepted());
+    assertThat(changes.emails).as("до ссылки почта не сменилась").isEmpty();
+    here.post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}").andExpect(status().isNoContent());
+    assertThat(changes.emails).singleElement().satisfies(seen -> {
+      assertThat(seen.event()).isEqualTo(new EmailChanged(id, "old@player.example", "new@player.example"));
+      assertThat(seen.committed()).isEqualTo("new@player.example");
+    });
+
+    changes.emails.clear();
+    here.post("/api/auth/email", "{\"current\":\"" + PASSWORD + "\",\"email\":\"late@player.example\"}").andExpect(status().isAccepted());
+    accounts.create("late@player.example", PASSWORD, Set.of("USER"), true, Map.of());
+    here.post("/api/auth/email/confirm", "{\"token\":\"" + changeToken() + "\"}").andExpect(status().isConflict());
+    assertThat(accounts.changeEmail(id, "busy@player.example", Locale.ROOT)).isEqualTo(EmailChange.TAKEN);
+    assertThat(accounts.changeEmail(id, "new@player.example", Locale.ROOT)).isEqualTo(EmailChange.SAME);
+    assertThat(changes.emails).as("откат и отсутствие смены событий не дают").isEmpty();
+
+    assertThat(accounts.changeEmail(id, " Admin-Set@Player.Example ", Locale.ROOT)).isEqualTo(EmailChange.CHANGED);
+    assertThat(changes.emails).singleElement().satisfies(seen -> {
+      assertThat(seen.event()).isEqualTo(new EmailChanged(id, "new@player.example", "admin-set@player.example"));
+      assertThat(seen.committed()).isEqualTo("admin-set@player.example");
+    });
+    assertThat(changes.passwords).isEmpty();
+  }
+
+  // REQ-AUTH-045
+  @Test
+  @DisplayName("Проверка пароля проектом: верный проходит, неверный — credentials-rejected и счёт неудач, общий со сменой пароля")
+  void projectConfirmsPassword() throws Exception {
+    registered("confirm@player.example");
+    UUID id = accounts.findByEmail("confirm@player.example").orElseThrow().id();
+    accounts.confirmPassword(id, PASSWORD);
+    assertThatThrownBy(() -> accounts.confirmPassword(id, "wrong password here"))
+      .isInstanceOfSatisfying(AuthRefused.class, refused -> assertThat(refused.code()).isEqualTo(AuthRefused.CREDENTIALS));
+    assertThatThrownBy(() -> accounts.confirmPassword(id, null)).isInstanceOf(AuthRefused.class);
+    assertThatThrownBy(() -> accounts.confirmPassword(UUID.randomUUID(), PASSWORD)).isInstanceOf(AuthRefused.class);
+    accounts.confirmPassword(id, PASSWORD);
+
+    for (int attempt = 0; attempt < 10; attempt++) {
+      assertThatThrownBy(() -> accounts.confirmPassword(id, "wrong password here")).isInstanceOf(AuthRefused.class);
+    }
+    assertThatThrownBy(() -> accounts.confirmPassword(id, PASSWORD)).as("верный пароль упирается в предел").isInstanceOf(RateLimited.class);
+    Browser browser = new Browser();
+    browser.post("/api/auth/login", login("confirm@player.example", PASSWORD)).andExpect(status().isOk());
+    browser.post("/api/auth/password", "{\"current\":\"" + PASSWORD + "\",\"password\":\"brand new password\"}")
+      .andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("rate-limited"));
+  }
+
   record Letter(String email, URI link, Locale locale, boolean committed) {
   }
 
@@ -844,6 +952,50 @@ class AuthFlowTest {
     }
   }
 
+  record Change<E>(E event, String committed) {
+  }
+
+  static final class Changes {
+
+    final List<Change<PasswordChanged>> passwords = new CopyOnWriteArrayList<>();
+    final List<Change<EmailChanged>> emails = new CopyOnWriteArrayList<>();
+    private final DataSource source;
+    private final org.springframework.security.crypto.password.PasswordEncoder encoder;
+
+    Changes(DataSource source, org.springframework.security.crypto.password.PasswordEncoder encoder) {
+      this.source = source;
+      this.encoder = encoder;
+    }
+
+    // REQ-AUTH-044
+    @EventListener
+    void on(PasswordChanged event) {
+      String hash = column("password_hash", event.account());
+      String committed = List.of("own new password", "reset new password", "admin new password").stream()
+        .filter(candidate -> encoder.matches(candidate, hash)).findFirst().orElse(null);
+      passwords.add(new Change<>(event, committed));
+    }
+
+    // REQ-AUTH-044
+    @EventListener
+    void on(EmailChanged event) {
+      emails.add(new Change<>(event, column("email", event.account())));
+    }
+
+    // REQ-AUTH-044
+    private String column(String name, UUID id) {
+      try (var connection = source.getConnection();
+        var query = connection.prepareStatement("SELECT " + name + " FROM platform_account WHERE id = ?")) {
+        query.setObject(1, id);
+        try (var rows = query.executeQuery()) {
+          return rows.next() ? rows.getString(1) : null;
+        }
+      } catch (java.sql.SQLException failure) {
+        throw new IllegalStateException(failure);
+      }
+    }
+  }
+
   @Configuration(proxyBeanMethods = false)
   @EnableAutoConfiguration
   static class Service {
@@ -861,6 +1013,11 @@ class AuthFlowTest {
     @Bean
     Verified verified(DataSource source) {
       return new Verified(source);
+    }
+
+    @Bean
+    Changes changes(DataSource source, org.springframework.security.crypto.password.PasswordEncoder encoder) {
+      return new Changes(source, encoder);
     }
 
     @Bean

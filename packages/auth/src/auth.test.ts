@@ -119,6 +119,37 @@ describe('состояние сессии', () => {
     expect(session.account()?.email).toBe('player@site.example');
   });
 
+  // REQ-AUTH-042, REQ-AUTH-043
+  it('вход со вторым шагом: пароль отклоняется кодом second-factor-required, код завершает вход', async () => {
+    const { http, session } = setUp();
+    await start(http, null);
+    const pending = session.login('admin@site.example', 'long password');
+    await flushes();
+    http.expectOne('/api/auth/login').flush({ code: 'second-factor-required' }, { status: 401, statusText: 'Unauthorized' });
+    const failure = await pending.catch((reason: unknown) => reason);
+    expect(authFailureCode(failure)).toBe('second-factor-required');
+    expect(session.account()).toBeNull();
+    http.expectNone('/api/auth/csrf');
+
+    const rejected = session.secondFactor('000000');
+    await flushes();
+    http.expectOne('/api/auth/login/second-factor').flush({ code: 'second-factor-rejected' }, { status: 401, statusText: 'Unauthorized' });
+    expect(authFailureCode(await rejected.catch((reason: unknown) => reason))).toBe('second-factor-rejected');
+    expect(session.account()).toBeNull();
+
+    const signed = session.secondFactor('123456');
+    await flushes();
+    const second = http.expectOne('/api/auth/login/second-factor');
+    expect(second.request.method).toBe('POST');
+    expect(second.request.body).toEqual({ code: '123456' });
+    second.flush(ME);
+    await flushes();
+    http.expectOne('/api/auth/csrf').flush({ token: 'u' });
+    await expect(signed).resolves.toEqual(ME);
+    expect(session.account()?.id).toBe(ME.id);
+    http.verify();
+  });
+
   it('регистрация, подтверждение и сброс уходят на точки ядра с телом, которое оно ждёт', async () => {
     const { http, session } = setUp();
     await start(http, null);

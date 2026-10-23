@@ -3,9 +3,13 @@ package io.github.apocarteres.platform.auth.internal;
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.AuthLetters;
+import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.EmailChange;
+import io.github.apocarteres.platform.auth.EmailChanged;
+import io.github.apocarteres.platform.auth.PasswordChanged;
 import io.github.apocarteres.platform.auth.Removal;
 import io.github.apocarteres.platform.auth.Purged;
+import io.github.apocarteres.platform.ratelimit.RateLimiter;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -16,6 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +28,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-// REQ-AUTH-009, REQ-AUTH-013, REQ-AUTH-023, REQ-AUTH-024
+// REQ-AUTH-009, REQ-AUTH-013, REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-044, REQ-AUTH-045
 final class AccountsService implements Accounts {
 
   private static final Log LOG = LogFactory.getLog(AccountsService.class);
@@ -38,10 +43,15 @@ final class AccountsService implements Accounts {
   private final AuthSettings settings;
   private final Clock clock;
   private final ExpiredKeys expiredKeys;
+  private final ApplicationEventPublisher events;
+  private final RateLimiter limiter;
 
   AccountsService(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    TransactionTemplate transactions, AuthLetters letters, AuthSettings settings, Clock clock, ExpiredKeys expiredKeys) {
+    TransactionTemplate transactions, AuthLetters letters, AuthSettings settings, Clock clock, ExpiredKeys expiredKeys,
+    ApplicationEventPublisher events, RateLimiter limiter) {
     this.expiredKeys = expiredKeys;
+    this.events = events;
+    this.limiter = limiter;
     this.accounts = accounts;
     this.tokens = tokens;
     this.sessions = sessions;
@@ -62,8 +72,26 @@ final class AccountsService implements Accounts {
   // REQ-AUTH-009
   @Override
   public void setPassword(UUID id, String password) {
-    accounts.password(id, passwords.encode(Credentials.password(password, settings)));
+    String hash = passwords.encode(Credentials.password(password, settings));
+    transactions.executeWithoutResult(status -> {
+      if (accounts.password(id, hash)) {
+        // REQ-AUTH-044
+        afterCommit(() -> events.publishEvent(new PasswordChanged(id)));
+      }
+    });
     sessions.terminate(id);
+  }
+
+  // REQ-AUTH-045
+  @Override
+  public void confirmPassword(UUID account, String password) {
+    limiter.require(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.toString());
+    AccountStore.Stored stored = accounts.find(account).orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Учётной записи нет"));
+    if (password == null || !passwords.matches(password, stored.passwordHash())) {
+      limiter.count(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.toString());
+      throw new AuthRefused(AuthRefused.CREDENTIALS, "Пароль не подошёл");
+    }
+    limiter.clear(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.toString());
   }
 
   // REQ-AUTH-009
@@ -114,6 +142,8 @@ final class AccountsService implements Accounts {
         }
         accounts.email(id, email);
         afterCommit(() -> letters.emailChanged(previous, locale));
+        // REQ-AUTH-044
+        afterCommit(() -> events.publishEvent(new EmailChanged(id, previous, email)));
         return EmailChange.CHANGED;
       });
     } catch (DuplicateKeyException raced) {

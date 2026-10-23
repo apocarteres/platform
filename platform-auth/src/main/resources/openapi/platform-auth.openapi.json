@@ -260,9 +260,10 @@
             }
           },
           "401": {
-            "description": "Почта или пароль не подошли",
+            "description": "Почта или пароль не подошли либо вход требует второго шага (REQ-AUTH-042)",
             "x-codes": [
-              "credentials-rejected"
+              "credentials-rejected",
+              "second-factor-required"
             ],
             "content": {
               "application/problem+json": {
@@ -321,6 +322,89 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login/second-factor": {
+      "post": {
+        "summary": "Второй шаг входа: код подтверждения после пароля, когда его требует порт проекта",
+        "x-clause": "REQ-AUTH-043",
+        "responses": {
+          "200": {
+            "description": "Успех: вход выполнен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Второй шаг не начат или просрочен либо код не подошёл",
+            "x-codes": [
+              "second-factor-expired",
+              "second-factor-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Запись заблокирована, точки закрыты либо нет токена CSRF",
+            "x-codes": [
+              "account-blocked",
+              "entry-closed",
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: действие отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SecondFactorRequest"
               }
             }
           }
@@ -1385,6 +1469,18 @@
         },
         "required": [
           "account"
+        ]
+      },
+      "SecondFactorRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
         ]
       }
     },

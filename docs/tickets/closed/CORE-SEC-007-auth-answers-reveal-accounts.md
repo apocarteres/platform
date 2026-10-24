@@ -1,11 +1,11 @@
 ---
 id: CORE-SEC-007
 type: ticket
-status: backlog
+status: done
 scope: auth, security, api, client
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-17-0-0
 related: REQ-AUTH
 ---
 

@@ -1,11 +1,11 @@
 ---
 id: CORE-SEC-008
 type: ticket
-status: backlog
+status: done
 scope: support, security
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-17-0-0
 related: REQ-SUPPORT
 ---
 

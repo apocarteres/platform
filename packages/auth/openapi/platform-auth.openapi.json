@@ -159,16 +159,17 @@
     },
     "/api/auth/resend": {
       "post": {
-        "summary": "Повторное письмо подтверждения",
+        "summary": "Повторное письмо подтверждения. Ответ не раскрывает, есть ли почта",
         "x-clause": "REQ-AUTH-004",
         "responses": {
           "202": {
             "description": "Успех"
           },
           "400": {
-            "description": "Почта не разобрана",
+            "description": "Запрос отвергнут",
             "x-codes": [
-              "email-rejected"
+              "email-rejected",
+              "human-check-failed"
             ],
             "content": {
               "application/problem+json": {

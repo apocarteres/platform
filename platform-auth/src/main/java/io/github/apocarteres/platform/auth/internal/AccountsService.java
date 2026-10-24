@@ -2,7 +2,6 @@ package io.github.apocarteres.platform.auth.internal;
 
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
-import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.EmailChange;
 import io.github.apocarteres.platform.auth.EmailChanged;
@@ -39,7 +38,7 @@ final class AccountsService implements Accounts {
   private final AccountCreation creation;
   private final PasswordEncoder passwords;
   private final TransactionTemplate transactions;
-  private final AuthLetters letters;
+  private final LetterQueue letters;
   private final AuthSettings settings;
   private final Clock clock;
   private final ExpiredKeys expiredKeys;
@@ -47,7 +46,7 @@ final class AccountsService implements Accounts {
   private final RateLimiter limiter;
 
   AccountsService(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    TransactionTemplate transactions, AuthLetters letters, AuthSettings settings, Clock clock, ExpiredKeys expiredKeys,
+    TransactionTemplate transactions, LetterQueue letters, AuthSettings settings, Clock clock, ExpiredKeys expiredKeys,
     ApplicationEventPublisher events, RateLimiter limiter) {
     this.expiredKeys = expiredKeys;
     this.events = events;

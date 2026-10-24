@@ -8,6 +8,7 @@ import io.github.apocarteres.platform.auth.EntryAccess;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-042, REQ-AUTH-043
+// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-042, REQ-AUTH-043, REQ-AUTH-046
 @RestController
 @RequestMapping("/api/auth")
 class AuthController {
@@ -83,13 +84,16 @@ class AuthController {
   private final SecurityContextRepository contexts;
   private final EntryAccess entry;
   private final AuthSettings settings;
+  private final Clock clock;
 
-  AuthController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry, AuthSettings settings) {
+  AuthController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry, AuthSettings settings,
+    Clock clock) {
     this.auth = auth;
     this.accounts = accounts;
     this.contexts = contexts;
     this.entry = entry;
     this.settings = settings;
+    this.clock = clock;
   }
 
   // REQ-AUTH-016
@@ -116,7 +120,7 @@ class AuthController {
   @PostMapping("/resend")
   ResponseEntity<Void> resend(@RequestBody Email body, HttpServletRequest request) {
     open(request);
-    auth.resend(body.email(), request.getLocale());
+    auth.resend(body.email(), body.human(), request.getRemoteAddr(), request.getLocale());
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 
@@ -130,6 +134,7 @@ class AuthController {
     if (pending.isPresent()) {
       HttpSession session = request.getSession(true);
       request.changeSessionId();
+      signedIn(session);
       session.setAttribute(SECOND_FACTOR, pending.get());
       SecurityContextHolder.clearContext();
       contexts.saveContext(SecurityContextHolder.createEmptyContext(), request, response);
@@ -166,12 +171,18 @@ class AuthController {
     context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(account.id().toString(), null, authorities));
     HttpSession session = request.getSession(true);
     request.changeSessionId();
+    signedIn(session);
     // REQ-AUTH-042
     if (session.getAttribute(SECOND_FACTOR) != null) {
       session.removeAttribute(SECOND_FACTOR);
     }
     SecurityContextHolder.setContext(context);
     contexts.saveContext(context, request, response);
+  }
+
+  // REQ-AUTH-046
+  private void signedIn(HttpSession session) {
+    session.setAttribute(SessionLifetimeFilter.SIGNED_IN_AT, clock.millis());
   }
 
   @PostMapping("/logout")

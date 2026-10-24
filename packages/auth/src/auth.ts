@@ -95,8 +95,9 @@ export class AuthSession {
     await firstValueFrom(this.http.post(`${this.base}/verify`, body));
   }
 
-  async resend(email: string): Promise<void> {
-    const body: EmailRequest = { email };
+  // REQ-AUTH-004
+  async resend(email: string, human?: string): Promise<void> {
+    const body: EmailRequest = { email, human };
     await firstValueFrom(this.http.post(`${this.base}/resend`, body));
   }
 

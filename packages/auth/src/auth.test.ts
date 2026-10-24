@@ -157,7 +157,7 @@ describe('состояние сессии', () => {
       [session.register('new@site.example', 'long password', { name: 'Игрок' }, 'h'), '/api/auth/register',
         { email: 'new@site.example', password: 'long password', human: 'h', profile: { name: 'Игрок' } }],
       [session.verify('tok'), '/api/auth/verify', { token: 'tok' }],
-      [session.resend('new@site.example'), '/api/auth/resend', { email: 'new@site.example' }],
+      [session.resend('new@site.example', 'h'), '/api/auth/resend', { email: 'new@site.example', human: 'h' }],
       [session.requestReset('new@site.example', 'h'), '/api/auth/password-reset/request', { email: 'new@site.example', human: 'h' }],
       [session.confirmReset('tok', 'another password'), '/api/auth/password-reset/confirm', { token: 'tok', password: 'another password' }],
       [session.changePassword('old password', 'new password'), '/api/auth/password', { current: 'old password', password: 'new password' }],

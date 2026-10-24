@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
-// REQ-AUTH-002, REQ-AUTH-004, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-023
+// REQ-AUTH-002, REQ-AUTH-004, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008, REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-023, REQ-AUTH-046
 record AuthSettings(
   Set<String> roles,
   Set<String> defaultRoles,
@@ -27,6 +27,7 @@ record AuthSettings(
   Duration emailChangeTtl,
   Duration resendInterval,
   Duration sessionTimeout,
+  Duration sessionLifetime,
   boolean cookieSecure,
   String sessionNamespace,
   Optional<Admin> admin
@@ -76,6 +77,8 @@ record AuthSettings(
       duration(binder, "tokens.email-change", Duration.ofHours(24)),
       duration(binder, "tokens.resend-interval", Duration.ofMinutes(1)),
       duration(binder, "session.timeout", Duration.ofHours(8)),
+      // REQ-AUTH-046
+      duration(binder, "session.absolute-timeout", Duration.ofDays(7)),
       binder.bind(PREFIX + "session.cookie-secure", Boolean.class).orElse(true),
       binder.bind(PREFIX + "session.namespace", String.class).orElse("platform:session"),
       admin(binder, roles)

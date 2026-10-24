@@ -21,6 +21,7 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
@@ -43,6 +44,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
@@ -114,10 +116,17 @@ public class AuthAutoConfiguration {
     return new AccountCreation(accounts, passwords, new ProfileReader(hook, validator), settings);
   }
 
+  // REQ-AUTH-003, REQ-AUTH-010
+  @Bean
+  @ConditionalOnMissingBean
+  LetterQueue letterQueue(AuthLetters letters) {
+    return LetterQueue.of(letters);
+  }
+
   // REQ-AUTH-003, REQ-AUTH-010, REQ-AUTH-017, REQ-AUTH-041, REQ-AUTH-044
   @Bean
   AuthService authService(AccountStore accounts, TokenStore tokens, Sessions sessions, PasswordEncoder passwords,
-    RateLimiter limiter, HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, AuthLetters letters,
+    RateLimiter limiter, HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, LetterQueue letters,
     PlatformTransactionManager transactions, AuthSettings settings, Clock clock, ObjectProvider<SecondFactor> factor) {
     return new AuthService(accounts, tokens, sessions, passwords, limiter, human, creation, events, letters,
       new TransactionTemplate(transactions), settings, clock, factor.getIfAvailable());
@@ -126,7 +135,7 @@ public class AuthAutoConfiguration {
   // REQ-AUTH-044, REQ-AUTH-045
   @Bean
   Accounts accounts(AccountStore accounts, TokenStore tokens, Sessions sessions, AccountCreation creation, PasswordEncoder passwords,
-    PlatformTransactionManager transactions, AuthLetters letters, AuthSettings settings, Clock clock, ObjectProvider<AccessKeyStore> keys,
+    PlatformTransactionManager transactions, LetterQueue letters, AuthSettings settings, Clock clock, ObjectProvider<AccessKeyStore> keys,
     ApplicationEventPublisher events, RateLimiter limiter) {
     AccessKeyStore store = keys.getIfAvailable();
     return new AccountsService(accounts, tokens, sessions, creation, passwords, new TransactionTemplate(transactions), letters, settings,
@@ -140,8 +149,8 @@ public class AuthAutoConfiguration {
 
   @Bean
   AuthController authController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry,
-    AuthSettings settings) {
-    return new AuthController(auth, accounts, contexts, entry, settings);
+    AuthSettings settings, Clock clock) {
+    return new AuthController(auth, accounts, contexts, entry, settings, clock);
   }
 
   // REQ-AUTH-009
@@ -174,10 +183,12 @@ public class AuthAutoConfiguration {
   SecurityFilterChain platformApiSecurity(HttpSecurity http, ApiAccess access, ObjectProvider<ModuleApiAccess> modules,
     ErrorMessages messages, SecurityContextRepository contexts, ObjectProvider<AccessKeyGuard> keys,
     @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, HstsSettings hsts,
-    ExternalIdentityGuard identities) throws Exception {
+    ExternalIdentityGuard identities, Sessions sessions, AuthSettings settings, Clock clock) throws Exception {
     ProblemResponses problems = new ProblemResponses(messages);
     AccessKeyGuard guard = keys.getIfAvailable();
     ExternalIdentityGuard external = identities.active() ? identities : null;
+    // REQ-AUTH-046
+    http.addFilterBefore(new SessionLifetimeFilter(sessions, settings.sessionLifetime(), clock), SecurityContextHolderFilter.class);
     // REQ-AUTH-038
     if (external != null) {
       http.addFilterBefore(new ExternalIdentityFilter(external, resolver), CsrfFilter.class);

@@ -556,6 +556,8 @@ class SupportFlowTest {
     clock.advance(Duration.ofDays(2));
     assertThat(retention.purgeExpired()).isEqualTo(new Expired(1, 1, 1));
     assertThat(retention.purgeExpired()).isEqualTo(new Expired(0, 0, 0));
+    // REQ-AUTH-046
+    operator = new Tab().signIn("operator@site.example");
     JsonNode view = body(operator.get("/api/support/operator/requests/" + closed));
     assertThat(view.get("journal").isNull()).isTrue();
     assertThat(view.get("snapshot").isNull()).isTrue();

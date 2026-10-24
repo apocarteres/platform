@@ -1,7 +1,6 @@
 package io.github.apocarteres.platform.auth.internal;
 
 import io.github.apocarteres.platform.auth.Account;
-import io.github.apocarteres.platform.auth.AuthLetters;
 import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.EmailChanged;
 import io.github.apocarteres.platform.auth.HumanCheck;
@@ -37,7 +36,7 @@ final class AuthService {
   private final HumanCheck human;
   private final AccountCreation creation;
   private final ApplicationEventPublisher events;
-  private final AuthLetters letters;
+  private final LetterQueue letters;
   private final TransactionTemplate transactions;
   private final AuthSettings settings;
   private final Clock clock;
@@ -45,7 +44,7 @@ final class AuthService {
   private final String absentHash;
 
   AuthService(AccountStore accounts, TokenStore tokens, Sessions sessions, PasswordEncoder passwords, RateLimiter limiter,
-    HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, AuthLetters letters,
+    HumanCheck human, AccountCreation creation, ApplicationEventPublisher events, LetterQueue letters,
     TransactionTemplate transactions, AuthSettings settings, Clock clock, SecondFactor factor) {
     this.accounts = accounts;
     this.tokens = tokens;
@@ -74,6 +73,8 @@ final class AuthService {
     Object parsed = creation.profile(profile);
     transactions.executeWithoutResult(status -> {
       if (accounts.findByEmail(email).isPresent()) {
+        // REQ-AUTH-003
+        passwords.encode(password);
         return;
       }
       Account account = creation.create(email, password, settings.defaultRoles(), false, parsed);
@@ -98,7 +99,9 @@ final class AuthService {
   }
 
   // REQ-AUTH-004
-  void resend(String declaredEmail, Locale locale) {
+  void resend(String declaredEmail, String answer, String address, Locale locale) {
+    limiter.consume(AuthLimits.RESEND_BY_ADDRESS, address);
+    requireHuman(answer, "resend", address);
     String email = Credentials.email(declaredEmail);
     limiter.consume(AuthLimits.RESEND_BY_EMAIL, email);
     transactions.executeWithoutResult(status -> {

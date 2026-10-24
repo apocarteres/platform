@@ -68,7 +68,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
-// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035, REQ-AUTH-036, REQ-AUTH-041, REQ-AUTH-044, REQ-AUTH-045
+// REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035, REQ-AUTH-036, REQ-AUTH-041, REQ-AUTH-044, REQ-AUTH-045,
+// REQ-AUTH-046
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -281,7 +282,7 @@ class AuthFlowTest {
       .andExpect(status().isAccepted());
     other.post("/api/auth/password-reset/request", "{\"email\":\"nobody@player.example\",\"human\":\"human\"}")
       .andExpect(status().isAccepted());
-    other.post("/api/auth/resend", "{\"email\":\"nobody@player.example\"}").andExpect(status().isAccepted());
+    other.post("/api/auth/resend", "{\"email\":\"nobody@player.example\",\"human\":\"human\"}").andExpect(status().isAccepted());
     assertThat(letters.sent).hasSize(1);
     other.post("/api/auth/login", login("nobody@player.example", PASSWORD))
       .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("credentials-rejected"));
@@ -295,13 +296,43 @@ class AuthFlowTest {
     Browser browser = new Browser();
     browser.post("/api/auth/register", "{\"email\":\"again@player.example\",\"password\":\"" + PASSWORD + "\",\"human\":\"human\"}");
     String first = token(0);
-    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\"}").andExpect(status().isAccepted());
+    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\",\"human\":\"human\"}").andExpect(status().isAccepted());
     assertThat(letters.sent).as("раньше минуты второго письма нет").hasSize(1);
     clock.advance(Duration.ofMinutes(2));
-    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\"}").andExpect(status().isAccepted());
+    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\",\"human\":\"human\"}").andExpect(status().isAccepted());
     assertThat(letters.sent).hasSize(2);
     browser.post("/api/auth/verify", "{\"token\":\"" + first + "\"}").andExpect(jsonPath("$.code").value("token-rejected"));
     browser.post("/api/auth/verify", "{\"token\":\"" + token(1) + "\"}").andExpect(status().isNoContent());
+  }
+
+  // REQ-AUTH-004
+  @Test
+  @DisplayName("Повторное письмо требует проверки «человек ли это» и ограничено по адресу")
+  void resendIsCheckedAndLimitedByAddress() throws Exception {
+    Browser browser = new Browser();
+    browser.post("/api/auth/resend", "{\"email\":\"again@player.example\"}")
+      .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("human-check-failed"));
+    for (int attempt = 1; attempt < 30; attempt++) {
+      browser.post("/api/auth/resend", "{\"email\":\"many" + attempt + "@player.example\",\"human\":\"human\"}")
+        .andExpect(status().isAccepted());
+    }
+    browser.post("/api/auth/resend", "{\"email\":\"last@player.example\",\"human\":\"human\"}")
+      .andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.code").value("rate-limited"));
+  }
+
+  // REQ-AUTH-046
+  @Test
+  @DisplayName("Сессия живёт не дольше предельного срока от входа, даже если ею пользуются")
+  void sessionEndsAfterItsLifetime() throws Exception {
+    Browser browser = registered("lifetime@player.example");
+    browser.post("/api/auth/login", login("lifetime@player.example", PASSWORD)).andExpect(status().isOk());
+    clock.advance(Duration.ofDays(7).minusMinutes(1));
+    browser.get("/api/auth/me").andExpect(status().isOk());
+    clock.advance(Duration.ofMinutes(1));
+    browser.get("/api/things").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("authentication-required"));
+    browser.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.account").doesNotExist());
+    browser.post("/api/auth/login", login("lifetime@player.example", PASSWORD)).andExpect(status().isOk());
+    browser.get("/api/things").andExpect(status().isOk());
   }
 
   @Test
@@ -1003,6 +1034,12 @@ class AuthFlowTest {
     @Bean
     Letters letters(DataSource source) {
       return new Letters(source);
+    }
+
+    // REQ-AUTH-010
+    @Bean
+    LetterQueue letterQueue(Letters letters) {
+      return new LetterQueue(letters, Runnable::run);
     }
 
     @Bean

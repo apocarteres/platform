@@ -10,6 +10,7 @@ final class AuthLimits {
   static final RateLimit LOGIN_FAILURES_BY_EMAIL = new RateLimit("auth-login-failures", Duration.ofMinutes(15), 10);
   static final RateLimit REGISTER_BY_ADDRESS = new RateLimit("auth-register-address", Duration.ofHours(1), 10);
   static final RateLimit RESEND_BY_EMAIL = new RateLimit("auth-resend-email", Duration.ofHours(1), 3);
+  static final RateLimit RESEND_BY_ADDRESS = new RateLimit("auth-resend-address", Duration.ofHours(1), 30);
   static final RateLimit RESET_BY_ADDRESS = new RateLimit("auth-reset-address", Duration.ofHours(1), 30);
   static final RateLimit RESET_BY_EMAIL = new RateLimit("auth-reset-email", Duration.ofHours(1), 3);
   // REQ-AUTH-023

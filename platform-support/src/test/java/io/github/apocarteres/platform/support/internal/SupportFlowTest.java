@@ -137,6 +137,8 @@ class SupportFlowTest {
   private DataSource source;
   @Autowired
   private SupportRetention retention;
+  @Autowired
+  private RequestStore requests;
 
   private final JsonMapper json = JsonMapper.builder().build();
   private MockMvc mvc;
@@ -243,6 +245,20 @@ class SupportFlowTest {
 
   private String submitted(Tab browser, String request, byte[]... files) throws Exception {
     return body(browser.submit(request, files).andExpect(status().isCreated())).get("id").asString();
+  }
+
+  // REQ-SUPPORT-001
+  @Test
+  @DisplayName("Номер обращения — случайные восемь цифр, не порядковые; занятый номер не записывается повторно")
+  void numbersAreRandom() throws Exception {
+    account("player@site.example", "USER");
+    Tab player = new Tab().signIn("player@site.example");
+    long first = body(player.submit(request("Первое")).andExpect(status().isCreated())).get("number").asLong();
+    long second = body(player.submit(request("Второе")).andExpect(status().isCreated())).get("number").asLong();
+    assertThat(List.of(first, second)).allSatisfy(number -> assertThat(number).isBetween(10_000_000L, 99_999_999L));
+    assertThat(Math.abs(first - second)).isNotEqualTo(1L);
+    assertThat(requests.insert(UUID.randomUUID(), first, null, "taken@mail.example", "ru", "занятый", "{}", "[]", clock.instant()))
+      .isFalse();
   }
 
   @Test

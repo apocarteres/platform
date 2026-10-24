@@ -40,3 +40,11 @@ databaseChangeLog:
             path: platform-support/005-answer-link.sql
             relativeToChangelogFile: true
             splitStatements: false
+  - changeSet:
+      id: platform-support:006-random-number
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-support/006-random-number.sql
+            relativeToChangelogFile: true
+            splitStatements: false

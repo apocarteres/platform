@@ -1,6 +1,6 @@
 CREATE TABLE platform_support_request (
   id UUID PRIMARY KEY,
-  number BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+  number BIGINT NOT NULL UNIQUE,
   author_account UUID REFERENCES platform_account (id) ON DELETE RESTRICT,
   guest_email VARCHAR(320),
   locale VARCHAR(35) NOT NULL,

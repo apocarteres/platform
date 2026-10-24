@@ -75,6 +75,10 @@ final class SupportService {
   private static final Logger LOG = LoggerFactory.getLogger(SupportService.class);
   private static final Pattern EMAIL = Pattern.compile("[^@\\s]{1,64}@[^@\\s]{1,255}\\.[^@\\s]{1,63}");
   private static final SecureRandom RANDOM = new SecureRandom();
+  // REQ-SUPPORT-001
+  private static final long FIRST_NUMBER = 10_000_000L;
+  private static final long NUMBERS = 90_000_000L;
+  private static final int NUMBER_ATTEMPTS = 10;
   private static final byte[] PNG = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'};
   private static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
 
@@ -127,7 +131,7 @@ final class SupportService {
     UUID id = UUID.randomUUID();
     Instant now = clock.instant();
     long number = Objects.requireNonNull(transactions.execute(status -> {
-      long assigned = requests.insert(id, author.orElse(null), email, locale.toLanguageTag(), message, snapshotJson, journalJson, now);
+      long assigned = number(id, author.orElse(null), email, locale.toLanguageTag(), message, snapshotJson, journalJson, now);
       for (int index = 0; index < attached.size(); index++) {
         Upload upload = attached.get(index);
         UUID file = UUID.randomUUID();
@@ -140,6 +144,18 @@ final class SupportService {
       return assigned;
     }));
     return new Submitted(id, number);
+  }
+
+  // REQ-SUPPORT-001
+  private long number(UUID id, UUID author, String email, String locale, String message, String snapshot, String journal,
+    Instant now) {
+    for (int attempt = 0; attempt < NUMBER_ATTEMPTS; attempt++) {
+      long number = FIRST_NUMBER + RANDOM.nextLong(NUMBERS);
+      if (requests.insert(id, number, author, email, locale, message, snapshot, journal, now)) {
+        return number;
+      }
+    }
+    throw new IllegalStateException("Свободный номер обращения не найден за " + NUMBER_ATTEMPTS + " попыток");
   }
 
   Page mine(UUID author, int page, int size) {

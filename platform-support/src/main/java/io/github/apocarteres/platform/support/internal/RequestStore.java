@@ -48,10 +48,12 @@ final class RequestStore {
     this.sql = sql;
   }
 
-  long insert(UUID id, UUID author, String guestEmail, String locale, String message, String snapshot, String journal,
-    Instant now) {
+  // REQ-SUPPORT-001
+  boolean insert(UUID id, long number, UUID author, String guestEmail, String locale, String message, String snapshot,
+    String journal, Instant now) {
     return jdbc.sql(sql.get("request-insert"))
       .param("id", id)
+      .param("number", number)
       .param("author", author)
       .param("email", guestEmail)
       .param("locale", locale)
@@ -59,8 +61,7 @@ final class RequestStore {
       .param("snapshot", snapshot)
       .param("journal", journal)
       .param("now", StoredInstant.offsetOf(now))
-      .query(Long.class)
-      .single();
+      .update() == 1;
   }
 
   Optional<Stored> find(UUID id) {

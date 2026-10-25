@@ -8,8 +8,8 @@ import { Router } from '@angular/router';
 import type { CanMatchFn, UrlTree } from '@angular/router';
 import { firstValueFrom, tap } from 'rxjs';
 import type {
-  AccessKey, Account, EmailChangeRequest, EmailRequest, IssuedKey, KeyRequest, LoginRequest, PasswordChangeRequest, Policy, RegisterRequest,
-  ResetRequest, SecondFactorRequest, Session, TokenRequest,
+  AccessKey, Account, EmailChangeRequest, EmailRequest, IssuedKey, KeyRequest, LoginRequest, OpenedSession, PasswordChangeRequest, Policy,
+  RegisterRequest, ResetRequest, SecondFactorRequest, Session, TokenRequest,
 } from './contract';
 
 // REQ-AUTH-015, REQ-AUTH-020
@@ -149,6 +149,21 @@ export class AuthSession {
   // REQ-AUTH-029
   async revokeKeys(): Promise<void> {
     await firstValueFrom(this.http.delete(`${this.base}/keys`));
+  }
+
+  // REQ-AUTH-047
+  sessions(): Promise<readonly OpenedSession[]> {
+    return firstValueFrom(this.http.get<readonly OpenedSession[]>(`${this.base}/sessions`));
+  }
+
+  // REQ-AUTH-047
+  async endSession(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.base}/sessions/${encodeURIComponent(id)}`));
+  }
+
+  // REQ-AUTH-047
+  async endOtherSessions(): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.base}/sessions`));
   }
 
   // REQ-AUTH-018

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.jayway.jsonpath.JsonPath;
 import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.ApiAccess;
@@ -69,7 +70,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 // REQ-AUTH-001, REQ-AUTH-002, REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-007, REQ-AUTH-008,
 // REQ-AUTH-009, REQ-AUTH-010, REQ-AUTH-012, REQ-AUTH-013, REQ-AUTH-014, REQ-AUTH-016, REQ-AUTH-017, REQ-AUTH-018, REQ-AUTH-019, REQ-AUTH-022,
 // REQ-AUTH-023, REQ-AUTH-024, REQ-AUTH-025, REQ-AUTH-028, REQ-AUTH-035, REQ-AUTH-036, REQ-AUTH-041, REQ-AUTH-044, REQ-AUTH-045,
-// REQ-AUTH-046
+// REQ-AUTH-046, REQ-AUTH-047
 @SpringBootTest(
   classes = AuthFlowTest.Service.class,
   properties = {
@@ -333,6 +334,42 @@ class AuthFlowTest {
     browser.get("/api/auth/session").andExpect(status().isOk()).andExpect(jsonPath("$.account").doesNotExist());
     browser.post("/api/auth/login", login("lifetime@player.example", PASSWORD)).andExpect(status().isOk());
     browser.get("/api/things").andExpect(status().isOk());
+  }
+
+  // REQ-AUTH-047
+  @Test
+  @DisplayName("Человек видит свои сессии и завершает одну или все прочие; отпечаток вместо значения, чужую не завершить")
+  void ownSessionsAreListedAndEnded() throws Exception {
+    Browser here = registered("sessions@player.example");
+    here.post("/api/auth/login", login("sessions@player.example", PASSWORD)).andExpect(status().isOk());
+    Browser there = new Browser();
+    there.post("/api/auth/login", login("sessions@player.example", PASSWORD)).andExpect(status().isOk());
+    Browser third = new Browser();
+    third.post("/api/auth/login", login("sessions@player.example", PASSWORD)).andExpect(status().isOk());
+    Browser stranger = registered("stranger@player.example");
+    stranger.post("/api/auth/login", login("stranger@player.example", PASSWORD)).andExpect(status().isOk());
+
+    String listed = here.get("/api/auth/sessions").andExpect(status().isOk())
+      .andExpect(jsonPath("$.length()").value(3))
+      .andExpect(jsonPath("$[?(@.current == true)].address").value("198.51.100.7"))
+      .andReturn().getResponse().getContentAsString();
+    assertThat(listed).doesNotContain(there.session()).doesNotContain(here.session());
+    String thereId = JsonPath.<List<String>>read(listed, "$[?(@.current == false)].id").get(0);
+
+    stranger.send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/auth/sessions/" + thereId)
+      .header("X-XSRF-TOKEN", stranger.csrf)).andExpect(status().isNoContent());
+    here.get("/api/auth/sessions").andExpect(jsonPath("$.length()").value(3));
+
+    here.send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/auth/sessions/" + thereId)
+      .header("X-XSRF-TOKEN", here.csrf)).andExpect(status().isNoContent());
+    here.get("/api/auth/sessions").andExpect(jsonPath("$.length()").value(2));
+
+    here.send(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/auth/sessions")
+      .header("X-XSRF-TOKEN", here.csrf)).andExpect(status().isNoContent());
+    here.get("/api/auth/sessions").andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].current").value(true));
+    here.get("/api/things").andExpect(status().isOk());
+    stranger.get("/api/things").andExpect(status().isOk());
+    new Browser().get("/api/auth/sessions").andExpect(status().isUnauthorized());
   }
 
   @Test

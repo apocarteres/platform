@@ -222,6 +222,34 @@ describe('ключи доступа', () => {
   });
 });
 
+// REQ-AUTH-047
+describe('сессии', () => {
+  it('список, завершение одной и всех прочих уходят на точки ядра', async () => {
+    const { http, session } = setUp();
+    await start(http, ME);
+    const opened = { id: 's/1', current: false, signedInAt: '2026-10-25T10:00:00Z', lastSeenAt: '2026-10-25T11:00:00Z',
+      address: '198.51.100.7', agent: 'Safari' };
+
+    const listed = session.sessions();
+    const list = http.expectOne('/api/auth/sessions');
+    expect(list.request.method).toBe('GET');
+    list.flush([opened]);
+    await expect(listed).resolves.toEqual([opened]);
+
+    const ended = session.endSession('s/1');
+    const end = http.expectOne('/api/auth/sessions/s%2F1');
+    expect(end.request.method).toBe('DELETE');
+    end.flush(null, { status: 204, statusText: 'No Content' });
+    await ended;
+
+    const others = session.endOtherSessions();
+    const endOthers = http.expectOne('/api/auth/sessions');
+    expect(endOthers.request.method).toBe('DELETE');
+    endOthers.flush(null, { status: 204, statusText: 'No Content' });
+    await others;
+  });
+});
+
 // REQ-AUTH-018
 describe('правило пароля', () => {
   it('читается открытой точкой ядра', async () => {

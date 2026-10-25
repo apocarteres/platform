@@ -91,3 +91,12 @@ export interface Session {
 export interface SecondFactorRequest {
   readonly code: string;
 }
+
+export interface OpenedSession {
+  readonly id: string;
+  readonly current: boolean;
+  readonly signedInAt: string;
+  readonly lastSeenAt: string;
+  readonly address: string | null;
+  readonly agent: string | null;
+}

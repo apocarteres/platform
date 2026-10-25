@@ -1152,6 +1152,124 @@
           }
         }
       }
+    },
+    "/api/auth/sessions": {
+      "get": {
+        "summary": "Свои открытые сессии",
+        "x-clause": "REQ-AUTH-047",
+        "description": "Вход, последнее обращение, адрес и браузер при входе; признак текущей. Идентификатор — отпечаток, а не значение сессии: по нему сессию можно только завершить.",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenedSession"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Завершить все свои сессии, кроме текущей",
+        "x-clause": "REQ-AUTH-047",
+        "responses": {
+          "204": {
+            "description": "Завершены"
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sessions/{id}": {
+      "delete": {
+        "summary": "Завершить одну свою сессию",
+        "x-clause": "REQ-AUTH-047",
+        "description": "Чужой или неизвестный идентификатор ничего не завершает и отвечает так же.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Завершена"
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1482,6 +1600,46 @@
         },
         "required": [
           "code"
+        ]
+      },
+      "OpenedSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "signedInAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "current",
+          "signedInAt",
+          "lastSeenAt",
+          "address",
+          "agent"
         ]
       }
     },

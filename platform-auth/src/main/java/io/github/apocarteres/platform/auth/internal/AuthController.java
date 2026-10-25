@@ -28,13 +28,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-042, REQ-AUTH-043, REQ-AUTH-046
+// REQ-AUTH-003, REQ-AUTH-004, REQ-AUTH-005, REQ-AUTH-006, REQ-AUTH-008, REQ-AUTH-042, REQ-AUTH-043, REQ-AUTH-046, REQ-AUTH-047
 @RestController
 @RequestMapping("/api/auth")
 class AuthController {
 
   // REQ-AUTH-042
   static final String SECOND_FACTOR = "platform.auth.second-factor";
+  // REQ-AUTH-047
+  private static final int AGENT_LENGTH = 256;
 
   record Registration(String email, String password, String human, Map<String, Object> profile) {
   }
@@ -172,12 +174,24 @@ class AuthController {
     HttpSession session = request.getSession(true);
     request.changeSessionId();
     signedIn(session);
+    // REQ-AUTH-047
+    session.setAttribute(Sessions.SIGNED_IN_ADDRESS, request.getRemoteAddr());
+    session.setAttribute(Sessions.SIGNED_IN_AGENT, agent(request));
     // REQ-AUTH-042
     if (session.getAttribute(SECOND_FACTOR) != null) {
       session.removeAttribute(SECOND_FACTOR);
     }
     SecurityContextHolder.setContext(context);
     contexts.saveContext(context, request, response);
+  }
+
+  // REQ-AUTH-047
+  private static String agent(HttpServletRequest request) {
+    String agent = request.getHeader("User-Agent");
+    if (agent == null) {
+      return null;
+    }
+    return agent.length() > AGENT_LENGTH ? agent.substring(0, AGENT_LENGTH) : agent;
   }
 
   // REQ-AUTH-046

@@ -153,6 +153,12 @@ public class AuthAutoConfiguration {
     return new AuthController(auth, accounts, contexts, entry, settings, clock);
   }
 
+  // REQ-AUTH-047
+  @Bean
+  SessionController sessionController(Sessions sessions) {
+    return new SessionController(sessions);
+  }
+
   // REQ-AUTH-009
   @Bean
   AdminProvisioning adminProvisioning(AccountStore accounts, AccountCreation creation, PlatformTransactionManager transactions,

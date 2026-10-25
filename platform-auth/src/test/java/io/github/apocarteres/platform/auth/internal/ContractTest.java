@@ -49,7 +49,9 @@ class ContractTest {
     // REQ-AUTH-029
     Map.entry("KeyRequest", AccessKeyController.KeyRequest.class),
     Map.entry("AccessKey", AccessKeyController.Key.class),
-    Map.entry("IssuedKey", AccessKeyController.Issued.class)
+    Map.entry("IssuedKey", AccessKeyController.Issued.class),
+    // REQ-AUTH-047
+    Map.entry("OpenedSession", SessionController.Opened.class)
   );
 
   private final JsonNode contract = read();
@@ -64,7 +66,7 @@ class ContractTest {
 
   private static Map<String, Method> endpoints() {
     Map<String, Method> found = new HashMap<>();
-    for (Class<?> controller : new Class<?>[] {AuthController.class, AccessKeyController.class}) {
+    for (Class<?> controller : new Class<?>[] {AuthController.class, AccessKeyController.class, SessionController.class}) {
       String base = controller.getAnnotation(RequestMapping.class).value()[0];
       for (Method method : controller.getDeclaredMethods()) {
         PostMapping post = method.getAnnotation(PostMapping.class);

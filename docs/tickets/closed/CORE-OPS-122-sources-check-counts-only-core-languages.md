@@ -5,7 +5,7 @@ status: done
 scope: adoption, quality
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-17-1-1
 related: REQ-ADOPTION
 ---
 

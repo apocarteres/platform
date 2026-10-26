@@ -9,7 +9,7 @@ import { findToolchainMismatches } from '../lib/toolchain.mjs';
 import { TICKET_AREAS } from '../lib/document-naming.mjs';
 import { migrate, plan } from '../lib/naming-migration.mjs';
 import { DEFAULT_IDLE_SECONDS, DEFAULT_LIMIT_SECONDS, report, runWithLimits } from '../lib/run.mjs';
-import { RECOMMENDATION, RULES, allRules } from '../lib/rules.mjs';
+import { RECOMMENDATION, RULES, allRules, ruleExtensions } from '../lib/rules.mjs';
 import { buildLimits } from '../lib/build-limits.mjs';
 import { BASELINE_FILE, baselineExists, compare, counts, grewOver, readBaseline, sizeOf, writeBaseline } from '../lib/baseline.mjs';
 import { INSTALLED_DOCS_PATH, SOURCE_DOCS_PATH, inspectBlock, manifest, markerVersion, readAgents, replaceBlock, writeAgents } from '../lib/agents.mjs';
@@ -87,9 +87,10 @@ async function check(root) {
   problems.push(...await stackProblems(root, config));
 
   // REQ-ADOPTION-009
-  const scanned = await collectSourceFiles(root, config);
+  const covered = ruleExtensions(config);
+  const scanned = await collectSourceFiles(root, config, covered);
   if (scanned.length === 0) {
-    problems.push(`${CONFIG_FILE}: правила не применяются ни к одному файлу; перечислите каталоги с исходниками в "sources"`);
+    problems.push(`${CONFIG_FILE}: правила не применяются ни к одному файлу; перечислите в "sources" каталоги, где есть файлы, которые проверяют правила: ${[...covered].sort().join(', ')}`);
   }
 
   const baseline = await readBaseline(root);

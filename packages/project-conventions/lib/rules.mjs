@@ -1,10 +1,10 @@
-import { findProseComments } from './comments.mjs';
+import { SOURCE_EXTENSIONS, findProseComments } from './comments.mjs';
 import { findSystemClockUses } from './clock.mjs';
 import { toRule, validate } from './project-rules.mjs';
 import { findNamingViolations } from './naming.mjs';
 import { findMoneyViolations } from './money.mjs';
-import { findOversizedFiles } from './filesize.mjs';
-import { findConfigSecrets } from './secrets.mjs';
+import { SIZE_EXTENSIONS, findOversizedFiles } from './filesize.mjs';
+import { CONFIG_EXTENSIONS, findConfigSecrets } from './secrets.mjs';
 import { findDependencyIssues } from './dependencies.mjs';
 import { findNamingIssues } from './document-naming.mjs';
 import { findForbiddenWords, findLongWordings } from './terms.mjs';
@@ -13,7 +13,7 @@ import { findRustExemptions } from './rust-exemptions.mjs';
 import { findOrderSensitiveWiring } from './wiring.mjs';
 import { findMissingDeployEntry } from './deploy-entry.mjs';
 import { findUndeliveredConfiguration } from './environment-config.mjs';
-import { findModalsWithoutEscape } from './modal-escape.mjs';
+import { TEMPLATES, findModalsWithoutEscape } from './modal-escape.mjs';
 import { findUndeclaredModalButtons } from './modal-actions.mjs';
 import { findBackdropsOutsideTheCore } from './modal-backdrop.mjs';
 import { findClientsWithoutUpdate } from './client-update.mjs';
@@ -281,4 +281,10 @@ export function projectRules(config) {
 export function allRules(config) {
   const { rules, errors } = projectRules(config);
   return { rules: [...RULES, ...rules], errors };
+}
+
+// REQ-ADOPTION-009
+export function ruleExtensions(config) {
+  const own = (config.rules ?? []).flatMap((entry) => entry.extensions ?? [...SOURCE_EXTENSIONS]);
+  return new Set([...SOURCE_EXTENSIONS, ...SIZE_EXTENSIONS, ...CONFIG_EXTENSIONS, ...TEMPLATES, ...own]);
 }

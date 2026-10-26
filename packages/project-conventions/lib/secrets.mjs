@@ -5,7 +5,7 @@ import { collectSourceFiles } from './comments.mjs';
 // REQ-CONFIG-002
 export const SENSITIVE_LEAVES = ['password', 'passwd', 'secret', 'token', 'credentials', 'credential'];
 export const SENSITIVE_KEY_OWNERS = ['api', 'private', 'secret', 'access', 'encryption', 'site', 'auth'];
-const CONFIG_EXTENSIONS = new Set(['.properties', '.yml', '.yaml']);
+export const CONFIG_EXTENSIONS = new Set(['.properties', '.yml', '.yaml']);
 const FROM_ENVIRONMENT = /^\$\{[^}]+\}$/;
 
 export function sensitiveKey(key, extra = []) {

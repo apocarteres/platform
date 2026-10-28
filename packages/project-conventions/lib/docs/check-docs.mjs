@@ -30,7 +30,7 @@ async function deliveredIds(root) {
 const REQUIRED_METADATA_FIELDS = ['id', 'type', 'status', 'scope', 'authority'];
 const DOCUMENT_REFERENCE_FIELDS = ['depends-on', 'supersedes', 'superseded-by', 'related'];
 const OPTIONAL_METADATA_FIELDS = [...DOCUMENT_REFERENCE_FIELDS, 'clause-id-prefix', 'priority', 'questions', 'release', 'opened-on', 'released-on', 'commit', 'obligation', 'legacy-id'];
-const ALLOWED_METADATA_FIELDS = new Set([
+export const ALLOWED_METADATA_FIELDS = new Set([
   ...REQUIRED_METADATA_FIELDS,
   ...OPTIONAL_METADATA_FIELDS,
 ]);
@@ -46,6 +46,9 @@ const STATUS_BY_TYPE = new Map([
   // REQ-TICKETS-018
   ['idea', new Set(['open', 'accepted', 'rejected'])],
 ]);
+
+// REQ-PROJECT-PROCESS-024
+export const DOCUMENT_TYPES = new Set(STATUS_BY_TYPE.keys());
 
 const ALLOWED_AUTHORITIES = new Set(['normative', 'supporting', 'historical', 'navigation']);
 const DEFAULT_CATALOG_TARGETS = [
@@ -87,7 +90,7 @@ function requiresMetadata(relativePath) {
   return relativePath.startsWith('docs/') && relativePath.endsWith('.md');
 }
 
-function validateMetadata(relativePath, parsed, errors, ids, references) {
+function validateMetadata(relativePath, parsed, errors, ids, references, projectFields = null) {
   if (!parsed) {
     if (requiresMetadata(relativePath)) {
       errors.push(`${relativePath}: отсутствует YAML front matter`);
@@ -110,6 +113,8 @@ function validateMetadata(relativePath, parsed, errors, ids, references) {
   for (const field of metadata.keys()) {
     // REQ-TICKETS-019
     if (field === 'ticket' && metadata.get('type') === 'idea') continue;
+    // REQ-PROJECT-PROCESS-024
+    if (projectFields?.has(field)) continue;
     if (!ALLOWED_METADATA_FIELDS.has(field)) {
       errors.push(`${relativePath}: неизвестное поле метаданных ${field}`);
     }
@@ -462,7 +467,9 @@ export async function checkDocumentation(projectRoot, options = {}) {
     const content = await readFile(filePath, 'utf8');
     const parsed = parseFrontMatter(content);
     if (parsed?.metadata) documents.push({ file: relativePath, content, metadata: parsed.metadata });
-    validateMetadata(relativePath, parsed, errors, ids, references);
+    validateMetadata(relativePath, parsed, errors, ids, references, options.projectFields ?? null);
+    // REQ-PROJECT-PROCESS-024
+    if (parsed?.metadata && options.projectFieldErrors) errors.push(...options.projectFieldErrors(relativePath, parsed.metadata));
     errors.push(...validateTicket(relativePath, content, parsed));
     // REQ-TICKETS-017
     errors.push(...validateIdea(relativePath, content, parsed));

@@ -3,6 +3,8 @@ import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseFrontMatter, priorities, terminalStatuses } from './ticket-model.mjs';
 import { IDEAS_DIR, buildIdeaIndex } from './ideas.mjs';
+import { metadataDeclaration } from './project-metadata.mjs';
+import { readConfig } from '../config.mjs';
 
 async function collect(directory) {
   const files = [];
@@ -20,6 +22,9 @@ const cell = (value) => value.replaceAll('|', '&#124;').replaceAll('\n', ' ');
 
 export async function buildTicketIndexes(root) {
   const directory = path.join(root, 'docs/tickets');
+  // REQ-PROJECT-PROCESS-024
+  const columns = [...metadataDeclaration(await readConfig(root)).fields]
+    .filter(([, field]) => field.index && field.types.includes('ticket')).map(([name]) => name);
   const tickets = [];
   const supporting = [];
   const errors = [];
@@ -45,7 +50,8 @@ export async function buildTicketIndexes(root) {
     ids.add(id);
     const status = metadata.get('status');
     if (!labels[status]) errors.push(`${relative}: неизвестный статус задачи`);
-    tickets.push({ file, title, id, status, priority: metadata.get('priority'), release: metadata.get('release'), scope: metadata.get('scope') ?? '' });
+    tickets.push({ file, title, id, status, priority: metadata.get('priority'), release: metadata.get('release'), scope: metadata.get('scope') ?? '',
+      own: columns.map((name) => metadata.get(name) ?? '') });
   }
   if (errors.length) return { errors, outputs: new Map() };
   tickets.sort((a, b) => priorities.indexOf(a.priority) - priorities.indexOf(b.priority)
@@ -64,8 +70,12 @@ export async function buildTicketIndexes(root) {
         ...(hasFeatures ? [`[Планы функций](${closed ? '../' : ''}features/INDEX.md)`] : [])].join(' · '), '',
       'Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.', '',
       `Всего: ${selected.length}. Включены самостоятельные задачи и этапы планов функций.`, '',
-      '| Задача | Приоритет | Статус | Выпуск | Области |', '|---|---|---|---|---|'];
-    for (const ticket of selected) lines.push(`| [${cell(ticket.title)}](${href(ticket.file)}) | ${ticket.priority === 'unassigned' ? 'Не назначен' : ticket.priority} | ${labels[ticket.status]} | ${releaseCell(root, ticket.release, href)} | ${cell(ticket.scope)} |`);
+      ['| Задача | Приоритет | Статус | Выпуск | Области |', ...columns.map((name) => ` ${cell(name)} |`)].join(''),
+      ['|---|---|---|---|---|', ...columns.map(() => '---|')].join('')];
+    for (const ticket of selected) {
+      lines.push(`| [${cell(ticket.title)}](${href(ticket.file)}) | ${ticket.priority === 'unassigned' ? 'Не назначен' : ticket.priority} | ${labels[ticket.status]} | ${releaseCell(root, ticket.release, href)} | ${cell(ticket.scope)} |`
+        + ticket.own.map((value) => ` ${cell(value)} |`).join(''));
+    }
     if (!closed && supporting.length) {
       lines.push('', '## Порядок работы и контекст', '');
       for (const item of supporting) lines.push(`- [${cell(item.title)}](${href(item.file)})`);

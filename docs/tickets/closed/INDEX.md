@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 221. Включены самостоятельные задачи и этапы планов функций.
+Всего: 222. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -177,6 +177,7 @@ authority: navigation
 | [Потребитель не может открыть своим потребителям тот же канал заявок](CORE-DOC-019-consumer-declares-its-own-feedback-channel.md) | P2 | Выполнена | [RELEASE-14-1-0](../../releases/RELEASE-14-1-0.md) | process, documentation |
 | [Названия проектов-потребителей в рабочих файлах ядра](CORE-DOC-021-consumer-names-in-working-files.md) | P2 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | documentation, delivery |
 | [Внешнему читателю не с чего начать](CORE-DOC-022-no-readme-for-an-outside-reader.md) | P2 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | documentation, delivery, security |
+| [Проект не может объявить своё поле метаданных задачи](CORE-DOC-024-project-metadata-fields.md) | P2 | Выполнена | [RELEASE-17-2-0](../../releases/RELEASE-17-2-0.md) | process, documentation |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

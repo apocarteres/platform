@@ -4,7 +4,7 @@ type: ticket
 status: backlog
 scope: process, documentation, release
 authority: supporting
-priority: P2
+priority: P1
 release: unassigned
 related: REQ-TICKETS, REQ-RELEASE, REQ-DEPLOYMENT
 ---

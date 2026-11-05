@@ -4,9 +4,10 @@ type: ticket
 status: backlog
 scope: release, tooling
 authority: supporting
-priority: P2
+priority: P1
 release: unassigned
-related: REQ-TICKETS, REQ-RELEASE, CORE-DOC-026
+depends-on: CORE-DOC-026
+related: REQ-TICKETS, REQ-RELEASE
 ---
 
 # Выпуск не учитывает зависимости задач

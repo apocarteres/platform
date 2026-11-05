@@ -66,7 +66,9 @@ commit, with every commit since the previous release attributed to a ticket,
 and with the core's obligations handled; `release finish` records the final
 step and the tag. One-off actions a ticket declares for before and after
 deployment become exit criteria at close, are marked with `release mark`, and
-hold `release finish` until marked. Breaking changes of the core are major versions with a
+hold `release finish` until marked. A ticket ships no earlier than the tickets
+it `depends-on`: close refuses an unreleased dependency outside the release, and
+the composition numbers the rollout order. Breaking changes of the core are major versions with a
 migration section, and `conventions upgrade-report --from X.Y.Z` lists what
 each release since then breaks, adds or obliges.
 

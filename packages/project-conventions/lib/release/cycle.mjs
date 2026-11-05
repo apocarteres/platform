@@ -25,6 +25,7 @@ import { questionStanding } from './questions.mjs';
 import { settledComposition } from './composition.mjs';
 import { fullRunProblem } from './full-run.mjs';
 import { collectedActions, keptActions, unmarkedActionProblems } from './deployment-actions.mjs';
+import { compositionRows, dependencyProblems, inRolloutOrder } from './rollout.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -82,6 +83,8 @@ export async function closability(root, { scheme, retagging = false }) {
   problems.push(...questions.problems);
   const tag = release === null ? null : releaseTag(release.metadata.get('id'), scheme);
   const existing = await releases(root);
+  // REQ-RELEASE-050
+  problems.push(...dependencyProblems(composition, await tickets(root), existing));
   // REQ-PUBLISHING-004, REQ-PUBLISHING-015
   const cost = release === null || !isCore || scheme !== 'semver'
     ? null
@@ -105,22 +108,6 @@ export async function closability(root, { scheme, retagging = false }) {
     open: release,
   }));
   return { problems, reminders: questions.reminders, release, commit, receipt, composition, state, obligations, isCore, tag, cost };
-}
-
-function compositionRows(root, composition) {
-  return [
-    '| Задача | Причина включения |',
-    '|---|---|',
-    ...composition.map((ticket) => {
-      const obligation = ticket.metadata.get('obligation');
-      const reason = obligation === undefined
-        ? (ticket.metadata.get('priority') === 'unassigned'
-          ? 'Закрыта в этом выпуске'
-          : `Закрыта в этом выпуске, приоритет ${ticket.metadata.get('priority')}`)
-        : `Обязательство ядра \`${obligation}\`, закрыто в этом выпуске`;
-      return `| [${ticketId(ticket)}](${ticketLinkTarget(root, ticket)}) | ${reason} |`;
-    }),
-  ];
 }
 
 function resultLines(receipt, commit, tag) {
@@ -347,7 +334,7 @@ export async function closeRelease(root, { scheme }) {
   content = replaceSection(
     content,
     '## Критерии выхода',
-    criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore), null, collectedActions(root, composition, release.content)),
+    criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore), null, collectedActions(root, inRolloutOrder(composition), release.content)),
   );
   const writes = [{ file: release.file, content }, ...stamps];
 
@@ -769,7 +756,7 @@ export async function recloseRelease(root, { scheme, reason }) {
   content = replaceSection(
     content,
     '## Критерии выхода',
-    criteriaLines(receipt, tag, obligationsSummary(closedNow, Object.keys(state.state.deferred ?? {}), state.isCore), null, collectedActions(root, composition, release.content)),
+    criteriaLines(receipt, tag, obligationsSummary(closedNow, Object.keys(state.state.deferred ?? {}), state.isCore), null, collectedActions(root, inRolloutOrder(composition), release.content)),
   );
   const already = retaggedRows(content);
   content = withSection(content, RETAGGED_SECTION, [

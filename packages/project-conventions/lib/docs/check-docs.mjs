@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { readdir, readFile, stat } from 'node:fs/promises';
+import { dependencyCycles } from './dependencies.mjs';
 import path from 'node:path';
 import { validateReleases, releaseStatuses } from './release-model.mjs';
 import { parseFrontMatter, validateTicket } from './ticket-model.mjs';
@@ -158,6 +159,7 @@ function validateMetadata(relativePath, parsed, errors, ids, references, project
       errors.push(`${relativePath}: ${field} должен содержать идентификаторы документов через запятую и пробел`);
     } else if (value) {
       references.push({
+        id: metadata.get('id'),
         field,
         relativePath,
         targetIds: value.split(', '),
@@ -496,6 +498,8 @@ export async function checkDocumentation(projectRoot, options = {}) {
       }
     }
   }
+  // REQ-TICKETS-010
+  errors.push(...dependencyCycles(references));
 
   await checkIndexCoverage(
     resolvedRoot,

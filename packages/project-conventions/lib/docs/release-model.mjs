@@ -57,9 +57,10 @@ export function validateReleases(documents) {
     const scope = parts.get('Состав') ?? '';
     const members = new Set();
     for (const row of scope.split('\n').filter(line => line.trim().startsWith('|'))) {
-      if (/^\|\s*Задача\s*\|\s*Причина включения\s*\|$/.test(row)
+      // REQ-RELEASE-050
+      if (/^\|\s*Задача\s*\|\s*Причина включения\s*\|(?:\s*Порядок\s*\|)?$/.test(row)
           || /^\|[\s:|-]+\|$/.test(row)) continue;
-      const match = /^\|\s*\[([A-Z][A-Z0-9-]*)\]\(([^)\s]+)\)\s*\|\s*([^|]+)\|\s*$/.exec(row);
+      const match = /^\|\s*\[([A-Z][A-Z0-9-]*)\]\(([^)\s]+)\)\s*\|\s*([^|]+)\|(?:\s*\d+\s*\|)?\s*$/.exec(row);
       if (!match) { fail('некорректная строка состава; нужны ссылка с id задачи и причина включения'); continue; }
       const [, ticketId, href, reason] = match;
       if (!reason.trim()) fail(`у ${ticketId} не указана причина включения`);

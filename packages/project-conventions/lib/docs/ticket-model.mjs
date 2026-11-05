@@ -1,4 +1,5 @@
 import { releaseIdPattern } from './release-model.mjs';
+import { deploymentSectionProblems } from './deployment-actions.mjs';
 
 export function parseFrontMatter(content) {
   const lines = content.split(/\r?\n/);
@@ -54,6 +55,8 @@ export function validateTicket(file, content, parsed) {
       ? 'работа по задаче с открытыми вопросами запрещена; выделите независимую часть отдельно'
       : 'задача с открытыми вопросами не закрывается; вынесите неразрешённый вопрос отдельной задачей');
   }
+  // REQ-TICKETS-023
+  for (const problem of deploymentSectionProblems(body)) fail(problem);
   if (status === 'cancelled' && !/^## Почему не делаем\s*$/m.test(body)) {
     fail('отменённая задача должна содержать раздел «Почему не делаем»');
   }

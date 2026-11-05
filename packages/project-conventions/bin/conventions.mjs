@@ -31,7 +31,7 @@ import {
 } from '../lib/cli/commands.mjs';
 import { parseArguments } from '../lib/cli/arguments.mjs';
 import {
-  releaseAccount, releaseAdopt, releaseFullRun, releaseCancel, releaseClose, releaseDefer, releaseDrop, releaseFinish,
+  releaseAccount, releaseAdopt, releaseFullRun, releaseCancel, releaseClose, releaseDefer, releaseDrop, releaseFinish, releaseMark,
   closeCommitFiles, releaseOpen, releaseReclose, releaseSatisfy, releaseStatus, summariesAfterTheCycle, ticketList,
 } from '../lib/cli/release.mjs';
 
@@ -510,7 +510,7 @@ const USAGE = {
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
     + '\n  Код 0 — зависимости не менялись, ставить нечего; код 1 — изменились.',
-  release: 'conventions release <status|close|reclose|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
+  release: 'conventions release <status|close|reclose|mark|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
 };
 
 // REQ-RELEASE-028
@@ -518,6 +518,8 @@ const RELEASE_USAGE = {
   status: 'conventions release status [--root <path>]',
   close: 'conventions release close [--root <path>]',
   reclose: 'conventions release reclose --reason "<причина>" [--root <path>]',
+  // REQ-RELEASE-049
+  mark: 'conventions release mark <TICKET-ID> --step <before|after> [--item N] --note "<чем подтверждено>" [--root <path>]',
   finish: 'conventions release finish --note "<чем выполнен>" [--root <path>]',
   open: 'conventions release open [--version X.Y.Z] [--tickets A,B] [--root <path>]',
   drop: 'conventions release drop <TICKET-ID> --reason "<причина>" [--root <path>]',
@@ -535,6 +537,8 @@ const RELEASE_SPEC = {
   status: {},
   close: {},
   reclose: { values: ['--reason'] },
+  // REQ-RELEASE-049
+  mark: { values: ['--step', '--item', '--note'], positional: 1 },
   finish: { values: ['--note'] },
   open: { values: ['--version', '--tickets'] },
   drop: { values: ['--reason'], positional: 1 },
@@ -694,6 +698,8 @@ async function release(argv) {
   else if (subcommand === 'close') await releaseClose(root);
   // REQ-RELEASE-046
   else if (subcommand === 'reclose') await releaseReclose(root, valueOf('--reason'));
+  // REQ-RELEASE-049
+  else if (subcommand === 'mark') await releaseMark(root, first, valueOf('--step'), valueOf('--item'), valueOf('--note'));
   else if (subcommand === 'finish') await releaseFinish(root, valueOf('--note'));
   else if (subcommand === 'open') await releaseOpen(root, valueOf('--version'), ticketList(valueOf('--tickets')));
   else if (subcommand === 'cancel') await releaseCancel(root, valueOf('--reason'));

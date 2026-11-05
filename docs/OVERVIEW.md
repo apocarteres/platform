@@ -64,7 +64,9 @@ A release is a document in `docs/releases` and a tag (`REQ-RELEASE`).
 `conventions release close` closes it only with a receipt for the released
 commit, with every commit since the previous release attributed to a ticket,
 and with the core's obligations handled; `release finish` records the final
-step and the tag. Breaking changes of the core are major versions with a
+step and the tag. One-off actions a ticket declares for before and after
+deployment become exit criteria at close, are marked with `release mark`, and
+hold `release finish` until marked. Breaking changes of the core are major versions with a
 migration section, and `conventions upgrade-report --from X.Y.Z` lists what
 each release since then breaks, adds or obliges.
 

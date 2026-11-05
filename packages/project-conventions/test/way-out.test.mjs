@@ -55,6 +55,9 @@ test('каждый отказ называет выход: команду, кл�
     take('release account', (await cycle.accountCommit(root, { sha: 'abc', reason: 'x' })).problems);
     take('release adopt', (await cycle.adoptCycle(root, { scheme: 'date', today: DAY })).problems);
     take('release satisfy', (await cycle.satisfyObligation(root, { obligationId: 'nope', ticketId: 'X' })).problems);
+    // REQ-RELEASE-049
+    take('release mark', (await cycle.markDeploymentAction(root, { scheme: 'date', ticketId: 'X', step: 'before', note: 'x' })).problems);
+    take('release mark', (await cycle.markDeploymentAction(root, { scheme: 'date', ticketId: 'X', step: 'before', note: '' })).problems);
     take('release open', (await cycle.openNext(root, { scheme: 'date', today: DAY, tickets: [`${PREFIX}-QUAL-777`] })).problems);
     take('release open', (await cycle.openNext(root, { scheme: 'semver', today: DAY })).problems);
     assert.equal((await cycle.openNext(root, { scheme: 'date', today: DAY })).opened, true);
@@ -62,6 +65,8 @@ test('каждый отказ называет выход: команду, кл�
     take('release close', (await cycle.closeRelease(root, { scheme: 'date' })).problems);
     take('release reclose', (await cycle.recloseRelease(root, { scheme: 'date', reason: 'x' })).problems);
     take('release finish', (await cycle.finishRelease(root, { scheme: 'date', today: DAY, note: 'x' })).problems);
+    // REQ-RELEASE-049
+    take('release mark', (await cycle.markDeploymentAction(root, { scheme: 'date', ticketId: 'X', step: 'before', note: 'x' })).problems);
     take('release drop', (await cycle.dropFromComposition(root, { ticketId: `${PREFIX}-QUAL-777`, reason: 'x' })).problems);
     take('release drop', (await cycle.dropFromComposition(root, { ticketId: `${PREFIX}-QUAL-001`, reason: 'x' })).problems);
     take('release account', (await cycle.accountCommit(root, { sha: 'deadbeef', reason: 'x' })).problems);

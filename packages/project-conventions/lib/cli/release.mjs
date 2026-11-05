@@ -7,7 +7,7 @@ import { IDEAS_DIR, buildIdeaIndex } from '../docs/ideas.mjs';
 import { refreshCompositionLinks, updateReleaseIndex } from '../docs/releases-index.mjs';
 import {
   accountCommit, adoptCycle, cancelRelease, closeRelease, closability, dropFromComposition,
-  finishability, finishRelease, openNext, recloseRelease, satisfyObligation,
+  finishability, finishRelease, markDeploymentAction, openNext, recloseRelease, satisfyObligation,
 } from '../release/cycle.mjs';
 import { declaredObligations, obligationState, readState, writeState } from '../release/obligations.mjs';
 import { OUTSIDE_THE_CODE, tagCommit, uncommitted } from '../release/git.mjs';
@@ -114,6 +114,30 @@ export async function releaseFinish(root, note) {
   }
   console.log(`Выпуск ${result.id} закрыт: тег ${result.tag}, коммит ${result.commit.slice(0, 8)}.`);
   console.log(`Завершающий шаг: ${result.note}`);
+}
+
+// REQ-RELEASE-049
+export async function releaseMark(root, ticketId, step, item, note) {
+  if (!ticketId || !step || !note) {
+    console.error('conventions release mark <TICKET-ID> --step <before|after> [--item N] --note "<чем подтверждено>"');
+    process.exitCode = 2;
+    return;
+  }
+  if (item !== undefined && !/^[1-9]\d*$/.test(item)) {
+    console.error(`Номер действия --item — целое число от 1, получено: ${item}`);
+    process.exitCode = 2;
+    return;
+  }
+  const number = item === undefined ? undefined : Number(item);
+  const config = await readConfig(root);
+  const result = await markDeploymentAction(root, { scheme: releaseScheme(config), ticketId, step, item: number, note });
+  if (!result.marked) {
+    console.error('Действие не отмечено:');
+    for (const problem of result.problems) console.error(`- ${problem}`);
+    process.exitCode = 1;
+    return;
+  }
+  console.log(`Действие задачи ${result.ticket} отмечено в выпуске ${result.id}: ${result.action} — ${result.note}`);
 }
 
 // REQ-RELEASE-007

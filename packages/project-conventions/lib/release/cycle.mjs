@@ -24,6 +24,7 @@ import { findExpandDebts } from '../migrations.mjs';
 import { questionStanding } from './questions.mjs';
 import { settledComposition } from './composition.mjs';
 import { fullRunProblem } from './full-run.mjs';
+import { collectedActions, keptActions, unmarkedActionProblems } from './deployment-actions.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -134,15 +135,17 @@ function resultLines(receipt, commit, tag) {
   ];
 }
 
-// REQ-RELEASE-001, REQ-RELEASE-034
-function criteriaLines(receipt, tag, obligations, finishing = null) {
+// REQ-RELEASE-001, REQ-RELEASE-034, REQ-RELEASE-049
+function criteriaLines(receipt, tag, obligations, finishing = null, actions = { before: [], after: [] }) {
   return [
     `- [x] Набор \`verify\` пройден на выпускаемом коммите — расписка ${receipt.completedAt}, наборы: ${receipt.checks.join(', ')}, прогон \`${receipt.run.command}\``,
     `- [x] Тег выпуска создан на проверенном коммите — \`${tag}\``,
     `- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ${obligations}`,
+    ...actions.before,
     finishing === null
       ? '- [ ] Завершающий шаг выполнен — развёртывание в производственную среду или публикация артефактов'
       : `- [x] Завершающий шаг выполнен — ${finishing}`,
+    ...actions.after,
   ];
 }
 
@@ -344,7 +347,7 @@ export async function closeRelease(root, { scheme }) {
   content = replaceSection(
     content,
     '## Критерии выхода',
-    criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore)),
+    criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore), null, collectedActions(root, composition, release.content)),
   );
   const writes = [{ file: release.file, content }, ...stamps];
 
@@ -355,7 +358,7 @@ export async function closeRelease(root, { scheme }) {
   return { closed: true, id, tag, commit, composition: composition.map(ticketId), reminders: state.reminders };
 }
 
-// REQ-RELEASE-001, REQ-RELEASE-034
+// REQ-RELEASE-001, REQ-RELEASE-034, REQ-RELEASE-049
 export async function finishability(root, { scheme }) {
   const problems = [];
   const release = await openRelease(root);
@@ -375,6 +378,7 @@ export async function finishability(root, { scheme }) {
     problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}):`
       + ' выполните её либо снимите из состава командой release drop с причиной');
   }
+  problems.push(...unmarkedActionProblems(release.content));
   const state = await readState(root);
   const { obligations, isCore } = await loadObligations(root);
   return { problems, release, id, tag, commit, composition, state, obligations, isCore };
@@ -405,7 +409,7 @@ export async function finishRelease(root, { scheme, today, note }) {
     receipt === null
       ? sectionLines(content, '## Критерии выхода')
         .map((line) => line.startsWith('- [ ] Завершающий шаг') ? `- [x] Завершающий шаг выполнен — ${note.trim()}` : line)
-      : criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore), note.trim()),
+      : criteriaLines(receipt, tag, obligationsSummary(closedNow, deferredNow, state.isCore), note.trim(), keptActions(release.content)),
   );
 
   const obligationState_ = state.state;
@@ -765,7 +769,7 @@ export async function recloseRelease(root, { scheme, reason }) {
   content = replaceSection(
     content,
     '## Критерии выхода',
-    criteriaLines(receipt, tag, obligationsSummary(closedNow, Object.keys(state.state.deferred ?? {}), state.isCore)),
+    criteriaLines(receipt, tag, obligationsSummary(closedNow, Object.keys(state.state.deferred ?? {}), state.isCore), null, collectedActions(root, composition, release.content)),
   );
   const already = retaggedRows(content);
   content = withSection(content, RETAGGED_SECTION, [
@@ -791,3 +795,4 @@ function retaggedRows(content) {
 export { obligationState, readState };
 // REQ-CODE-DESIGN-009
 export { cancelRelease, dropFromComposition } from './composition.mjs';
+export { markDeploymentAction } from './deployment-actions.mjs';

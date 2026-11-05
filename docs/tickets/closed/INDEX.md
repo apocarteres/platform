@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 225. Включены самостоятельные задачи и этапы планов функций.
+Всего: 226. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -124,6 +124,7 @@ authority: navigation
 | [tickets-renumber переписывает ссылки основы на её задачу](CORE-OPS-121-renumber-rewrites-base-references.md) | P1 | Выполнена | [RELEASE-16-2-1](../../releases/RELEASE-16-2-1.md) | process, tooling |
 | [Проверка источников считает только языки ядра](CORE-OPS-122-sources-check-counts-only-core-languages.md) | P1 | Выполнена | [RELEASE-17-1-1](../../releases/RELEASE-17-1-1.md) | adoption, quality |
 | [Выпуск не учитывает зависимости задач](CORE-OPS-123-release-ignores-depends-on.md) | P1 | Выполнена | [RELEASE-17-3-0](../../releases/RELEASE-17-3-0.md) | release, tooling |
+| [Angular-пакеты ядра собираются уязвимыми зависимостями разработки](CORE-OPS-124-angular-packages-vulnerable-dev-dependencies.md) | P1 | Выполнена | [RELEASE-17-3-1](../../releases/RELEASE-17-3-1.md) | tooling, build, security |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

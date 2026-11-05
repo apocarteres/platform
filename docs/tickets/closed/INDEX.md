@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 222. Включены самостоятельные задачи и этапы планов функций.
+Всего: 225. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -59,6 +59,7 @@ authority: navigation
 | [Продолжение закрытой заявки теряется](CORE-DOC-014-a-closed-report-swallows-its-continuation.md) | P1 | Выполнена | [RELEASE-1-28-0](../../releases/RELEASE-1-28-0.md) | process, documentation |
 | [Запрет на комментарии к закрытой заявке вместо обещания их читать](CORE-DOC-015-closed-report-accepts-no-comments.md) | P1 | Выполнена | [RELEASE-1-29-0](../../releases/RELEASE-1-29-0.md) | process, documentation |
 | [Публичный репозиторий ядра без лицензии](CORE-DOC-020-repository-has-no-license.md) | P1 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | delivery, licensing |
+| [Задача не объявляет действий на рабочей среде до и после развёртывания](CORE-DOC-026-deployment-actions-are-not-declared.md) | P1 | Выполнена | [RELEASE-17-3-0](../../releases/RELEASE-17-3-0.md) | process, documentation, release |
 | [Версия платформы приложений задавалась дважды и разошлась](CORE-OPS-001-application-platform-version-declared-twice.md) | P1 | Выполнена | [RELEASE-0-30-0](../../releases/RELEASE-0-30-0.md) | build, platform |
 | [Правила из платформы: контракт, доставка и внедрение](CORE-OPS-002-code-comments-rule.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | process, tooling, backend, frontend |
 | [Пакет процессных правил и инструментов документации](CORE-OPS-003-conventions-package.md) | P1 | Выполнена | [RELEASE-0-29-0](../../releases/RELEASE-0-29-0.md) | process, documentation, tooling |
@@ -122,6 +123,7 @@ authority: navigation
 | [Сводки задач конфликтуют почти в каждом pull request](CORE-OPS-120-ticket-summaries-conflict-in-pull-requests.md) | P1 | Выполнена | [RELEASE-16-2-0](../../releases/RELEASE-16-2-0.md) | process, documentation, release |
 | [tickets-renumber переписывает ссылки основы на её задачу](CORE-OPS-121-renumber-rewrites-base-references.md) | P1 | Выполнена | [RELEASE-16-2-1](../../releases/RELEASE-16-2-1.md) | process, tooling |
 | [Проверка источников считает только языки ядра](CORE-OPS-122-sources-check-counts-only-core-languages.md) | P1 | Выполнена | [RELEASE-17-1-1](../../releases/RELEASE-17-1-1.md) | adoption, quality |
+| [Выпуск не учитывает зависимости задач](CORE-OPS-123-release-ignores-depends-on.md) | P1 | Выполнена | [RELEASE-17-3-0](../../releases/RELEASE-17-3-0.md) | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |
@@ -178,6 +180,7 @@ authority: navigation
 | [Названия проектов-потребителей в рабочих файлах ядра](CORE-DOC-021-consumer-names-in-working-files.md) | P2 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | documentation, delivery |
 | [Внешнему читателю не с чего начать](CORE-DOC-022-no-readme-for-an-outside-reader.md) | P2 | Выполнена | [RELEASE-15-3-0](../../releases/RELEASE-15-3-0.md) | documentation, delivery, security |
 | [Проект не может объявить своё поле метаданных задачи](CORE-DOC-024-project-metadata-fields.md) | P2 | Выполнена | [RELEASE-17-2-0](../../releases/RELEASE-17-2-0.md) | process, documentation |
+| [Проверка после выпуска требует отдельной задачи-проверки](CORE-DOC-025-post-release-check-needs-no-ticket.md) | P2 | Выполнена | [RELEASE-17-3-0](../../releases/RELEASE-17-3-0.md) | process, documentation |
 | [Четыре проверки жили скриптами одного репозитория](CORE-OPS-006-four-checks-from-a-second-consumer.md) | P2 | Выполнена | [RELEASE-0-27-0](../../releases/RELEASE-0-27-0.md) | quality, tooling |
 | [Закрытие обязательства ссылкой оставляло задачу-заготовку](CORE-OPS-011-satisfied-obligation-leaves-draft-ticket.md) | P2 | Выполнена | [RELEASE-0-21-0](../../releases/RELEASE-0-21-0.md) | release |
 | [Сборка сервиса оставляла в дереве плоский POM](CORE-OPS-012-service-build-left-a-flattened-pom.md) | P2 | Выполнена | [RELEASE-0-32-0](../../releases/RELEASE-0-32-0.md) | build, platform |

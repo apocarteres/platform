@@ -274,7 +274,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
         } else throw new Refusal('not-found', 'нет такого адреса', 404);
       } catch (failure) {
         if (!(failure instanceof Refusal)) throw failure;
-        send(failure.status, { type: 'about:blank', title: failure.message, detail: failure.message, code: failure.code });
+        send(failure.status, { type: 'about:blank', title: 'Conflict', detail: 'Conflict', reason: failure.message, code: failure.code });
       }
     });
   });

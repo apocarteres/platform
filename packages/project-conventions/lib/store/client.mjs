@@ -38,7 +38,7 @@ function keyOf(store, env, writing) {
 async function refusalOf(response) {
   const body = await response.json().catch(() => null);
   const code = typeof body?.code === 'string' ? body.code : `http-${response.status}`;
-  const detail = body?.detail ?? body?.title ?? `хранилище ответило ${response.status}`;
+  const detail = body?.reason ?? body?.detail ?? body?.title ?? `хранилище ответило ${response.status}`;
   return new StoreRefusal(code, String(detail), response.status);
 }
 

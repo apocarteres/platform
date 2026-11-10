@@ -5,7 +5,7 @@ status: done
 scope: process, release, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-17-4-0
 related: REQ-TICKETS, REQ-RELEASE, REQ-PROJECT-PROCESS, REQ-QUALITY, CORE-OPS-127
 ---
 

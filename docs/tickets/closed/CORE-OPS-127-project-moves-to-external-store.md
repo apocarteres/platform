@@ -5,7 +5,7 @@ status: done
 scope: process, tooling, documentation
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-17-4-0
 depends-on: CORE-OPS-126
 related: REQ-TICKETS, REQ-RELEASE, REQ-ADOPTION, CORE-OPS-126
 ---

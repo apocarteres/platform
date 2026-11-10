@@ -11,6 +11,7 @@ export const DELIVERED_DOCUMENTS = [
   'telemetry.md',
   'mail.md',
   'release-cycle.md',
+  'ticket-store.md',
   'api-errors.md',
   'code-design.md',
   'component-replacement.md',

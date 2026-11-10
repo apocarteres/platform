@@ -16,7 +16,7 @@ related: REQ-TICKETS, REQ-RELEASE, REQ-PROJECT-PROCESS, REQ-QUALITY, CORE-OPS-12
 
 **Область действия: любой проект.** Правило не зависит от стека.
 
-Происхождение и расчёты — идея [CORE-IDEA-003](../ideas/CORE-IDEA-003-external-ticket-store.md).
+Происхождение и расчёты — идея `CORE-IDEA-003` репозитория ядра.
 
 ## Две реализации
 

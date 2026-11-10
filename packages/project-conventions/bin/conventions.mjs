@@ -24,6 +24,8 @@ import { findObligationDebts, loadObligations, obligationState, readState } from
 import { findExpandDebts } from '../lib/migrations.mjs';
 import { attestation, writeReceipt } from '../lib/release/receipt.mjs';
 import { codeTree, headCommit, resolveCommit } from '../lib/release/git.mjs';
+import { externalStore, filesOnly } from '../lib/store/config.mjs';
+import { externalCommits, externalObligationState, externalRelease, reportFailure, storeCommand } from '../lib/store/cli.mjs';
 import { systemNow } from '../lib/now.mjs';
 import {
   backupsCommand, commits, components, deployArgs, deployed, deps, health, jvmArgs, manifest as deployManifest, migrations, staticCheck, telemetryCommand, mailCommand,
@@ -98,8 +100,8 @@ async function check(root) {
   let improvedTotal = 0;
   const advisories = [];
 
-  // REQ-RELEASE-035
-  const debts = await findObligationDebts(root);
+  // REQ-RELEASE-035, REQ-STORE-012
+  const debts = await externalStore(root, config) === null ? await findObligationDebts(root) : { problems: [], advisories: [] };
   problems.push(...debts.problems);
   advisories.push(...debts.advisories);
   // REQ-DEPLOYMENT-030
@@ -188,14 +190,24 @@ async function docsCheck(root) {
   console.log(`Документация проверена: ${result.markdownCount} Markdown-документов, ${result.requirementClauseCount} стабильных положений.`);
 }
 
+// REQ-STORE-016
+async function onFiles(root, command) {
+  if (await externalStore(root) === null) return true;
+  console.error(filesOnly(command));
+  process.exitCode = 1;
+  return false;
+}
+
 async function ticketsIndex(root) {
-  const errors = await updateTicketIndexes(root, { check: false });
+  // REQ-STORE-015
+  const ideasOnly = await externalStore(root) !== null;
+  const errors = await updateTicketIndexes(root, { check: false, ideasOnly });
   if (errors.length > 0) {
     for (const error of errors) console.error(`- ${error}`);
     process.exitCode = 1;
     return;
   }
-  console.log('Сводки задач согласованы.');
+  console.log(ideasOnly ? 'Сводка идей согласована; сводки задач ведёт хранилище.' : 'Сводки задач согласованы.');
 }
 
 // REQ-TICKETS-022
@@ -316,7 +328,15 @@ async function attestedCommand(root, parsed) {
 }
 
 async function obligations(root) {
-  const state = await readState(root);
+  // REQ-STORE-012
+  const store = await externalStore(root);
+  let state;
+  try {
+    state = store === null ? await readState(root) : await externalObligationState(store);
+  } catch (failure) {
+    reportFailure(failure, 'Учёт обязательств прочитать не удалось:');
+    return;
+  }
   const { obligations: declared, notApplicable, isCore } = await loadObligations(root);
   if (declared.length === 0) {
     console.log('Ядро не объявляет обязательств.');
@@ -466,7 +486,7 @@ async function feedbackTemplate(root) {
 
 // REQ-RELEASE-028
 const COMMANDS = 'conventions <check|docs-check|tickets-index|tickets-renumber|releases-index|sync'
-  + '|feedback-template|baseline|receipt|run|build|naming|obligations|commits|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|telemetry|mail|release> [--root <path>]';
+  + '|feedback-template|baseline|receipt|run|build|naming|obligations|commits|store|health|unknown|static-check|migrations|attested|deps|components|deploy-args|deployed|manifest|jvm-args|upgrade-report|backups|telemetry|mail|release> [--root <path>]';
 
 // REQ-RELEASE-028
 const USAGE = {
@@ -486,7 +506,12 @@ const USAGE = {
   run: 'conventions run [--idle <с>] [--limit <с>] -- <команда>',
   build: 'conventions build [--root <path>] -- <команда сборки>'
     + '\n  Запускает сборку под пределами машины: CONVENTIONS_BUILD_CPUS — ядер, CONVENTIONS_BUILD_NICE — приоритет.',
-  commits: 'conventions commits [--range <диапазон git>] [--root <path>]',
+  commits: 'conventions commits [--range <диапазон git>] [--strict] [--root <path>]'
+    + '\n  --strict: при внешнем хранилище номер, который не удалось проверить, — отказ, а не предупреждение.',
+  store: 'conventions store [--check [--operations]] [--root <path>]'
+    + '\n  conventions store --export [--out <файл>] — задачи, выпуски и учёт обязательств проекта в форме контракта.'
+    + '\n  conventions store --move --url <адрес> --id-pattern <шаблон> [--read-key-env <ПЕРЕМЕННАЯ>] [--write-key-env <ПЕРЕМЕННАЯ>] — переход с файлов на внешнее хранилище.'
+    + '\n  --check сверяет внешнее хранилище задач и выпусков с контрактом ядра; --operations между выпусками открывает и отменяет пробный выпуск.',
   health: 'conventions health --url <адрес состояния сервиса> [--timeout <с>]',
   unknown: 'conventions unknown --url <адрес сайта> [--timeout <с>]',
   attested: 'conventions attested [--commit <ref>] [--root <path>]'
@@ -565,7 +590,8 @@ const SPEC = {
   obligations: {},
   baseline: { flags: ['--allow-growth'] },
   naming: { values: ['--map'], positional: 1 },
-  commits: { values: ['--range'] },
+  commits: { values: ['--range'], flags: ['--strict'] },
+  store: { flags: ['--check', '--operations', '--move', '--export'], values: ['--url', '--id-pattern', '--read-key-env', '--write-key-env', '--out'] },
   health: { values: ['--url', '--timeout'] },
   unknown: { values: ['--url', '--timeout'] },
   'static-check': { values: ['--url', '--component', '--previous', '--timeout'] },
@@ -628,14 +654,30 @@ if (command === undefined || command === '--help') {
     else if (command === 'docs-check') await docsCheck(root);
     else if (command === 'tickets-index') await ticketsIndex(root);
     // REQ-TICKETS-022
-    else if (command === 'tickets-renumber') await ticketsRenumber(root, parsed.positional[0], parsed.values.get('--base') ?? 'main');
-    else if (command === 'releases-index') await releasesIndex(root);
+    else if (command === 'tickets-renumber' || command === 'releases-index' || command === 'naming') {
+      if (!await onFiles(root, command)) process.exitCode = 1;
+      else if (command === 'releases-index') await releasesIndex(root);
+      else if (command === 'naming') await naming(root, parsed.positional[0], parsed.values.get('--map'));
+      else await ticketsRenumber(root, parsed.positional[0], parsed.values.get('--base') ?? 'main');
+    }
+    else if (command === 'store') {
+      const moving = parsed.flags.has('--move') || parsed.flags.has('--export');
+      await storeCommand(root, moving ? null : await externalStore(root), {
+        check: parsed.flags.has('--check'), withOperations: parsed.flags.has('--operations'),
+        move: parsed.flags.has('--move'), exportOnly: parsed.flags.has('--export'), values: parsed.values,
+      });
+    }
     else if (command === 'sync') await sync(root);
     // REQ-ADOPTION-027
     else if (command === 'feedback-template') await feedbackTemplate(root);
     else if (command === 'obligations') await obligations(root);
     else if (command === 'baseline') await baseline(root, parsed.flags.has('--allow-growth'));
-    else if (command === 'commits') await commits(root, parsed.values.get('--range') ?? null);
+    else if (command === 'commits') {
+      const store = await externalStore(root);
+      const range = parsed.values.get('--range') ?? null;
+      if (store === null) await commits(root, range);
+      else await externalCommits(root, store, range, parsed.flags.has('--strict'));
+    }
     else if (command === 'health') await health(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
     // REQ-DEPLOYMENT-018
     else if (command === 'unknown') await unknown(parsed.values.get('--url'), parsed.values.get('--timeout'), { usage: USAGE, refuse });
@@ -664,7 +706,6 @@ if (command === undefined || command === '--help') {
     // REQ-DEPLOYMENT-011, REQ-DEPLOYMENT-030
     else if (command === 'jvm-args') await jvmArgs(root, parsed, { usage: USAGE, refuse });
     else if (command === 'manifest') await deployManifest(root, parsed, { usage: USAGE, refuse });
-    else await naming(root, parsed.positional[0], parsed.values.get('--map'));
   }
 }
 
@@ -694,6 +735,12 @@ async function release(argv) {
   const root = path.resolve(parsed.values.get('--root') ?? process.cwd());
   const valueOf = (name) => parsed.values.get(name);
   const first = parsed.positional[0];
+  // REQ-STORE-001
+  const store = await externalStore(root);
+  if (store !== null) {
+    await externalRelease(root, store, subcommand, { first, valueOf, tickets: ticketList(valueOf('--tickets')) });
+    return;
+  }
   if (subcommand === 'status') await releaseStatus(root);
   else if (subcommand === 'close') await releaseClose(root);
   // REQ-RELEASE-046

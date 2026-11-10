@@ -38,7 +38,13 @@ export function validateIdea(file, content, parsed) {
 }
 
 // REQ-TICKETS-019
-export function ideaTicketErrors(documents) {
+export function ideaTicketErrors(documents, pattern = null) {
+  // REQ-STORE-015
+  if (pattern !== null) {
+    return documents
+      .filter((one) => one.metadata.get('type') === 'idea' && one.metadata.has('ticket') && !pattern.test(one.metadata.get('ticket')))
+      .map((one) => `${one.file}: поле ticket идеи — номер задачи хранилища (store.idPattern), получено ${one.metadata.get('ticket')}`);
+  }
   const tickets = new Set(documents.filter((one) => one.metadata.get('type') === 'ticket').map((one) => one.metadata.get('id')));
   return documents
     .filter((one) => one.metadata.get('type') === 'idea' && one.metadata.has('ticket') && !tickets.has(one.metadata.get('ticket')))

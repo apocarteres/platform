@@ -1,10 +1,10 @@
 ---
 id: CORE-OPS-126
 type: ticket
-status: backlog
+status: done
 scope: process, release, tooling
 authority: supporting
-priority: unassigned
+priority: P1
 release: unassigned
 related: REQ-TICKETS, REQ-RELEASE, REQ-PROJECT-PROCESS, REQ-QUALITY, CORE-OPS-127
 ---
@@ -45,7 +45,7 @@ related: REQ-TICKETS, REQ-RELEASE, REQ-PROJECT-PROCESS, REQ-QUALITY, CORE-OPS-12
 ## Решение владельца
 
 Решение владельца от 2026-11-10 — идея
-[CORE-IDEA-003](../ideas/CORE-IDEA-003-external-ticket-store.md) принята:
+[CORE-IDEA-003](../../ideas/CORE-IDEA-003-external-ticket-store.md) принята:
 
 - постановка задачи целиком живёт в хранилище;
 - задачи и выпуски, включая закрытые, в репозитории не остаются;
@@ -124,6 +124,15 @@ related: REQ-TICKETS, REQ-RELEASE, REQ-PROJECT-PROCESS, REQ-QUALITY, CORE-OPS-12
 - Версия контракта, которой хранилище не исполняет, даёт отказ с названием
   требуемой версии.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-10 — реализовано в `packages/project-conventions/lib/store`: разбор `store`, клиент контракта, шлагбаум закрытия с заморозкой и манифестом в теге, тонкие клиенты операций, проверка коммитов с запомненными номерами, `store --check`. Требования — новый документ `REQ-STORE`.
+- Отступления от постановки, записанные в `REQ-STORE`:
+  - пункт 11: `tickets-index` при внешнем хранилище не отказывает, а собирает только сводку идей — иначе её нечем пересобрать (`REQ-STORE-015`);
+  - пункт 12: требования о файлах не переписаны по одному, а получили одно положение о том, как они читаются при внешнем хранилище (`REQ-STORE-020`);
+  - `store --check` без ключа `--operations` только читает: операции открывают и отменяют пробный выпуск и занимают номер, поэтому включаются явно (`REQ-STORE-017`).
+- Один сценарий цикла проходит на обеих реализациях: `test/store-scenarios.test.mjs`; поддельное хранилище по контракту — `test/fake-store.mjs`.
 
 ## Вне задачи
 

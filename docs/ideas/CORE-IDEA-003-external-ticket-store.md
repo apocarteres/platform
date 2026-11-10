@@ -186,7 +186,7 @@ ticket: CORE-OPS-126
   "sections": {
     "whyNot": false,
     "openQuestions": false,
-    "beforeDeploy": "1. …",
+    "beforeDeploy": "- …",
     "afterDeploy": null
   }
 }
@@ -505,5 +505,5 @@ ticket: CORE-OPS-126
 Разговор с владельцем 2026-11-10: перенос задач legacy-store в трекер,
 синхронизация «репозиторий → трекер» затирает правки на доске, а деление
 полей между системами владелец отверг как непонятное людям. Исполняют задачи
-[CORE-OPS-126](../tickets/CORE-OPS-126-external-ticket-store.md) и
-[CORE-OPS-127](../tickets/CORE-OPS-127-project-moves-to-external-store.md).
+[CORE-OPS-126](../tickets/closed/CORE-OPS-126-external-ticket-store.md) и
+[CORE-OPS-127](../tickets/closed/CORE-OPS-127-project-moves-to-external-store.md).

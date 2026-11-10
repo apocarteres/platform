@@ -1,10 +1,10 @@
 ---
 id: CORE-OPS-127
 type: ticket
-status: backlog
+status: done
 scope: process, tooling, documentation
 authority: supporting
-priority: unassigned
+priority: P1
 release: unassigned
 depends-on: CORE-OPS-126
 related: REQ-TICKETS, REQ-RELEASE, REQ-ADOPTION, CORE-OPS-126
@@ -37,7 +37,7 @@ related: REQ-TICKETS, REQ-RELEASE, REQ-ADOPTION, CORE-OPS-126
 ## Решение владельца
 
 Решение владельца от 2026-11-10 (идея
-[CORE-IDEA-003](../ideas/CORE-IDEA-003-external-ticket-store.md), вопрос 2):
+[CORE-IDEA-003](../../ideas/CORE-IDEA-003-external-ticket-store.md), вопрос 2):
 задачи и выпуски, включая закрытые, в репозитории не остаются и переносятся в
 хранилище.
 
@@ -66,6 +66,12 @@ related: REQ-TICKETS, REQ-RELEASE, REQ-ADOPTION, CORE-OPS-126
 - Ссылка в строке кода и в блоке кода не заменяется.
 - Срок обязательства после перехода равен сроку до него.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-10 — реализовано: `conventions store --export` и `conventions store --move` (`lib/store/export.mjs`, `lib/store/move.mjs`), порядок перехода — `REQ-STORE-021`, выгрузка и импорт — `REQ-STORE-022`.
+- Выпуски контракт читать не даёт, поэтому приём выпусков сверяется по ответу импорта, а задач — поиском по номерам.
+- Ссылка в коде не заменяется, а проверка документации её видит: после перехода такие ссылки называет `docs-check`, и правит их человек.
 
 ## Вне задачи
 

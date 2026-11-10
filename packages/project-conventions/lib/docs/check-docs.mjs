@@ -60,6 +60,10 @@ const DEFAULT_CATALOG_TARGETS = [
   'docs/releases/INDEX.md',
 ];
 
+// REQ-STORE-015
+const STORE_CATALOGS = ['docs/tickets/INDEX.md', 'docs/releases/INDEX.md'];
+const STORE_TYPES = ['ticket', 'release'];
+
 async function walkFiles(directory) {
   let entries;
   try {
@@ -450,8 +454,10 @@ async function checkChildIndexCoverage(projectRoot, directory, indexPath, errors
 }
 
 export async function checkDocumentation(projectRoot, options = {}) {
+  // REQ-STORE-015
+  const store = options.store ?? null;
   const requiredCatalogTargets = [
-    ...DEFAULT_CATALOG_TARGETS,
+    ...DEFAULT_CATALOG_TARGETS.filter((target) => store === null || !STORE_CATALOGS.includes(target)),
     ...(options.requiredCatalogTargets ?? []),
   ];
   const resolvedRoot = path.resolve(projectRoot);
@@ -469,6 +475,11 @@ export async function checkDocumentation(projectRoot, options = {}) {
     const content = await readFile(filePath, 'utf8');
     const parsed = parseFrontMatter(content);
     if (parsed?.metadata) documents.push({ file: relativePath, content, metadata: parsed.metadata });
+    // REQ-STORE-015
+    if (store !== null && STORE_TYPES.includes(parsed?.metadata?.get('type'))) {
+      errors.push(`${relativePath}: документ типа ${parsed.metadata.get('type')} лежит в репозитории, а проект ведёт задачи и выпуски`
+        + ' во внешнем хранилище (store в .conventions.json): заведите его в хранилище и уберите файл');
+    }
     validateMetadata(relativePath, parsed, errors, ids, references, options.projectFields ?? null);
     // REQ-PROJECT-PROCESS-024
     if (parsed?.metadata && options.projectFieldErrors) errors.push(...options.projectFieldErrors(relativePath, parsed.metadata));
@@ -486,13 +497,15 @@ export async function checkDocumentation(projectRoot, options = {}) {
     }
   }
 
-  errors.push(...validateReleases(documents));
-  // REQ-TICKETS-019
-  errors.push(...ideaTicketErrors(documents));
+  if (store === null) errors.push(...validateReleases(documents));
+  // REQ-TICKETS-019, REQ-STORE-015
+  errors.push(...ideaTicketErrors(documents, store?.pattern ?? null));
 
   const delivered = await deliveredIds(resolvedRoot);
   for (const reference of references) {
     for (const targetId of reference.targetIds) {
+      // REQ-STORE-015
+      if (store !== null && store.pattern.test(targetId)) continue;
       if (!ids.has(targetId) && !delivered.has(targetId)) {
         errors.push(`${reference.relativePath}: поле ${reference.field} ссылается на неизвестный документ ${targetId}`);
       }

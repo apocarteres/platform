@@ -14,7 +14,7 @@ import { costSection, majorProblem, upgradeCost } from './changes.mjs';
 // REQ-PUBLISHING-015
 const COST_SECTION = '## Цена обновления';
 import {
-  CYCLE_TRAILER, REVERT_LABEL, commitStanding, commitsInRange, reachableSince, revertCommit, ticketIdsAt, ticketOf, tipOf,
+  commitStanding, commitsInRange, reachableSince, ticketIdsAt, ticketOf, tipOf,
 } from './commits.mjs';
 
 export { commitStanding };
@@ -26,6 +26,7 @@ import { settledComposition } from './composition.mjs';
 import { fullRunProblem } from './full-run.mjs';
 import { collectedActions, keptActions, unmarkedActionProblems } from './deployment-actions.mjs';
 import { compositionRows, dependencyProblems, inRolloutOrder } from './rollout.mjs';
+import { HOLDS, commitHolds } from './commit-holds.mjs';
 import { NOT_A_REPOSITORY, codeTree, createTag, headCommit, moveTag, repositoryAt, tagCommit, tagExists, workingTreeClean } from './git.mjs';
 
 // REQ-RELEASE-001, REQ-RELEASE-002, REQ-RELEASE-003, REQ-RELEASE-009, REQ-RELEASE-014, REQ-RELEASE-028
@@ -144,9 +145,6 @@ function obligationsSummary(closed, deferred, isCore) {
   return parts.length === 0 ? 'обязательств к исполнению в этом выпуске не было' : parts.join('; ');
 }
 
-// REQ-RELEASE-042
-const HOLDS = new Set(['не называет задачу', 'задача не заведена', 'задача вне состава']);
-
 // REQ-RELEASE-036, REQ-RELEASE-042
 async function standingContext(root, { config, composition, open, tip = 'HEAD' }) {
   const known = await tickets(root);
@@ -175,41 +173,11 @@ async function commitProblems(root, { scheme, config, composition, existing, rel
   const beyondBaseline = await withoutOlderThan(root, commits, baseline);
 
   const context = await standingContext(root, { config, composition, open });
-  const { areas, prefix, stages } = context;
   const known = await tickets(root);
-  const problems = [];
-  const outside = new Map();
-  for (const commit of beyondBaseline) {
-    const standing = commitStanding(commit, context);
-    if (!HOLDS.has(standing)) continue;
-    if (standing === 'не называет задачу') {
-      // REQ-RELEASE-039
-      problems.push(`Коммит ${commit.sha.slice(0, 8)} не называет задачу: «${commit.subject}»\n  `
-        + wayOutOfAnUnnamedCommit(releaseId, prefix, commit.sha.slice(0, 8)));
-      continue;
-    }
-    // REQ-PROJECT-PROCESS-023
-    if (standing === 'задача не заведена') {
-      problems.push(`Коммит ${commit.sha.slice(0, 8)} называет ${ticketOf(commit, areas, prefix, stages)}, а задачи нет в docs/tickets: «${commit.subject}»\n  `
-        + `Заведите задачу с этим идентификатором либо учтите коммит: release account ${commit.sha.slice(0, 8)} --reason "<причина>"`);
-      continue;
-    }
-    const ticket = ticketOf(commit, areas, prefix, stages);
-    if (!outside.has(ticket)) outside.set(ticket, []);
-    outside.get(ticket).push(commit);
-  }
-
-  // REQ-RELEASE-037
-  for (const [ticket, commits] of outside) {
-    if (revertCommit(commits[0], areas, prefix, stages)) continue;
-    const named = commits.map(
-      (commit) => `Коммит ${commit.sha.slice(0, 8)} относится к задаче ${ticket} вне состава выпуска: «${commit.subject}»`,
-    );
-    // REQ-RELEASE-039
-    named.push(wayIntoComposition(ticket, known.find((item) => ticketId(item) === ticket) ?? null, commits));
-    problems.push(named.join('\n  '));
-  }
-  return problems;
+  return commitHolds(beyondBaseline, context, {
+    releaseId,
+    releaseOf: (ticket) => known.find((item) => ticketId(item) === ticket)?.metadata.get('release') ?? 'unassigned',
+  });
 }
 
 // REQ-QUALITY-004
@@ -269,28 +237,6 @@ export async function accountCommit(root, { sha, reason }) {
   return { accounted: true, sha: found.sha.slice(0, 8), release: release.metadata.get('id') };
 }
 
-// REQ-RELEASE-039
-function wayOutOfAnUnnamedCommit(releaseId, prefix, sha) {
-  const example = prefix ? `${prefix}-OPS-001` : 'OPS-001';
-  return `Выхода четыре. Коммит ещё не отправлен: назовите задачу идентификатором в начале заголовка (${example} ...);`
-    + ` если коммит обслуживает сам выпуск — поставьте в тело строку ${CYCLE_TRAILER}: ${releaseId}`
-    + ' (именно в тело, заголовок для этого не годится);'
-    + ` если коммит отменяет прежнюю работу — метку ${REVERT_LABEL} сразу после идентификатора задачи.`
-    + ` Коммит уже отправлен: учтите его в выпуске командой release account ${sha} --reason "<причина>"`
-    + ' — это единственный выход, не переписывающий общую историю (REQ-RELEASE-041)';
-}
-
-// REQ-RELEASE-039
-function wayIntoComposition(ticket, known, commits) {
-  const assigned = known === null ? 'unassigned' : (known.metadata.get('release') ?? 'unassigned');
-  const way = assigned !== 'unassigned'
-    ? `Задача ${ticket} уже отнесена к ${assigned} и в состав этого выпуска не вносится (REQ-RELEASE-007): работа после её выпуска оформляется новой задачей, а ненужная — отменяется коммитом с меткой !revert`
-    : `Задача ${ticket} вносится в состав так: доведите её до выполненного состояния — состав подберёт её сам (REQ-RELEASE-007), — либо отмените её коммиты коммитом с меткой !revert`;
-  // REQ-RELEASE-041, REQ-RELEASE-042
-  const accounts = commits.map((commit) => `release account ${commit.sha.slice(0, 8)} --reason "<причина>"`).join('; ');
-  return `${way}. Коммит, который выпуску не мешает — например, запись хода задачи, задевшая документ рядом с ней (REQ-RELEASE-040), — учтите в выпуске: ${accounts} (REQ-RELEASE-041)`;
-}
-
 // REQ-RELEASE-036
 async function previousReleaseTag(root, existing, scheme) {
   const released = existing
@@ -305,7 +251,7 @@ async function previousReleaseTag(root, existing, scheme) {
   return null;
 }
 
-async function withoutOlderThan(root, commits, baseline) {
+export async function withoutOlderThan(root, commits, baseline) {
   const allowed = await reachableSince(root, baseline);
   return commits.filter((commit) => allowed.has(commit.sha));
 }
@@ -701,7 +647,7 @@ export async function openNext(root, { scheme, version, today, tickets: names = 
 }
 
 // REQ-RELEASE-045
-async function documentsSinceTheReceipt(root, config, carriedFrom) {
+export async function documentsSinceTheReceipt(root, config, carriedFrom) {
   const { documentationProblems } = await import('../docs/documentation.mjs');
   const { errors } = await documentationProblems(root, config);
   if (errors.length === 0) return [];

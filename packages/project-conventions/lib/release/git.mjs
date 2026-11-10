@@ -102,3 +102,29 @@ export async function createTag(root, tag, commit, message) {
 export async function moveTag(root, tag, commit, message) {
   await git(root, ['tag', '-f', '-a', tag, commit, '-m', message]);
 }
+
+// REQ-STORE-011
+export async function tagMessage(root, tag) {
+  if (!await tagExists(root, tag)) return null;
+  return git(root, ['tag', '--list', '--format=%(contents)', tag]);
+}
+
+// REQ-STORE-019
+export async function tagsWithCommits(root) {
+  const listed = await git(root, ['tag', '--list', '--format=%(refname:short)%09%(*objectname)%09%(objectname)']);
+  return listed === '' ? [] : listed.split('\n').map((line) => {
+    const [tag, peeled, own] = line.split('\t');
+    return { tag, commit: peeled || own };
+  });
+}
+
+// REQ-STORE-008
+export async function commitSubject(root, ref) {
+  try {
+    const found = await git(root, ['log', '-1', '--format=%H%x09%s', `${ref}^{commit}`]);
+    const [sha, ...subject] = found.split('\t');
+    return { sha, subject: subject.join('\t') };
+  } catch {
+    return null;
+  }
+}

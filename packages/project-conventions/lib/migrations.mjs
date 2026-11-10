@@ -2,7 +2,9 @@ import { execFile } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { CONFIG_FILE } from './config.mjs';
+import { CONFIG_FILE, readConfig } from './config.mjs';
+import { externalStore } from './store/config.mjs';
+import { releaseTags } from './store/tags.mjs';
 import { releases } from './release/documents.mjs';
 import { environmentWithoutGit } from './release/git.mjs';
 import { changeSets, isChangelog, setCarriedAt } from './changelog.mjs';
@@ -80,12 +82,21 @@ async function presentAt(root, commit, file) {
   }
 }
 
+// REQ-DEPLOYMENT-027, REQ-STORE-019
+async function releasedCommits(root) {
+  const config = await readConfig(root);
+  if (await externalStore(root, config) !== null) {
+    return (await releaseTags(root, config.release?.scheme ?? 'date')).map((one) => one.commit);
+  }
+  return (await releases(root))
+    .filter((release) => release.metadata.get('status') === 'released' && release.metadata.get('commit') !== undefined)
+    .map((release) => release.metadata.get('commit'));
+}
+
 // REQ-DEPLOYMENT-027
 export async function releasesCarrying(root, migration) {
   let count = 0;
-  for (const release of await releases(root)) {
-    const commit = release.metadata.get('commit');
-    if (release.metadata.get('status') !== 'released' || commit === undefined) continue;
+  for (const commit of await releasedCommits(root)) {
     const carried = migration.set === undefined ? await presentAt(root, commit, migration.file) : await setCarriedAt(root, commit, migration);
     if (carried) count += 1;
   }

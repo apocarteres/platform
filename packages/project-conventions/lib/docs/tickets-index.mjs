@@ -113,10 +113,10 @@ export async function present(directory) {
   }
 }
 
-export async function updateTicketIndexes(root, { check = false, stale = true } = {}) {
-  // REQ-PROJECT-PROCESS-021
-  if (!await present(path.join(root, 'docs/tickets'))) return [];
-  const { errors, outputs } = await buildTicketIndexes(root);
+export async function updateTicketIndexes(root, { check = false, stale = true, ideasOnly = false } = {}) {
+  // REQ-PROJECT-PROCESS-021, REQ-STORE-015
+  if (!ideasOnly && !await present(path.join(root, 'docs/tickets'))) return [];
+  const { errors, outputs } = ideasOnly ? { errors: [], outputs: new Map() } : await buildTicketIndexes(root);
   // REQ-TICKETS-017
   if (await present(path.join(root, IDEAS_DIR))) {
     const ideas = await buildIdeaIndex(root);

@@ -21,9 +21,14 @@ export function questionLimits(config) {
 
 // REQ-RELEASE-047
 export async function questionStanding(root, config) {
+  return questionsAmong(await tickets(root), config);
+}
+
+// REQ-RELEASE-047, REQ-STORE-013
+export function questionsAmong(known, config) {
   const limits = questionLimits(config);
   if (limits.problems.length > 0) return { problems: limits.problems, reminders: [] };
-  const open = (await tickets(root)).filter((ticket) => ticket.metadata.get('questions') === 'open').map(ticketId).sort();
+  const open = known.filter((ticket) => ticket.metadata.get('questions') === 'open').map(ticketId).sort();
   const named = open.join(', ');
   if (open.length > limits.require) {
     return {

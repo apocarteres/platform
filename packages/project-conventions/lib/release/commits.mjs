@@ -76,15 +76,20 @@ export function cycleCommit(commit) {
 export const REVERT_LABEL = '!revert';
 
 // REQ-RELEASE-037, REQ-RELEASE-042
-export function revertCommit(commit, areas, prefix, stages) {
-  const named = ticketsOf(commit, areas, prefix, stages);
+export function revertCommit(commit, areas, prefix, stages, pattern = null) {
+  const named = ticketsOf(commit, areas, prefix, stages, pattern);
   if (named.length === 0) return false;
-  const head = named.join('\\s+');
+  const head = named.map((id) => id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
   return new RegExp(`^${head}\\s+${REVERT_LABEL.replace('!', '\\!')}\\b`).test(commit.subject);
 }
 
 // REQ-NAMING-001, REQ-NAMING-011, REQ-NAMING-012
-function leadingTicket(subject, areas, prefix, stages) {
+function leadingTicket(subject, areas, prefix, stages, pattern = null) {
+  // REQ-STORE-014
+  if (pattern !== null) {
+    const named = new RegExp(`^(${pattern})(?![A-Za-z0-9_-])`).exec(subject);
+    return named === null ? null : named[1];
+  }
   const head = prefix ? `${prefix}-` : '';
   const match = new RegExp(`^(${head}(?:${areas.join('|')})-\\d{3})\\b`).exec(subject);
   if (match !== null) return match[1];
@@ -94,11 +99,11 @@ function leadingTicket(subject, areas, prefix, stages) {
 }
 
 // REQ-RELEASE-042
-export function ticketsOf(commit, areas, prefix, stages = new Set()) {
+export function ticketsOf(commit, areas, prefix, stages = new Set(), pattern = null) {
   const found = [];
   let rest = commit.subject;
   for (;;) {
-    const one = leadingTicket(rest, areas, prefix, stages);
+    const one = leadingTicket(rest, areas, prefix, stages, pattern);
     if (one === null) break;
     found.push(one);
     rest = rest.slice(one.length).replace(/^\s+/, '');
@@ -107,8 +112,8 @@ export function ticketsOf(commit, areas, prefix, stages = new Set()) {
 }
 
 // REQ-NAMING-001, REQ-NAMING-011, REQ-NAMING-012
-export function ticketOf(commit, areas, prefix, stages = new Set()) {
-  return ticketsOf(commit, areas, prefix, stages)[0] ?? null;
+export function ticketOf(commit, areas, prefix, stages = new Set(), pattern = null) {
+  return ticketsOf(commit, areas, prefix, stages, pattern)[0] ?? null;
 }
 
 // REQ-PROJECT-PROCESS-023
@@ -132,13 +137,13 @@ export function tipOf(range) {
 }
 
 // REQ-RELEASE-036, REQ-RELEASE-042
-export function commitStanding(commit, { members, cancelled, accounted, areas, prefix, stages, existing }) {
+export function commitStanding(commit, { members, cancelled, accounted, areas, prefix, stages, existing, pattern = null, records = true }) {
   // REQ-RELEASE-036
   if (cycleCommit(commit) || mergeCommit(commit)) return 'обслуживает выпуск';
   // REQ-RELEASE-041
   if (accounted.some((sha) => commit.sha.startsWith(sha))) return 'учтён в выпуске';
   // REQ-RELEASE-042
-  const named = ticketsOf(commit, areas, prefix, stages);
+  const named = ticketsOf(commit, areas, prefix, stages, pattern);
   // REQ-TICKETS-020
   if (named.length === 0) return ideaRecord(commit, prefix) ? 'запись об идее' : 'не называет задачу';
   // REQ-PROJECT-PROCESS-023
@@ -147,6 +152,6 @@ export function commitStanding(commit, { members, cancelled, accounted, areas, p
   // REQ-RELEASE-031
   if (named.some((id) => cancelled.has(id))) return 'задача отменена';
   // REQ-RELEASE-040
-  if (recordCommit(commit)) return 'запись о задаче';
+  if (records && recordCommit(commit)) return 'запись о задаче';
   return 'задача вне состава';
 }

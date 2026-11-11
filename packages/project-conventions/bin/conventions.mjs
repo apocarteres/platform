@@ -509,6 +509,7 @@ const USAGE = {
   commits: 'conventions commits [--range <диапазон git>] [--strict] [--root <path>]'
     + '\n  --strict: при внешнем хранилище номер, который не удалось проверить, — отказ, а не предупреждение.',
   store: 'conventions store [--check [--operations]] [--root <path>]'
+    + '\n  conventions store (--lookup <ID,ID> | --working | --open) [--json] — чтение хранилища в JSON в форме контракта.'
     + '\n  conventions store --export [--out <файл>] — задачи, выпуски и учёт обязательств проекта в форме контракта.'
     + '\n  conventions store --move --url <адрес> --id-pattern <шаблон> [--read-key-env <ПЕРЕМЕННАЯ>] [--write-key-env <ПЕРЕМЕННАЯ>] — переход с файлов на внешнее хранилище.'
     + '\n  --check сверяет внешнее хранилище задач и выпусков с контрактом ядра; --operations между выпусками открывает и отменяет пробный выпуск.',
@@ -540,7 +541,7 @@ const USAGE = {
 
 // REQ-RELEASE-028
 const RELEASE_USAGE = {
-  status: 'conventions release status [--root <path>]',
+  status: 'conventions release status [--json] [--root <path>]',
   close: 'conventions release close [--root <path>]',
   reclose: 'conventions release reclose --reason "<причина>" [--root <path>]',
   // REQ-RELEASE-049
@@ -559,7 +560,7 @@ const RELEASE_USAGE = {
 
 // REQ-RELEASE-028
 const RELEASE_SPEC = {
-  status: {},
+  status: { flags: ['--json'] },
   close: {},
   reclose: { values: ['--reason'] },
   // REQ-RELEASE-049
@@ -591,7 +592,10 @@ const SPEC = {
   baseline: { flags: ['--allow-growth'] },
   naming: { values: ['--map'], positional: 1 },
   commits: { values: ['--range'], flags: ['--strict'] },
-  store: { flags: ['--check', '--operations', '--move', '--export'], values: ['--url', '--id-pattern', '--read-key-env', '--write-key-env', '--out'] },
+  store: {
+    flags: ['--check', '--operations', '--move', '--export', '--working', '--open', '--json'],
+    values: ['--url', '--id-pattern', '--read-key-env', '--write-key-env', '--out', '--lookup'],
+  },
   health: { values: ['--url', '--timeout'] },
   unknown: { values: ['--url', '--timeout'] },
   'static-check': { values: ['--url', '--component', '--previous', '--timeout'] },
@@ -665,6 +669,7 @@ if (command === undefined || command === '--help') {
       await storeCommand(root, moving ? null : await externalStore(root), {
         check: parsed.flags.has('--check'), withOperations: parsed.flags.has('--operations'),
         move: parsed.flags.has('--move'), exportOnly: parsed.flags.has('--export'), values: parsed.values,
+        read: { '--lookup': parsed.values.get('--lookup'), '--working': parsed.flags.has('--working'), '--open': parsed.flags.has('--open') },
       });
     }
     else if (command === 'sync') await sync(root);
@@ -738,10 +743,12 @@ async function release(argv) {
   // REQ-STORE-001
   const store = await externalStore(root);
   if (store !== null) {
-    await externalRelease(root, store, subcommand, { first, valueOf, tickets: ticketList(valueOf('--tickets')) });
+    await externalRelease(root, store, subcommand, { first, valueOf, tickets: ticketList(valueOf('--tickets')), json: parsed.flags.has('--json') });
     return;
   }
-  if (subcommand === 'status') await releaseStatus(root);
+  // REQ-STORE-023
+  if (subcommand === 'status' && parsed.flags.has('--json')) refuse(usage, 'release status --json действует при внешнем хранилище: при файлах состав и действия читаются из docs/releases');
+  else if (subcommand === 'status') await releaseStatus(root);
   else if (subcommand === 'close') await releaseClose(root);
   // REQ-RELEASE-046
   else if (subcommand === 'reclose') await releaseReclose(root, valueOf('--reason'));

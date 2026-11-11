@@ -1,10 +1,10 @@
 ---
 id: CORE-OPS-128
 type: ticket
-status: backlog
+status: done
 scope: process, tooling
 authority: supporting
-priority: unassigned
+priority: P1
 release: unassigned
 depends-on: CORE-OPS-126
 related: REQ-STORE, REQ-RELEASE, CORE-OPS-126, CORE-OPS-127
@@ -14,7 +14,7 @@ related: REQ-STORE, REQ-RELEASE, CORE-OPS-126, CORE-OPS-127
 
 ## Проблема
 
-При внешнем хранилище ([CORE-OPS-126](closed/CORE-OPS-126-external-ticket-store.md))
+При внешнем хранилище ([CORE-OPS-126](CORE-OPS-126-external-ticket-store.md))
 чтения контракта доступны только внутри пакета правил. Скрипты проекта,
 которые раньше читали файлы задач и выпусков, — развёртывание, сборка
 выпуска, проверки CI — после перехода остаются без источника и вынуждены
@@ -50,6 +50,12 @@ related: REQ-STORE, REQ-RELEASE, CORE-OPS-126, CORE-OPS-127
   закрытия без отметок, после него — с отметками.
 - Манифест тега несёт значения полей проекта задач состава.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-11 — реализовано: чтения `conventions store --lookup | --working | --open`, `release status --json`, значения полей проекта в манифесте тега (`lib/store/cli.mjs`, `lib/store/shape.mjs`); требование — `REQ-STORE-023`, манифест — `REQ-STORE-011`.
+- Отметок действий до первого шага закрытия контракт не даёт: действия попадают в выпуск операцией закрытия. `release status --json` до него называет действия без отметок.
+- `release status --json` при файлах отказывает: состав и действия там читаются из документа выпуска.
 
 ## Вне задачи
 

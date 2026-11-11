@@ -17,6 +17,7 @@ const PARTS = {
   rules: { paths: ['rules/'], command: 'echo run >> "$RUNS/rules" && test ! -f rules/broken' },
   web: { paths: ['web/', 'rules/configs/'], except: ['web/notes/'], command: 'echo run >> "$RUNS/web"' },
   java: { paths: ['java/', 'pom.xml'], command: 'echo run >> "$RUNS/java"' },
+  tools: { paths: ['tools/'], always: true, command: 'echo run >> "$RUNS/tools"' },
 };
 
 async function project() {
@@ -94,6 +95,8 @@ test('дерево части: свои файлы и общие; докумен
   assert.deepEqual(differs(changed('java/Main.java')), ['java']);
   assert.deepEqual(differs(changed('build.toml')), ['rules', 'web', 'java'], 'файл вне частей — общий');
   assert.deepEqual(differs(changed('docs/note.md')), []);
+  assert.equal(before.get('tools'), null);
+  assert.deepEqual(differs(partTrees([...base, entry('tools/run.sh')], parts)), [], 'файл части с always её собственный, а не общий');
   assert.deepEqual(differs(changed('web/notes/readme.txt')), ['rules', 'web', 'java'], 'исключённый из части путь становится общим');
 });
 
@@ -102,10 +105,10 @@ test('receipt --parts: часть с прежним деревом не пере
   try {
     const first = await p.receipt();
     assert.equal(first.code, 0, first.stderr);
-    assert.deepEqual(await p.counts(), { checks: 1, rules: 1, web: 1, java: 1 });
+    assert.deepEqual(await p.counts(), { checks: 1, rules: 1, web: 1, java: 1, tools: 1 });
     const head = await p.git('rev-parse', 'HEAD');
     const written = JSON.parse(await readFile(path.join(p.root, 'target/verify', `${head}.json`), 'utf8'));
-    assert.deepEqual(written.parts.map((one) => [one.name, one.carriedFrom]), [['checks', null], ['rules', null], ['web', null], ['java', null]]);
+    assert.deepEqual(written.parts.map((one) => [one.name, one.carriedFrom]), [['checks', null], ['rules', null], ['web', null], ['java', null], ['tools', null]]);
     assert.equal(written.run.exitCode, 0);
 
     await p.put('rules/lib.mjs', 'export const one = 2;\n');
@@ -113,20 +116,20 @@ test('receipt --parts: часть с прежним деревом не пере
     const next = await p.commit('Правка правил');
     const second = await p.receipt();
     assert.equal(second.code, 0, second.stderr);
-    assert.deepEqual(await p.counts(), { checks: 2, rules: 2, web: 1, java: 1 }, 'перезапущены часть без путей и изменённая часть');
+    assert.deepEqual(await p.counts(), { checks: 2, rules: 2, web: 1, java: 1, tools: 2 }, 'перезапущены часть без путей и изменённая часть');
     assert.match(second.stdout, new RegExp(`Часть java: расписка перенесена с ${head.slice(0, 8)}`));
     const carried = JSON.parse(await readFile(path.join(p.root, 'target/verify', `${next}.json`), 'utf8'));
-    assert.deepEqual(carried.parts.map((one) => [one.name, one.carriedFrom]), [['checks', null], ['rules', null], ['web', head], ['java', head]]);
+    assert.deepEqual(carried.parts.map((one) => [one.name, one.carriedFrom]), [['checks', null], ['rules', null], ['web', head], ['java', head], ['tools', null]]);
     const attested = await run(process.execPath, [cli, 'attested', '--root', p.root], { env: environmentWithoutGit() });
     assert.match(attested.stdout, /Расписка на .* есть: verify/);
 
     await p.put('build.toml', 'tools = 2\n');
     await p.commit('Правка общего файла');
     assert.equal((await p.receipt()).code, 0);
-    assert.deepEqual(await p.counts(), { checks: 3, rules: 3, web: 2, java: 2 }, 'общий файл обесценивает расписки всех частей');
+    assert.deepEqual(await p.counts(), { checks: 3, rules: 3, web: 2, java: 2, tools: 3 }, 'общий файл обесценивает расписки всех частей');
 
     assert.equal((await p.receipt('--fresh')).code, 0);
-    assert.deepEqual(await p.counts(), { checks: 4, rules: 4, web: 3, java: 3 });
+    assert.deepEqual(await p.counts(), { checks: 4, rules: 4, web: 3, java: 3, tools: 4 });
   } finally {
     await p.stop();
   }
@@ -144,7 +147,7 @@ test('receipt --parts: упавшая часть расписки не оста�
     await assert.rejects(readFile(path.join(p.root, 'target/verify', `${head}.json`), 'utf8'));
     const again = await p.receipt();
     assert.notEqual(again.code, 0);
-    assert.deepEqual(await p.counts(), { checks: 2, rules: 2, web: 1, java: 1 }, 'пройденные части перенесены, упавшая выполнена заново');
+    assert.deepEqual(await p.counts(), { checks: 2, rules: 2, web: 1, java: 1, tools: 2 }, 'пройденные части перенесены, упавшая выполнена заново');
 
     await p.put('web/app.ts', 'export const app = 2;\n');
     const dirty = await p.receipt();

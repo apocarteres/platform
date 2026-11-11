@@ -38,7 +38,7 @@
   "verify": {
     "parts": {
       "checks": { "command": "mise run verify-part-checks" },
-      "rules": { "command": "mise run verify-part-rules" },
+      "rules": { "paths": ["packages/project-conventions/"], "always": true, "command": "mise run verify-part-rules" },
       "web": {
         "paths": ["packages/", "packages/project-conventions/configs/"],
         "except": ["packages/project-conventions/"],

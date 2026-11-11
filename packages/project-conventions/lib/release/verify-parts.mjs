@@ -6,7 +6,7 @@ import { OUTSIDE_THE_CODE, trackedFiles } from './git.mjs';
 import { RECEIPT_DIR } from './receipt.mjs';
 
 // REQ-RELEASE-051
-const PART_KEYS = new Set(['command', 'paths', 'except']);
+const PART_KEYS = new Set(['command', 'paths', 'except', 'always']);
 const PART_NAME = /^[a-z][a-z0-9-]*$/;
 
 const prefixes = (value) => Array.isArray(value) && value.every((one) => typeof one === 'string' && one !== '');
@@ -32,7 +32,8 @@ export function partsDeclaration(config) {
     if (part.paths !== undefined && (!prefixes(part.paths) || part.paths.length === 0)) problems.push(`${where}: paths — непустой перечень путей от корня репозитория`);
     if (part.except !== undefined && !prefixes(part.except)) problems.push(`${where}: except — перечень путей от корня репозитория`);
     if (part.except !== undefined && part.paths === undefined) problems.push(`${where}: except без paths не действует`);
-    parts.push({ name, command: part.command, paths: part.paths ?? null, except: part.except ?? [] });
+    if (part.always !== undefined && typeof part.always !== 'boolean') problems.push(`${where}: always — true либо false`);
+    parts.push({ name, command: part.command, paths: part.paths ?? null, except: part.except ?? [], always: part.always === true || part.paths === undefined });
   }
   return { parts: problems.length === 0 ? parts : [], problems };
 }
@@ -53,7 +54,7 @@ export function partTrees(entries, parts) {
     .filter((entry) => !bounded.some((part) => owns(part, entry.file)));
   const trees = new Map();
   for (const part of parts) {
-    if (part.paths === null) {
+    if (part.always) {
       trees.set(part.name, null);
       continue;
     }

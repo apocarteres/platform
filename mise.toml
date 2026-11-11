@@ -80,20 +80,47 @@ run = [
   "mise run conventions-check",
   "mise run web-typecheck",
   "mise run web-lint",
-  "mise run web-test",
+  "scripts/web.sh test --except project-conventions",
   "mise run java-test",
 ]
 
 [tasks.verify-set]
-description = "Полный набор: быстрый шлагбаум и сборка npm-пакетов ядра"
+description = "Полный набор подряд, без расписки: быстрый шлагбаум и сборка npm-пакетов ядра"
 run = [
   "mise run check",
   "mise run web-build",
 ]
 
+# CORE-OPS-129: части набора verify объявлены в .conventions.json (verify.parts)
+[tasks.verify-part-checks]
+description = "Часть набора: документация и правила проекта"
+run = [
+  "node packages/project-conventions/bin/conventions.mjs docs-check",
+  "mise run conventions-check",
+]
+
+[tasks.verify-part-rules]
+description = "Часть набора: тесты и статический разбор пакета правил"
+run = [
+  "mise run conventions-test",
+  "scripts/web.sh lint --only project-conventions",
+]
+
+[tasks.verify-part-web]
+description = "Часть набора: npm-пакеты ядра, кроме пакета правил"
+run = [
+  "scripts/web.sh typecheck --except project-conventions",
+  "scripts/web.sh lint --except project-conventions",
+  "scripts/web.sh test --except project-conventions",
+  "scripts/web.sh build --except project-conventions",
+]
+
 [tasks.verify]
-description = "Всё, что проверяется локально; расписку пишет наблюдавший прогон"
-run = "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify -- mise run verify-set"
+description = "Всё, что проверяется локально; расписку пишет наблюдавший прогон, часть с прежним деревом не перезапускается"
+run = [
+  "scripts/web.sh install",
+  "node packages/project-conventions/bin/conventions.mjs receipt --checks check,verify --parts",
+]
 
 # CORE-OPS-088
 [tasks.verify-runner-prepare]

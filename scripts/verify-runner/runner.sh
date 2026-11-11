@@ -98,12 +98,19 @@ verify() {
   require_container
   log "контекст Docker: $(docker context show); коммит $commit"
   docker restart "$CONTAINER" >/dev/null
-  in_container 'find /work/src -mindepth 1 -maxdepth 1 -exec rm -rf {} +'
+  # CORE-OPS-129: зависимости пакетов и расписки частей переживают прогон —
+  # дерево приводится к коммиту, а не создаётся заново.
   git -C "$ROOT_DIR" bundle create - --all | docker exec -i "$CONTAINER" bash -lc 'cat > /tmp/platform.bundle'
   docker exec "$CONTAINER" bash -lc "
     set -eu
-    git clone --quiet --no-checkout /tmp/platform.bundle /work/src
+    if [ ! -d /work/src/.git ]; then
+      find /work/src -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+      git clone --quiet --no-checkout /tmp/platform.bundle /work/src
+    else
+      git -C /work/src fetch --quiet --force /tmp/platform.bundle '+refs/*:refs/bundle/*'
+    fi
     git -C /work/src checkout --quiet --force --detach '$commit'
+    git -C /work/src clean -fdxq -e node_modules/ -e /target/
     git -C /work/src config user.email verify-runner@localhost
     git -C /work/src config user.name verify-runner
     rm -f /tmp/platform.bundle
@@ -116,7 +123,7 @@ verify() {
   fi
   in_container 'eval "$(mise activate bash --shims)" && mise run verify'
   mkdir -p "$ROOT_DIR/target/verify"
-  docker cp "$CONTAINER:/work/src/target/verify/$commit.json" "$ROOT_DIR/target/verify/$commit.json"
+  docker cp "$CONTAINER:/work/src/target/verify/." "$ROOT_DIR/target/verify/"
   log "набор пройден в контейнере; расписка перенесена: target/verify/$commit.json"
 }
 

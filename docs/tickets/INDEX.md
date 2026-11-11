@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 8. Включены самостоятельные задачи и этапы планов функций.
+Всего: 7. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -25,4 +25,3 @@ authority: navigation
 | [У ядра нет общей локализации](CORE-ARC-028-no-shared-localization.md) | P3 | Запланирована | Не назначен | client, mail, api, conventions |
 | [Цена обновления молчит об изменённом поведении](CORE-OPS-104-cost-misses-changed-behaviour.md) | P3 | Запланирована | Не назначен | release, publishing, tooling |
 | [Сборочный контейнер не работает с rootless Docker](CORE-OPS-108-verify-runner-rootless-docker.md) | P3 | Запланирована | Не назначен | tooling, testing |
-| [web.sh не переставляет зависимости пакета при устаревшем node_modules](CORE-OPS-117-web-sh-stale-node-modules.md) | P3 | Запланирована | Не назначен | tooling, build |

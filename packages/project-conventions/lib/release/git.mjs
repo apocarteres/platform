@@ -62,6 +62,12 @@ export async function uncommitted(root, prefixes) {
     .sort();
 }
 
+// REQ-RELEASE-051
+export async function trackedFiles(root, commit) {
+  const listing = await git(root, ['ls-tree', '-r', '--full-tree', commit]);
+  return (listing === '' ? [] : listing.split('\n')).map((line) => ({ line, file: line.slice(line.indexOf('\t') + 1) }));
+}
+
 // REQ-RELEASE-045
 export async function codeTree(root, commit) {
   const listing = await git(root, ['ls-tree', '-r', '--full-tree', commit]);

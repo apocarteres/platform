@@ -1,5 +1,8 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { environmentWithoutGit } from './git.mjs';
 
@@ -148,8 +151,46 @@ export function contractOf(source, name = 'контракт') {
   return found.sort();
 }
 
-// REQ-PUBLISHING-015
+// CORE-OPS-130
+export const SURFACE_CACHE = 'target/surface';
+let reading = null;
+
+function readingKey() {
+  reading ??= readFile(fileURLToPath(import.meta.url), 'utf8')
+    .then((source) => createHash('sha256').update(source).digest('hex').slice(0, 16));
+  return reading;
+}
+
+async function commitOf(root, ref) {
+  try {
+    const { stdout } = await run('git', ['-C', root, 'rev-parse', '--verify', '--quiet', `${ref}^{commit}`], { env: environmentWithoutGit() });
+    return stdout.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+// CORE-OPS-130
 export async function surfaceAt(root, ref) {
+  const commit = await commitOf(root, ref);
+  if (commit === null) return readSurface(root, ref);
+  const file = path.join(root, SURFACE_CACHE, await readingKey(), `${commit}.json`);
+  try {
+    return JSON.parse(await readFile(file, 'utf8'));
+  } catch {
+    const surface = await readSurface(root, commit);
+    try {
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, JSON.stringify(surface));
+    } catch {
+      return surface;
+    }
+    return surface;
+  }
+}
+
+// REQ-PUBLISHING-015
+async function readSurface(root, ref) {
   const cli = await shown(root, ref, `${PACKAGE}/bin/conventions.mjs`);
   const rules = rulesOf(await shown(root, ref, `${PACKAGE}/lib/rules.mjs`));
   const delivered = deliveredOf(await shown(root, ref, `${PACKAGE}/lib/documents.mjs`));

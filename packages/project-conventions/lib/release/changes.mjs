@@ -199,14 +199,26 @@ async function releaseDocument(root, tag) {
   }
 }
 
+// CORE-OPS-130
+const SURFACES_AT_ONCE = 8;
+
 // REQ-PUBLISHING-015
 export async function changesHistory(root, { since = 'v1.0.0', until = null } = {}) {
   const tags = (await releaseTags(root)).filter((tag) => compareVersions(versionOf(tag), versionOf(since)) >= 0
     && (until === null || compareVersions(versionOf(tag), versionOf(until)) <= 0));
   const history = [];
+  const surfaces = new Map();
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(SURFACES_AT_ONCE, tags.length) }, async () => {
+    while (next < tags.length) {
+      const tag = tags[next];
+      next += 1;
+      surfaces.set(tag, await surfaceAt(root, tag));
+    }
+  }));
   let before = null;
   for (const tag of tags) {
-    const after = await surfaceAt(root, tag);
+    const after = surfaces.get(tag);
     if (before !== null) {
       const changes = changesBetween(before, after);
       const document = await releaseDocument(root, tag);

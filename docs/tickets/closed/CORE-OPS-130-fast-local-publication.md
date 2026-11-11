@@ -1,10 +1,10 @@
 ---
 id: CORE-OPS-130
 type: ticket
-status: backlog
+status: done
 scope: release, tooling, build
 authority: supporting
-priority: unassigned
+priority: P1
 release: unassigned
 related: REQ-PUBLISHING, REQ-RELEASE, CORE-OPS-129, CORE-OPS-101
 ---
@@ -51,6 +51,13 @@ related: REQ-PUBLISHING, REQ-RELEASE, CORE-OPS-129, CORE-OPS-101
   журналом.
 - Замер: `mise run install-local` на прогретом дереве — не больше 20 с.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-11 — поверхность ядра на коммите запоминается в `target/surface/<отпечаток кода чтения>/<коммит>.json`, теги читаются по восемь одновременно (`lib/release/surface.mjs`, `lib/release/changes.mjs`). Отпечаток кода чтения в пути обесценивает запомненное при правке самого чтения.
+- `scripts/install-local.sh`: сборка Java-модулей идёт одновременно с публикацией npm-пакетов, пакеты упаковываются одновременно; журнал Maven печатается при отказе.
+- Замеры 2026-11-11: история изменений — 57 с → 8 с при пустом запомненном и 0,4 с при заполненном, результат совпал побайтно; `mise run install-local` на прогретом дереве — 116 с → 13 с.
+- `mvnw clean` из корня убирает корневой `target/` вместе с запомненным и отпечатками зависимостей: первый запуск после него идёт дольше.
 
 ## Вне задачи
 

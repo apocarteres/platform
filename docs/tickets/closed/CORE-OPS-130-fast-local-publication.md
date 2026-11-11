@@ -5,7 +5,7 @@ status: done
 scope: release, tooling, build
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-17-6-1
 related: REQ-PUBLISHING, REQ-RELEASE, CORE-OPS-129, CORE-OPS-101
 ---
 

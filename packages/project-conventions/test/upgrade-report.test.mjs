@@ -3,12 +3,12 @@ import test from 'node:test';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { RULES } from '../lib/rules.mjs';
 import {
   SEES_MORE_SECTION, breakingReasons, changesBetween, changesHistory, costSection, declaredIn, majorProblem, packagedHistory, reportLines,
 } from '../lib/release/changes.mjs';
-import { commandsOf, contractOf, rulesOf, surfaceAt } from '../lib/release/surface.mjs';
+import { SURFACE_CACHE, commandsOf, contractOf, rulesOf, surfaceAt } from '../lib/release/surface.mjs';
 import { environmentWithoutGit } from '../lib/release/git.mjs';
 
 const EMPTY = { rules: [], commands: [], subcommands: [], keys: {}, clauses: [], obligations: [], contract: [] };
@@ -191,6 +191,12 @@ test('история собирается по тегам ядра, а не по
 
     const head = await surfaceAt(root, 'HEAD');
     assert.deepEqual(head.rules.map((rule) => rule.id), ['comments', 'wiring']);
+
+    const kept = (await readdir(path.join(root, SURFACE_CACHE), { recursive: true })).filter((name) => name.endsWith('.json'));
+    assert.equal(kept.length, 3, 'поверхность прочитана один раз на коммит: тегов три, HEAD — коммит последнего');
+    assert.deepEqual(await changesHistory(root), history, 'повтор из запомненного даёт ту же историю');
+    git('tag', '-f', 'v1.2.0', 'v1.1.0');
+    assert.deepEqual((await surfaceAt(root, 'v1.2.0')).rules.map((rule) => rule.id), ['comments'], 'перенесённый тег читается по своему коммиту, а не по имени');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

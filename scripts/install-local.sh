@@ -30,10 +30,15 @@ esac
 
 log "версия $VERSION"
 
+# CORE-OPS-130: Maven и npm друг от друга не зависят и идут одновременно;
+# журнал Maven печатается при отказе.
+MAVEN_LOG="$ROOT_DIR/target/install-local-maven.log"
+mkdir -p "$ROOT_DIR/target"
 log "Maven: установка в локальный репозиторий"
 # CORE-OPS-088: тесты пройдены до публикации — это доказывает расписка выпуска;
 # повторный прогон потребовал бы Docker на машине, которая только публикует.
-(cd "$ROOT_DIR" && ./mvnw --batch-mode --no-transfer-progress -Drevision="$VERSION" -Prelease -DskipTests install)
+(cd "$ROOT_DIR" && ./mvnw --batch-mode --no-transfer-progress -T 1C -Drevision="$VERSION" -Prelease -DskipTests install) > "$MAVEN_LOG" 2>&1 &
+MAVEN_PID=$!
 
 DIST_DIR="$ROOT_DIR/target/local-packages"
 mkdir -p "$DIST_DIR"
@@ -76,10 +81,24 @@ pack_package() {
   log "готово: $DIST_DIR/$archive"
 }
 
+PACK_PIDS=()
 for manifest in "$ROOT_DIR"/packages/*/package.json; do
   [ -f "$manifest" ] || continue
   publishable "$manifest" || continue
-  pack_package "$(dirname "$manifest")"
+  pack_package "$(dirname "$manifest")" &
+  PACK_PIDS+=("$!")
 done
+
+FAILED=0
+for pid in ${PACK_PIDS[@]+"${PACK_PIDS[@]}"}; do
+  wait "$pid" || FAILED=1
+done
+if ! wait "$MAVEN_PID"; then
+  cat "$MAVEN_LOG" >&2
+  echo "Maven: установка в локальный репозиторий не удалась" >&2
+  FAILED=1
+fi
+[ "$FAILED" = 0 ] || exit 1
+log "Maven: артефакты установлены"
 
 log "потребитель ставит архивы как file:-зависимости или через scripts/platform/install.sh"

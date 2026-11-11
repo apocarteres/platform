@@ -9,6 +9,7 @@ import { exportProject } from './export.mjs';
 import { moveToStore } from './move.mjs';
 import { accountCommit, closeRelease, finishRelease, finishability, openRelease, settle } from './cycle.mjs';
 import { accountState, localStanding, storeStanding } from './gate.mjs';
+import { actionsOf } from './shape.mjs';
 import { checkStore } from './check.mjs';
 import { commitsWithoutATicket } from './commits.mjs';
 
@@ -38,8 +39,40 @@ function debts(obligations, state, isCore) {
   });
 }
 
+// REQ-STORE-023
+async function statusReport(root, context) {
+  const { config, client } = context;
+  await settle(root, context);
+  const open = await client.openRelease();
+  const { obligations, isCore } = await loadObligations(root);
+  const report = {
+    release: null, tag: null, composition: [], actions: [], problems: [], reminders: [],
+    debts: debts(obligations, accountState(open), isCore),
+  };
+  if (open.release === null) return report;
+  const state = await storeStanding(root, { ...context, retagging: true });
+  const { id, status: standing } = state.release;
+  report.release = { id, status: standing };
+  report.tag = state.tag;
+  report.composition = state.composition.map((ticket) => ({
+    id: ticket.metadata.get('id'), title: ticket.title, status: ticket.metadata.get('status'), fields: ticket.fields,
+  }));
+  report.actions = actionsOf(state.composition, state.release.actions ?? []);
+  report.reminders = state.reminders;
+  if (standing === 'in_progress') report.problems = (await finishability(root, context)).problems;
+  else if (standing === 'draft') {
+    report.problems = [...(await localStanding(root, config)).problems, ...state.problems];
+    if (await tagCommit(root, state.tag) !== null) report.problems.push(`Тег ${state.tag} уже существует: номер не переиспользуется`);
+  }
+  return report;
+}
+
 // REQ-RELEASE-010, REQ-RELEASE-038
-async function status(root, context) {
+async function status(root, context, json) {
+  if (json) {
+    console.log(JSON.stringify(await statusReport(root, context), null, 2));
+    return;
+  }
   const { config, client } = context;
   await settle(root, context);
   const open = await client.openRelease();
@@ -146,7 +179,7 @@ export async function externalRelease(root, store, subcommand, request) {
   const context = { config, store, client: storeClient(store), scheme: config.release?.scheme ?? 'date' };
   const { first, valueOf } = request;
   try {
-    if (subcommand === 'status') await status(root, context);
+    if (subcommand === 'status') await status(root, context, request.json === true);
     else if (subcommand === 'close') await close(root, context, undefined);
     else if (subcommand === 'reclose') await close(root, context, valueOf('--reason') ?? '');
     else if (subcommand === 'finish') await finish(root, context, valueOf('--note'));
@@ -247,13 +280,34 @@ async function moveCommand(root, { values, withOperations, exportOnly }) {
 }
 
 // REQ-STORE-017
-export async function storeCommand(root, store, { check, withOperations, move = false, exportOnly = false, values = new Map() }) {
+export async function storeCommand(root, store, { check, withOperations, move = false, exportOnly = false, values = new Map(), read = {} }) {
   if (move || exportOnly) {
     await moveCommand(root, { values, withOperations, exportOnly });
     return;
   }
+  // REQ-STORE-023
+  const reading = ['--lookup', '--working', '--open'].filter((name) => read[name] !== undefined && read[name] !== false);
   if (store === null) {
     console.log('Проект ведёт задачи и выпуски в файлах: внешнее хранилище не объявлено (store в .conventions.json).');
+    if (reading.length > 0) process.exitCode = 1;
+    return;
+  }
+  if (reading.length > 1 || (read['--body'] === true && reading[0] !== '--lookup')) {
+    console.error(reading.length > 1 ? `Чтение одно за вызов: названы ${reading.join(', ')}` : 'Ключ --body действует только с --lookup: тело задачи отдаёт поиск по номерам');
+    process.exitCode = 2;
+    return;
+  }
+  if (reading.length === 1) {
+    try {
+      const client = storeClient(store);
+      let answer;
+      if (reading[0] === '--working') answer = await client.working();
+      else if (reading[0] === '--open') answer = await client.openRelease();
+      else answer = await client.lookup(read['--lookup'].split(',').map((id) => id.trim()).filter(Boolean), { withBody: read['--body'] === true });
+      console.log(JSON.stringify(answer, null, 2));
+    } catch (failure) {
+      reportFailure(failure, `Хранилище ${store.url} не прочитано:`);
+    }
     return;
   }
   if (!check) {

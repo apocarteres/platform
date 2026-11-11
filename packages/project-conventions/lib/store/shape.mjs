@@ -33,6 +33,7 @@ export function asDocument(ticket) {
     aliases: ticket.aliases ?? [],
     title: ticket.title ?? ticket.id,
     url: ticket.url ?? null,
+    fields: ticket.fields ?? {},
   };
 }
 
@@ -78,6 +79,14 @@ export function ticketFields(config) {
 // REQ-STORE-018
 export function fieldsDigest(fields) {
   return createHash('sha256').update(JSON.stringify(canonical(fields)), 'utf8').digest('hex');
+}
+
+// REQ-STORE-011
+export function manifestComposition(composition) {
+  return composition.map((ticket) => {
+    const fields = Object.fromEntries(Object.entries(ticket.fields ?? {}).filter(([, value]) => value !== null && value !== undefined));
+    return { id: ticket.metadata.get('id'), title: ticket.title, ...(Object.keys(fields).length > 0 ? { fields } : {}) };
+  });
 }
 
 // REQ-STORE-011

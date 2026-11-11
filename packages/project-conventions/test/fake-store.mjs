@@ -246,7 +246,8 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
           else send(200, set, { etag });
         } else if (request.method === 'POST' && route === '/tickets/lookup') {
           if (body.ids.length > 500) throw new Refusal('lookup-too-large', 'не больше 500 номеров', 422);
-          const tickets = [...new Set(body.ids.map(find).filter((ticket) => ticket !== null))];
+          const tickets = [...new Set(body.ids.map(find).filter((ticket) => ticket !== null))]
+            .map(({ text, ...form }) => (body.withBody === true ? { ...form, body: text ?? '' } : form));
           send(200, { contract: state.contract, tickets, missing: body.ids.filter((name) => find(name) === null) });
         } else if (request.method === 'GET' && route === '/releases/open') {
           send(200, view());

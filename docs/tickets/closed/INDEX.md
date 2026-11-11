@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 228. Включены самостоятельные задачи и этапы планов функций.
+Всего: 229. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -127,6 +127,7 @@ authority: navigation
 | [Angular-пакеты ядра собираются уязвимыми зависимостями разработки](CORE-OPS-124-angular-packages-vulnerable-dev-dependencies.md) | P1 | Выполнена | [RELEASE-17-3-1](../../releases/RELEASE-17-3-1.md) | tooling, build, security |
 | [Задачи и выпуски проекта во внешнем хранилище по контракту ядра](CORE-OPS-126-external-ticket-store.md) | P1 | Выполнена | [RELEASE-17-4-0](../../releases/RELEASE-17-4-0.md) | process, release, tooling |
 | [Переход проекта с файлов задач и выпусков на внешнее хранилище](CORE-OPS-127-project-moves-to-external-store.md) | P1 | Выполнена | [RELEASE-17-4-0](../../releases/RELEASE-17-4-0.md) | process, tooling, documentation |
+| [Чтения внешнего хранилища для скриптов проекта](CORE-OPS-128-store-reads-for-project-scripts.md) | P1 | Выполнена | [RELEASE-17-5-0](../../releases/RELEASE-17-5-0.md) | process, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

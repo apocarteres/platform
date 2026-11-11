@@ -376,6 +376,53 @@ test('команды, работающие только с файлами, пр�
   }
 });
 
+test('чтения для скриптов проекта: store --lookup, --working, --open и release status --json печатают JSON в форме контракта', async () => {
+  const fields = { maintenance: { types: ['ticket'], values: ['none', 'required'] } };
+  const p = await project({ extra: { metadata: { fields } } });
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done', fields: { maintenance: 'required' }, sections: { whyNot: false, openQuestions: false, beforeDeploy: '- Выключить задание', afterDeploy: '- Проверить вход' } });
+    p.store.add('SHOP-OPS-002', { status: 'backlog' });
+    const looked = JSON.parse((await p.command('store', '--lookup', 'SHOP-OPS-001,SHOP-OPS-777', '--json')).stdout);
+    assert.deepEqual(looked.tickets.map((ticket) => [ticket.id, ticket.fields.maintenance]), [['SHOP-OPS-001', 'required']]);
+    assert.deepEqual(looked.missing, ['SHOP-OPS-777']);
+    assert.equal(Object.hasOwn(looked.tickets[0], 'body'), false, 'без ключа --body тела в ответе нет');
+    p.store.find('SHOP-OPS-001').text = '## Ручное QA\n\nПравка: вход';
+    const bodied = JSON.parse((await p.command('store', '--lookup', 'SHOP-OPS-001,SHOP-OPS-002', '--body')).stdout);
+    assert.deepEqual(bodied.tickets.map((ticket) => ticket.body), ['## Ручное QA\n\nПравка: вход', '']);
+    assert.equal((await p.command('store', '--working', '--body')).code, 2);
+    const working = JSON.parse((await p.command('store', '--working')).stdout);
+    assert.deepEqual(working.tickets.map((ticket) => ticket.id).sort(), ['SHOP-OPS-001', 'SHOP-OPS-002']);
+    assert.equal(JSON.parse((await p.command('store', '--open')).stdout).release, null);
+    assert.equal((await p.command('store', '--open', '--working')).code, 2);
+
+    const before = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.equal(before.release, null);
+    await openRelease(p.root, p.context(), { version: undefined, tickets: [] });
+    const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'draft' });
+    assert.equal(status.tag, '2026.11.1');
+    assert.deepEqual(status.composition, [{ id: 'SHOP-OPS-001', title: status.composition[0].title, status: 'done', fields: { maintenance: 'required' } }]);
+    assert.deepEqual(status.actions, [
+      { ticket: 'SHOP-OPS-001', step: 'before', item: 1, text: 'Выключить задание', done: false, note: null },
+      { ticket: 'SHOP-OPS-001', step: 'after', item: 1, text: 'Проверить вход', done: false, note: null },
+    ], 'до первого шага закрытия действия названы, а отметок ещё нет');
+    assert.match(status.problems.join(), /Нет расписки/);
+
+    await p.attest();
+    const closed = await closeRelease(p.root, p.context());
+    assert.equal(closed.closed, true, JSON.stringify(closed.problems));
+    const manifest = manifestOf(await tagMessage(p.root, '2026.11.1'));
+    assert.deepEqual(manifest.composition, [{ id: 'SHOP-OPS-001', title: manifest.composition[0].title, fields: { maintenance: 'required' } }]);
+    await p.store.operate('markAction', { ticket: 'SHOP-OPS-001', step: 'before', item: 1, done: true, note: 'выключено' });
+    const after = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.equal(after.release.status, 'in_progress');
+    assert.deepEqual(after.actions.map((one) => [one.step, one.done, one.note]), [['before', true, 'выключено'], ['after', false, null]]);
+    assert.match(after.problems.join(), /Проверить вход/);
+  } finally {
+    await p.stop();
+  }
+});
+
 test('отказ хранилища по инварианту доходит до человека кодом и текстом хранилища', async () => {
   const p = await project();
   try {

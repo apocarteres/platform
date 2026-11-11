@@ -3,7 +3,7 @@ import { loadObligations, pendingObligations } from '../release/obligations.mjs'
 import { commitSubject, createTag, headCommit, moveTag, tagCommit, tagMessage } from '../release/git.mjs';
 import { inRolloutOrder } from '../release/rollout.mjs';
 import { accountState, compositionOf, localStanding, storeStanding } from './gate.mjs';
-import { actionsOf, asDocument, fieldsDigest, manifestMessage, manifestOf, ticketFields } from './shape.mjs';
+import { actionsOf, asDocument, fieldsDigest, manifestComposition, manifestMessage, manifestOf, ticketFields } from './shape.mjs';
 
 // REQ-STORE-012
 function obligationRequest(obligation) {
@@ -133,7 +133,7 @@ export async function closeRelease(root, context, { reason = null } = {}) {
       release: id,
       commit,
       revision: state.working.revision,
-      composition: composition.map((ticket) => ({ id: ticketId(ticket), title: ticket.title })),
+      composition: manifestComposition(composition),
       actions: actionsOf(composition, state.release.actions ?? []),
       receipt: receiptOf(receipt),
       ...(retagging ? { reason: reason.trim(), from: tagged } : {}),

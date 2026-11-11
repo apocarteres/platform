@@ -292,8 +292,8 @@ export async function storeCommand(root, store, { check, withOperations, move = 
     if (reading.length > 0) process.exitCode = 1;
     return;
   }
-  if (reading.length > 1) {
-    console.error(`Чтение одно за вызов: названы ${reading.join(', ')}`);
+  if (reading.length > 1 || (read['--body'] === true && reading[0] !== '--lookup')) {
+    console.error(reading.length > 1 ? `Чтение одно за вызов: названы ${reading.join(', ')}` : 'Ключ --body действует только с --lookup: тело задачи отдаёт поиск по номерам');
     process.exitCode = 2;
     return;
   }
@@ -303,7 +303,7 @@ export async function storeCommand(root, store, { check, withOperations, move = 
       let answer;
       if (reading[0] === '--working') answer = await client.working();
       else if (reading[0] === '--open') answer = await client.openRelease();
-      else answer = await client.lookup(read['--lookup'].split(',').map((id) => id.trim()).filter(Boolean));
+      else answer = await client.lookup(read['--lookup'].split(',').map((id) => id.trim()).filter(Boolean), { withBody: read['--body'] === true });
       console.log(JSON.stringify(answer, null, 2));
     } catch (failure) {
       reportFailure(failure, `Хранилище ${store.url} не прочитано:`);

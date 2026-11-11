@@ -385,6 +385,11 @@ test('чтения для скриптов проекта: store --lookup, --wor
     const looked = JSON.parse((await p.command('store', '--lookup', 'SHOP-OPS-001,SHOP-OPS-777', '--json')).stdout);
     assert.deepEqual(looked.tickets.map((ticket) => [ticket.id, ticket.fields.maintenance]), [['SHOP-OPS-001', 'required']]);
     assert.deepEqual(looked.missing, ['SHOP-OPS-777']);
+    assert.equal(Object.hasOwn(looked.tickets[0], 'body'), false, 'без ключа --body тела в ответе нет');
+    p.store.find('SHOP-OPS-001').text = '## Ручное QA\n\nПравка: вход';
+    const bodied = JSON.parse((await p.command('store', '--lookup', 'SHOP-OPS-001,SHOP-OPS-002', '--body')).stdout);
+    assert.deepEqual(bodied.tickets.map((ticket) => ticket.body), ['## Ручное QA\n\nПравка: вход', '']);
+    assert.equal((await p.command('store', '--working', '--body')).code, 2);
     const working = JSON.parse((await p.command('store', '--working')).stdout);
     assert.deepEqual(working.tickets.map((ticket) => ticket.id).sort(), ['SHOP-OPS-001', 'SHOP-OPS-002']);
     assert.equal(JSON.parse((await p.command('store', '--open')).stdout).release, null);

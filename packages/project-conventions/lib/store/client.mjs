@@ -104,12 +104,12 @@ export function storeClient(store, { env = process.env, fetch: send = globalThis
     },
 
     // REQ-STORE-005
-    async lookup(ids) {
+    async lookup(ids, { withBody = false } = {}) {
       const unique = [...new Set(ids)];
       const tickets = [];
       const missing = [];
       for (let start = 0; start < unique.length; start += LOOKUP_LIMIT) {
-        const response = await call('POST', '/tickets/lookup', { body: { ids: unique.slice(start, start + LOOKUP_LIMIT) } });
+        const response = await call('POST', '/tickets/lookup', { body: { ids: unique.slice(start, start + LOOKUP_LIMIT), ...(withBody ? { withBody: true } : {}) } });
         if (!response.ok) throw await refusalOf(response);
         const body = accepted(await response.json(), 'поиска по номерам');
         tickets.push(...(body.tickets ?? []));

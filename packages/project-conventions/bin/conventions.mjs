@@ -509,7 +509,7 @@ const USAGE = {
   commits: 'conventions commits [--range <диапазон git>] [--strict] [--root <path>]'
     + '\n  --strict: при внешнем хранилище номер, который не удалось проверить, — отказ, а не предупреждение.',
   store: 'conventions store [--check [--operations]] [--root <path>]'
-    + '\n  conventions store (--lookup <ID,ID> | --working | --open) [--json] — чтение хранилища в JSON в форме контракта.'
+    + '\n  conventions store (--lookup <ID,ID> [--body] | --working | --open) [--json] — чтение хранилища в JSON в форме контракта.'
     + '\n  conventions store --export [--out <файл>] — задачи, выпуски и учёт обязательств проекта в форме контракта.'
     + '\n  conventions store --move --url <адрес> --id-pattern <шаблон> [--read-key-env <ПЕРЕМЕННАЯ>] [--write-key-env <ПЕРЕМЕННАЯ>] — переход с файлов на внешнее хранилище.'
     + '\n  --check сверяет внешнее хранилище задач и выпусков с контрактом ядра; --operations между выпусками открывает и отменяет пробный выпуск.',
@@ -593,7 +593,7 @@ const SPEC = {
   naming: { values: ['--map'], positional: 1 },
   commits: { values: ['--range'], flags: ['--strict'] },
   store: {
-    flags: ['--check', '--operations', '--move', '--export', '--working', '--open', '--json'],
+    flags: ['--check', '--operations', '--move', '--export', '--working', '--open', '--json', '--body'],
     values: ['--url', '--id-pattern', '--read-key-env', '--write-key-env', '--out', '--lookup'],
   },
   health: { values: ['--url', '--timeout'] },
@@ -669,7 +669,7 @@ if (command === undefined || command === '--help') {
       await storeCommand(root, moving ? null : await externalStore(root), {
         check: parsed.flags.has('--check'), withOperations: parsed.flags.has('--operations'),
         move: parsed.flags.has('--move'), exportOnly: parsed.flags.has('--export'), values: parsed.values,
-        read: { '--lookup': parsed.values.get('--lookup'), '--working': parsed.flags.has('--working'), '--open': parsed.flags.has('--open') },
+        read: { '--lookup': parsed.values.get('--lookup'), '--working': parsed.flags.has('--working'), '--open': parsed.flags.has('--open'), '--body': parsed.flags.has('--body') },
       });
     }
     else if (command === 'sync') await sync(root);

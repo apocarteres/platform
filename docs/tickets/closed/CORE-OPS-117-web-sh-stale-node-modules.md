@@ -5,7 +5,7 @@ status: done
 scope: tooling, build
 authority: supporting
 priority: P3
-release: unassigned
+release: RELEASE-17-6-0
 related: REQ-QUALITY, REQ-BUILD
 ---
 

@@ -1,10 +1,10 @@
 ---
 id: CORE-OPS-129
 type: ticket
-status: backlog
+status: done
 scope: release, tooling, build
 authority: supporting
-priority: unassigned
+priority: P1
 release: unassigned
 related: REQ-RELEASE, REQ-QUALITY, REQ-BUILD, CORE-OPS-117, CORE-OPS-088
 ---
@@ -59,6 +59,13 @@ related: REQ-RELEASE, REQ-QUALITY, REQ-BUILD, CORE-OPS-117, CORE-OPS-088
 - Замер: повторный прогон ядра после правки одного пакета правил — около
   минуты.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-11 — пакет правил: части набора `verify.parts`, команда `conventions receipt --parts [--fresh]` (`lib/release/verify-parts.mjs`, `lib/cli/receipt.mjs`), требование `REQ-RELEASE-051`.
+- Ядро объявило четыре части. Тесты пакета правил читают исходники всего ядра, поэтому части `checks` и `rules` путей не имеют и выполняются всегда; переносятся расписки частей `web` и `java`.
+- `scripts/web.sh`: ключи `--only` и `--except`, режим `install`; набор больше не гоняет тесты пакета правил дважды.
+- Сборочный контейнер приводит дерево к коммиту вместо пересоздания, сохраняя зависимости пакетов и расписки частей, и возвращает каталог расписок целиком.
 
 ## Вне задачи
 

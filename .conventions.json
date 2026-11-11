@@ -34,5 +34,20 @@
   },
   "stack": ["java", "angular"],
   "ticketPrefix": "CORE",
-  "commitRuleSince": "4eee830"
+  "commitRuleSince": "4eee830",
+  "verify": {
+    "parts": {
+      "checks": { "command": "mise run verify-part-checks" },
+      "rules": { "command": "mise run verify-part-rules" },
+      "web": {
+        "paths": ["packages/", "packages/project-conventions/configs/"],
+        "except": ["packages/project-conventions/"],
+        "command": "mise run verify-part-web"
+      },
+      "java": {
+        "paths": ["platform-", "pom.xml", "mvnw", ".mvn/"],
+        "command": "mise run java-test"
+      }
+    }
+  }
 }

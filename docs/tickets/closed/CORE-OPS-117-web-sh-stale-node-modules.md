@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-117
 type: ticket
-status: backlog
+status: done
 scope: tooling, build
 authority: supporting
 priority: P3
@@ -30,3 +30,7 @@ related: REQ-QUALITY, REQ-BUILD
 ## Критерии приёмки
 
 - Тест: пакет с `node_modules` от прежнего файла блокировки — `web.sh` переставляет зависимости, шаг проходит.
+
+## Ход работы
+
+- 2026-11-11 — `scripts/web.sh` ставит зависимости по отпечатку `conventions deps` (файл блокировки и версии инструментов), отпечаток пишется в `target/deps-<пакет>.sha256`; тест — `packages/project-conventions/test/core-web-sh.test.mjs`. Сделано вместе с `CORE-OPS-129`: без этого сборочный контейнер не мог бы сохранять `node_modules` между прогонами.

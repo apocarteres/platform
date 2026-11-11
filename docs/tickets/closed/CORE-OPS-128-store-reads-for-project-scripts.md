@@ -5,7 +5,7 @@ status: done
 scope: process, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-17-5-0
 depends-on: CORE-OPS-126
 related: REQ-STORE, REQ-RELEASE, CORE-OPS-126, CORE-OPS-127
 ---

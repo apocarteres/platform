@@ -5,7 +5,7 @@ status: done
 scope: backend, java
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-17-7-0
 related: REQ-NOTIFICATIONS, CORE-ARC-018
 ---
 

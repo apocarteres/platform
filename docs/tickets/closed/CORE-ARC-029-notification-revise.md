@@ -1,7 +1,7 @@
 ---
 id: CORE-ARC-029
 type: ticket
-status: in_progress
+status: done
 scope: backend, java
 authority: supporting
 priority: P1

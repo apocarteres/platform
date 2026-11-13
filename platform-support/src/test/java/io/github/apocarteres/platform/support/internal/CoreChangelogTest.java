@@ -88,6 +88,12 @@ class CoreChangelogTest {
           found.add("constraint " + rows.getString(1) + " " + rows.getString(2) + " " + rows.getString(3));
         }
       }
+      try (ResultSet rows = statement.executeQuery("SELECT tablename, indexdef FROM pg_indexes WHERE schemaname = 'public'"
+        + " AND tablename NOT LIKE 'databasechangelog%' ORDER BY 1, 2")) {
+        while (rows.next()) {
+          found.add("index " + rows.getString(1) + " " + rows.getString(2));
+        }
+      }
     }
     return found;
   }

@@ -8,3 +8,11 @@ databaseChangeLog:
             path: platform-notifications/001-notification.sql
             relativeToChangelogFile: true
             splitStatements: false
+  - changeSet:
+      id: platform-notifications:002-notification-link
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-notifications/002-notification-link.sql
+            relativeToChangelogFile: true
+            splitStatements: false

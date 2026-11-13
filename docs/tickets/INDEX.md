@@ -14,10 +14,11 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 7. Включены самостоятельные задачи и этапы планов функций.
+Всего: 8. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Созданное уведомление нельзя поправить](CORE-ARC-029-notification-revise.md) | P1 | В работе | Не назначен | backend, java |
 | [Проверка настройки nginx на общем хосте обрывает работу ZAVPN](CORE-OPS-112-nginx-check-on-a-shared-host.md) | P2 | Запланирована | Не назначен | deployment, operations |
 | [Закреплённый npm 10.9.4 не разбирает дерево зависимостей с vitest 4.1](CORE-OPS-125-pinned-npm-cannot-resolve-vitest-4-1.md) | P2 | Запланирована | Не назначен | tooling, build |
 | [У Rust нет языковых документов, которые есть у Java и TypeScript](CORE-QUAL-012-rust-has-no-language-documents.md) | P2 | Запланирована | Не назначен | documentation, rust |

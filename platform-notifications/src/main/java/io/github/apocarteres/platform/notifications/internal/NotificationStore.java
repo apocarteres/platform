@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
-// REQ-NOTIFICATIONS-001, REQ-PERSISTENCE-001
+// REQ-NOTIFICATIONS-001, REQ-NOTIFICATIONS-010, REQ-PERSISTENCE-001
 final class NotificationStore {
 
   private final JdbcClient jdbc;
@@ -29,6 +29,30 @@ final class NotificationStore {
   void insert(UUID id, UUID account, String kind, Map<String, String> params, String link, Instant now) {
     jdbc.sql(sql.get("notification-insert")).param("id", id).param("account", account).param("kind", kind)
       .param("params", json.writeValueAsString(params)).param("link", link).param("now", StoredInstant.offsetOf(now)).update();
+  }
+
+  // REQ-NOTIFICATIONS-010
+  record Stored(UUID id, Map<String, String> params) {
+  }
+
+  // REQ-NOTIFICATIONS-010
+  List<Stored> ofLink(String kind, String link) {
+    return jdbc.sql(sql.get("notification-of-link")).param("kind", kind).param("link", link)
+      .query((row, index) -> new Stored(row.getObject("id", UUID.class), params(row.getString("params")))).list();
+  }
+
+  // REQ-NOTIFICATIONS-010
+  void revise(UUID id, Map<String, String> params) {
+    jdbc.sql(sql.get("notification-revise")).param("id", id).param("params", json.writeValueAsString(params)).update();
+  }
+
+  // REQ-NOTIFICATIONS-010
+  void withdraw(UUID id) {
+    jdbc.sql(sql.get("notification-withdraw")).param("id", id).update();
+  }
+
+  private Map<String, String> params(String stored) {
+    return json.readValue(stored, new TypeReference<Map<String, String>>() { });
   }
 
   // REQ-NOTIFICATIONS-004
@@ -51,7 +75,7 @@ final class NotificationStore {
     return new Notice(
       row.getObject("id", UUID.class),
       row.getString("kind"),
-      json.readValue(row.getString("params"), new TypeReference<Map<String, String>>() { }),
+      params(row.getString("params")),
       row.getString("link"),
       row.getObject("created_at", OffsetDateTime.class).toInstant(),
       row.getObject("read_at", OffsetDateTime.class) != null

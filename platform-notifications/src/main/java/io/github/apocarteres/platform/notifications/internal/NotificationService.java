@@ -1,13 +1,17 @@
 package io.github.apocarteres.platform.notifications.internal;
 
 import io.github.apocarteres.platform.notifications.Notifications;
+import io.github.apocarteres.platform.notifications.internal.NotificationStore.Stored;
 import java.time.Clock;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
-// REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-006
+// REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-010
 final class NotificationService implements Notifications {
 
   static final int PARAMS = 20;
@@ -34,9 +38,55 @@ final class NotificationService implements Notifications {
     if (account == null) {
       throw new IllegalArgumentException("Уведомление принадлежит учётной записи: account не назван");
     }
+    kind(kind);
+    Map<String, String> kept = params(params);
+    link(link);
+    UUID id = UUID.randomUUID();
+    store.insert(id, account, kind, kept, link, clock.instant());
+    return id;
+  }
+
+  // REQ-NOTIFICATIONS-010
+  @Override
+  public int revise(String kind, String link, UnaryOperator<Map<String, String>> change) {
+    kind(kind);
+    if (link == null) {
+      throw new IllegalArgumentException("Правка уведомлений называет ссылку: link не назван");
+    }
+    link(link);
+    if (change == null) {
+      throw new IllegalArgumentException("Правка уведомлений: change не назван");
+    }
+    List<Stored> found = store.ofLink(kind, link);
+    Map<UUID, Map<String, String>> revised = new LinkedHashMap<>();
+    for (Stored stored : found) {
+      Map<String, String> after = change.apply(Collections.unmodifiableMap(new LinkedHashMap<>(stored.params())));
+      if (after == null) {
+        revised.put(stored.id(), null);
+      } else {
+        Map<String, String> kept = params(after);
+        if (!kept.equals(stored.params())) {
+          revised.put(stored.id(), kept);
+        }
+      }
+    }
+    revised.forEach((id, params) -> {
+      if (params == null) {
+        store.withdraw(id);
+      } else {
+        store.revise(id, params);
+      }
+    });
+    return revised.size();
+  }
+
+  private static void kind(String kind) {
     if (kind == null || kind.length() > 64 || !KIND.matcher(kind).matches()) {
       throw new IllegalArgumentException("Вид уведомления «" + kind + "»: строчные буквы и цифры с точкой или дефисом, до 64 знаков");
     }
+  }
+
+  private static Map<String, String> params(Map<String, String> params) {
     Map<String, String> kept = new LinkedHashMap<>();
     if (params != null) {
       if (params.size() > PARAMS) {
@@ -52,12 +102,13 @@ final class NotificationService implements Notifications {
         kept.put(key, value);
       });
     }
+    return kept;
+  }
+
+  private static void link(String link) {
     if (link != null && (link.length() > LINK_CHARS || !link.startsWith("/") || link.startsWith("//") || CONTROL.matcher(link).find())) {
       throw new IllegalArgumentException("Ссылка уведомления — путь сайта от корня, до " + LINK_CHARS + " знаков: " + link);
     }
-    UUID id = UUID.randomUUID();
-    store.insert(id, account, kind, kept, link, clock.instant());
-    return id;
   }
 
   // REQ-NOTIFICATIONS-006

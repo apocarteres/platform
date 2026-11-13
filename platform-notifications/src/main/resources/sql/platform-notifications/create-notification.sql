@@ -7,4 +7,6 @@ CREATE TABLE platform_notification (
   link VARCHAR(500),
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
   read_at TIMESTAMP WITH TIME ZONE
-)
+);
+
+CREATE INDEX platform_notification_link ON platform_notification (link, kind);

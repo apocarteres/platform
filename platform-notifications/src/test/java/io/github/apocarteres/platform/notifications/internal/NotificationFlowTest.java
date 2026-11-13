@@ -56,7 +56,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-// REQ-NOTIFICATIONS-001, REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-004, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-009
+// REQ-NOTIFICATIONS-001, REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-004, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-009,
+// REQ-NOTIFICATIONS-010
 @SpringBootTest(
   classes = NotificationFlowTest.Service.class,
   properties = {
@@ -335,6 +336,67 @@ class NotificationFlowTest {
     assertThat(notifications.erase(player)).isEqualTo(1);
     assertThat(accounts.delete(other)).isEqualTo(Removal.REMOVED);
     assertThat(JdbcClient.create(source).sql("SELECT COUNT(*) FROM platform_notification").query(Long.class).single()).isZero();
+  }
+
+  // REQ-NOTIFICATIONS-010
+  @Test
+  @DisplayName("Правка: уведомления вида и ссылки у всех учётных записей; прочитанное остаётся прочитанным, null убирает")
+  void reviseChangesTheKindAndLink() throws Exception {
+    UUID player = account("player@site.example");
+    UUID other = account("other@site.example");
+    UUID mine = notifications.notify(player, "order.noted", Map.of("note", "старый", "number", "7"), "/orders/7");
+    clock.advance(Duration.ofMinutes(1));
+    notifications.notify(other, "order.noted", Map.of("note", "старый", "number", "7"), "/orders/7");
+    clock.advance(Duration.ofMinutes(1));
+    notifications.notify(other, "order.noted", Map.of("note", "другой", "number", "7"), "/orders/7");
+    notifications.notify(player, "order.noted", Map.of("note", "старый", "number", "8"), "/orders/8");
+    notifications.notify(player, "order.shipped", Map.of("note", "старый"), "/orders/7");
+    Tab tab = new Tab("player@site.example");
+    tab.post("/api/notifications/" + mine + "/read", "{}").andExpect(status().isNoContent());
+
+    int changed = notifications.revise("order.noted", "/orders/7", params -> {
+      Map<String, String> next = new LinkedHashMap<>(params);
+      next.put("note", "новый");
+      return "другой".equals(params.get("note")) ? params : next;
+    });
+
+    assertThat(changed).isEqualTo(2);
+    tab.get("/api/notifications/page?size=50").andExpect(jsonPath("$.total").value(3))
+      .andExpect(jsonPath("$.items[2].kind").value("order.noted")).andExpect(jsonPath("$.items[2].params.note").value("новый"))
+      .andExpect(jsonPath("$.items[2].read").value(true))
+      .andExpect(jsonPath("$.items[1].link").value("/orders/8")).andExpect(jsonPath("$.items[1].params.note").value("старый"))
+      .andExpect(jsonPath("$.items[0].kind").value("order.shipped")).andExpect(jsonPath("$.items[0].params.note").value("старый"));
+    Tab theirs = new Tab("other@site.example");
+    theirs.get("/api/notifications/page").andExpect(jsonPath("$.items[0].params.note").value("другой"))
+      .andExpect(jsonPath("$.items[1].params.note").value("новый")).andExpect(jsonPath("$.items[1].params.number").value("7"));
+
+    assertThat(notifications.revise("order.noted", "/orders/7", params -> params)).as("те же параметры — не правка").isZero();
+    assertThat(notifications.revise("order.noted", "/orders/7", params -> "другой".equals(params.get("note")) ? null : params))
+      .isEqualTo(1);
+    theirs.get("/api/notifications/page").andExpect(jsonPath("$.total").value(1)).andExpect(jsonPath("$.items[0].params.note").value("новый"));
+    tab.get("/api/notifications/page").andExpect(jsonPath("$.total").value(3));
+  }
+
+  // REQ-NOTIFICATIONS-010
+  @Test
+  @DisplayName("Правка проверяет параметры как создание и идёт в транзакции вызывающего: отказ и откат — без частичной правки")
+  void reviseValidatesAndJoinsTheTransaction() {
+    UUID player = account("player@site.example");
+    notifications.notify(player, "order.noted", Map.of("note", "первый"), "/orders/7");
+    notifications.notify(player, "order.noted", Map.of("note", "второй"), "/orders/7");
+    assertThatThrownBy(() -> notifications.revise("order.noted", "/orders/7", params -> "второй".equals(params.get("note"))
+      ? Map.of("note", "x".repeat(201)) : Map.of("note", "годный"))).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new TransactionTemplate(transactions).executeWithoutResult(status -> {
+      notifications.revise("order.noted", "/orders/7", params -> Map.of("note", "откатится"));
+      throw new IllegalStateException("работа откатилась");
+    })).isInstanceOf(IllegalStateException.class);
+    assertThat(JdbcClient.create(source).sql("SELECT params FROM platform_notification ORDER BY seq").query(String.class).list())
+      .containsExactly("{\"note\":\"первый\"}", "{\"note\":\"второй\"}");
+    assertThatThrownBy(() -> notifications.revise("Order", "/orders/7", params -> params)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> notifications.revise("order.noted", null, params -> params)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> notifications.revise("order.noted", "https://evil.example/", params -> params))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> notifications.revise("order.noted", "/orders/7", null)).isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

@@ -5,7 +5,7 @@ status: done
 scope: security, process
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-17-7-1
 related: REQ-SECRETS, REQ-ADOPTION, CORE-ARC-026, CORE-SEC-001
 ---
 

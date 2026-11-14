@@ -237,7 +237,7 @@ authority: navigation
 | [Ответы входа выдают почту временем, у сессии нет предельного срока](CORE-SEC-007-auth-answers-reveal-accounts.md) | P2 | Выполнена | [RELEASE-17-0-0](../../releases/RELEASE-17-0-0.md) | auth, security, api, client |
 | [Номер обращения выдаёт число обращений](CORE-SEC-008-support-number-reveals-volume.md) | P2 | Выполнена | [RELEASE-17-0-0](../../releases/RELEASE-17-0-0.md) | support, security |
 | [Человек не видит своих сессий](CORE-SEC-009-sessions-are-invisible-to-their-owner.md) | P2 | Выполнена | [RELEASE-17-1-0](../../releases/RELEASE-17-1-0.md) | auth, security, api, client |
-| [Обязательство secret-cipher достаётся проекту любого стека](CORE-SEC-010-secret-cipher-reaches-every-stack.md) | P2 | Выполнена | Не назначен | security, process |
+| [Обязательство secret-cipher достаётся проекту любого стека](CORE-SEC-010-secret-cipher-reaches-every-stack.md) | P2 | Выполнена | [RELEASE-17-7-1](../../releases/RELEASE-17-7-1.md) | security, process |
 | [Тест крупного дерева роняет verify ошибкой EPIPE](CORE-TEST-001-large-tree-test-epipe.md) | P2 | Выполнена | [RELEASE-15-5-1](../../releases/RELEASE-15-5-1.md) | testing, quality |
 | [Схема имён не знала об этапах плана функции](CORE-DOC-007-feature-plan-stage-names.md) | P3 | Выполнена | [RELEASE-0-36-0](../../releases/RELEASE-0-36-0.md) | documentation, process |
 | [План функции из одного файла оставался вне перехода на схему](CORE-DOC-008-single-file-feature-plans.md) | P3 | Выполнена | [RELEASE-0-37-0](../../releases/RELEASE-0-37-0.md) | documentation, process |

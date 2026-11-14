@@ -94,7 +94,7 @@ test('обязательство чужого стека к проекту не 
 test('каталог ядра размечен: обязательства Java и Angular не достаются проекту только с правилами', async () => {
   const all = JSON.parse(await readFile(new URL('../obligations.json', import.meta.url), 'utf8')).obligations;
   const of = (id) => all.find((one) => one.id === id)?.stack;
-  for (const id of ['java-25', 'java-modules', 'data-access', 'liquibase-migrations', 'wiring-check', 'core-auth']) {
+  for (const id of ['java-25', 'java-modules', 'data-access', 'liquibase-migrations', 'wiring-check', 'core-auth', 'secret-cipher']) {
     assert.deepEqual(of(id), ['java'], id);
   }
   for (const id of ['modal-escape', 'modal-actions', 'modal-busy-backdrop', 'client-update', 'defer-error', 'bundle-budgets',

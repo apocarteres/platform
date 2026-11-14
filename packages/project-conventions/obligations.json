@@ -244,6 +244,9 @@
       "title": "Секреты шифруются средством платформы",
       "requirement": "REQ-SECRETS-001",
       "level": "директива",
+      "stack": [
+        "java"
+      ],
       "since": "1.6.0",
       "dueReleases": 2,
       "area": "SEC",

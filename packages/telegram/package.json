@@ -1,0 +1,40 @@
+{
+  "name": "@apocarteres/telegram",
+  "version": "0.0.0",
+  "description": "Связь учётной записи с ботом Telegram в клиенте без вида: состояние связи сигналом, одноразовая ссылка в бот, снятие связи. Экраны и переход по ссылке остаются проекту.",
+  "license": "Apache-2.0",
+  "publishable": true,
+  "peerDependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@angular/common": "22.2.3",
+    "@angular/compiler": "22.2.3",
+    "@angular/compiler-cli": "22.2.3",
+    "@angular/core": "22.2.3",
+    "@angular/platform-browser": "22.2.3",
+    "@angular/router": "22.2.3",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "22.18.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
+    "jsdom": "28.0.0",
+    "ng-packagr": "22.2.4",
+    "rxjs": "7.8.2",
+    "tslib": "2.8.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vite": "7.3.7",
+    "vitest": "4.1.12",
+    "zone.js": "0.15.1"
+  },
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "contract-types": "node scripts/contract-types.mjs"
+  }
+}

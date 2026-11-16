@@ -5,7 +5,7 @@ status: done
 scope: backend, personal-data
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-18-0-0
 related: REQ-NOTIFICATIONS, REQ-TELEGRAM, CORE-ARC-030, CORE-ARC-018
 ---
 

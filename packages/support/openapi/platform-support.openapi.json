@@ -639,15 +639,28 @@
     },
     "/api/support/operator/requests": {
       "get": {
-        "summary": "Все обращения — для оператора",
-        "x-clause": "REQ-SUPPORT-012",
+        "summary": "Все обращения — для оператора: отбор по состояниям и порядок",
+        "x-clause": "REQ-SUPPORT-016",
         "parameters": [
           {
             "name": "state",
             "in": "query",
             "required": false,
+            "style": "form",
+            "explode": true,
             "schema": {
-              "$ref": "#/components/schemas/RequestState"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RequestState"
+              }
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/RequestOrder"
             }
           },
           {
@@ -679,6 +692,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Page"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет роли оператора",
+            "x-codes": [
+              "access-denied"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/support/operator/counts": {
+      "get": {
+        "summary": "Число обращений в каждом состоянии — для оператора",
+        "x-clause": "REQ-SUPPORT-016",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Counts"
                 }
               }
             }
@@ -1170,6 +1227,14 @@
         ],
         "description": "REQ-SUPPORT-007"
       },
+      "RequestOrder": {
+        "type": "string",
+        "enum": [
+          "CREATED",
+          "ACTIVITY"
+        ],
+        "description": "REQ-SUPPORT-016"
+      },
       "Snapshot": {
         "type": "object",
         "additionalProperties": false,
@@ -1431,6 +1496,37 @@
           "page",
           "size",
           "total"
+        ]
+      },
+      "Count": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/RequestState"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "state",
+          "total"
+        ]
+      },
+      "Counts": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "states": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Count"
+            }
+          }
+        },
+        "required": [
+          "states"
         ]
       },
       "Step": {

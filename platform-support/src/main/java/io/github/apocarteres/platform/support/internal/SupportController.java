@@ -7,11 +7,13 @@ import io.github.apocarteres.platform.support.RequestState;
 import io.github.apocarteres.platform.support.internal.SupportService.Upload;
 import io.github.apocarteres.platform.support.internal.SupportViews.AnswerLink;
 import io.github.apocarteres.platform.support.internal.SupportViews.AuthorView;
+import io.github.apocarteres.platform.support.internal.SupportViews.Counts;
 import io.github.apocarteres.platform.support.internal.SupportViews.File;
 import io.github.apocarteres.platform.support.internal.SupportViews.Message;
 import io.github.apocarteres.platform.support.internal.SupportViews.OperatorView;
 import io.github.apocarteres.platform.support.internal.SupportViews.Page;
 import io.github.apocarteres.platform.support.internal.SupportViews.Policy;
+import io.github.apocarteres.platform.support.internal.SupportViews.RequestOrder;
 import io.github.apocarteres.platform.support.internal.SupportViews.StateChange;
 import io.github.apocarteres.platform.support.internal.SupportViews.Submission;
 import io.github.apocarteres.platform.support.internal.SupportViews.Submitted;
@@ -23,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import org.springframework.http.ContentDisposition;
@@ -41,7 +44,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-// REQ-SUPPORT-001, REQ-SUPPORT-004, REQ-SUPPORT-007, REQ-SUPPORT-008, REQ-SUPPORT-012
+// REQ-SUPPORT-001, REQ-SUPPORT-004, REQ-SUPPORT-007, REQ-SUPPORT-008, REQ-SUPPORT-012, REQ-SUPPORT-016
 @RestController
 @RequestMapping("/api/support")
 class SupportController {
@@ -117,10 +120,17 @@ class SupportController {
     return support.answerView(body.token(), request.getRemoteAddr());
   }
 
+  // REQ-SUPPORT-016
   @GetMapping("/operator/requests")
-  Page all(@RequestParam(required = false) RequestState state, @RequestParam(defaultValue = "0") int page,
-    @RequestParam(defaultValue = "20") int size) {
-    return support.all(state, page, size);
+  Page all(@RequestParam(required = false) List<RequestState> state, @RequestParam(defaultValue = "CREATED") RequestOrder order,
+    @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    return support.all(state == null ? Set.of() : Set.copyOf(state), order, page, size);
+  }
+
+  // REQ-SUPPORT-016
+  @GetMapping("/operator/counts")
+  Counts counts() {
+    return support.counts();
   }
 
   // REQ-SUPPORT-012

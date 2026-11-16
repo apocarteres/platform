@@ -11,6 +11,8 @@ export interface ProblemDetail {
 
 export type RequestState = 'NEW' | 'IN_PROGRESS' | 'ANSWERED' | 'CLOSED';
 
+export type RequestOrder = 'CREATED' | 'ACTIVITY';
+
 export interface Snapshot {
   readonly version?: string | null;
   readonly page?: string | null;
@@ -71,6 +73,15 @@ export interface Page {
   readonly page: number;
   readonly size: number;
   readonly total: number;
+}
+
+export interface Count {
+  readonly state: RequestState;
+  readonly total: number;
+}
+
+export interface Counts {
+  readonly states: readonly Count[];
 }
 
 export interface Step {

@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-// REQ-SUPPORT-001, REQ-SUPPORT-008, REQ-SUPPORT-012
+// REQ-SUPPORT-001, REQ-SUPPORT-008, REQ-SUPPORT-012, REQ-SUPPORT-016
 final class SupportViews {
 
   record Submission(String message, String email, Snapshot snapshot, List<JournalEntry> journal) {
@@ -28,6 +28,17 @@ final class SupportViews {
   }
 
   record Page(List<Item> items, int page, int size, long total) {
+  }
+
+  // REQ-SUPPORT-016
+  enum RequestOrder { CREATED, ACTIVITY }
+
+  // REQ-SUPPORT-016
+  record Count(RequestState state, long total) {
+  }
+
+  // REQ-SUPPORT-016
+  record Counts(List<Count> states) {
   }
 
   record Step(String kind, String side, String text, RequestState from, RequestState to, Instant at) {

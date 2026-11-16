@@ -14,10 +14,14 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 7. Включены самостоятельные задачи и этапы планов функций.
+Всего: 11. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
+| [Учётную запись ядра нельзя связать с Telegram](CORE-ARC-030-telegram-link.md) | P2 | Запланирована | Не назначен | backend, frontend, security, personal-data |
+| [Уведомления ядра не уходят за пределы приложения](CORE-ARC-031-telegram-notifications.md) | P2 | Запланирована | Не назначен | backend, personal-data |
+| [Подпись Mini App каждый проект проверяет своим кодом](CORE-ARC-032-telegram-mini-app.md) | P2 | Запланирована | Не назначен | backend, security |
+| [На сайт нельзя войти через Telegram](CORE-ARC-033-telegram-sign-in.md) | P2 | Запланирована | Не назначен | backend, frontend, security |
 | [Проверка настройки nginx на общем хосте обрывает работу ZAVPN](CORE-OPS-112-nginx-check-on-a-shared-host.md) | P2 | Запланирована | Не назначен | deployment, operations |
 | [Закреплённый npm 10.9.4 не разбирает дерево зависимостей с vitest 4.1](CORE-OPS-125-pinned-npm-cannot-resolve-vitest-4-1.md) | P2 | Запланирована | Не назначен | tooling, build |
 | [У Rust нет языковых документов, которые есть у Java и TypeScript](CORE-QUAL-012-rust-has-no-language-documents.md) | P2 | Запланирована | Не назначен | documentation, rust |

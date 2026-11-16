@@ -5,7 +5,7 @@ status: done
 scope: backend, frontend, security, personal-data
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-17-9-0
 related: REQ-TELEGRAM, REQ-AUTH, REQ-CONFIG, REQ-SECRETS
 ---
 

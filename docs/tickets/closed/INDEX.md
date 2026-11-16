@@ -174,7 +174,7 @@ authority: navigation
 | [Учётную запись ядра нельзя связать с Telegram](CORE-ARC-030-telegram-link.md) | P2 | Выполнена | [RELEASE-17-9-0](../../releases/RELEASE-17-9-0.md) | backend, frontend, security, personal-data |
 | [Уведомления ядра не уходят за пределы приложения](CORE-ARC-031-telegram-notifications.md) | P2 | Выполнена | [RELEASE-18-0-0](../../releases/RELEASE-18-0-0.md) | backend, personal-data |
 | [Подпись Mini App каждый проект проверяет своим кодом](CORE-ARC-032-telegram-mini-app.md) | P2 | Выполнена | [RELEASE-18-1-0](../../releases/RELEASE-18-1-0.md) | backend, security |
-| [На сайт нельзя войти через Telegram](CORE-ARC-033-telegram-sign-in.md) | P2 | Выполнена | Не назначен | backend, frontend, security |
+| [На сайт нельзя войти через Telegram](CORE-ARC-033-telegram-sign-in.md) | P2 | Выполнена | [RELEASE-18-2-0](../../releases/RELEASE-18-2-0.md) | backend, frontend, security |
 | [Модуль Telegram знает только одного бота](CORE-ARC-034-telegram-several-bots.md) | P2 | Выполнена | [RELEASE-18-0-0](../../releases/RELEASE-18-0-0.md) | backend, frontend, security, personal-data |
 | [Starter `platform-persistence`: SQL-каталог и условная запись](CORE-DATA-001-platform-persistence.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | backend, persistence |
 | [Подключение к проекту без каталогов документации падало трассировкой](CORE-DOC-001-adoption-on-a-bare-repository.md) | P2 | Выполнена | [RELEASE-0-25-0](../../releases/RELEASE-0-25-0.md) | process, platform |

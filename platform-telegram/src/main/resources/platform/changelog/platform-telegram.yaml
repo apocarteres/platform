@@ -24,3 +24,11 @@ databaseChangeLog:
             path: platform-telegram/003-bots.sql
             relativeToChangelogFile: true
             splitStatements: false
+  - changeSet:
+      id: platform-telegram:004-code
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-telegram/004-code.sql
+            relativeToChangelogFile: true
+            splitStatements: false

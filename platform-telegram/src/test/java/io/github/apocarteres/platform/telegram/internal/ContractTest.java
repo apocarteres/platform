@@ -32,16 +32,22 @@ class ContractTest {
   private static final Map<String, Class<?>> SCHEMAS = Map.of(
     "Links", TelegramViews.Links.class,
     "BotLink", TelegramViews.BotLink.class,
-    "Invitation", TelegramViews.Invitation.class
+    "Invitation", TelegramViews.Invitation.class,
+    "SignedIn", TelegramViews.SignedIn.class
   );
 
-  // REQ-AUTH-022, REQ-AUTH-038
+  // REQ-AUTH-022, REQ-AUTH-038, REQ-AUTH-048
   private static final Map<String, Integer> CHAIN = Map.of(
     "authentication-required", 401,
     "csrf-rejected", 403,
     "identity-rejected", 401,
     "rate-limited", 429,
-    "rate-limit-unavailable", 503
+    "rate-limit-unavailable", 503,
+    "credentials-rejected", 401,
+    "second-factor-required", 401,
+    "entry-closed", 403,
+    "account-blocked", 403,
+    "email-unverified", 403
   );
 
   private final JsonNode contract = read();
@@ -60,7 +66,7 @@ class ContractTest {
 
   private static Map<String, Method> endpoints() {
     Map<String, Method> found = new HashMap<>();
-    for (Class<?> controller : new Class<?>[] {LinkController.class, WebhookController.class}) {
+    for (Class<?> controller : new Class<?>[] {LinkController.class, WebhookController.class, LoginController.class}) {
       String base = controller.getAnnotation(RequestMapping.class).value()[0];
       for (Method method : controller.getDeclaredMethods()) {
         PostMapping post = method.getAnnotation(PostMapping.class);

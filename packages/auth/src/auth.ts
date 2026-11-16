@@ -75,6 +75,11 @@ export class AuthSession {
     return this.signIn(`${this.base}/login/second-factor`, body);
   }
 
+  // REQ-AUTH-048
+  signInWith(url: string, body: object): Promise<SignedIn> {
+    return this.signIn(url, body);
+  }
+
   async logout(): Promise<void> {
     try {
       await firstValueFrom(this.http.post(`${this.base}/logout`, {}));
@@ -177,7 +182,7 @@ export class AuthSession {
   }
 
   // REQ-AUTH-005, REQ-AUTH-043
-  private async signIn(url: string, body: LoginRequest | SecondFactorRequest): Promise<SignedIn> {
+  private async signIn(url: string, body: LoginRequest | SecondFactorRequest | object): Promise<SignedIn> {
     const signed = await firstValueFrom(this.http.post<SignedIn>(url, body));
     this.current.set(signed);
     await this.csrf();

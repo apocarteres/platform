@@ -147,10 +147,15 @@ public class AuthAutoConfiguration {
     return new HttpSessionSecurityContextRepository();
   }
 
+  // REQ-AUTH-048
   @Bean
-  AuthController authController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry,
-    AuthSettings settings, Clock clock) {
-    return new AuthController(auth, accounts, contexts, entry, settings, clock);
+  SessionSignIn sessionSignIn(AuthService auth, SecurityContextRepository contexts, EntryAccess entry, Clock clock) {
+    return new SessionSignIn(auth, contexts, entry, clock);
+  }
+
+  @Bean
+  AuthController authController(AuthService auth, Accounts accounts, SessionSignIn sessions, AuthSettings settings) {
+    return new AuthController(auth, accounts, sessions, settings);
   }
 
   // REQ-AUTH-047

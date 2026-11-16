@@ -1,10 +1,12 @@
 ---
 id: RELEASE-18-0-0
 type: release
-status: draft
+status: released
 scope: release
 authority: supporting
 opened-on: 2026-11-16
+released-on: 2026-11-16
+commit: add8124ec63089c8b05b9367b7d65d81e07702eb
 ---
 
 # Выпуск 18.0.0
@@ -29,17 +31,17 @@ opened-on: 2026-11-16
 
 ## Состав
 
-| Задача | Причина включения |
-|---|---|
-| [CORE-ARC-031](../tickets/closed/CORE-ARC-031-telegram-notifications.md) | Указана при открытии выпуска |
-| [CORE-ARC-034](../tickets/closed/CORE-ARC-034-telegram-several-bots.md) | Указана при открытии выпуска |
+| Задача | Причина включения | Порядок |
+|---|---|---|
+| [CORE-ARC-031](../tickets/closed/CORE-ARC-031-telegram-notifications.md) | Закрыта в этом выпуске, приоритет P2 | 1 |
+| [CORE-ARC-034](../tickets/closed/CORE-ARC-034-telegram-several-bots.md) | Закрыта в этом выпуске, приоритет P2 | 1 |
 
 ## Критерии выхода
 
-- [ ] Набор `verify` пройден на выпускаемом коммите — расписка получена командой выпуска
-- [ ] Тег выпуска создан на проверенном коммите — ставится командой выпуска
-- [ ] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной
-- [ ] Завершающий шаг выполнен — развёртывание в производственную среду или публикация артефактов
+- [x] Набор `verify` пройден на выпускаемом коммите — расписка 2026-11-16T18:30:38.847Z, наборы: check, verify, прогон `conventions receipt --parts: mise run verify-part-checks && mise run verify-part-rules && mise run verify-part-web && mise run java-test`
+- [x] Тег выпуска создан на проверенном коммите — `v18.0.0`
+- [x] Обязательства ядра этого выпуска закрыты или перенесены записью с причиной — ядро не объявляет обязательств самому себе
+- [x] Завершающий шаг выполнен — публикация артефактов ядра: mise run install-local
 
 ## Не входит
 
@@ -47,4 +49,40 @@ opened-on: 2026-11-16
 
 ## Результат
 
-Заполняется при закрытии из расписки о проверках.
+Выпущено с коммита `add8124ec63089c8b05b9367b7d65d81e07702eb`, тег `v18.0.0`.
+
+Расписка о проверках получена 2026-11-16T18:30:38.847Z; выполненные наборы: check, verify.
+
+Прогон наблюдён командой `conventions receipt --parts: mise run verify-part-checks && mise run verify-part-rules && mise run verify-part-web && mise run java-test` с кодом возврата 0.
+
+Развёртывание выполняется этим тегом: REQ-RELEASE-016.
+
+## Цена обновления
+
+Несовместимо (10) — версия обязана быть старшей:
+- снято в контракте — platform-telegram: ответ 200 у GET /api/telegram/link: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: ответ 200 у POST /api/telegram/link: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: ответ 200 у POST /api/telegram/webhook: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: ответ 204 у DELETE /api/telegram/link: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: поле LinkState.linked: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: поле LinkState.linkedAt: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: точка DELETE /api/telegram/link: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: точка GET /api/telegram/link: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: точка POST /api/telegram/link: клиент, опиравшийся на это, сломается
+- снято в контракте — platform-telegram: точка POST /api/telegram/webhook: клиент, опиравшийся на это, сломается
+
+Добавлено (14):
+- положений добавлено: 8
+- в контракте — platform-telegram: ответ 200 у GET /api/telegram/links
+- в контракте — platform-telegram: ответ 200 у POST /api/telegram/{bot}/link
+- в контракте — platform-telegram: ответ 200 у POST /api/telegram/{bot}/webhook
+- в контракте — platform-telegram: ответ 204 у DELETE /api/telegram/{bot}/link
+- в контракте — platform-telegram: поле BotLink.bot
+- в контракте — platform-telegram: поле BotLink.linked
+- в контракте — platform-telegram: поле BotLink.linkedAt
+- в контракте — platform-telegram: поле BotLink.name
+- в контракте — platform-telegram: поле Links.bots
+- в контракте — platform-telegram: точка DELETE /api/telegram/{bot}/link
+- в контракте — platform-telegram: точка GET /api/telegram/links
+- в контракте — platform-telegram: точка POST /api/telegram/{bot}/link
+- в контракте — platform-telegram: точка POST /api/telegram/{bot}/webhook

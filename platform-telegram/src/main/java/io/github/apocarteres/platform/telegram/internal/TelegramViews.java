@@ -17,4 +17,8 @@ final class TelegramViews {
 
   record Links(List<BotLink> bots) {
   }
+
+  // REQ-TELEGRAM-020
+  record SignedIn(java.util.UUID id, String email, java.util.Set<String> roles) {
+  }
 }

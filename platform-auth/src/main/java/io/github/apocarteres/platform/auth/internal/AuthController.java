@@ -4,23 +4,15 @@ import io.github.apocarteres.platform.auth.Account;
 import io.github.apocarteres.platform.auth.Accounts;
 import io.github.apocarteres.platform.auth.AuthRefused;
 import io.github.apocarteres.platform.auth.CurrentAccount;
-import io.github.apocarteres.platform.auth.EntryAccess;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.time.Clock;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,9 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 class AuthController {
 
   // REQ-AUTH-042
-  static final String SECOND_FACTOR = "platform.auth.second-factor";
-  // REQ-AUTH-047
-  private static final int AGENT_LENGTH = 256;
+  static final String SECOND_FACTOR = SessionSignIn.SECOND_FACTOR;
 
   record Registration(String email, String password, String human, Map<String, Object> profile) {
   }
@@ -83,26 +73,19 @@ class AuthController {
 
   private final AuthService auth;
   private final Accounts accounts;
-  private final SecurityContextRepository contexts;
-  private final EntryAccess entry;
+  private final SessionSignIn sessions;
   private final AuthSettings settings;
-  private final Clock clock;
 
-  AuthController(AuthService auth, Accounts accounts, SecurityContextRepository contexts, EntryAccess entry, AuthSettings settings,
-    Clock clock) {
+  AuthController(AuthService auth, Accounts accounts, SessionSignIn sessions, AuthSettings settings) {
     this.auth = auth;
     this.accounts = accounts;
-    this.contexts = contexts;
-    this.entry = entry;
+    this.sessions = sessions;
     this.settings = settings;
-    this.clock = clock;
   }
 
   // REQ-AUTH-016
   private void open(HttpServletRequest request) {
-    if (!entry.allowed(request)) {
-      throw new AuthRefused(AuthRefused.ENTRY, "Точки аутентификации для этого запроса закрыты проектом");
-    }
+    sessions.open(request);
   }
 
   @PostMapping("/register")
@@ -132,19 +115,7 @@ class AuthController {
     open(request);
     Account checked = auth.authenticate(body.email(), body.password(), body.human(), request.getRemoteAddr());
     // REQ-AUTH-042
-    Optional<PendingLogin> pending = auth.secondStep(checked);
-    if (pending.isPresent()) {
-      HttpSession session = request.getSession(true);
-      request.changeSessionId();
-      signedIn(session);
-      session.setAttribute(SECOND_FACTOR, pending.get());
-      SecurityContextHolder.clearContext();
-      contexts.saveContext(SecurityContextHolder.createEmptyContext(), request, response);
-      throw new AuthRefused(AuthRefused.SECOND_FACTOR_REQUIRED, "Вход требует второго шага");
-    }
-    Account account = auth.signIn(checked);
-    signIn(account, request, response);
-    return Me.of(account);
+    return Me.of(sessions.begin(checked, request, response));
   }
 
   // REQ-AUTH-043
@@ -162,41 +133,8 @@ class AuthController {
     Account confirmed = auth.confirmSecondStep(pending, body.code());
     session.removeAttribute(SECOND_FACTOR);
     Account account = auth.signInAfterSecondStep(confirmed.id());
-    signIn(account, request, response);
+    sessions.establish(account, request, response);
     return Me.of(account);
-  }
-
-  // REQ-AUTH-005, REQ-AUTH-008
-  private void signIn(Account account, HttpServletRequest request, HttpServletResponse response) {
-    List<SimpleGrantedAuthority> authorities = account.roles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
-    SecurityContext context = SecurityContextHolder.createEmptyContext();
-    context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(account.id().toString(), null, authorities));
-    HttpSession session = request.getSession(true);
-    request.changeSessionId();
-    signedIn(session);
-    // REQ-AUTH-047
-    session.setAttribute(Sessions.SIGNED_IN_ADDRESS, request.getRemoteAddr());
-    session.setAttribute(Sessions.SIGNED_IN_AGENT, agent(request));
-    // REQ-AUTH-042
-    if (session.getAttribute(SECOND_FACTOR) != null) {
-      session.removeAttribute(SECOND_FACTOR);
-    }
-    SecurityContextHolder.setContext(context);
-    contexts.saveContext(context, request, response);
-  }
-
-  // REQ-AUTH-047
-  private static String agent(HttpServletRequest request) {
-    String agent = request.getHeader("User-Agent");
-    if (agent == null) {
-      return null;
-    }
-    return agent.length() > AGENT_LENGTH ? agent.substring(0, AGENT_LENGTH) : agent;
-  }
-
-  // REQ-AUTH-046
-  private void signedIn(HttpSession session) {
-    session.setAttribute(SessionLifetimeFilter.SIGNED_IN_AT, clock.millis());
   }
 
   @PostMapping("/logout")

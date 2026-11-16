@@ -13,8 +13,9 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
 
-// REQ-TELEGRAM-002, REQ-TELEGRAM-015, REQ-TELEGRAM-018, REQ-CONFIG-001
-record TelegramSettings(Map<String, Bot> bots, Duration linkTtl, URI apiBase, URI linkBase, Duration miniAppAge) {
+// REQ-TELEGRAM-002, REQ-TELEGRAM-015, REQ-TELEGRAM-018, REQ-TELEGRAM-020, REQ-TELEGRAM-021, REQ-CONFIG-001
+record TelegramSettings(Map<String, Bot> bots, Duration linkTtl, URI apiBase, URI linkBase, Duration miniAppAge, Duration loginAge,
+  String secondFactorBot) {
 
   static final String PREFIX = "platform.telegram.";
 
@@ -107,8 +108,18 @@ record TelegramSettings(Map<String, Bot> bots, Duration linkTtl, URI apiBase, UR
     if (age.isNegative() || age.isZero() || age.compareTo(LONGEST_AGE) > 0) {
       throw refused("mini-app.max-age", age + ": срок initData — положительный и не длиннее 7 суток");
     }
+    // REQ-TELEGRAM-020
+    Duration login = binder.bind(PREFIX + "login.max-age", Duration.class).orElse(Duration.ofMinutes(10));
+    if (login.isNegative() || login.isZero() || login.compareTo(LONGEST) > 0) {
+      throw refused("login.max-age", login + ": срок данных входа — положительный и не длиннее суток");
+    }
+    // REQ-TELEGRAM-021
+    String factor = binder.bind(PREFIX + "second-factor.bot", String.class).map(String::trim).orElse(null);
+    if (factor != null && !bots.containsKey(factor)) {
+      throw refused("second-factor.bot", factor + ": бот не объявлен в platform.telegram.bots");
+    }
     return new TelegramSettings(Map.copyOf(bots), ttl,
-      URI.create(base.endsWith("/") ? base.substring(0, base.length() - 1) : base), URI.create(site), age);
+      URI.create(base.endsWith("/") ? base.substring(0, base.length() - 1) : base), URI.create(site), age, login, factor);
   }
 
   // REQ-TELEGRAM-018

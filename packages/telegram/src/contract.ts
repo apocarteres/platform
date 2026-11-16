@@ -16,6 +16,22 @@ export interface Invitation {
   readonly expiresAt: string;
 }
 
+export interface LoginWidget {
+  readonly id: number;
+  readonly first_name?: string;
+  readonly last_name?: string;
+  readonly username?: string;
+  readonly photo_url?: string;
+  readonly auth_date: number;
+  readonly hash: string;
+}
+
+export interface SignedIn {
+  readonly id: string;
+  readonly email: string;
+  readonly roles: readonly string[];
+}
+
 export interface Update {
   readonly update_id: number;
   readonly message?: Readonly<Record<string, unknown>>;

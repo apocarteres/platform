@@ -27,6 +27,7 @@ final class AuthService {
 
   // REQ-AUTH-042
   private static final Duration SECOND_FACTOR_TTL = Duration.ofMinutes(5);
+  private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(AuthService.class);
 
   private final AccountStore accounts;
   private final TokenStore tokens;
@@ -153,6 +154,33 @@ final class AuthService {
       return Optional.empty();
     }
     return Optional.of(new PendingLogin(account.id(), clock.instant().plus(SECOND_FACTOR_TTL)));
+  }
+
+  // REQ-AUTH-048
+  Account proven(UUID id, String address) {
+    limiter.consume(AuthLimits.LOGIN_BY_ADDRESS, address);
+    Account account = accounts.find(id).map(AccountStore.Stored::account)
+      .orElseThrow(() -> new AuthRefused(AuthRefused.CREDENTIALS, "Учётной записи нет"));
+    limiter.require(AuthLimits.LOGIN_FAILURES_BY_EMAIL, account.email());
+    if (account.blocked()) {
+      throw new AuthRefused(AuthRefused.BLOCKED, "Учётная запись заблокирована");
+    }
+    if (!account.verified()) {
+      throw new AuthRefused(AuthRefused.UNVERIFIED, "Почта не подтверждена");
+    }
+    return account;
+  }
+
+  // REQ-AUTH-042
+  void challenge(Account account) {
+    if (factor == null) {
+      return;
+    }
+    try {
+      factor.challenge(account);
+    } catch (RuntimeException failure) {
+      LOG.warn("Порт второго шага не выдал код: " + failure.getClass().getName());
+    }
   }
 
   // REQ-AUTH-043

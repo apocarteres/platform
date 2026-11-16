@@ -281,6 +281,116 @@
           }
         }
       }
+    },
+    "/api/telegram/{bot}/login": {
+      "post": {
+        "summary": "Вход на сайт через Telegram Login Widget",
+        "x-clause": "REQ-TELEGRAM-020",
+        "description": "Тело — данные виджета как есть: id, first_name, last_name, username, photo_url, auth_date, hash. Подпись проверяется ключом из токена бота. Вход — только учётной записи, связанной с этим ботом; открывает обычную сессию ядра с её проверками и вторым шагом (REQ-AUTH-048). Требует токена CSRF.",
+        "parameters": [
+          {
+            "name": "bot",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор бота из platform.telegram.bots",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,15}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginWidget"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успех: сессия открыта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Подпись неверна или просрочена, связи нет — один ответ; либо нужен второй шаг: POST /api/auth/login/second-factor",
+            "x-codes": [
+              "credentials-rejected",
+              "second-factor-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF, вход закрыт проектом, учётная запись заблокирована или почта не подтверждена",
+            "x-codes": [
+              "csrf-rejected",
+              "entry-closed",
+              "account-blocked",
+              "email-unverified"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бот не объявлен",
+            "x-codes": [
+              "telegram-bot-not-found"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: вход отклонён, а не пропущен",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -342,6 +452,61 @@
         "required": [
           "url",
           "expiresAt"
+        ]
+      },
+      "LoginWidget": {
+        "type": "object",
+        "description": "Данные Telegram Login Widget",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "photo_url": {
+            "type": "string"
+          },
+          "auth_date": {
+            "type": "integer"
+          },
+          "hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "auth_date",
+          "hash"
+        ]
+      },
+      "SignedIn": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "roles"
         ]
       },
       "Update": {

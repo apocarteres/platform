@@ -150,6 +150,28 @@ describe('состояние сессии', () => {
     http.verify();
   });
 
+  // REQ-AUTH-048
+  it('вход, проверенный модулем ядра, идёт на его точку и ведёт себя как вход по паролю', async () => {
+    const { http, session } = setUp();
+    await start(http, null);
+    const widget = { id: 7001, auth_date: 1, hash: 'h' };
+    const pending = session.signInWith('/api/telegram/news/login', widget);
+    await flushes();
+    http.expectOne('/api/telegram/news/login').flush({ code: 'second-factor-required' }, { status: 401, statusText: 'Unauthorized' });
+    expect(authFailureCode(await pending.catch((reason: unknown) => reason))).toBe('second-factor-required');
+    expect(session.account()).toBeNull();
+    const signed = session.signInWith('/api/telegram/news/login', widget);
+    await flushes();
+    const request = http.expectOne('/api/telegram/news/login');
+    expect(request.request.body).toEqual(widget);
+    request.flush(ME);
+    await flushes();
+    http.expectOne('/api/auth/csrf').flush({ token: 'u' });
+    await expect(signed).resolves.toEqual(ME);
+    expect(session.account()?.id).toBe(ME.id);
+    http.verify();
+  });
+
   it('регистрация, подтверждение и сброс уходят на точки ядра с телом, которое оно ждёт', async () => {
     const { http, session } = setUp();
     await start(http, null);

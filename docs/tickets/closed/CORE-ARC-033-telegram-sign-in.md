@@ -1,12 +1,12 @@
 ---
 id: CORE-ARC-033
 type: ticket
-status: backlog
+status: done
 scope: backend, frontend, security
 authority: supporting
 priority: P2
-release: unassigned
-related: REQ-AUTH, CORE-ARC-030
+release: RELEASE-18-2-0
+related: REQ-AUTH, REQ-TELEGRAM, CORE-ARC-030, CORE-ARC-034
 ---
 
 # На сайт нельзя войти через Telegram
@@ -51,6 +51,18 @@ related: REQ-AUTH, CORE-ARC-030
   сессия; заблокированная — `account-blocked`.
 - Код второго шага приходит в Telegram и принимается один раз.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-16 — порт ядра `SignIn` (`REQ-AUTH-048`): открытие сессии вынесено
+  из контроллера входа в общий класс, и вход по паролю и вход, удостоверенный
+  модулем, идут одним путём. `SecondFactor.challenge` — метод по умолчанию,
+  совместимо с прежними реализациями.
+- `POST /api/telegram/<бот>/login` (`REQ-TELEGRAM-020`) — по боту, с учётом
+  `CORE-ARC-034`; клиент — `AuthSession.signInWith` в `@apocarteres/auth`.
+- Второй шаг (`REQ-TELEGRAM-021`) — бот из
+  `platform.telegram.second-factor.bot`, текст — бин проекта
+  `TelegramCodeText`; требуется связанным с этим ботом записям.
 
 ## Откуда пришла задача
 

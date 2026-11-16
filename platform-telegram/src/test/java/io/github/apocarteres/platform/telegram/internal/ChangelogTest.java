@@ -34,7 +34,8 @@ class ChangelogTest {
 
   private static final List<String> SAMPLES = List.of(
     "sql/platform-auth/create-account.sql", "sql/platform-auth/create-role.sql", "sql/platform-auth/create-token.sql",
-    "sql/platform-auth/create-access-key.sql", "sql/platform-telegram/create-link.sql", "sql/platform-telegram/create-invite.sql"
+    "sql/platform-auth/create-access-key.sql", "sql/platform-telegram/create-link.sql", "sql/platform-telegram/create-invite.sql",
+    "sql/platform-telegram/create-code.sql"
   );
 
   static {

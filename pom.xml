@@ -48,8 +48,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>4.0.8</spring-boot.version>
-    <!-- REQ-DEPS-005 -->
-    <tomcat.version>11.0.25</tomcat.version>
+    <!-- REQ-DEPS-005, CORE-SEC-011 -->
+    <tomcat.version>11.0.27</tomcat.version>
     <!-- REQ-DEPS-005: GHSA-q4xh-88c3-wmh7, GHSA-gx83-3vf8-gh7j, GHSA-wjgm-6hv5-3cvf -->
     <jackson.version>3.1.7</jackson.version>
     <jackson2.version>2.21.7</jackson2.version>

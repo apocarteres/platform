@@ -5,7 +5,7 @@ status: done
 scope: backend, frontend, api
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-17-8-0
 related: REQ-SUPPORT, CORE-ARC-017
 ---
 

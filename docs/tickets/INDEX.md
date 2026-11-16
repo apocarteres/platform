@@ -14,11 +14,10 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 9. Включены самостоятельные задачи и этапы планов функций.
+Всего: 8. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
-| [Подпись Mini App каждый проект проверяет своим кодом](CORE-ARC-032-telegram-mini-app.md) | P2 | Запланирована | Не назначен | backend, security |
 | [На сайт нельзя войти через Telegram](CORE-ARC-033-telegram-sign-in.md) | P2 | Запланирована | Не назначен | backend, frontend, security |
 | [Проверка настройки nginx на общем хосте обрывает работу ZAVPN](CORE-OPS-112-nginx-check-on-a-shared-host.md) | P2 | Запланирована | Не назначен | deployment, operations |
 | [Закреплённый npm 10.9.4 не разбирает дерево зависимостей с vitest 4.1](CORE-OPS-125-pinned-npm-cannot-resolve-vitest-4-1.md) | P2 | Запланирована | Не назначен | tooling, build |

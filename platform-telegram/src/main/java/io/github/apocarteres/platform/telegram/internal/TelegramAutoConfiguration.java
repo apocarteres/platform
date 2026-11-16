@@ -57,6 +57,12 @@ public class TelegramAutoConfiguration {
     return new WebhookAuthenticator(settings);
   }
 
+  // REQ-TELEGRAM-018
+  @Bean
+  MiniAppAuthenticator telegramMiniAppAuthenticator(TelegramSettings settings, Clock clock) {
+    return new MiniAppAuthenticator(settings, clock);
+  }
+
   @Bean
   LinkController telegramLinkController(LinkService links) {
     return new LinkController(links);

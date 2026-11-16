@@ -89,6 +89,12 @@ final class LinkService implements TelegramLinks {
     return store.find(account, bot).map(link -> OptionalLong.of(link.chat())).orElse(OptionalLong.empty());
   }
 
+  // REQ-TELEGRAM-019
+  @Override
+  public Optional<UUID> account(String bot, long telegramUser) {
+    return store.account(bot, telegramUser);
+  }
+
   // REQ-TELEGRAM-009
   @Override
   public boolean unlink(UUID account, String bot) {

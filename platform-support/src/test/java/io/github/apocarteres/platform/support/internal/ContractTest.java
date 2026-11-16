@@ -42,6 +42,8 @@ class ContractTest {
     Map.entry("AnswerLink", SupportViews.AnswerLink.class),
     Map.entry("Item", SupportViews.Item.class),
     Map.entry("Page", SupportViews.Page.class),
+    Map.entry("Count", SupportViews.Count.class),
+    Map.entry("Counts", SupportViews.Counts.class),
     Map.entry("Step", SupportViews.Step.class),
     Map.entry("OperatorStep", SupportViews.OperatorStep.class),
     Map.entry("File", SupportViews.File.class),
@@ -137,6 +139,16 @@ class ContractTest {
     Set<String> described = new TreeSet<>();
     contract.get("components").get("schemas").get("RequestState").get("enum").forEach(value -> described.add(value.asString()));
     assertThat(described).isEqualTo(Arrays.stream(RequestState.values()).map(Enum::name).collect(Collectors.toCollection(TreeSet::new)));
+  }
+
+  // REQ-SUPPORT-016
+  @Test
+  @DisplayName("Порядки списка в контракте — ровно порядки, которые принимает точка")
+  void ordersMatch() {
+    Set<String> described = new TreeSet<>();
+    contract.get("components").get("schemas").get("RequestOrder").get("enum").forEach(value -> described.add(value.asString()));
+    assertThat(described).isEqualTo(Arrays.stream(SupportViews.RequestOrder.values()).map(Enum::name)
+      .collect(Collectors.toCollection(TreeSet::new)));
   }
 
   @Test

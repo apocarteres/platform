@@ -672,6 +672,7 @@ class SupportFlowTest {
     other.post("/api/support/requests/" + id + "/messages", "{\"text\":\"чужое\"}").andExpect(status().isNotFound());
     other.get("/api/support/operator/requests").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("access-denied"));
     other.get("/api/support/operator/requests/" + id).andExpect(status().isForbidden());
+    other.get("/api/support/operator/counts").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("access-denied"));
     new Tab().get("/api/support/operator/requests").andExpect(status().isUnauthorized());
   }
 

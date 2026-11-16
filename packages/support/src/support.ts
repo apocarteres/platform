@@ -5,8 +5,8 @@ import {
 import type { EnvironmentProviders, Signal, Type } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type {
-  AnswerLink, AuthorView, JournalEntry, Message, OperatorView, Page, Policy, RequestState, Snapshot, StateChange, Submission,
-  Submitted, Unread,
+  AnswerLink, AuthorView, Counts, JournalEntry, Message, OperatorView, Page, Policy, RequestOrder, RequestState, Snapshot,
+  StateChange, Submission, Submitted, Unread,
 } from './contract';
 
 // REQ-SUPPORT-014
@@ -173,17 +173,29 @@ export class SupportDesk {
   }
 }
 
-// REQ-SUPPORT-007, REQ-SUPPORT-012
+// REQ-SUPPORT-007, REQ-SUPPORT-012, REQ-SUPPORT-016
 @Injectable()
 export class SupportOperator {
   private readonly http = inject(HttpClient);
-  private readonly base = `${inject(OPTIONS).base}/operator/requests`;
+  private readonly place = `${inject(OPTIONS).base}/operator`;
+  private readonly base = `${this.place}/requests`;
   private readonly unread = inject(SupportUnread);
 
-  list(state: RequestState | null = null, page = 0, size = 20): Promise<Page> {
+  // REQ-SUPPORT-016
+  list(
+    states: readonly RequestState[] | RequestState | null = null, page = 0, size = 20, order: RequestOrder = 'CREATED',
+  ): Promise<Page> {
     let params = paging(page, size);
-    if (state !== null) params = params.set('state', state);
+    for (const state of states === null ? [] : typeof states === 'string' ? [states] : states) {
+      params = params.append('state', state);
+    }
+    if (order !== 'CREATED') params = params.set('order', order);
     return firstValueFrom(this.http.get<Page>(this.base, { params }));
+  }
+
+  // REQ-SUPPORT-016
+  counts(): Promise<Counts> {
+    return firstValueFrom(this.http.get<Counts>(`${this.place}/counts`));
   }
 
   request(id: string): Promise<OperatorView> {

@@ -212,6 +212,14 @@ describe('точки центра', () => {
     answer.flush({});
     void operator.list('NEW');
     backend.expectOne('/svc/support/operator/requests?page=0&size=20&state=NEW').flush({ items: [], page: 0, size: 20, total: 0 });
+    // REQ-SUPPORT-016
+    void operator.list(['NEW', 'IN_PROGRESS'], 1, 10, 'ACTIVITY');
+    backend.expectOne('/svc/support/operator/requests?page=1&size=10&state=NEW&state=IN_PROGRESS&order=ACTIVITY')
+      .flush({ items: [], page: 1, size: 10, total: 0 });
+    void operator.list();
+    backend.expectOne('/svc/support/operator/requests?page=0&size=20').flush({ items: [], page: 0, size: 20, total: 0 });
+    void operator.counts();
+    backend.expectOne('/svc/support/operator/counts').flush({ states: [] });
     void operator.change('r', 'CLOSED');
     const change = backend.expectOne('/svc/support/operator/requests/r/state');
     expect(change.request.body).toEqual({ state: 'CLOSED' });

@@ -7,12 +7,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-// REQ-SUPPORT-001, REQ-PERSISTENCE-001
+// REQ-SUPPORT-001, REQ-SUPPORT-016, REQ-PERSISTENCE-001
 final class RequestStore {
 
   enum Kind { MESSAGE, STATE, ATTACHMENTS_EXPIRED, JOURNAL_EXPIRED, EMAIL_EXPIRED, ERASED }
@@ -77,13 +81,27 @@ final class RequestStore {
     return jdbc.sql(sql.get("request-count-by-author")).param("author", author).query(Long.class).single();
   }
 
-  List<Listed> pageAll(RequestState state, int offset, int limit) {
-    return jdbc.sql(sql.get("request-page-all")).param("state", state == null ? null : state.name())
+  // REQ-SUPPORT-016
+  List<Listed> pageAll(Set<RequestState> states, boolean activity, int offset, int limit) {
+    return jdbc.sql(sql.get("request-page-all")).param("states", names(states)).param("activity", activity)
       .param("offset", offset).param("limit", limit).query(RequestStore::listed).list();
   }
 
-  long countAll(RequestState state) {
-    return jdbc.sql(sql.get("request-count-all")).param("state", state == null ? null : state.name()).query(Long.class).single();
+  // REQ-SUPPORT-016
+  long countAll(Set<RequestState> states) {
+    return jdbc.sql(sql.get("request-count-all")).param("states", names(states)).query(Long.class).single();
+  }
+
+  // REQ-SUPPORT-016
+  Map<RequestState, Long> countByState() {
+    Map<RequestState, Long> counts = new EnumMap<>(RequestState.class);
+    jdbc.sql(sql.get("request-count-by-state"))
+      .query((row, index) -> counts.put(RequestState.valueOf(row.getString("state")), row.getLong("total"))).list();
+    return counts;
+  }
+
+  private static List<String> names(Set<RequestState> states) {
+    return (states.isEmpty() ? EnumSet.allOf(RequestState.class) : states).stream().map(Enum::name).toList();
   }
 
   // REQ-SUPPORT-007

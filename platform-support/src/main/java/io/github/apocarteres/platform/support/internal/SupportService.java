@@ -13,11 +13,14 @@ import io.github.apocarteres.platform.support.internal.RequestStore.Kind;
 import io.github.apocarteres.platform.support.internal.RequestStore.Side;
 import io.github.apocarteres.platform.support.internal.RequestStore.Stored;
 import io.github.apocarteres.platform.support.internal.SupportViews.AuthorView;
+import io.github.apocarteres.platform.support.internal.SupportViews.Count;
+import io.github.apocarteres.platform.support.internal.SupportViews.Counts;
 import io.github.apocarteres.platform.support.internal.SupportViews.File;
 import io.github.apocarteres.platform.support.internal.SupportViews.Item;
 import io.github.apocarteres.platform.support.internal.SupportViews.OperatorStep;
 import io.github.apocarteres.platform.support.internal.SupportViews.OperatorView;
 import io.github.apocarteres.platform.support.internal.SupportViews.Page;
+import io.github.apocarteres.platform.support.internal.SupportViews.RequestOrder;
 import io.github.apocarteres.platform.support.internal.SupportViews.Step;
 import io.github.apocarteres.platform.support.internal.SupportViews.Submitted;
 import io.github.apocarteres.platform.support.internal.SupportViews.Unread;
@@ -30,8 +33,10 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -42,7 +47,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
-// REQ-SUPPORT-001, REQ-SUPPORT-004, REQ-SUPPORT-005, REQ-SUPPORT-006, REQ-SUPPORT-007, REQ-SUPPORT-008, REQ-SUPPORT-009
+// REQ-SUPPORT-001, REQ-SUPPORT-004, REQ-SUPPORT-005, REQ-SUPPORT-006, REQ-SUPPORT-007, REQ-SUPPORT-008, REQ-SUPPORT-009,
+// REQ-SUPPORT-016
 final class SupportService {
 
   static final class Upload {
@@ -165,11 +171,19 @@ final class SupportService {
     return new Page(items, Math.max(0, page), bounded, requests.countByAuthor(author));
   }
 
-  Page all(RequestState state, int page, int size) {
+  // REQ-SUPPORT-016
+  Page all(Set<RequestState> states, RequestOrder order, int page, int size) {
     int bounded = bounded(size);
     int offset = Math.max(0, page) * bounded;
-    List<Item> items = requests.pageAll(state, offset, bounded).stream().map(SupportService::item).toList();
-    return new Page(items, Math.max(0, page), bounded, requests.countAll(state));
+    List<Item> items = requests.pageAll(states, order == RequestOrder.ACTIVITY, offset, bounded).stream()
+      .map(SupportService::item).toList();
+    return new Page(items, Math.max(0, page), bounded, requests.countAll(states));
+  }
+
+  // REQ-SUPPORT-016
+  Counts counts() {
+    Map<RequestState, Long> found = requests.countByState();
+    return new Counts(Arrays.stream(RequestState.values()).map(state -> new Count(state, found.getOrDefault(state, 0L))).toList());
   }
 
   // REQ-SUPPORT-012

@@ -5,7 +5,7 @@ status: active
 scope: backend, frontend, java, typescript, personal-data
 authority: normative
 clause-id-prefix: REQ-SUPPORT
-related: REQ-AUTH, REQ-CLIENT-JOURNAL, REQ-API, ADR-0007, CORE-ARC-017
+related: REQ-AUTH, REQ-CLIENT-JOURNAL, REQ-API, ADR-0007, CORE-ARC-017, CORE-API-010
 ---
 
 # Центр поддержки: обращения, ход, место оператора
@@ -50,6 +50,7 @@ related: REQ-AUTH, REQ-CLIENT-JOURNAL, REQ-API, ADR-0007, CORE-ARC-017
 
 12. <a id="REQ-SUPPORT-012"></a> **REQ-SUPPORT-012** — Автор видит только свои обращения; чужое и стёртое отдаются как несуществующие (`request-not-found`). Оператор видит все. Почта, журнал, снимок и учётная запись автора есть только в месте оператора (`/api/support/operator/**`), и туда пускает только роль оператора (`access-denied`). Правила доступа центр объявляет `ModuleApiAccess` (`REQ-AUTH-022`).
 13. <a id="REQ-SUPPORT-013"></a> **REQ-SUPPORT-013** — Точки центра описаны контрактом OpenAPI `platform-support/src/main/resources/openapi/platform-support.openapi.json`, копия лежит в пакете клиента, типы клиента выводятся из него. Тест держит контроллер в соответствии с контрактом — точки, тела, поля, состояния, коды отказов под своими статусами. Цена обновления сверяет контракт между версиями, включая значения перечислений: снятое значение несовместимо (`REQ-PUBLISHING-015`).
+16. <a id="REQ-SUPPORT-016"></a> **REQ-SUPPORT-016** — Список оператора (`/api/support/operator/requests`, `SupportOperator.list`) отбирает по нескольким состояниям сразу — повторяемый параметр `state`; без него — все состояния. Порядок — параметр `order`: `CREATED` — по времени создания, по умолчанию, `ACTIVITY` — по последней активности, то есть по последнему сообщению или смене состояния любой стороны; просмотр активностью не считается. Оба — свежие сверху, при равном времени — больший номер выше, поэтому страницы не перемешиваются. Число обращений в каждом состоянии отдаёт одним запросом `/api/support/operator/counts` (`SupportOperator.counts`): называет все состояния, пустое — нулём, и его числа совпадают с `total` списка того же отбора. Основание — заявка потребителя от 2026-11-16 (`CORE-API-010`).
 
 ## Клиент
 

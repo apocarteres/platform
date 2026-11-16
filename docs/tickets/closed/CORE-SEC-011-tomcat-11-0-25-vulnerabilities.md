@@ -5,7 +5,7 @@ status: done
 scope: backend, security, dependencies
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-18-2-1
 related: REQ-DEPS
 ---
 

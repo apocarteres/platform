@@ -1,12 +1,12 @@
 ---
 id: CORE-ARC-030
 type: ticket
-status: backlog
+status: done
 scope: backend, frontend, security, personal-data
 authority: supporting
 priority: P2
 release: unassigned
-related: REQ-AUTH, REQ-CONFIG, REQ-SECRETS
+related: REQ-TELEGRAM, REQ-AUTH, REQ-CONFIG, REQ-SECRETS
 ---
 
 # Учётную запись ядра нельзя связать с Telegram
@@ -58,6 +58,26 @@ App, затем вход на сайт и второй шаг. Учётных з
 - Webhook без верного секрета отвечает отказом и ничего не меняет.
 - Стирание учётной записи стирает связь.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-16 — требования `REQ-TELEGRAM-001`…`013`; модуль
+  `platform-telegram`: настройки бота, webhook через порт
+  `RequestAuthenticator` (`REQ-AUTH-037`) — отдельной цепочки безопасности
+  нет (`REQ-AUTH-022`); таблицы `platform_telegram_link` и
+  `platform_telegram_invite` с каскадом от `platform_account`; `TelegramLinks`,
+  `TelegramBot`, `TelegramReplies`; клиент `@apocarteres/telegram` —
+  `TelegramLink`.
+- «Чужой токен» понят так: токен, которого ядро не выдавало, и токен,
+  предъявленный человеком Telegram, уже связанным с другой учётной записью.
+  Токен — одноразовая ссылка: кто её получил, тот и связывает; поэтому срок
+  короткий, 10 минут.
+- Ответ в чат на `/start` — телом ответа webhook, текст даёт проект портом
+  `TelegramReplies`; без порта бот молчит.
+
+## Вне задачи
+
+Доставка уведомлений, повторы и учёт заблокировавших бот — `CORE-ARC-031`.
 
 ## Откуда пришла задача
 

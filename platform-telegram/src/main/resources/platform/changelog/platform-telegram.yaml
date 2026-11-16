@@ -1,0 +1,18 @@
+# REQ-DATA-ACCESS-007, REQ-TELEGRAM-001
+databaseChangeLog:
+  - changeSet:
+      id: platform-telegram:001-link
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-telegram/001-link.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-telegram:002-invite
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-telegram/002-invite.sql
+            relativeToChangelogFile: true
+            splitStatements: false

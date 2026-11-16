@@ -14,11 +14,10 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 11. Включены самостоятельные задачи и этапы планов функций.
+Всего: 10. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
-| [Учётную запись ядра нельзя связать с Telegram](CORE-ARC-030-telegram-link.md) | P2 | Запланирована | Не назначен | backend, frontend, security, personal-data |
 | [Уведомления ядра не уходят за пределы приложения](CORE-ARC-031-telegram-notifications.md) | P2 | Запланирована | Не назначен | backend, personal-data |
 | [Подпись Mini App каждый проект проверяет своим кодом](CORE-ARC-032-telegram-mini-app.md) | P2 | Запланирована | Не назначен | backend, security |
 | [На сайт нельзя войти через Telegram](CORE-ARC-033-telegram-sign-in.md) | P2 | Запланирована | Не назначен | backend, frontend, security |

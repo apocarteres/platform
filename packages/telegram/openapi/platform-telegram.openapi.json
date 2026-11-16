@@ -1,0 +1,320 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Telegram ядра",
+    "version": "0.0.0",
+    "description": "Контракт точек platform-telegram (REQ-TELEGRAM-012). Версия документа — версия ядра. Изменяющие запросы вошедшего требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN; запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006). Webhook удостоверяется секретным заголовком и токена CSRF не требует (REQ-TELEGRAM-003)."
+  },
+  "paths": {
+    "/api/telegram/link": {
+      "get": {
+        "summary": "Состояние своей связи с Telegram",
+        "x-clause": "REQ-TELEGRAM-009",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkState"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Одноразовая ссылка связи с ботом",
+        "x-clause": "REQ-TELEGRAM-006",
+        "description": "Новая выдача гасит прежнюю ссылку. Ссылка ведёт в бот с командой /start и токеном.",
+        "responses": {
+          "200": {
+            "description": "Успех",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Связь уже есть: сначала её снимают",
+            "x-codes": [
+              "telegram-already-linked"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Снять свою связь",
+        "x-clause": "REQ-TELEGRAM-009",
+        "description": "Снятие отсутствующей связи безвредно.",
+        "responses": {
+          "204": {
+            "description": "Связи нет"
+          },
+          "401": {
+            "description": "Вход не выполнен",
+            "x-codes": [
+              "authentication-required"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Нет токена CSRF",
+            "x-codes": [
+              "csrf-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telegram/webhook": {
+      "post": {
+        "summary": "Обновление бота от Telegram",
+        "x-clause": "REQ-TELEGRAM-004",
+        "description": "Только для Telegram. Заголовок X-Telegram-Bot-Api-Secret-Token сверяется с секретом webhook. Модуль читает команду /start <токен> из личного чата; на прочее — 200 без тела. Ответ в чат приходит телом ответа методом sendMessage (REQ-TELEGRAM-008).",
+        "parameters": [
+          {
+            "name": "X-Telegram-Bot-Api-Secret-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Update"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновление принято; тело — ответ в чат или пусто",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Секрет webhook неверен или не передан",
+            "x-codes": [
+              "identity-rejected"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Превышен предел частоты; заголовок Retry-After",
+            "x-codes": [
+              "rate-limited"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Хранилище ограничителя недоступно: обновление отклонено, а не пропущено",
+            "x-codes": [
+              "rate-limit-unavailable"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LinkState": {
+        "type": "object",
+        "properties": {
+          "linked": {
+            "type": "boolean"
+          },
+          "linkedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "linked",
+          "linkedAt"
+        ]
+      },
+      "Invitation": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt"
+        ]
+      },
+      "Update": {
+        "type": "object",
+        "description": "Обновление Bot API; модуль читает message.chat, message.from и message.text",
+        "properties": {
+          "update_id": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "update_id"
+        ]
+      },
+      "Reply": {
+        "type": "object",
+        "description": "Вызов Bot API в ответе webhook",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "sendMessage"
+            ]
+          },
+          "chat_id": {
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "method",
+          "chat_id",
+          "text"
+        ]
+      },
+      "ProblemDetail": {
+        "type": "object",
+        "description": "RFC 9457 с расширением code (REQ-API-001)",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code"
+        ]
+      }
+    }
+  }
+}

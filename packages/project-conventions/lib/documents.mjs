@@ -36,6 +36,7 @@ export const DELIVERED_DOCUMENTS = [
   'auth.md',
   'support.md',
   'notifications.md',
+  'telegram.md',
   'project-rules.md',
   'rule-distribution.md',
   'terminology.md',

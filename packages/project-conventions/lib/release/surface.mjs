@@ -116,11 +116,12 @@ export function componentsOf(pom) {
   return found.sort((one, other) => (one.id < other.id ? -1 : 1));
 }
 
-// REQ-PUBLISHING-015, REQ-AUTH-020, REQ-SUPPORT-013, REQ-NOTIFICATIONS-008
+// REQ-PUBLISHING-015, REQ-AUTH-020, REQ-SUPPORT-013, REQ-NOTIFICATIONS-008, REQ-TELEGRAM-012
 export const CONTRACTS = [
   'platform-auth/src/main/resources/openapi/platform-auth.openapi.json',
   'platform-support/src/main/resources/openapi/platform-support.openapi.json',
   'platform-notifications/src/main/resources/openapi/platform-notifications.openapi.json',
+  'platform-telegram/src/main/resources/openapi/platform-telegram.openapi.json',
 ];
 
 // REQ-PUBLISHING-015, REQ-AUTH-020

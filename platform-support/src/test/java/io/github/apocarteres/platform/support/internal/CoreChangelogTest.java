@@ -36,7 +36,7 @@ class CoreChangelogTest {
 
   private static final List<String> SAMPLES = List.of(
     "sql/platform-auth/create-account.sql", "sql/platform-auth/create-role.sql", "sql/platform-auth/create-token.sql",
-    "sql/platform-auth/create-access-key.sql", "sql/platform-notifications/create-notification.sql",
+    "sql/platform-auth/create-access-key.sql", "sql/platform-notifications/create-notification.sql", "sql/platform-notifications/create-delivery.sql",
     "sql/platform-support/create-request.sql", "sql/platform-support/create-entry.sql", "sql/platform-support/create-attachment.sql",
     "sql/platform-support/create-attachment-content.sql", "sql/platform-support/create-answer-link.sql",
     "sql/platform-job-lock/create-table.sql"

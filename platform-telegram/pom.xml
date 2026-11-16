@@ -22,6 +22,12 @@
       <version>${revision}</version>
     </dependency>
     <dependency>
+      <groupId>io.github.apocarteres.platform</groupId>
+      <artifactId>platform-notifications</artifactId>
+      <version>${revision}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jdbc</artifactId>
     </dependency>

@@ -14,7 +14,7 @@ import io.github.apocarteres.platform.auth.EntryAccess;
 import io.github.apocarteres.platform.auth.HumanCheck;
 import io.github.apocarteres.platform.auth.RegistrationHook;
 import io.github.apocarteres.platform.auth.Removal;
-import io.github.apocarteres.platform.telegram.TelegramBot;
+import io.github.apocarteres.platform.telegram.TelegramBots;
 import io.github.apocarteres.platform.telegram.TelegramLinks;
 import io.github.apocarteres.platform.telegram.TelegramReplies;
 import io.github.apocarteres.platform.telegram.TelegramUnavailable;
@@ -71,14 +71,17 @@ import tools.jackson.databind.json.JsonMapper;
     "platform.auth.default-roles=USER",
     "platform.auth.link-base=https://site.example",
     "platform.auth.session.cookie-secure=false",
-    "platform.telegram.bot-name=core_test_bot",
+    "platform.telegram.bots.news.name=site_news_bot",
+    "platform.telegram.bots.support.name=site_support_bot",
     "platform.telegram.link-ttl=PT10M",
   }
 )
 class LinkFlowTest {
 
   static final String BOT_TOKEN = "123456:" + "t".repeat(35);
+  static final String SUPPORT_TOKEN = "654321:" + "u".repeat(35);
   static final String SECRET = "s".repeat(40);
+  static final String SUPPORT_SECRET = "v".repeat(40);
   static final String PASSWORD = "correct horse battery";
 
   static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:17-alpine");
@@ -91,7 +94,8 @@ class LinkFlowTest {
     try (var connection = java.sql.DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
       liquibase.database.Database database = liquibase.database.DatabaseFactory.getInstance()
         .findCorrectDatabaseImplementation(new liquibase.database.jvm.JdbcConnection(connection));
-      for (String file : List.of("platform/changelog/platform-auth.yaml", "platform/changelog/platform-telegram.yaml")) {
+      for (String file : List.of("platform/changelog/platform-auth.yaml", "platform/changelog/platform-notifications.yaml",
+        "platform/changelog/platform-telegram.yaml")) {
         new liquibase.Liquibase(file, new liquibase.resource.ClassLoaderResourceAccessor(), database)
           .update(new liquibase.Contexts(), new liquibase.LabelExpression());
       }
@@ -107,8 +111,10 @@ class LinkFlowTest {
     registry.add("spring.datasource.password", POSTGRES::getPassword);
     registry.add("spring.data.redis.host", REDIS::getHost);
     registry.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
-    registry.add("platform.telegram.bot-token", () -> BOT_TOKEN);
-    registry.add("platform.telegram.webhook-secret", () -> SECRET);
+    registry.add("platform.telegram.bots.news.token", () -> BOT_TOKEN);
+    registry.add("platform.telegram.bots.news.webhook-secret", () -> SECRET);
+    registry.add("platform.telegram.bots.support.token", () -> SUPPORT_TOKEN);
+    registry.add("platform.telegram.bots.support.webhook-secret", () -> SUPPORT_SECRET);
     registry.add("platform.telegram.api-base", BOT_API::base);
   }
 
@@ -125,7 +131,9 @@ class LinkFlowTest {
   @Autowired
   private TelegramLinks links;
   @Autowired
-  private TelegramBot bot;
+  private TelegramBots bots;
+  @Autowired
+  private io.github.apocarteres.platform.notifications.Notifications notifications;
 
   private final JsonMapper json = JsonMapper.builder().build();
   private MockMvc mvc;
@@ -175,9 +183,9 @@ class LinkFlowTest {
       return send(MockMvcRequestBuilders.delete(path).header("X-XSRF-TOKEN", csrf));
     }
 
-    String invite() throws Exception {
-      String url = body(post("/api/telegram/link", "{}").andExpect(status().isOk())).get("url").asString();
-      assertThat(url).matches("https://t\\.me/core_test_bot\\?start=[A-Za-z0-9_-]{43}");
+    String invite(String bot) throws Exception {
+      String url = body(post("/api/telegram/" + bot + "/link", "{}").andExpect(status().isOk())).get("url").asString();
+      assertThat(url).matches("https://t\\.me/site_" + bot + "_bot\\?start=[A-Za-z0-9_-]{43}");
       return url.substring(url.indexOf("start=") + "start=".length());
     }
 
@@ -209,16 +217,20 @@ class LinkFlowTest {
       + ",\"type\":\"" + chatType + "\"},\"from\":{\"id\":" + user + ",\"is_bot\":false,\"first_name\":\"Имя\",\"language_code\":\"ru\"}}}";
   }
 
-  private ResultActions webhook(String secret, String update) throws Exception {
-    var request = MockMvcRequestBuilders.post("/api/telegram/webhook").contentType(MediaType.APPLICATION_JSON).content(update);
+  private ResultActions webhook(String bot, String secret, String update) throws Exception {
+    var request = MockMvcRequestBuilders.post("/api/telegram/" + bot + "/webhook").contentType(MediaType.APPLICATION_JSON).content(update);
     if (secret != null) {
       request.header(WebhookAuthenticator.HEADER, secret);
     }
     return mvc.perform(request);
   }
 
-  private ResultActions start(long user, String token) throws Exception {
-    return webhook(SECRET, update("private", user, "/start " + token));
+  private static String secret(String bot) {
+    return bot.equals("news") ? SECRET : SUPPORT_SECRET;
+  }
+
+  private ResultActions start(String bot, long user, String token) throws Exception {
+    return webhook(bot, secret(bot), update("private", user, "/start " + token));
   }
 
   private long links() {
@@ -226,25 +238,48 @@ class LinkFlowTest {
   }
 
   @Test
-  @DisplayName("Ссылка связи, /start из личного чата — связь записана, ответ в чат текстом проекта, владелец видит связь")
+  @DisplayName("Ссылка связи, /start из личного чата — связь с этим ботом записана, ответ в чат текстом проекта, владелец видит связи")
   void linksByInvitation() throws Exception {
     UUID id = account("player@site.example");
     Tab player = new Tab().signIn("player@site.example");
-    player.get("/api/telegram/link").andExpect(status().isOk()).andExpect(jsonPath("$.linked").value(false));
-    JsonNode invitation = body(player.post("/api/telegram/link", "{}").andExpect(status().isOk()));
+    player.get("/api/telegram/links").andExpect(status().isOk())
+      .andExpect(jsonPath("$.bots[0].bot").value("news")).andExpect(jsonPath("$.bots[0].name").value("site_news_bot"))
+      .andExpect(jsonPath("$.bots[0].linked").value(false)).andExpect(jsonPath("$.bots[1].bot").value("support"));
+    JsonNode invitation = body(player.post("/api/telegram/news/link", "{}").andExpect(status().isOk()));
     assertThat(invitation.get("expiresAt").asString()).isEqualTo("2026-11-16T10:10:00Z");
     String token = invitation.get("url").asString().replaceAll(".*start=", "");
     assertThat(jdbc.sql("SELECT digest FROM platform_telegram_invite").query(String.class).single()).doesNotContain(token);
 
-    start(7001L, token).andExpect(status().isOk())
+    start("news", 7001L, token).andExpect(status().isOk())
       .andExpect(jsonPath("$.method").value("sendMessage")).andExpect(jsonPath("$.chat_id").value(7001L))
-      .andExpect(jsonPath("$.text").value("связано ru"));
-    assertThat(links.chat(id)).isEqualTo(OptionalLong.of(7001L));
-    player.get("/api/telegram/link").andExpect(jsonPath("$.linked").value(true))
-      .andExpect(jsonPath("$.linkedAt").value("2026-11-16T10:00:00Z"));
-    assertThat(player.get("/api/telegram/link").andReturn().getResponse().getContentAsString()).doesNotContain("7001");
-    player.post("/api/telegram/link", "{}").andExpect(status().isConflict())
+      .andExpect(jsonPath("$.text").value("связано news ru"));
+    assertThat(links.chat(id, "news")).isEqualTo(OptionalLong.of(7001L));
+    assertThat(links.chat(id, "support")).isEmpty();
+    assertThat(jdbc.sql("SELECT language FROM platform_telegram_link").query(String.class).single()).isEqualTo("ru");
+    player.get("/api/telegram/links").andExpect(jsonPath("$.bots[0].linked").value(true))
+      .andExpect(jsonPath("$.bots[0].linkedAt").value("2026-11-16T10:00:00Z")).andExpect(jsonPath("$.bots[1].linked").value(false));
+    assertThat(player.get("/api/telegram/links").andReturn().getResponse().getContentAsString()).doesNotContain("7001");
+    player.post("/api/telegram/news/link", "{}").andExpect(status().isConflict())
       .andExpect(jsonPath("$.code").value("telegram-already-linked"));
+    player.post("/api/telegram/nobody/link", "{}").andExpect(status().isNotFound())
+      .andExpect(jsonPath("$.code").value("telegram-bot-not-found"));
+  }
+
+  @Test
+  @DisplayName("Два бота: человек связывается с каждым; токен одного бота другим ботом не принимается")
+  void botsDoNotMix() throws Exception {
+    UUID id = account("player@site.example");
+    Tab player = new Tab().signIn("player@site.example");
+    String news = player.invite("news");
+    String support = player.invite("support");
+    start("support", 7001L, news).andExpect(jsonPath("$.text").value("отказ support ru"));
+    start("news", 7001L, news).andExpect(jsonPath("$.text").value("связано news ru"));
+    start("support", 7001L, support).andExpect(jsonPath("$.text").value("связано support ru"));
+    assertThat(links.chat(id, "news")).isEqualTo(OptionalLong.of(7001L));
+    assertThat(links.chat(id, "support")).isEqualTo(OptionalLong.of(7001L));
+    player.delete("/api/telegram/support/link").andExpect(status().isNoContent());
+    assertThat(links.chat(id, "support")).isEmpty();
+    assertThat(links.chat(id, "news")).isPresent();
   }
 
   @Test
@@ -252,102 +287,114 @@ class LinkFlowTest {
   void refusesSpentTokens() throws Exception {
     UUID id = account("player@site.example");
     Tab player = new Tab().signIn("player@site.example");
-    String replaced = player.invite();
-    String expired = player.invite();
-    start(7001L, replaced).andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ ru"));
+    String replaced = player.invite("news");
+    String expired = player.invite("news");
+    start("news", 7001L, replaced).andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ news ru"));
     clock.advance(Duration.ofMinutes(10));
-    start(7001L, expired).andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ ru"));
-    start(7001L, "A".repeat(43)).andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ ru"));
-    start(7001L, "короткий").andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ ru"));
-    String fresh = player.invite();
-    start(7001L, fresh).andExpect(jsonPath("$.text").value("связано ru"));
-    player.delete("/api/telegram/link").andExpect(status().isNoContent());
-    start(7001L, fresh).andExpect(jsonPath("$.text").value("отказ ru"));
-    assertThat(links.chat(id)).isEmpty();
+    start("news", 7001L, expired).andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ news ru"));
+    start("news", 7001L, "A".repeat(43)).andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ news ru"));
+    start("news", 7001L, "короткий").andExpect(status().isOk()).andExpect(jsonPath("$.text").value("отказ news ru"));
+    String fresh = player.invite("news");
+    start("news", 7001L, fresh).andExpect(jsonPath("$.text").value("связано news ru"));
+    player.delete("/api/telegram/news/link").andExpect(status().isNoContent());
+    start("news", 7001L, fresh).andExpect(jsonPath("$.text").value("отказ news ru"));
+    assertThat(links.chat(id, "news")).isEmpty();
   }
 
   @Test
-  @DisplayName("Человек Telegram связан с одной учётной записью: вторая его же связью не получает")
+  @DisplayName("Человек Telegram связан у бота с одной учётной записью: вторая его же связью не получает")
   void onePersonOneAccount() throws Exception {
     account("first@site.example");
     UUID second = account("second@site.example");
-    start(7001L, new Tab().signIn("first@site.example").invite()).andExpect(jsonPath("$.text").value("связано ru"));
-    start(7001L, new Tab().signIn("second@site.example").invite()).andExpect(jsonPath("$.text").value("отказ ru"));
-    assertThat(links.chat(second)).isEmpty();
+    start("news", 7001L, new Tab().signIn("first@site.example").invite("news")).andExpect(jsonPath("$.text").value("связано news ru"));
+    start("news", 7001L, new Tab().signIn("second@site.example").invite("news")).andExpect(jsonPath("$.text").value("отказ news ru"));
+    assertThat(links.chat(second, "news")).isEmpty();
     assertThat(links()).isEqualTo(1L);
   }
 
   @Test
-  @DisplayName("Webhook без верного секрета — identity-rejected до разбора, связь не записана")
+  @DisplayName("Webhook без верного секрета своего бота — identity-rejected до разбора, связь не записана")
   void webhookNeedsTheSecret() throws Exception {
     account("player@site.example");
-    String token = new Tab().signIn("player@site.example").invite();
-    webhook(null, update("private", 7001L, "/start " + token)).andExpect(status().isUnauthorized())
-      .andExpect(jsonPath("$.code").value("identity-rejected"));
-    webhook("x".repeat(40), update("private", 7001L, "/start " + token)).andExpect(status().isUnauthorized())
-      .andExpect(jsonPath("$.code").value("identity-rejected"));
-    webhook(null, "не json").andExpect(status().isUnauthorized());
+    String token = new Tab().signIn("player@site.example").invite("news");
+    String update = update("private", 7001L, "/start " + token);
+    webhook("news", null, update).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("identity-rejected"));
+    webhook("news", "x".repeat(40), update).andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("identity-rejected"));
+    webhook("news", SUPPORT_SECRET, update).andExpect(status().isUnauthorized());
+    webhook("news", null, "не json").andExpect(status().isUnauthorized());
+    webhook("nobody", SECRET, update).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("csrf-rejected"));
     assertThat(links()).isZero();
-    start(7001L, token).andExpect(jsonPath("$.text").value("связано ru"));
+    start("news", 7001L, token).andExpect(jsonPath("$.text").value("связано news ru"));
   }
 
   @Test
   @DisplayName("Прочие обновления — 200 без тела: не /start, не личный чат, без отправителя")
   void otherUpdatesAreSkipped() throws Exception {
     account("player@site.example");
-    String token = new Tab().signIn("player@site.example").invite();
-    webhook(SECRET, update("group", 7001L, "/start " + token)).andExpect(status().isOk()).andExpect(content().string(""));
-    webhook(SECRET, update("private", 7001L, "привет")).andExpect(status().isOk()).andExpect(content().string(""));
-    webhook(SECRET, update("private", 7001L, "/start")).andExpect(status().isOk()).andExpect(content().string(""));
-    webhook(SECRET, "{\"update_id\":2,\"edited_message\":{}}").andExpect(status().isOk()).andExpect(content().string(""));
+    String token = new Tab().signIn("player@site.example").invite("news");
+    webhook("news", SECRET, update("group", 7001L, "/start " + token)).andExpect(status().isOk()).andExpect(content().string(""));
+    webhook("news", SECRET, update("private", 7001L, "привет")).andExpect(status().isOk()).andExpect(content().string(""));
+    webhook("news", SECRET, update("private", 7001L, "/start")).andExpect(status().isOk()).andExpect(content().string(""));
+    webhook("news", SECRET, "{\"update_id\":2,\"edited_message\":{}}").andExpect(status().isOk()).andExpect(content().string(""));
     assertThat(links()).isZero();
-    start(7001L, token).andExpect(jsonPath("$.text").value("связано ru"));
+    start("news", 7001L, token).andExpect(jsonPath("$.text").value("связано news ru"));
   }
 
   @Test
   @DisplayName("Точки связи — только вошедшему; снятие отсутствующей связи безвредно")
   void linkEndpointsAreForTheSignedIn() throws Exception {
     Tab guest = new Tab();
-    guest.get("/api/telegram/link").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("authentication-required"));
-    guest.post("/api/telegram/link", "{}").andExpect(status().isUnauthorized());
+    guest.get("/api/telegram/links").andExpect(status().isUnauthorized()).andExpect(jsonPath("$.code").value("authentication-required"));
+    guest.post("/api/telegram/news/link", "{}").andExpect(status().isUnauthorized());
     account("player@site.example");
     Tab player = new Tab().signIn("player@site.example");
-    player.delete("/api/telegram/link").andExpect(status().isNoContent());
-    player.send(MockMvcRequestBuilders.post("/api/telegram/link")).andExpect(status().isForbidden())
+    player.delete("/api/telegram/news/link").andExpect(status().isNoContent());
+    player.send(MockMvcRequestBuilders.post("/api/telegram/news/link")).andExpect(status().isForbidden())
       .andExpect(jsonPath("$.code").value("csrf-rejected"));
   }
 
   @Test
-  @DisplayName("Удаление учётной записи стирает связь и невыданную ссылку: исход REMOVED")
+  @DisplayName("Удаление учётной записи стирает связи и невыданные ссылки: исход REMOVED")
   void accountRemovalErasesTheLink() throws Exception {
     UUID id = account("player@site.example");
     Tab player = new Tab().signIn("player@site.example");
-    start(7001L, player.invite()).andExpect(jsonPath("$.text").value("связано ru"));
-    UUID pending = account("pending@site.example");
-    new Tab().signIn("pending@site.example").invite();
+    start("news", 7001L, player.invite("news")).andExpect(jsonPath("$.text").value("связано news ru"));
+    player.invite("support");
     UUID other = account("other@site.example");
-    new Tab().signIn("other@site.example").invite();
+    new Tab().signIn("other@site.example").invite("news");
     assertThat(accounts.delete(id)).isEqualTo(Removal.REMOVED);
-    assertThat(accounts.delete(pending)).isEqualTo(Removal.REMOVED);
     assertThat(links()).isZero();
     assertThat(jdbc.sql("SELECT account_id FROM platform_telegram_invite").query(UUID.class).list()).containsExactly(other);
   }
 
+  // REQ-TELEGRAM-014
   @Test
-  @DisplayName("Bot API: webhook регистрируется с секретом из настроек; отказ не несёт токена бота")
+  @DisplayName("Без текстов проекта каналов Telegram нет: очередь доставки не пишется")
+  void noTextsNoChannel() {
+    UUID id = account("player@site.example");
+    notifications.notify(id, "support.answered", java.util.Map.of(), null);
+    assertThat(jdbc.sql("SELECT COUNT(*) FROM platform_notification_delivery").query(Long.class).single()).isZero();
+  }
+
+  @Test
+  @DisplayName("Bot API: каждый бот вызывается своим токеном, webhook регистрируется с его секретом; отказ не несёт токена")
   void botApiCalls() {
-    bot.useWebhook(URI.create("https://site.example/api/telegram/webhook"));
+    assertThat(bots.ids()).containsExactly("news", "support");
+    bots.bot("support").useWebhook(URI.create("https://site.example/api/telegram/support/webhook"));
     assertThat(BOT_API.calls).singleElement().satisfies(call -> {
-      assertThat(call.path()).isEqualTo("/bot" + BOT_TOKEN + "/setWebhook");
-      assertThat(call.body()).contains("\"url\":\"https://site.example/api/telegram/webhook\"").contains("\"secret_token\":\"" + SECRET + "\"");
+      assertThat(call.path()).isEqualTo("/bot" + SUPPORT_TOKEN + "/setWebhook");
+      assertThat(call.body()).contains("\"url\":\"https://site.example/api/telegram/support/webhook\"")
+        .contains("\"secret_token\":\"" + SUPPORT_SECRET + "\"");
     });
-    bot.send(7001L, "текст");
+    bots.bot("news").send(7001L, "текст");
+    assertThat(BOT_API.calls.get(1).path()).isEqualTo("/bot" + BOT_TOKEN + "/sendMessage");
     assertThat(BOT_API.calls.get(1).body()).contains("\"chat_id\":7001").contains("\"text\":\"текст\"");
     BOT_API.answer = "{\"ok\":false,\"error_code\":400,\"description\":\"Bad Request: chat not found\"}";
-    assertThatThrownBy(() -> bot.send(1L, "текст")).isInstanceOf(TelegramUnavailable.class)
+    assertThatThrownBy(() -> bots.bot("news").send(1L, "текст")).isInstanceOf(TelegramUnavailable.class)
       .hasMessageContaining("sendMessage").hasMessageContaining("chat not found").hasMessageNotContaining(BOT_TOKEN).hasNoCause();
     BOT_API.answer = "<html>";
-    assertThatThrownBy(() -> bot.send(1L, "текст")).isInstanceOf(TelegramUnavailable.class).hasMessageNotContaining(BOT_TOKEN);
+    assertThatThrownBy(() -> bots.bot("news").send(1L, "текст")).isInstanceOf(TelegramUnavailable.class).hasMessageNotContaining(BOT_TOKEN);
+    assertThatThrownBy(() -> bots.bot("nobody")).isInstanceOf(IllegalArgumentException.class);
   }
 
   record Call(String path, String body) {
@@ -357,6 +404,7 @@ class LinkFlowTest {
 
     final List<Call> calls = new CopyOnWriteArrayList<>();
     volatile String answer = "{\"ok\":true,\"result\":true}";
+    final java.util.Queue<String> queued = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private final HttpServer server;
 
     BotApi() {
@@ -367,7 +415,8 @@ class LinkFlowTest {
       }
       server.createContext("/", exchange -> {
         calls.add(new Call(exchange.getRequestURI().getPath(), new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8)));
-        byte[] reply = answer.getBytes(StandardCharsets.UTF_8);
+        String next = queued.poll();
+        byte[] reply = (next == null ? answer : next).getBytes(StandardCharsets.UTF_8);
         exchange.sendResponseHeaders(200, reply.length);
         exchange.getResponseBody().write(reply);
         exchange.close();
@@ -413,13 +462,13 @@ class LinkFlowTest {
     TelegramReplies telegramReplies() {
       return new TelegramReplies() {
         @Override
-        public Optional<String> linked(String language) {
-          return Optional.of("связано " + language);
+        public Optional<String> linked(String bot, String language) {
+          return Optional.of("связано " + bot + " " + language);
         }
 
         @Override
-        public Optional<String> refused(String language) {
-          return Optional.of("отказ " + language);
+        public Optional<String> refused(String bot, String language) {
+          return Optional.of("отказ " + bot + " " + language);
         }
       };
     }

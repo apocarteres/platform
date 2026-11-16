@@ -30,7 +30,8 @@ import tools.jackson.databind.json.JsonMapper;
 class ContractTest {
 
   private static final Map<String, Class<?>> SCHEMAS = Map.of(
-    "LinkState", TelegramViews.LinkState.class,
+    "Links", TelegramViews.Links.class,
+    "BotLink", TelegramViews.BotLink.class,
     "Invitation", TelegramViews.Invitation.class
   );
 

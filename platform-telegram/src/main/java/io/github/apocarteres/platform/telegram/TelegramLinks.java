@@ -6,7 +6,7 @@ import java.util.UUID;
 // REQ-TELEGRAM-009
 public interface TelegramLinks {
 
-  OptionalLong chat(UUID account);
+  OptionalLong chat(UUID account, String bot);
 
-  boolean unlink(UUID account);
+  boolean unlink(UUID account, String bot);
 }

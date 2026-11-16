@@ -4,7 +4,7 @@ type: runbook
 status: active
 scope: backend, security, personal-data
 authority: supporting
-related: REQ-AUTH
+related: REQ-AUTH, REQ-TELEGRAM
 ---
 # Подключение внешней личности
 
@@ -18,25 +18,35 @@ related: REQ-AUTH
    platform.auth.external.requests-per-minute=120
    ```
 
-2. Бин `RequestAuthenticator`: свои пути под `/api/**` (не `/api/auth/**`) и проверка подписи запроса.
+2. Mini App Telegram проверяет модуль `platform-telegram` (`REQ-TELEGRAM-018`): пути и роли объявляются у бота, своего порта проекту писать не нужно.
+
+   ```properties
+   platform.telegram.bots.shop.mini-app.paths=/api/app/**
+   platform.telegram.bots.shop.mini-app.roles=CLIENT
+   platform.telegram.mini-app.max-age=PT1H
+   ```
+
+   Клиент Mini App шлёт `Telegram.WebApp.initData` в заголовке `X-Telegram-Init-Data`. Код проекта узнаёт бот и пользователя `TelegramMiniApp.user()`, а связанную учётную запись — `TelegramLinks.account(bot, user.id())`. Webhook бота модуль удостоверяет сам, на своём пути (`REQ-TELEGRAM-003`).
+
+   Для другого мессенджера или стороннего удостоверения — свой бин `RequestAuthenticator`: свои пути под `/api/**` (не `/api/auth/**`) и проверка подписи запроса.
 
    ```java
    @Bean
-   RequestAuthenticator miniApp(TelegramSignature signature) {
+   RequestAuthenticator partner(PartnerSignature signature) {
      return new RequestAuthenticator() {
        public Set<String> paths() {
-         return Set.of("/api/app/**");
+         return Set.of("/api/partner/**");
        }
 
        public Optional<ExternalIdentity> authenticate(HttpServletRequest request) {
-         return signature.verified(request.getHeader("X-Telegram-Init-Data"))
-           .map(user -> new ExternalIdentity("telegram", user.id(), Set.of("CLIENT")));
+         return signature.verified(request.getHeader("X-Partner-Signature"))
+           .map(partner -> new ExternalIdentity("partner", partner.id(), Set.of("CLIENT")));
        }
      };
    }
    ```
 
-   Свежесть и защиту от повтора проверяет порт: срок `auth_date` у `initData`, постоянное сравнение секрета webhook. Webhook — отдельный порт на своём пути, с личностью вида сервера мессенджера; предел частоты для неё задаётся по потоку обновлений.
+   Свежесть и защиту от повтора проверяет порт: срок подписи, постоянное сравнение секрета.
 
 3. Правила доступа — как обычно, в `ApiAccess`: `rules.requestMatchers("/api/app/**").hasRole("CLIENT")`.
 4. В коде проекта: `CurrentIdentity.get()` — вид, идентификатор, роли; `CurrentAccount.id()` для внешней личности пуст.

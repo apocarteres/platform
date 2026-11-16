@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 final class WebhookAuthenticator implements RequestAuthenticator {
 
   static final String HEADER = "X-Telegram-Bot-Api-Secret-Token";
-  static final String KIND = "telegram";
+  static final String KIND = "telegram-webhook";
 
   private final Map<String, Bot> byPath;
 

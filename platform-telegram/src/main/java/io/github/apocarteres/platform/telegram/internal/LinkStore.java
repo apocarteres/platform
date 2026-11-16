@@ -47,6 +47,11 @@ final class LinkStore {
       .param("language", language).param("now", StoredInstant.offsetOf(now)).update() == 1;
   }
 
+  // REQ-TELEGRAM-019
+  Optional<UUID> account(String bot, long user) {
+    return jdbc.sql(sql.get("link-account")).param("bot", bot).param("user", user).query(UUID.class).optional();
+  }
+
   boolean delete(UUID account, String bot) {
     return jdbc.sql(sql.get("link-delete")).param("account", account).param("bot", bot).update() == 1;
   }

@@ -1,0 +1,1 @@
+CREATE INDEX platform_notification_delivery_due ON platform_notification_delivery (due_at)

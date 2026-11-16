@@ -2,16 +2,16 @@ package io.github.apocarteres.platform.telegram.internal;
 
 import io.github.apocarteres.platform.auth.ModuleApiAccess;
 import io.github.apocarteres.platform.persistence.SqlStatements;
-import io.github.apocarteres.platform.telegram.TelegramBot;
 import io.github.apocarteres.platform.telegram.TelegramReplies;
-import java.net.http.HttpClient;
+import io.github.apocarteres.platform.telegram.TelegramTexts;
 import java.time.Clock;
-import java.time.Duration;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -23,6 +23,7 @@ import org.springframework.transaction.support.TransactionTemplate;
   "io.github.apocarteres.platform.auth.internal.AuthAutoConfiguration",
   "io.github.apocarteres.platform.persistence.internal.PersistenceAutoConfiguration",
   "io.github.apocarteres.platform.time.internal.TimeAutoConfiguration",
+  "io.github.apocarteres.platform.notifications.internal.NotificationsAutoConfiguration",
 })
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class TelegramAutoConfiguration {
@@ -46,8 +47,8 @@ public class TelegramAutoConfiguration {
 
   // REQ-TELEGRAM-011
   @Bean
-  TelegramBot telegramBot(TelegramSettings settings) {
-    return new BotClient(settings, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build());
+  Bots telegramBots(TelegramSettings settings) {
+    return new Bots(settings);
   }
 
   // REQ-TELEGRAM-003
@@ -71,9 +72,21 @@ public class TelegramAutoConfiguration {
   @Bean
   ModuleApiAccess telegramAccess() {
     return rules -> {
-      rules.requestMatchers(HttpMethod.POST, WebhookAuthenticator.PATH).authenticated();
-      rules.requestMatchers(WebhookAuthenticator.PATH).denyAll();
+      rules.requestMatchers(HttpMethod.POST, "/api/telegram/*/webhook").authenticated();
+      rules.requestMatchers("/api/telegram/*/webhook").denyAll();
       rules.requestMatchers("/api/telegram/**").authenticated();
     };
+  }
+
+  // REQ-TELEGRAM-014
+  @Configuration(proxyBeanMethods = false)
+  @ConditionalOnClass(name = "io.github.apocarteres.platform.notifications.NotificationChannels")
+  static class ChannelConfiguration {
+
+    @Bean
+    TelegramChannels telegramChannels(LinkStore links, ObjectProvider<TelegramTexts> texts, Bots bots, TelegramSettings settings,
+      Clock clock) {
+      return new TelegramChannels(links, texts.getIfAvailable(), bots, settings, clock);
+    }
   }
 }

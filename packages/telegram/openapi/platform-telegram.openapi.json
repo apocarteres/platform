@@ -3,12 +3,12 @@
   "info": {
     "title": "Telegram ядра",
     "version": "0.0.0",
-    "description": "Контракт точек platform-telegram (REQ-TELEGRAM-012). Версия документа — версия ядра. Изменяющие запросы вошедшего требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN; запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006). Webhook удостоверяется секретным заголовком и токена CSRF не требует (REQ-TELEGRAM-003)."
+    "description": "Контракт точек platform-telegram (REQ-TELEGRAM-012). Версия документа — версия ядра. Изменяющие запросы вошедшего требуют токена CSRF: cookie XSRF-TOKEN и заголовок X-XSRF-TOKEN; запрос браузера несёт X-Api-Version (REQ-CLIENT-UPDATE-006). Webhook удостоверяется секретным заголовком и токена CSRF не требует (REQ-TELEGRAM-003). Боты называются идентификатором из настроек (REQ-TELEGRAM-002)."
   },
   "paths": {
-    "/api/telegram/link": {
+    "/api/telegram/links": {
       "get": {
-        "summary": "Состояние своей связи с Telegram",
+        "summary": "Свои связи со всеми ботами службы",
         "x-clause": "REQ-TELEGRAM-009",
         "responses": {
           "200": {
@@ -16,7 +16,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LinkState"
+                  "$ref": "#/components/schemas/Links"
                 }
               }
             }
@@ -35,7 +35,9 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/telegram/{bot}/link": {
       "post": {
         "summary": "Одноразовая ссылка связи с ботом",
         "x-clause": "REQ-TELEGRAM-006",
@@ -77,6 +79,19 @@
               }
             }
           },
+          "404": {
+            "description": "Бот не объявлен",
+            "x-codes": [
+              "telegram-bot-not-found"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Связь уже есть: сначала её снимают",
             "x-codes": [
@@ -90,7 +105,19 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "bot",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор бота из platform.telegram.bots",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,15}$"
+            }
+          }
+        ]
       },
       "delete": {
         "summary": "Снять свою связь",
@@ -125,16 +152,51 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Бот не объявлен",
+            "x-codes": [
+              "telegram-bot-not-found"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "bot",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор бота из platform.telegram.bots",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,15}$"
+            }
+          }
+        ]
       }
     },
-    "/api/telegram/webhook": {
+    "/api/telegram/{bot}/webhook": {
       "post": {
         "summary": "Обновление бота от Telegram",
         "x-clause": "REQ-TELEGRAM-004",
         "description": "Только для Telegram. Заголовок X-Telegram-Bot-Api-Secret-Token сверяется с секретом webhook. Модуль читает команду /start <токен> из личного чата; на прочее — 200 без тела. Ответ в чат приходит телом ответа методом sendMessage (REQ-TELEGRAM-008).",
         "parameters": [
+          {
+            "name": "bot",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор бота из platform.telegram.bots",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,15}$"
+            }
+          },
           {
             "name": "X-Telegram-Bot-Api-Secret-Token",
             "in": "header",
@@ -178,6 +240,19 @@
               }
             }
           },
+          "404": {
+            "description": "Бот не объявлен",
+            "x-codes": [
+              "telegram-bot-not-found"
+            ],
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
           "429": {
             "description": "Превышен предел частоты; заголовок Retry-After",
             "x-codes": [
@@ -210,9 +285,30 @@
   },
   "components": {
     "schemas": {
-      "LinkState": {
+      "Links": {
         "type": "object",
         "properties": {
+          "bots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BotLink"
+            }
+          }
+        },
+        "required": [
+          "bots"
+        ]
+      },
+      "BotLink": {
+        "type": "object",
+        "properties": {
+          "bot": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя бота в Telegram без @"
+          },
           "linked": {
             "type": "boolean"
           },
@@ -225,6 +321,8 @@
           }
         },
         "required": [
+          "bot",
+          "name",
           "linked",
           "linkedAt"
         ]

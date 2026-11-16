@@ -120,6 +120,8 @@ class NotificationFlowTest {
   private DataSource source;
   @Autowired
   private PlatformTransactionManager transactions;
+  @Autowired
+  private io.github.apocarteres.platform.notifications.NotificationDelivery delivery;
 
   private final JsonMapper json = JsonMapper.builder().build();
   private MockMvc mvc;
@@ -427,6 +429,16 @@ class NotificationFlowTest {
     @Override
     public void emailChanged(String previousEmail, Locale locale) {
     }
+  }
+
+  // REQ-NOTIFICATIONS-011
+  @Test
+  @DisplayName("Без канала доставки очередь не пишется, а команда отправки ничего не делает")
+  void noChannelNoQueue() {
+    UUID account = accounts.create("quiet@site.example", PASSWORD, Set.of("USER"), true, null).id();
+    notifications.notify(account, "support.answered", Map.of(), null);
+    assertThat(JdbcClient.create(source).sql("SELECT COUNT(*) FROM platform_notification_delivery").query(Long.class).single()).isZero();
+    assertThat(delivery.deliverPending().claimed()).isZero();
   }
 
   @Configuration(proxyBeanMethods = false)

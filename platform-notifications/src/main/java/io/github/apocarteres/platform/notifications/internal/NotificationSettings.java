@@ -4,11 +4,12 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
-// REQ-NOTIFICATIONS-004, REQ-NOTIFICATIONS-006
-record NotificationSettings(Duration keep, int listSize) {
+// REQ-NOTIFICATIONS-004, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-013
+record NotificationSettings(Duration keep, int listSize, int deliveryBatch) {
 
   static final String PREFIX = "platform.notifications.";
   static final int LIST_MAX = 50;
+  static final int BATCH_MAX = 100;
 
   static NotificationSettings of(Environment environment) {
     Binder binder = Binder.get(environment);
@@ -20,7 +21,12 @@ record NotificationSettings(Duration keep, int listSize) {
     if (size < 1 || size > LIST_MAX) {
       throw refused("list-size", size + ": список колокольчика — от 1 до " + LIST_MAX);
     }
-    return new NotificationSettings(keep, size);
+    // REQ-NOTIFICATIONS-013
+    int batch = binder.bind(PREFIX + "delivery.batch", Integer.class).orElse(25);
+    if (batch < 1 || batch > BATCH_MAX) {
+      throw refused("delivery.batch", batch + ": пачка доставки — от 1 до " + BATCH_MAX);
+    }
+    return new NotificationSettings(keep, size, batch);
   }
 
   private static IllegalStateException refused(String key, String reason) {

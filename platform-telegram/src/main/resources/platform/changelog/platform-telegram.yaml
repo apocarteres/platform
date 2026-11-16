@@ -16,3 +16,11 @@ databaseChangeLog:
             path: platform-telegram/002-invite.sql
             relativeToChangelogFile: true
             splitStatements: false
+  - changeSet:
+      id: platform-telegram:003-bots
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-telegram/003-bots.sql
+            relativeToChangelogFile: true
+            splitStatements: false

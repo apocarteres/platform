@@ -5,6 +5,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { TelegramLink, provideTelegram } from './link';
 import type { TelegramOptions } from './link';
 
+const BOTS = [
+  { bot: 'news', name: 'site_news_bot', linked: true, linkedAt: '2026-11-16T10:00:00Z' },
+  { bot: 'support', name: 'site_support_bot', linked: false, linkedAt: null },
+];
+
 function setUp(options: TelegramOptions = {}): { http: HttpTestingController; link: TelegramLink } {
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideTelegram(options)] });
   return { http: TestBed.inject(HttpTestingController), link: TestBed.inject(TelegramLink) };
@@ -15,42 +20,46 @@ afterEach(() => {
 });
 
 // REQ-TELEGRAM-013
-describe('связь с Telegram', () => {
-  it('состояние — null до первого чтения, затем как отдал сервер', async () => {
+describe('связи с ботами Telegram', () => {
+  it('связи — null до первого чтения, затем по каждому боту службы', async () => {
     const { http, link } = setUp();
-    expect(link.state()).toBeNull();
-    expect(link.linked()).toBe(false);
+    expect(link.bots()).toBeNull();
+    expect(link.linked()).toEqual([]);
     const read = link.refresh();
-    http.expectOne('/api/telegram/link').flush({ linked: true, linkedAt: '2026-11-16T10:00:00Z' });
+    http.expectOne('/api/telegram/links').flush({ bots: BOTS });
     await read;
-    expect(link.state()).toEqual({ linked: true, linkedAt: '2026-11-16T10:00:00Z' });
-    expect(link.linked()).toBe(true);
+    expect(link.bots()).toEqual(BOTS);
+    expect(link.linked()).toEqual(['news']);
   });
 
-  it('без входа состояние сбрасывается в null, прочий отказ не поглощается', async () => {
+  it('без входа связи сбрасываются в null, прочий отказ не поглощается', async () => {
     const { http, link } = setUp();
     const signedOut = link.refresh();
-    http.expectOne('/api/telegram/link').flush({ code: 'authentication-required' }, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne('/api/telegram/links').flush({ code: 'authentication-required' }, { status: 401, statusText: 'Unauthorized' });
     await signedOut;
-    expect(link.state()).toBeNull();
+    expect(link.bots()).toBeNull();
     const failing = link.refresh();
-    http.expectOne('/api/telegram/link').flush({ code: 'unexpected' }, { status: 500, statusText: 'Server Error' });
+    http.expectOne('/api/telegram/links').flush({ code: 'unexpected' }, { status: 500, statusText: 'Server Error' });
     await expect(failing).rejects.toBeTruthy();
   });
 
-  it('ссылка связи — POST на объявленную базу; снятие — DELETE и состояние «нет связи»', async () => {
+  it('ссылка связи и снятие — по боту на объявленной базе; снятие отмечает только этот бот', async () => {
     const { http, link } = setUp({ base: '/backend/telegram' });
-    const invited = link.invite();
-    const post = http.expectOne('/backend/telegram/link');
+    const read = link.refresh();
+    http.expectOne('/backend/telegram/links').flush({ bots: BOTS });
+    await read;
+    const invited = link.invite('support');
+    const post = http.expectOne('/backend/telegram/support/link');
     expect(post.request.method).toBe('POST');
-    post.flush({ url: 'https://t.me/core_test_bot?start=abc', expiresAt: '2026-11-16T10:10:00Z' });
-    await expect(invited).resolves.toEqual({ url: 'https://t.me/core_test_bot?start=abc', expiresAt: '2026-11-16T10:10:00Z' });
-    const removed = link.unlink();
-    const remove = http.expectOne('/backend/telegram/link');
+    post.flush({ url: 'https://t.me/site_support_bot?start=abc', expiresAt: '2026-11-16T10:10:00Z' });
+    await expect(invited).resolves.toEqual({ url: 'https://t.me/site_support_bot?start=abc', expiresAt: '2026-11-16T10:10:00Z' });
+    const removed = link.unlink('news');
+    const remove = http.expectOne('/backend/telegram/news/link');
     expect(remove.request.method).toBe('DELETE');
     remove.flush(null, { status: 204, statusText: 'No Content' });
     await removed;
-    expect(link.state()).toEqual({ linked: false, linkedAt: null });
+    expect(link.linked()).toEqual([]);
+    expect(link.bots()?.map((one) => one.linkedAt)).toEqual([null, null]);
     http.verify();
   });
 });

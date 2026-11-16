@@ -34,7 +34,8 @@ class ModuleBoundaryTest {
 
   // REQ-DATA-ACCESS-002, REQ-DATA-ACCESS-005
   private static final Set<String> DATA_ACCESS = Set.of(
-    ROOT + ".notifications.internal.NotificationStore"
+    ROOT + ".notifications.internal.NotificationStore",
+    ROOT + ".notifications.internal.DeliveryStore"
   );
 
   @Test

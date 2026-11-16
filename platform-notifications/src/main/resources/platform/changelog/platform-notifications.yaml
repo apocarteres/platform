@@ -16,3 +16,19 @@ databaseChangeLog:
             path: platform-notifications/002-notification-link.sql
             relativeToChangelogFile: true
             splitStatements: false
+  - changeSet:
+      id: platform-notifications:003-delivery
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-notifications/003-delivery.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+  - changeSet:
+      id: platform-notifications:004-delivery-due
+      author: platform
+      changes:
+        - sqlFile:
+            path: platform-notifications/004-delivery-due.sql
+            relativeToChangelogFile: true
+            splitStatements: false

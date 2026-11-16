@@ -1,12 +1,12 @@
 ---
 id: CORE-ARC-031
 type: ticket
-status: backlog
+status: done
 scope: backend, personal-data
 authority: supporting
 priority: P2
 release: unassigned
-related: REQ-NOTIFICATIONS, CORE-ARC-030, CORE-ARC-018
+related: REQ-NOTIFICATIONS, REQ-TELEGRAM, CORE-ARC-030, CORE-ARC-018
 ---
 
 # Уведомления ядра не уходят за пределы приложения
@@ -57,6 +57,28 @@ related: REQ-NOTIFICATIONS, CORE-ARC-030, CORE-ARC-018
 - Откат транзакции `notify` — нет и доставки.
 - Два одновременных `deliverPending()` не шлют одно уведомление дважды.
 - `mise run verify` зелёный.
+
+## Ход работы
+
+- 2026-11-16 — в `platform-notifications`: порт `NotificationChannel`,
+  очередь `platform_notification_delivery`, которую `notify` пишет в своей
+  транзакции, команда `NotificationDelivery.deliverPending()` с захватом
+  `SKIP LOCKED` и сроком захвата, исходы `Delivery` с повтором до 8 попыток
+  (`REQ-NOTIFICATIONS-011`…`014`).
+- В `platform-telegram`: канал `telegram-<бот>` на каждый бот при бине проекта `TelegramTexts`,
+  язык связи пишется при `/start`, ответы Bot API `403`/`4xx`/`429`/`5xx`,
+  не чаще раза в секунду в один чат (`REQ-TELEGRAM-014`…`017`).
+- Число каналов задают настройки, поэтому в модуле уведомлений есть второй
+  порт — `NotificationChannels`, источник нескольких каналов.
+- Прочитанное в колокольчике до отправки в Telegram не уходит: человек его
+  уже видел.
+- `403` от Bot API снимает связь: чат недоступен, а его номер — персональные
+  данные без цели.
+
+## Вне задачи
+
+Разметка текста (HTML, Markdown) и кнопки в сообщении — по заявке
+потребителя.
 
 ## Откуда пришла задача
 

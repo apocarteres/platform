@@ -7,17 +7,17 @@ public interface TelegramReplies {
 
   TelegramReplies SILENT = new TelegramReplies() {
     @Override
-    public Optional<String> linked(String language) {
+    public Optional<String> linked(String bot, String language) {
       return Optional.empty();
     }
 
     @Override
-    public Optional<String> refused(String language) {
+    public Optional<String> refused(String bot, String language) {
       return Optional.empty();
     }
   };
 
-  Optional<String> linked(String language);
+  Optional<String> linked(String bot, String language);
 
-  Optional<String> refused(String language);
+  Optional<String> refused(String bot, String language);
 }

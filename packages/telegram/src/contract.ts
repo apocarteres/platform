@@ -1,6 +1,12 @@
 // REQ-TELEGRAM-012
 
-export interface LinkState {
+export interface Links {
+  readonly bots: readonly BotLink[];
+}
+
+export interface BotLink {
+  readonly bot: string;
+  readonly name: string;
   readonly linked: boolean;
   readonly linkedAt: string | null;
 }

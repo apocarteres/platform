@@ -4,12 +4,14 @@ import io.github.apocarteres.platform.web.errors.CodedFailure;
 import io.github.apocarteres.platform.web.errors.ErrorCode;
 import org.springframework.http.HttpStatus;
 
-// REQ-TELEGRAM-006, REQ-API-011
+// REQ-TELEGRAM-002, REQ-TELEGRAM-006, REQ-API-011
 public final class TelegramRefused extends RuntimeException implements CodedFailure {
 
   private static final long serialVersionUID = 1L;
 
   public static final ErrorCode ALREADY_LINKED = ErrorCode.of("telegram-already-linked", HttpStatus.CONFLICT);
+  // REQ-TELEGRAM-002
+  public static final ErrorCode BOT_NOT_FOUND = ErrorCode.of("telegram-bot-not-found", HttpStatus.NOT_FOUND);
 
   private final transient ErrorCode code;
 

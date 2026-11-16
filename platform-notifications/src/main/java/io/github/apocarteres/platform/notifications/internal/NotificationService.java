@@ -10,8 +10,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
+import org.springframework.transaction.support.TransactionTemplate;
 
-// REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-010
+// REQ-NOTIFICATIONS-002, REQ-NOTIFICATIONS-003, REQ-NOTIFICATIONS-006, REQ-NOTIFICATIONS-010, REQ-NOTIFICATIONS-012
 final class NotificationService implements Notifications {
 
   static final int PARAMS = 20;
@@ -23,11 +24,18 @@ final class NotificationService implements Notifications {
   private static final Pattern CONTROL = Pattern.compile("\\p{Cntrl}");
 
   private final NotificationStore store;
+  private final DeliveryStore deliveries;
+  private final List<String> channels;
+  private final TransactionTemplate transactions;
   private final NotificationSettings settings;
   private final Clock clock;
 
-  NotificationService(NotificationStore store, NotificationSettings settings, Clock clock) {
+  NotificationService(NotificationStore store, DeliveryStore deliveries, List<String> channels, TransactionTemplate transactions,
+    NotificationSettings settings, Clock clock) {
     this.store = store;
+    this.deliveries = deliveries;
+    this.channels = List.copyOf(channels);
+    this.transactions = transactions;
     this.settings = settings;
     this.clock = clock;
   }
@@ -42,7 +50,15 @@ final class NotificationService implements Notifications {
     Map<String, String> kept = params(params);
     link(link);
     UUID id = UUID.randomUUID();
-    store.insert(id, account, kind, kept, link, clock.instant());
+    if (channels.isEmpty()) {
+      store.insert(id, account, kind, kept, link, clock.instant());
+      return id;
+    }
+    // REQ-NOTIFICATIONS-012
+    transactions.executeWithoutResult(status -> {
+      store.insert(id, account, kind, kept, link, clock.instant());
+      channels.forEach(channel -> deliveries.enqueue(id, channel, clock.instant()));
+    });
     return id;
   }
 

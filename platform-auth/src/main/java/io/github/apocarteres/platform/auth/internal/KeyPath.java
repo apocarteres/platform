@@ -61,6 +61,7 @@ final class KeyPath {
     String uri = request.getContextPath() + path;
     String url = request.getRequestURL().toString();
     String origin = url.endsWith(request.getRequestURI()) ? url.substring(0, url.length() - request.getRequestURI().length()) : "";
+    String encoded = request.getContextPath() + UriUtils.encodePath(path, StandardCharsets.UTF_8);
     return new HttpServletRequestWrapper(request) {
       @Override
       public String getRequestURI() {
@@ -69,7 +70,7 @@ final class KeyPath {
 
       @Override
       public StringBuffer getRequestURL() {
-        return new StringBuffer(origin).append(uri);
+        return new StringBuffer(origin).append(encoded);
       }
     };
   }

@@ -74,6 +74,11 @@ class KeyPathTest {
     MockHttpServletRequest raw = request("/app", "/app/api/%61dmin/people");
     assertThat(KeyPath.decoded(raw, KeyPath.of(raw).orElseThrow()).getRequestURI()).isEqualTo("/app/api/admin/people");
     assertThat(KeyPath.decoded(raw, KeyPath.of(raw).orElseThrow()).getRequestURL()).hasToString("http://localhost/app/api/admin/people");
+    MockHttpServletRequest odd = request("/%61pp", "/%61pp/api/a%3Fb%20c/%D0%B6");
+    odd.setServerPort(8443);
+    assertThat(KeyPath.decoded(odd, KeyPath.of(odd).orElseThrow()).getRequestURI()).isEqualTo("/%61pp/api/a?b c/ж");
+    assertThat(KeyPath.decoded(odd, KeyPath.of(odd).orElseThrow()).getRequestURL())
+      .hasToString("http://localhost:8443/%61pp/api/a%3Fb%20c/%D0%B6");
   }
 
   private static MockHttpServletRequest request(String context, String uri) {

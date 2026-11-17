@@ -7,10 +7,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.web.util.UriUtils;
 
 // REQ-SUPPORT-003
 final class IntakeGuard extends OncePerRequestFilter {
@@ -28,18 +26,21 @@ final class IntakeGuard extends OncePerRequestFilter {
     this.failures = failures;
   }
 
-  @Override
-  protected boolean shouldNotFilter(HttpServletRequest request) {
-    return !("POST".equals(request.getMethod()) && intake(request.getRequestURI().substring(request.getContextPath().length())));
+  // REQ-SUPPORT-003
+  static String pattern(String servletPath) {
+    String prefix = servletPath == null ? "" : servletPath.strip();
+    while (prefix.endsWith("/")) {
+      prefix = prefix.substring(0, prefix.length() - 1);
+    }
+    if (!prefix.isEmpty() && !prefix.startsWith("/")) {
+      prefix = "/" + prefix;
+    }
+    return prefix + PATH;
   }
 
-  // REQ-SUPPORT-003
-  private static boolean intake(String raw) {
-    try {
-      return PATH.equals(UriUtils.decode(raw, StandardCharsets.UTF_8));
-    } catch (IllegalArgumentException malformed) {
-      return true;
-    }
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    return !"POST".equals(request.getMethod());
   }
 
   @Override

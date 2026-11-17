@@ -73,6 +73,7 @@ class KeyPathTest {
   void portSeesDecodedUri() {
     MockHttpServletRequest raw = request("/app", "/app/api/%61dmin/people");
     assertThat(KeyPath.decoded(raw, KeyPath.of(raw).orElseThrow()).getRequestURI()).isEqualTo("/app/api/admin/people");
+    assertThat(KeyPath.decoded(raw, KeyPath.of(raw).orElseThrow()).getRequestURL()).hasToString("http://localhost/app/api/admin/people");
   }
 
   private static MockHttpServletRequest request(String context, String uri) {

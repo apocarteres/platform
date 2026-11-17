@@ -59,10 +59,17 @@ final class KeyPath {
   // REQ-AUTH-031
   static HttpServletRequest decoded(HttpServletRequest request, String path) {
     String uri = request.getContextPath() + path;
+    String url = request.getRequestURL().toString();
+    String origin = url.endsWith(request.getRequestURI()) ? url.substring(0, url.length() - request.getRequestURI().length()) : "";
     return new HttpServletRequestWrapper(request) {
       @Override
       public String getRequestURI() {
         return uri;
+      }
+
+      @Override
+      public StringBuffer getRequestURL() {
+        return new StringBuffer(origin).append(uri);
       }
     };
   }

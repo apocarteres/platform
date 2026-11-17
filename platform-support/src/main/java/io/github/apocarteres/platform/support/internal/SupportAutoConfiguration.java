@@ -118,10 +118,10 @@ public class SupportAutoConfiguration {
   // REQ-SUPPORT-003
   @Bean
   FilterRegistrationBean<IntakeGuard> supportIntakeGuard(RateLimiter limiter,
-    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver failures) {
+    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver failures, Environment environment) {
     FilterRegistrationBean<IntakeGuard> registration = new FilterRegistrationBean<>(new IntakeGuard(limiter, failures));
     registration.setOrder(IntakeGuard.ORDER);
-    registration.addUrlPatterns(IntakeGuard.PATH);
+    registration.addUrlPatterns(IntakeGuard.pattern(environment.getProperty("spring.mvc.servlet.path", "/")));
     return registration;
   }
 }

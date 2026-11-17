@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -53,8 +54,8 @@ final class AccessKeyGuard {
     if (!account.verified()) {
       throw new AuthRefused(AuthRefused.UNVERIFIED, "Почта учётной записи не подтверждена");
     }
-    String path = request.getRequestURI().substring(request.getContextPath().length());
-    if (path.startsWith(CORE_PATHS) || !settings.access().opens(request)) {
+    Optional<String> path = KeyPath.of(request).map(decoded -> decoded.toLowerCase(Locale.ROOT));
+    if (path.isEmpty() || core(path.get()) || !settings.access().opens(request)) {
       throw new AuthRefused(AuthRefused.KEY_CLOSED, "Эта точка по ключу доступа закрыта");
     }
     limiter.consume(requests, key.id().toString());
@@ -66,5 +67,9 @@ final class AccessKeyGuard {
       account.roles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList());
     authentication.setDetails(new UsedKey(key.id(), key.name()));
     return authentication;
+  }
+
+  private static boolean core(String path) {
+    return path.equals(CORE_PATHS.substring(0, CORE_PATHS.length() - 1)) || path.startsWith(CORE_PATHS);
   }
 }

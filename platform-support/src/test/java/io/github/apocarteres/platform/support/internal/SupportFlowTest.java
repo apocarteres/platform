@@ -315,6 +315,12 @@ class SupportFlowTest {
       r.setContent(null);
       return r;
     })).andExpect(status().isLengthRequired()).andExpect(jsonPath("$.code").value("length-required"));
+    for (String encoded : List.of("/api/support/%72equests", "/api/%73upport/requests", "/%61pi/support/requests")) {
+      guest.send(multipart(java.net.URI.create(encoded)).with(r -> {
+        r.setContent(new byte[(int) SupportLimits.BODY_BYTES + 1]);
+        return r;
+      })).andExpect(status().isContentTooLarge()).andExpect(jsonPath("$.code").value("body-too-large"));
+    }
     for (int index = 0; index < 10; index++) {
       guest.submit(guest("обращение " + index, "g" + index + "@mail.example")).andExpect(status().isCreated());
     }

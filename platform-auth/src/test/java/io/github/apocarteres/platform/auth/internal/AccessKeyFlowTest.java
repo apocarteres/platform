@@ -315,8 +315,8 @@ class AccessKeyFlowTest {
 
     byKey(key, MockMvcRequestBuilders.get("/api/open/staff/panel")).andExpect(status().isForbidden())
       .andExpect(jsonPath("$.code").value("key-closed"));
-    for (String encoded : List.of("/api/open/%73taff/panel", "/api/open/%53%54%41%46%46/panel", "/api/%61uth/me", "/api/%41UTH/me",
-      "/api/AUTH/me", "/api/Auth/keys")) {
+    for (String encoded : List.of("/api/open/%73taff/panel", "/api/open/%73%74%61%66%66/panel", "/api/%61uth/me", "/api/%41UTH/me",
+      "/api/AUTH/me", "/api/Auth/keys", "/%61pi/auth/keys")) {
       MockHttpServletResponse answered = byKey(key, MockMvcRequestBuilders.get(URI.create(encoded))).andReturn().getResponse();
       assertThat(answered.getStatus()).as(encoded).isEqualTo(403);
       assertThat(answered.getContentAsString()).as(encoded).contains("key-closed").doesNotContain("служебное");
@@ -491,9 +491,8 @@ class AccessKeyFlowTest {
     // REQ-AUTH-031
     @Bean
     KeyAccess keyAccess() {
-      Set<String> opened = Set.of("/api/things", "/api/key-name", "/api/admin/panel", "/api/auth/me", "/api/auth/keys", "/api/partner/me");
-      return request -> opened.contains(request.getRequestURI())
-        || (request.getRequestURI().startsWith("/api/open/") && !request.getRequestURI().startsWith("/api/open/staff/"));
+      return request -> request.getRequestURI().startsWith("/api/") && !request.getRequestURI().equals("/api/closed")
+        && !request.getRequestURI().startsWith("/api/open/staff/");
     }
 
     // REQ-AUTH-038

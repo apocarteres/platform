@@ -1,14 +1,16 @@
 package io.github.apocarteres.platform.auth.internal;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Optional;
 import org.springframework.web.util.UriUtils;
 
 // REQ-AUTH-031
 final class KeyPath {
 
-  private static final String STRUCTURAL = "/;\\%";
+  private static final String STRUCTURAL = "/;\\%.";
 
   private KeyPath() {
   }
@@ -30,11 +32,7 @@ final class KeyPath {
       }
       int high = Character.digit(raw.charAt(at + 1), 16);
       int low = Character.digit(raw.charAt(at + 2), 16);
-      if (high < 0 || low < 0) {
-        return Optional.empty();
-      }
-      char decoded = (char) (high * 16 + low);
-      if (unreserved(decoded) || STRUCTURAL.indexOf(decoded) >= 0) {
+      if (high < 0 || low < 0 || STRUCTURAL.indexOf((char) (high * 16 + low)) >= 0) {
         return Optional.empty();
       }
     }
@@ -52,7 +50,25 @@ final class KeyPath {
     return Optional.of(path);
   }
 
-  private static boolean unreserved(char value) {
-    return (value >= 'a' && value <= 'z') || (value >= 'A' && value <= 'Z') || (value >= '0' && value <= '9') || "-._~".indexOf(value) >= 0;
+  // REQ-AUTH-031
+  static boolean under(HttpServletRequest request, String path, String prefix) {
+    String info = request.getPathInfo();
+    return under(path, prefix) || (info != null && under(info, prefix));
+  }
+
+  // REQ-AUTH-031
+  static HttpServletRequest decoded(HttpServletRequest request, String path) {
+    String uri = request.getContextPath() + path;
+    return new HttpServletRequestWrapper(request) {
+      @Override
+      public String getRequestURI() {
+        return uri;
+      }
+    };
+  }
+
+  private static boolean under(String path, String prefix) {
+    String lower = path.toLowerCase(Locale.ROOT);
+    return lower.equals(prefix) || lower.startsWith(prefix + "/");
   }
 }

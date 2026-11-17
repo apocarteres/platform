@@ -7,8 +7,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.util.UriUtils;
 
 // REQ-SUPPORT-003
 final class IntakeGuard extends OncePerRequestFilter {
@@ -28,8 +30,16 @@ final class IntakeGuard extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getRequestURI().substring(request.getContextPath().length());
-    return !("POST".equals(request.getMethod()) && PATH.equals(path));
+    return !("POST".equals(request.getMethod()) && intake(request.getRequestURI().substring(request.getContextPath().length())));
+  }
+
+  // REQ-SUPPORT-003
+  private static boolean intake(String raw) {
+    try {
+      return PATH.equals(UriUtils.decode(raw, StandardCharsets.UTF_8));
+    } catch (IllegalArgumentException malformed) {
+      return true;
+    }
   }
 
   @Override

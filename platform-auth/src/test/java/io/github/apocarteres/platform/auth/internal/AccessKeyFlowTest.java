@@ -308,6 +308,24 @@ class AccessKeyFlowTest {
   }
 
   @Test
+  @DisplayName("Закодированный путь не обходит ни точки ядра, ни запрещающий перечень проекта; не-ASCII в сегменте ключу не мешает")
+  void encodedPathsDoNotBypass() throws Exception {
+    person("owner@site.example", "USER", "ADMIN");
+    String key = issue(signedIn("owner@site.example"), "агент", 30).get("value").asString();
+
+    byKey(key, MockMvcRequestBuilders.get("/api/open/staff/panel")).andExpect(status().isForbidden())
+      .andExpect(jsonPath("$.code").value("key-closed"));
+    for (String encoded : List.of("/api/open/%73taff/panel", "/api/open/%73%74%61%66%66/panel", "/api/%61uth/me", "/api/%41UTH/me",
+      "/api/AUTH/me", "/api/Auth/keys", "/%61pi/auth/keys")) {
+      MockHttpServletResponse answered = byKey(key, MockMvcRequestBuilders.get(URI.create(encoded))).andReturn().getResponse();
+      assertThat(answered.getStatus()).as(encoded).isEqualTo(403);
+      assertThat(answered.getContentAsString()).as(encoded).contains("key-closed").doesNotContain("служебное");
+    }
+    byKey(key, MockMvcRequestBuilders.get("/api/open/thing")).andExpect(status().isOk());
+    byKey(key, MockMvcRequestBuilders.get(URI.create("/api/open/%D0%B2%D0%B5%D1%89%D1%8C/thing"))).andExpect(status().isOk());
+  }
+
+  @Test
   @DisplayName("Неизвестный, отозванный и истёкший ключ отказывают; блокировка и снятая роль действуют сразу")
   void rejectedKeys() throws Exception {
     Account owner = person("owner@site.example", "USER", "ADMIN");
@@ -473,8 +491,8 @@ class AccessKeyFlowTest {
     // REQ-AUTH-031
     @Bean
     KeyAccess keyAccess() {
-      Set<String> opened = Set.of("/api/things", "/api/key-name", "/api/admin/panel", "/api/auth/me", "/api/auth/keys", "/api/partner/me");
-      return request -> opened.contains(request.getRequestURI());
+      return request -> request.getRequestURI().startsWith("/api/") && !request.getRequestURI().equals("/api/closed")
+        && !request.getRequestURI().startsWith("/api/open/staff/");
     }
 
     // REQ-AUTH-038
@@ -531,6 +549,16 @@ class AccessKeyFlowTest {
     @GetMapping("/api/admin/panel")
     String panel() {
       return "панель";
+    }
+
+    @GetMapping({"/api/open/thing", "/api/open/{name}/thing"})
+    String openThing() {
+      return "открыто";
+    }
+
+    @GetMapping("/api/open/staff/panel")
+    String staffPanel() {
+      return "служебное";
     }
   }
 }

@@ -155,9 +155,10 @@ class SupportFlowTest {
     letters.arrivals.clear();
     letters.failing = false;
     clock.set(java.time.Instant.parse("2026-09-25T10:00:00Z"));
-    Filter guard = context.getBean("supportIntakeGuard", FilterRegistrationBean.class).getFilter();
+    FilterRegistrationBean<?> guard = context.getBean("supportIntakeGuard", FilterRegistrationBean.class);
     mvc = MockMvcBuilders.webAppContextSetup(context)
-      .addFilters(guard, context.getBean("springSessionRepositoryFilter", Filter.class),
+      .addFilter(guard.getFilter(), guard.getUrlPatterns().toArray(String[]::new))
+      .addFilters(context.getBean("springSessionRepositoryFilter", Filter.class),
         context.getBean("springSecurityFilterChain", Filter.class))
       .build();
   }
@@ -315,6 +316,12 @@ class SupportFlowTest {
       r.setContent(null);
       return r;
     })).andExpect(status().isLengthRequired()).andExpect(jsonPath("$.code").value("length-required"));
+    for (String encoded : List.of("/api/support/%72equests", "/api/%73upport/requests", "/%61pi/support/requests", "/api/support/requests;x=1")) {
+      guest.send(multipart(java.net.URI.create(encoded)).with(r -> {
+        r.setContent(new byte[(int) SupportLimits.BODY_BYTES + 1]);
+        return r;
+      })).andExpect(status().isContentTooLarge()).andExpect(jsonPath("$.code").value("body-too-large"));
+    }
     for (int index = 0; index < 10; index++) {
       guest.submit(guest("обращение " + index, "g" + index + "@mail.example")).andExpect(status().isCreated());
     }

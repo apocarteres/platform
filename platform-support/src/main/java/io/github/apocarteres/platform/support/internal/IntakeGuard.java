@@ -26,10 +26,21 @@ final class IntakeGuard extends OncePerRequestFilter {
     this.failures = failures;
   }
 
+  // REQ-SUPPORT-003
+  static String pattern(String servletPath) {
+    String prefix = servletPath == null ? "" : servletPath.strip();
+    while (prefix.endsWith("/")) {
+      prefix = prefix.substring(0, prefix.length() - 1);
+    }
+    if (!prefix.isEmpty() && !prefix.startsWith("/")) {
+      prefix = "/" + prefix;
+    }
+    return prefix + PATH;
+  }
+
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    String path = request.getRequestURI().substring(request.getContextPath().length());
-    return !("POST".equals(request.getMethod()) && PATH.equals(path));
+    return !"POST".equals(request.getMethod());
   }
 
   @Override

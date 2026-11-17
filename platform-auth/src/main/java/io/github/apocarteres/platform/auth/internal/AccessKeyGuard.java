@@ -18,7 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 // REQ-AUTH-030, REQ-AUTH-031, REQ-AUTH-033, REQ-AUTH-034
 final class AccessKeyGuard {
 
-  static final String CORE_PATHS = "/api/auth/";
+  static final String CORE_PATHS = "/api/auth";
   static final Duration USE_PRECISION = Duration.ofMinutes(1);
 
   private static final Set<String> SAFE = Set.of("GET", "HEAD", "OPTIONS");
@@ -53,8 +53,8 @@ final class AccessKeyGuard {
     if (!account.verified()) {
       throw new AuthRefused(AuthRefused.UNVERIFIED, "Почта учётной записи не подтверждена");
     }
-    String path = request.getRequestURI().substring(request.getContextPath().length());
-    if (path.startsWith(CORE_PATHS) || !settings.access().opens(request)) {
+    Optional<String> path = KeyPath.of(request);
+    if (path.isEmpty() || KeyPath.under(request, path.get(), CORE_PATHS) || !settings.access().opens(KeyPath.decoded(request, path.get()))) {
       throw new AuthRefused(AuthRefused.KEY_CLOSED, "Эта точка по ключу доступа закрыта");
     }
     limiter.consume(requests, key.id().toString());

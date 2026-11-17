@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 241. Включены самостоятельные задачи и этапы планов функций.
+Всего: 242. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -149,6 +149,7 @@ authority: navigation
 | [Вход не умеет второй шаг после пароля](CORE-SEC-005-login-has-no-second-step.md) | P1 | Выполнена | [RELEASE-16-1-0](../../releases/RELEASE-16-1-0.md) | auth, security, api, client |
 | [Смена пароля и почты не публикуют событий](CORE-SEC-006-credential-changes-publish-no-events.md) | P1 | Выполнена | [RELEASE-16-1-0](../../releases/RELEASE-16-1-0.md) | auth, security |
 | [Tomcat 11.0.25 в ядре несёт критические уязвимости](CORE-SEC-011-tomcat-11-0-25-vulnerabilities.md) | P1 | Выполнена | [RELEASE-18-2-1](../../releases/RELEASE-18-2-1.md) | backend, security, dependencies |
+| [Закодированный путь обходит проверки ключа доступа и приёма обращений](CORE-SEC-012-encoded-path-opens-closed-key-points.md) | P1 | Выполнена | Не назначен | backend, security, auth |
 | [Starter `platform-web-errors`: единый контракт ошибок API](CORE-API-001-platform-web-errors.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | backend, api, frontend |
 | [Angular-пакет разбора ошибок `@apocarteres/http`](CORE-API-002-angular-http-error-package.md) | P2 | Выполнена | [RELEASE-1-5-0](../../releases/RELEASE-1-5-0.md) | frontend, api |
 | [Сервис не может добавить расширение в тело ошибки](CORE-API-004-service-cannot-add-an-extension-to-the-error-body.md) | P2 | Выполнена | [RELEASE-1-7-0](../../releases/RELEASE-1-7-0.md) | api, backend |

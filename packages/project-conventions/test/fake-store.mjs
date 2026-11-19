@@ -31,7 +31,7 @@ export function ticketForm(id, overrides = {}) {
   };
 }
 
-export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 'read-key', writeKey = 'write-key', contract = 1 } = {}) {
+export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 'read-key', writeKey = 'write-key', contract = 2 } = {}) {
   const state = {
     tickets: new Map(), releases: [], obligations: new Map(), releasedCount: 0, fields: null, answers: new Map(), next: 1,
     requests: [], contract, down: false,

@@ -515,9 +515,10 @@ test('отказ хранилища по инварианту доходит д�
 test('версия контракта, которой хранилище не исполняет, — отказ с названием требуемой версии', async () => {
   const p = await project();
   try {
-    p.store.state.contract = 2;
+    // REQ-STORE-024
+    p.store.state.contract = 1;
     await assert.rejects(p.context().client.working(), (failure) => failure instanceof StoreRefusal
-      && failure.code === 'contract-version' && /пакету правил нужна версия 1/.test(failure.message));
+      && failure.code === 'contract-version' && /пакету правил нужна версия 2/.test(failure.message));
     const status = await p.command('release', 'status');
     assert.equal(status.code, 1);
     assert.match(status.stderr, /contract-version/);

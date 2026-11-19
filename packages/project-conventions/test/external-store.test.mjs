@@ -127,6 +127,78 @@ test('выпуск открывается, закрывается и завер�
   }
 });
 
+test('состав — задачи со слитой работой в любом статусе, кроме отменённой; выпуск закрывается без «Готово» и сам ставит его', async () => {
+  const p = await project();
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'in_review' });
+    p.store.add('SHOP-OPS-002', { status: 'in_progress' });
+    p.store.add('SHOP-OPS-003', { status: 'cancelled' });
+    p.store.add('SHOP-OPS-004', { status: 'backlog' });
+    p.store.add('SHOP-OPS-005', { status: 'done' });
+    await p.commit('SHOP-OPS-001 Работа на проверке');
+    await p.commit('SHOP-OPS-002 Работа в работе');
+    await p.commit('SHOP-OPS-003 !revert Отменённая работа');
+    await openRelease(p.root, p.context(), { tickets: [] });
+    await p.attest();
+    const closed = await closeRelease(p.root, p.context());
+    assert.equal(closed.closed, true, JSON.stringify(closed.problems));
+    assert.deepEqual(closed.composition.sort(), ['SHOP-OPS-001', 'SHOP-OPS-002', 'SHOP-OPS-005']);
+    assert.equal(p.store.find('SHOP-OPS-003').release, null, 'отменённая в состав не входит');
+    assert.equal(p.store.find('SHOP-OPS-004').release, null, 'задача без слитой работы в состав не входит');
+    assert.equal(p.store.find('SHOP-OPS-001').status, 'in_review', 'закрытие статусов не меняет');
+    const finished = await finishRelease(p.root, p.context(), { note: 'развёрнуто' });
+    assert.equal(finished.finished, true, JSON.stringify(finished.problems));
+    for (const name of ['SHOP-OPS-001', 'SHOP-OPS-002', 'SHOP-OPS-005']) assert.equal(p.store.find(name).status, 'done', name);
+    assert.equal(p.store.find('SHOP-OPS-003').status, 'cancelled');
+  } finally {
+    await p.stop();
+  }
+});
+
+test('указанная при открытии задача без слитой работы держит закрытие, отменённая из состава уходит', async () => {
+  const p = await project();
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done' });
+    p.store.add('SHOP-OPS-002', { status: 'todo' });
+    p.store.add('SHOP-OPS-003', { status: 'in_review' });
+    await openRelease(p.root, p.context(), { tickets: ['SHOP-OPS-002', 'SHOP-OPS-003'] });
+    p.store.find('SHOP-OPS-003').status = 'cancelled';
+    await p.attest();
+    const held = await closeRelease(p.root, p.context());
+    assert.equal(held.closed, false);
+    const text = held.problems.join('\n');
+    assert.match(text, /SHOP-OPS-002 состава без слитой работы \(todo\)/);
+    assert.doesNotMatch(text, /SHOP-OPS-003/);
+    assert.equal(p.store.open().status, 'draft');
+  } finally {
+    await p.stop();
+  }
+});
+
+test('отменённая коммитом !revert работа в состав не подбирается; поле вне done у задачи на проверке держит закрытие', async () => {
+  const p = await project({ extra: { metadata: { fields: { 'manual-qa': { types: ['ticket'], values: ['required', 'passed'], done: ['passed'] } } } } });
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'in_progress' });
+    p.store.add('SHOP-OPS-002', { status: 'in_review', fields: { 'manual-qa': 'required' } });
+    await p.commit('SHOP-OPS-001 Работа');
+    await p.commit('SHOP-OPS-001 !revert Работа не нужна');
+    await p.commit('SHOP-OPS-002 Работа на ручной проверке');
+    await openRelease(p.root, p.context(), { tickets: [] });
+    await p.attest();
+    const held = await closeRelease(p.root, p.context());
+    assert.equal(held.closed, false);
+    const text = held.problems.join('\n');
+    assert.match(text, /Задача SHOP-OPS-002: задача выполнена, а manual-qa — required/);
+    assert.doesNotMatch(text, /SHOP-OPS-001/);
+    p.store.find('SHOP-OPS-002').fields['manual-qa'] = 'passed';
+    const closed = await closeRelease(p.root, p.context());
+    assert.equal(closed.closed, true, JSON.stringify(closed.problems));
+    assert.deepEqual(closed.composition, ['SHOP-OPS-002']);
+  } finally {
+    await p.stop();
+  }
+});
+
 test('выпуск, открытый на доске без команды ядра, закрывается тем же путём: обязательства заведены, порог вопросов проверен', async () => {
   const p = await project({ obligations: [OBLIGATION], extra: { release: { openQuestions: { remind: 0, require: 0 } } } });
   try {
@@ -254,7 +326,8 @@ test('шлагбаум закрытия: коммит без задачи, за�
     await p.commit('Правка без задачи');
     await p.commit('SHOP-OPS-005 Работа вне состава');
     await p.commit('SHOP-OPS-777 Несуществующая задача');
-    await p.store.operate('openRelease', { tickets: [] });
+    await p.store.operate('openRelease', { tickets: ['SHOP-OPS-005'] });
+    await p.store.operate('dropTicket', { ticket: 'SHOP-OPS-005', reason: 'работа не нужна в этом выпуске' });
     await p.attest();
     const held = await closeRelease(p.root, p.context());
     assert.equal(held.closed, false);

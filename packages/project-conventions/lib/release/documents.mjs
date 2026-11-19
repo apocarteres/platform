@@ -75,6 +75,11 @@ export function shipsResult(ticket) {
   return ticket.metadata.get('status') === 'done';
 }
 
+// REQ-RELEASE-031, REQ-STORE-024
+export function withdrawn(ticket) {
+  return ['cancelled', 'superseded'].includes(ticket.metadata.get('status'));
+}
+
 export async function unassignedDoneTickets(root) {
   return (await tickets(root)).filter((ticket) =>
     shipsResult(ticket)

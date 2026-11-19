@@ -5,7 +5,7 @@ status: done
 scope: release, tooling
 authority: supporting
 priority: P1
-release: unassigned
+release: RELEASE-19-0-0
 related: REQ-STORE, REQ-RELEASE
 ---
 

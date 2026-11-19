@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-// REQ-STORE-004
-export const CONTRACT = 1;
+// REQ-STORE-004, REQ-STORE-024
+export const CONTRACT = 2;
 
 // REQ-STORE-005
 export const LOOKUP_LIMIT = 500;
@@ -42,7 +42,7 @@ async function refusalOf(response) {
   return new StoreRefusal(code, String(detail), response.status);
 }
 
-// REQ-STORE-004
+// REQ-STORE-004, REQ-STORE-024
 function accepted(body, what) {
   if (body === null || typeof body !== 'object') {
     throw new StoreRefusal('contract-shape', `ответ ${what} не объект JSON`, 200);

@@ -1,8 +1,8 @@
-import { releaseTag, shipsResult, ticketId } from '../release/documents.mjs';
+import { releaseTag, shipsResult, ticketId, withdrawn } from '../release/documents.mjs';
 import { loadObligations, pendingObligations } from '../release/obligations.mjs';
 import { commitSubject, createTag, headCommit, moveTag, tagCommit, tagMessage } from '../release/git.mjs';
 import { inRolloutOrder } from '../release/rollout.mjs';
-import { accountState, compositionOf, localStanding, storeStanding } from './gate.mjs';
+import { accountState, compositionOf, localStanding, ships, storeStanding } from './gate.mjs';
 import { actionsOf, asDocument, fieldsDigest, manifestComposition, manifestMessage, manifestOf, ticketFields } from './shape.mjs';
 
 // REQ-STORE-012
@@ -128,7 +128,7 @@ export async function closeRelease(root, context, { reason = null } = {}) {
       await thaw('Проверки закрытия не пройдены');
       return { closed: false, problems: state.problems, reminders: state.reminders };
     }
-    const composition = inRolloutOrder(state.composition.filter(shipsResult));
+    const composition = inRolloutOrder(state.composition.filter((ticket) => ships(ticket, state.merged)));
     const manifest = {
       release: id,
       commit,
@@ -172,7 +172,7 @@ export async function closeRelease(root, context, { reason = null } = {}) {
 const markCommand = (action, total) => `release mark ${action.ticket} --step ${action.step}`
   + `${total > 1 ? ` --item ${action.item}` : ''} --note "<чем подтверждено>"`;
 
-// REQ-RELEASE-034, REQ-RELEASE-049, REQ-STORE-008
+// REQ-RELEASE-034, REQ-RELEASE-049, REQ-STORE-008, REQ-STORE-024
 export async function finishability(root, { client, scheme }) {
   const open = await client.openRelease();
   if (open.release === null) {
@@ -187,10 +187,6 @@ export async function finishability(root, { client, scheme }) {
   }
   const working = await client.working();
   const composition = working.tickets.map(asDocument).filter((ticket) => ticket.metadata.get('release') === release.id);
-  for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
-    problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}):`
-      + ' выполните её либо снимите из состава командой release drop с причиной');
-  }
   const actions = release.actions ?? [];
   for (const action of actions.filter((one) => !one.done)) {
     const own = actions.filter((other) => other.ticket === action.ticket && other.step === action.step);
@@ -211,7 +207,7 @@ export async function finishRelease(root, context, { note }) {
   const closedObligations = obligations
     .map((obligation) => ({
       id: obligation.id,
-      ticket: state.composition.find((item) => item.metadata.get('obligation') === obligation.id && shipsResult(item)),
+      ticket: state.composition.find((item) => item.metadata.get('obligation') === obligation.id && !withdrawn(item)),
     }))
     .filter((one) => one.ticket !== undefined)
     .map((one) => ({ id: one.id, ticket: ticketId(one.ticket) }));

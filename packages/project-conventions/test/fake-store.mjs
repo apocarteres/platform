@@ -31,7 +31,7 @@ export function ticketForm(id, overrides = {}) {
   };
 }
 
-export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 'read-key', writeKey = 'write-key', contract = 1 } = {}) {
+export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 'read-key', writeKey = 'write-key', contract = 2 } = {}) {
   const state = {
     tickets: new Map(), releases: [], obligations: new Map(), releasedCount: 0, fields: null, answers: new Map(), next: 1,
     requests: [], contract, down: false,
@@ -187,6 +187,10 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
       if (release.status !== 'in_progress') throw new Refusal('release-not-open', 'завершается выпуск после первого шага закрытия');
       release.status = 'released';
       release.result = { ...release.result, note, releasedOn: today };
+      // REQ-STORE-024
+      for (const ticket of state.tickets.values()) {
+        if (ticket.release === release.id && !['cancelled', 'superseded'].includes(ticket.status)) ticket.status = 'done';
+      }
       state.releasedCount += 1;
       for (const closed of closedObligations) {
         const record = state.obligations.get(closed.id);

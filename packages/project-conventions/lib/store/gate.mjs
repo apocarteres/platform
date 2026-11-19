@@ -1,7 +1,7 @@
-import { releaseTag, shipsResult, ticketId } from '../release/documents.mjs';
+import { releaseTag, shipsResult, ticketId, withdrawn } from '../release/documents.mjs';
 import { loadObligations, overdueObligations } from '../release/obligations.mjs';
 import { attested, receiptFor } from '../release/receipt.mjs';
-import { commitsInRange, ticketsOf } from '../release/commits.mjs';
+import { commitsInRange, revertCommit, ticketsOf } from '../release/commits.mjs';
 import { commitHolds } from '../release/commit-holds.mjs';
 import { documentsSinceTheReceipt, withoutOlderThan } from '../release/cycle.mjs';
 import { findExpandDebts } from '../migrations.mjs';
@@ -44,19 +44,38 @@ export async function localStanding(root, config) {
   return { problems, commit, receipt: found.receipt };
 }
 
-// REQ-RELEASE-007, REQ-STORE-005
-export function compositionOf(documents, releaseId) {
+// REQ-STORE-024
+export function ships(ticket, merged = new Set()) {
+  if (withdrawn(ticket)) return false;
+  return shipsResult(ticket) || namesOf(ticket).some((name) => merged.has(name));
+}
+
+// REQ-RELEASE-007, REQ-RELEASE-033, REQ-STORE-005, REQ-STORE-024
+export function compositionOf(documents, releaseId, merged = new Set(), dropped = new Set()) {
   return documents.filter((ticket) => {
     const release = ticket.metadata.get('release');
-    return release === releaseId || (release === 'unassigned' && shipsResult(ticket));
+    if (release === releaseId) return true;
+    return release === 'unassigned' && !namesOf(ticket).some((name) => dropped.has(name)) && ships(ticket, merged);
   });
 }
 
+// REQ-RELEASE-037, REQ-STORE-024
+function mergedNames(commits, store) {
+  const latest = new Map();
+  for (const commit of commits) {
+    const reverted = revertCommit(commit, [], null, new Set(), store.idPattern);
+    for (const name of ticketsOf(commit, [], null, new Set(), store.idPattern)) {
+      if (!latest.has(name)) latest.set(name, !reverted);
+    }
+  }
+  return new Set([...latest].filter(([, live]) => live).map(([name]) => name));
+}
+
 // REQ-RELEASE-036, REQ-STORE-014
-async function commitProblems(root, { config, store, client, scheme, tag, composition, release }) {
+async function commitProblems(root, { config, store, client, commits: range, composition, release }) {
   const baseline = config.commitRuleSince ?? null;
   if (baseline === null) return [];
-  const commits = await withoutOlderThan(root, await commitsInRange(root, await previousTag(root, scheme, tag)), baseline);
+  const commits = await withoutOlderThan(root, range, baseline);
   const named = commits.flatMap((commit) => ticketsOf(commit, [], null, new Set(), store.idPattern));
   const found = named.length === 0 ? { tickets: [] } : await client.lookup(named);
   const looked = found.tickets.map(asDocument);
@@ -91,19 +110,31 @@ export async function storeStanding(root, { config, store, client, scheme, retag
   const referenced = working.referenced.map(asDocument);
   const release = open.release;
   const tag = releaseTag(release.id, scheme);
-  const composition = compositionOf(documents, release.id);
+  const commits = await commitsInRange(root, await previousTag(root, scheme, tag));
+  const baseline = config.commitRuleSince ?? null;
+  const merged = mergedNames(baseline === null ? commits : await withoutOlderThan(root, commits, baseline), store);
+  const dropped = new Set((release.dropped ?? []).map((row) => row.ticket));
+  const composition = compositionOf(documents, release.id, merged, dropped);
   const problems = [];
   if (composition.length === 0) {
     problems.push('Состав пуст: нечего выпускать.'
-      + ' Состав подбирает выполненные задачи без выпуска сам — доведите задачу до выполненного состояния');
+      + ' Состав подбирает задачи без выпуска со слитой в main работой сам — слейте работу задачи');
   }
-  // REQ-RELEASE-031, REQ-RELEASE-008
-  for (const ticket of composition.filter((item) => !shipsResult(item) && !item.metadata.has('obligation'))) {
-    problems.push(`Задача ${ticketId(ticket)} состава не выполнена (${ticket.metadata.get('status')}): выполните её либо снимите из состава командой release drop с причиной`);
+  // REQ-RELEASE-031, REQ-RELEASE-008, REQ-STORE-024
+  for (const ticket of composition.filter((item) => !item.metadata.has('obligation'))) {
+    if (withdrawn(ticket)) {
+      problems.push(`Задача ${ticketId(ticket)} состава отменена (${ticket.metadata.get('status')}): снимите её из состава командой release drop с причиной`);
+    } else if (!ships(ticket, merged)) {
+      problems.push(`Задача ${ticketId(ticket)} состава без слитой работы (${ticket.metadata.get('status')}):`
+        + ' слейте её работу в main либо снимите из состава командой release drop с причиной');
+    }
   }
   // REQ-PROJECT-PROCESS-024
   const fieldErrors = projectFieldErrors(metadataDeclaration(config).fields);
-  for (const ticket of composition) problems.push(...fieldErrors(`Задача ${ticketId(ticket)}`, ticket.metadata));
+  for (const ticket of composition) {
+    const metadata = ships(ticket, merged) ? new Map(ticket.metadata).set('status', 'done') : ticket.metadata;
+    problems.push(...fieldErrors(`Задача ${ticketId(ticket)}`, metadata));
+  }
   const { obligations, isCore } = await loadObligations(root);
   const state = accountState(open);
   for (const entry of overdueObligations(obligations, state, isCore)) {
@@ -126,8 +157,8 @@ export async function storeStanding(root, { config, store, client, scheme, retag
       + ' Либо первый шаг закрытия уже выполнен — тогда завершите выпуск командой release finish,'
       + ' — либо номер занят прежним выпуском и следующий открывается с другим номером');
   }
-  problems.push(...await commitProblems(root, { config, store, client, scheme, tag, composition, release }));
+  problems.push(...await commitProblems(root, { config, store, client, commits, composition, release }));
   return {
-    problems, reminders: questions.reminders, release, open, working, documents, composition, tag, state, obligations, isCore,
+    problems, reminders: questions.reminders, release, open, working, documents, composition, merged, tag, state, obligations, isCore,
   };
 }

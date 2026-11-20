@@ -5,7 +5,7 @@ status: done
 scope: release, tickets, store
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-20-0-0
 related: REQ-STORE, REQ-RELEASE, REQ-PROJECT-PROCESS, ADR-0009, CORE-OPS-131
 ---
 

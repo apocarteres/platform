@@ -1,12 +1,12 @@
 ---
 id: CORE-OPS-132
 type: ticket
-status: backlog
+status: done
 scope: release, tickets, store
 authority: supporting
 priority: P2
-release: unassigned
-related: REQ-STORE, REQ-RELEASE, REQ-PROJECT-PROCESS, CORE-OPS-131
+release: RELEASE-20-0-0
+related: REQ-STORE, REQ-RELEASE, REQ-PROJECT-PROCESS, ADR-0009, CORE-OPS-131
 ---
 
 # Ворота выпуска при внешнем хранилище читают поля трекера
@@ -70,6 +70,20 @@ TR-172 (хранилище по контракту 3), TR-173 (уход поле
 
 Начинать после ухода контракта 2: shop-core на ядре 19 (DRIAD-739), затем
 выпуск трекера TR-166/TR-167.
+
+## Ход работы
+
+- 2026-11-20 — сигнал старта от Manager: магазины на ядре 19, трекер
+  v2026.11.4 с TR-166/TR-167 в проде.
+- Проект изменений — [ADR-0009](../../decisions/ADR-0009-store-contract-3-release-conditions.md):
+  имя «условие выпуска» (`conditions`), а не «обязательство» — слово занято
+  долгом потребителя перед ядром и полем `obligation`; переход одним шагом,
+  пакет правил называет версию заголовком `X-Store-Contract`; файлы задач
+  без изменений; манифест тега несёт условия.
+- Код: `CONTRACT` 3, `conditions` в форме задачи вместо `fields`, ворота
+  `before-release`/`pending` в `lib/store/gate.mjs`, без `defineFields` и
+  `fieldsDigest`; `store --check` проверяет форму условий; `release status`
+  и манифест показывают условия. `REQ-STORE-025`.
 
 ## Откуда пришла задача
 

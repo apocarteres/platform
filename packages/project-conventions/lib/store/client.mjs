@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-// REQ-STORE-004, REQ-STORE-024
-export const CONTRACT = 2;
+// REQ-STORE-004, REQ-STORE-025
+export const CONTRACT = 3;
 
 // REQ-STORE-005
 export const LOOKUP_LIMIT = 500;
@@ -71,6 +71,8 @@ export function storeClient(store, { env = process.env, fetch: send = globalThis
         headers: {
           accept: 'application/json',
           authorization: `Bearer ${key}`,
+          // REQ-STORE-004
+          'x-store-contract': String(CONTRACT),
           ...(body === undefined ? {} : { 'content-type': 'application/json' }),
           ...headers,
         },
@@ -96,7 +98,6 @@ export function storeClient(store, { env = process.env, fetch: send = globalThis
       const body = accepted(await response.json(), 'рабочего набора');
       workingSet = {
         revision: String(body.revision ?? ''),
-        fieldsDigest: body.fieldsDigest ?? null,
         tickets: body.tickets ?? [],
         referenced: body.referenced ?? [],
       };

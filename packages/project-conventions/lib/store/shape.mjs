@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { DEPLOYMENT_STEPS, deploymentActions } from '../docs/deployment-actions.mjs';
 
 // REQ-STORE-006
@@ -17,9 +16,6 @@ export function asDocument(ticket) {
   if (ticket.questions) metadata.set('questions', ticket.questions);
   if ((ticket.dependsOn ?? []).length > 0) metadata.set('depends-on', ticket.dependsOn.join(', '));
   if (ticket.obligation) metadata.set('obligation', ticket.obligation);
-  for (const [name, value] of Object.entries(ticket.fields ?? {})) {
-    if (value !== null && value !== undefined) metadata.set(name, String(value));
-  }
   const lines = [`# ${ticket.title ?? ticket.id}`, ''];
   for (const step of DEPLOYMENT_STEPS) {
     const text = ticket.sections?.[SECTION_OF[step.key]];
@@ -33,8 +29,24 @@ export function asDocument(ticket) {
     aliases: ticket.aliases ?? [],
     title: ticket.title ?? ticket.id,
     url: ticket.url ?? null,
-    fields: ticket.fields ?? {},
+    conditions: conditionsOf(ticket),
   };
+}
+
+// REQ-STORE-025
+export const PHASES = ['before-release', 'after-release'];
+// REQ-STORE-025
+export const STATES = ['pending', 'done', 'not-required'];
+
+// REQ-STORE-025
+function conditionsOf(ticket) {
+  return (Array.isArray(ticket.conditions) ? ticket.conditions : [])
+    .map((one) => ({ key: String(one?.key ?? ''), phase: String(one?.phase ?? ''), state: String(one?.state ?? '') }));
+}
+
+// REQ-STORE-025
+export function pendingBefore(document) {
+  return document.conditions.filter((one) => one.phase === 'before-release' && one.state === 'pending');
 }
 
 // REQ-STORE-006
@@ -62,31 +74,19 @@ export function actionsOf(composition, recorded = []) {
   return actions;
 }
 
-function canonical(value) {
-  if (Array.isArray(value)) return value.map(canonical);
-  if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
-  }
-  return value;
-}
-
-// REQ-STORE-018
+// REQ-STORE-022
 export function ticketFields(config) {
   const declared = config.metadata?.fields ?? {};
   return Object.fromEntries(Object.entries(declared).filter(([, field]) => (field?.types ?? []).includes('ticket')));
 }
 
-// REQ-STORE-018
-export function fieldsDigest(fields) {
-  return createHash('sha256').update(JSON.stringify(canonical(fields)), 'utf8').digest('hex');
-}
-
-// REQ-STORE-011
+// REQ-STORE-011, REQ-STORE-025
 export function manifestComposition(composition) {
-  return composition.map((ticket) => {
-    const fields = Object.fromEntries(Object.entries(ticket.fields ?? {}).filter(([, value]) => value !== null && value !== undefined));
-    return { id: ticket.metadata.get('id'), title: ticket.title, ...(Object.keys(fields).length > 0 ? { fields } : {}) };
-  });
+  return composition.map((ticket) => ({
+    id: ticket.metadata.get('id'),
+    title: ticket.title,
+    ...(ticket.conditions.length > 0 ? { conditions: ticket.conditions } : {}),
+  }));
 }
 
 // REQ-STORE-011

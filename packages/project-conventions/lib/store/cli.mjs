@@ -55,7 +55,7 @@ async function statusReport(root, context) {
   report.release = { id, status: standing };
   report.tag = state.tag;
   report.composition = state.composition.map((ticket) => ({
-    id: ticket.metadata.get('id'), title: ticket.title, status: ticket.metadata.get('status'), fields: ticket.fields,
+    id: ticket.metadata.get('id'), title: ticket.title, status: ticket.metadata.get('status'), conditions: ticket.conditions,
   }));
   report.actions = actionsOf(state.composition, state.release.actions ?? []);
   report.reminders = state.reminders;
@@ -315,7 +315,7 @@ export async function storeCommand(root, store, { check, withOperations, move = 
     return;
   }
   try {
-    const result = await checkStore({ client: storeClient(store), config: await readConfig(root), withOperations });
+    const result = await checkStore({ client: storeClient(store), withOperations });
     for (const note of result.notes) console.log(`Замечание: ${note}`);
     if (result.problems.length > 0) {
       console.error(`Хранилище ${store.url} контракт ядра не исполняет (${result.problems.length}):`);

@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 
 const TERMINAL = new Set(['cancelled', 'superseded']);
-const UNFROZEN = new Set(['unfreezeRelease', 'closeRelease', 'recloseRelease', 'defineFields']);
+const UNFROZEN = new Set(['unfreezeRelease', 'closeRelease', 'recloseRelease']);
 
 class Refusal extends Error {
   constructor(code, detail, status = 409) {
@@ -25,13 +25,13 @@ const digestOf = (value) => createHash('sha256').update(JSON.stringify(canonical
 export function ticketForm(id, overrides = {}) {
   return {
     id, aliases: [], title: `Задача ${id}`, url: `https://tracker.example/${id}`, status: 'backlog', priority: 'P2', scope: 'quality',
-    release: null, questions: null, dependsOn: [], related: [], obligation: null, supersededBy: null, fields: {},
+    release: null, questions: null, dependsOn: [], related: [], obligation: null, supersededBy: null, conditions: [],
     sections: { whyNot: false, openQuestions: false, beforeDeploy: null, afterDeploy: null },
     ...overrides,
   };
 }
 
-export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 'read-key', writeKey = 'write-key', contract = 2 } = {}) {
+export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 'read-key', writeKey = 'write-key', contract = 3 } = {}) {
   const state = {
     tickets: new Map(), releases: [], obligations: new Map(), releasedCount: 0, fields: null, answers: new Map(), next: 1,
     requests: [], contract, down: false,
@@ -56,7 +56,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
     const inside = new Set(tickets.map((ticket) => ticket.id));
     const referenced = [...new Set(tickets.flatMap((ticket) => ticket.dependsOn))]
       .map(find).filter((ticket) => ticket !== null && !inside.has(ticket.id));
-    const body = { tickets, referenced, fieldsDigest: state.fields === null ? null : digestOf(state.fields) };
+    const body = { tickets, referenced };
     return { contract: state.contract, revision: digestOf(body).slice(0, 16), ...body };
   }
 
@@ -152,9 +152,6 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
       if (release?.status !== 'closing') throw new Refusal('release-not-open', 'замороженного выпуска нет');
       release.status = release.frozenFrom;
     },
-    defineFields({ fields }) {
-      state.fields = fields;
-    },
     takeObligations({ obligations }) {
       const release = draft('взятие обязательств');
       for (const one of obligations) {
@@ -235,7 +232,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
       const route = request.url.replace(/^\/api\/conventions\/[^/]+/, '');
       const send = (status, body, headers = {}) => {
         const text = body === null ? '' : JSON.stringify(body);
-        state.requests.push({ method: request.method, route, status, bytes: text.length, operation: null });
+        state.requests.push({ method: request.method, route, status, bytes: text.length, operation: null, contract: request.headers['x-store-contract'] ?? null });
         response.writeHead(status, { 'content-type': status >= 400 ? 'application/problem+json' : 'application/json', ...headers });
         response.end(text);
       };

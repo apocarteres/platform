@@ -3,7 +3,7 @@ import { loadObligations, pendingObligations } from '../release/obligations.mjs'
 import { commitSubject, createTag, headCommit, moveTag, tagCommit, tagMessage } from '../release/git.mjs';
 import { inRolloutOrder } from '../release/rollout.mjs';
 import { accountState, compositionOf, localStanding, ships, storeStanding } from './gate.mjs';
-import { actionsOf, asDocument, fieldsDigest, manifestComposition, manifestMessage, manifestOf, ticketFields } from './shape.mjs';
+import { actionsOf, asDocument, manifestComposition, manifestMessage, manifestOf } from './shape.mjs';
 
 // REQ-STORE-012
 function obligationRequest(obligation) {
@@ -24,17 +24,11 @@ function obligationRequest(obligation) {
   };
 }
 
-// REQ-STORE-012, REQ-STORE-018
-export async function settle(root, { config, client }) {
-  const done = { fields: false, taken: [] };
+// REQ-STORE-012
+export async function settle(root, { client }) {
+  const done = { taken: [] };
   if (!client.canWrite()) return done;
   const working = await client.working();
-  const fields = ticketFields(config);
-  const digest = fieldsDigest(fields);
-  if (working.fieldsDigest !== digest && (working.fieldsDigest !== null || Object.keys(fields).length > 0)) {
-    await client.operate('defineFields', { fields }, `defineFields:${digest}`);
-    done.fields = true;
-  }
   const open = await client.openRelease();
   if (open.release === null || open.release.status !== 'draft') return done;
   const { obligations, isCore } = await loadObligations(root);

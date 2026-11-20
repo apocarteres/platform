@@ -13,7 +13,7 @@ import { StoreRefusal, storeClient } from '../lib/store/client.mjs';
 import { closeRelease, finishRelease, openRelease, settle } from '../lib/store/cycle.mjs';
 import { checkStore } from '../lib/store/check.mjs';
 import { commitsWithoutATicket } from '../lib/store/commits.mjs';
-import { fieldsDigest, manifestOf } from '../lib/store/shape.mjs';
+import { manifestOf } from '../lib/store/shape.mjs';
 import { documentationProblems } from '../lib/docs/documentation.mjs';
 import { fakeStore } from './fake-store.mjs';
 
@@ -175,11 +175,11 @@ test('указанная при открытии задача без слито�
   }
 });
 
-test('отменённая коммитом !revert работа в состав не подбирается; поле вне done у задачи на проверке держит закрытие', async () => {
-  const p = await project({ extra: { metadata: { fields: { 'manual-qa': { types: ['ticket'], values: ['required', 'passed'], done: ['passed'] } } } } });
+test('отменённая коммитом !revert работа в состав не подбирается; невыполненное условие before-release держит закрытие', async () => {
+  const p = await project();
   try {
     p.store.add('SHOP-OPS-001', { status: 'in_progress' });
-    p.store.add('SHOP-OPS-002', { status: 'in_review', fields: { 'manual-qa': 'required' } });
+    p.store.add('SHOP-OPS-002', { status: 'in_review', conditions: [{ key: 'manual-qa', phase: 'before-release', state: 'pending' }] });
     await p.commit('SHOP-OPS-001 Работа');
     await p.commit('SHOP-OPS-001 !revert Работа не нужна');
     await p.commit('SHOP-OPS-002 Работа на ручной проверке');
@@ -188,9 +188,12 @@ test('отменённая коммитом !revert работа в состав
     const held = await closeRelease(p.root, p.context());
     assert.equal(held.closed, false);
     const text = held.problems.join('\n');
-    assert.match(text, /Задача SHOP-OPS-002: задача выполнена, а manual-qa — required/);
+    assert.match(text, /Задача SHOP-OPS-002: условие выпуска manual-qa \(before-release\) не выполнено/);
     assert.doesNotMatch(text, /SHOP-OPS-001/);
-    p.store.find('SHOP-OPS-002').fields['manual-qa'] = 'passed';
+    p.store.find('SHOP-OPS-002').conditions = [
+      { key: 'manual-qa', phase: 'before-release', state: 'done' },
+      { key: 'smoke', phase: 'after-release', state: 'pending' },
+    ];
     const closed = await closeRelease(p.root, p.context());
     assert.equal(closed.closed, true, JSON.stringify(closed.problems));
     assert.deepEqual(closed.composition, ['SHOP-OPS-002']);
@@ -317,10 +320,10 @@ test('перезакрытие переносит тег с манифестом
   }
 });
 
-test('шлагбаум закрытия: коммит без задачи, задача вне состава, невыпущенная зависимость и значение поля вне done', async () => {
-  const p = await project({ extra: { metadata: { fields: { 'manual-qa': { types: ['ticket'], values: ['required', 'passed'], done: ['passed'] } } } } });
+test('шлагбаум закрытия: коммит без задачи, задача вне состава, невыпущенная зависимость и невыполненное условие выпуска', async () => {
+  const p = await project();
   try {
-    p.store.add('SHOP-OPS-001', { status: 'done', dependsOn: ['SHOP-OPS-009'], fields: { 'manual-qa': 'required' } });
+    p.store.add('SHOP-OPS-001', { status: 'done', dependsOn: ['SHOP-OPS-009'], conditions: [{ key: 'manual-qa', phase: 'before-release', state: 'pending' }] });
     p.store.add('SHOP-OPS-009', { status: 'backlog' });
     p.store.add('SHOP-OPS-005', { status: 'in_progress' });
     await p.commit('Правка без задачи');
@@ -336,8 +339,7 @@ test('шлагбаум закрытия: коммит без задачи, за�
     assert.match(text, /относится к задаче SHOP-OPS-005 вне состава/);
     assert.match(text, /называет SHOP-OPS-777, а задачи нет в хранилище/);
     assert.match(text, /SHOP-OPS-001 состава зависит от SHOP-OPS-009, которая не выпущена/);
-    assert.match(text, /Задача SHOP-OPS-001: задача выполнена, а manual-qa — required/);
-    assert.equal(p.store.state.fields['manual-qa'].done[0], 'passed', 'определения полей опубликованы');
+    assert.match(text, /Задача SHOP-OPS-001: условие выпуска manual-qa \(before-release\) не выполнено/);
     assert.equal(p.store.open().status, 'draft');
   } finally {
     await p.stop();
@@ -366,17 +368,34 @@ test('ни одна команда не запрашивает всю истор
   assert.ok(sizes[0].every((line) => line.endsWith('малый')));
 });
 
-test('settle публикует определения полей один раз и не трогает хранилище ключом чтения', async () => {
+// REQ-STORE-004, REQ-STORE-025
+test('пакет правил называет версию контракта в каждом запросе; определения полей хранилищу не передаются', async () => {
   const fields = { executor: { types: ['ticket'], values: ['owner', 'agent'] } };
   const p = await project({ extra: { metadata: { fields } } });
   try {
-    const reader = { ...p.context(), client: storeClient(p.declared, { env: { STORE_READ: p.store.readKey } }) };
-    await settle(p.root, reader);
-    assert.equal(p.store.state.fields, null);
     await settle(p.root, p.context());
-    await settle(p.root, p.context());
-    assert.deepEqual(p.store.operationsSeen(), ['defineFields']);
-    assert.equal(fieldsDigest(fields), fieldsDigest({ executor: { values: ['owner', 'agent'], types: ['ticket'] } }));
+    await p.context().client.working();
+    assert.ok(p.store.state.requests.length > 0);
+    assert.ok(p.store.state.requests.every((one) => one.contract === '3'), 'заголовок X-Store-Contract: 3 в каждом запросе');
+    assert.deepEqual(p.store.operationsSeen(), []);
+  } finally {
+    await p.stop();
+  }
+});
+
+// REQ-STORE-025
+test('store --check: условие выпуска с неизвестной фазой или состоянием и повтор ключа — нарушение контракта', async () => {
+  const p = await project();
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'backlog', conditions: [
+      { key: 'qa', phase: 'before-deploy', state: 'pending' },
+      { key: 'qa', phase: 'after-release', state: 'maybe' },
+    ] });
+    const result = await p.command('store', '--check');
+    assert.equal(result.code, 1);
+    assert.match(result.stdout + result.stderr, /условие qa: phase — before-release либо after-release/);
+    assert.match(result.stdout + result.stderr, /условие qa: state — pending, done, not-required/);
+    assert.match(result.stdout + result.stderr, /ключи условий повторяются/);
   } finally {
     await p.stop();
   }
@@ -450,13 +469,13 @@ test('команды, работающие только с файлами, пр�
 });
 
 test('чтения для скриптов проекта: store --lookup, --working, --open и release status --json печатают JSON в форме контракта', async () => {
-  const fields = { maintenance: { types: ['ticket'], values: ['none', 'required'] } };
-  const p = await project({ extra: { metadata: { fields } } });
+  const p = await project();
+  const conditions = [{ key: 'maintenance', phase: 'after-release', state: 'pending' }];
   try {
-    p.store.add('SHOP-OPS-001', { status: 'done', fields: { maintenance: 'required' }, sections: { whyNot: false, openQuestions: false, beforeDeploy: '- Выключить задание', afterDeploy: '- Проверить вход' } });
+    p.store.add('SHOP-OPS-001', { status: 'done', conditions, sections: { whyNot: false, openQuestions: false, beforeDeploy: '- Выключить задание', afterDeploy: '- Проверить вход' } });
     p.store.add('SHOP-OPS-002', { status: 'backlog' });
     const looked = JSON.parse((await p.command('store', '--lookup', 'SHOP-OPS-001,SHOP-OPS-777', '--json')).stdout);
-    assert.deepEqual(looked.tickets.map((ticket) => [ticket.id, ticket.fields.maintenance]), [['SHOP-OPS-001', 'required']]);
+    assert.deepEqual(looked.tickets.map((ticket) => [ticket.id, ticket.conditions]), [['SHOP-OPS-001', conditions]]);
     assert.deepEqual(looked.missing, ['SHOP-OPS-777']);
     assert.equal(Object.hasOwn(looked.tickets[0], 'body'), false, 'без ключа --body тела в ответе нет');
     p.store.find('SHOP-OPS-001').text = '## Ручное QA\n\nПравка: вход';
@@ -474,7 +493,7 @@ test('чтения для скриптов проекта: store --lookup, --wor
     const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
     assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'draft' });
     assert.equal(status.tag, '2026.11.1');
-    assert.deepEqual(status.composition, [{ id: 'SHOP-OPS-001', title: status.composition[0].title, status: 'done', fields: { maintenance: 'required' } }]);
+    assert.deepEqual(status.composition, [{ id: 'SHOP-OPS-001', title: status.composition[0].title, status: 'done', conditions }]);
     assert.deepEqual(status.actions, [
       { ticket: 'SHOP-OPS-001', step: 'before', item: 1, text: 'Выключить задание', done: false, note: null },
       { ticket: 'SHOP-OPS-001', step: 'after', item: 1, text: 'Проверить вход', done: false, note: null },
@@ -485,7 +504,7 @@ test('чтения для скриптов проекта: store --lookup, --wor
     const closed = await closeRelease(p.root, p.context());
     assert.equal(closed.closed, true, JSON.stringify(closed.problems));
     const manifest = manifestOf(await tagMessage(p.root, '2026.11.1'));
-    assert.deepEqual(manifest.composition, [{ id: 'SHOP-OPS-001', title: manifest.composition[0].title, fields: { maintenance: 'required' } }]);
+    assert.deepEqual(manifest.composition, [{ id: 'SHOP-OPS-001', title: manifest.composition[0].title, conditions }]);
     await p.store.operate('markAction', { ticket: 'SHOP-OPS-001', step: 'before', item: 1, done: true, note: 'выключено' });
     const after = JSON.parse((await p.command('release', 'status', '--json')).stdout);
     assert.equal(after.release.status, 'in_progress');
@@ -516,9 +535,9 @@ test('версия контракта, которой хранилище не и
   const p = await project();
   try {
     // REQ-STORE-024
-    p.store.state.contract = 1;
+    p.store.state.contract = 2;
     await assert.rejects(p.context().client.working(), (failure) => failure instanceof StoreRefusal
-      && failure.code === 'contract-version' && /пакету правил нужна версия 2/.test(failure.message));
+      && failure.code === 'contract-version' && /пакету правил нужна версия 3/.test(failure.message));
     const status = await p.command('release', 'status');
     assert.equal(status.code, 1);
     assert.match(status.stderr, /contract-version/);

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { StoreRefusal } from './client.mjs';
-import { fieldsDigest, ticketFields } from './shape.mjs';
+import { PHASES, STATES } from './shape.mjs';
 
 // REQ-STORE-017
 const RELEASE_STATUSES = ['draft', 'closing', 'in_progress', 'blocked'];
@@ -22,13 +22,24 @@ function ticketProblems(ticket) {
     if (!isList(ticket?.[key])) problems.push(`${where}: ${key} — перечень`);
   }
   if (ticket?.sections === null || typeof ticket?.sections !== 'object') problems.push(`${where}: sections — объект`);
-  if (ticket?.fields === null || typeof ticket?.fields !== 'object') problems.push(`${where}: fields — объект`);
+  // REQ-STORE-025
+  if (!isList(ticket?.conditions)) {
+    problems.push(`${where}: conditions — перечень`);
+  } else {
+    for (const condition of ticket.conditions) {
+      if (typeof condition?.key !== 'string' || condition.key === '') problems.push(`${where}: условие без ключа key`);
+      if (!PHASES.includes(condition?.phase)) problems.push(`${where}: условие ${condition?.key}: phase — ${PHASES.join(' либо ')}`);
+      if (!STATES.includes(condition?.state)) problems.push(`${where}: условие ${condition?.key}: state — ${STATES.join(', ')}`);
+    }
+    const keys = ticket.conditions.map((condition) => condition?.key);
+    if (new Set(keys).size !== keys.length) problems.push(`${where}: ключи условий повторяются`);
+  }
   if (typeof ticket?.title !== 'string') problems.push(`${where}: title — строка`);
   return problems;
 }
 
 // REQ-STORE-005, REQ-STORE-017
-async function reads(client, config) {
+async function reads(client) {
   const problems = [];
   const notes = [];
   const open = await client.openRelease();
@@ -45,11 +56,6 @@ async function reads(client, config) {
   const before = client.requests.length;
   await client.working();
   if (client.requests[before]?.status !== 304) problems.push('рабочий набор: повтор с If-None-Match отвечает 304, пока набор не менялся');
-  if (working.fieldsDigest !== null && !/^[0-9a-f]{64}$/.test(working.fieldsDigest)) problems.push('рабочий набор: fieldsDigest — SHA-256 в шестнадцатеричной записи либо null');
-  const digest = fieldsDigest(ticketFields(config));
-  if (working.fieldsDigest !== null && working.fieldsDigest !== digest) {
-    notes.push('определения полей проекта в хранилище расходятся с .conventions.json: их опубликует первая команда выпуска с ключом записи');
-  }
 
   const sample = working.tickets[0] ?? null;
   const aliased = working.tickets.find((ticket) => (ticket.aliases ?? []).length > 0) ?? null;
@@ -124,8 +130,8 @@ async function operations(client) {
 }
 
 // REQ-STORE-017
-export async function checkStore({ client, config, withOperations = false }) {
-  const read = await reads(client, config);
+export async function checkStore({ client, withOperations = false }) {
+  const read = await reads(client);
   const result = { problems: read.problems, notes: read.notes, operations: false };
   if (!withOperations) return result;
   if (!client.canWrite()) {

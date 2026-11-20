@@ -9,8 +9,7 @@ import { questionsAmong } from '../release/questions.mjs';
 import { dependencyProblems } from '../release/rollout.mjs';
 import { codeTree, headCommit, tagExists, workingTreeClean } from '../release/git.mjs';
 import { previousTag } from './tags.mjs';
-import { metadataDeclaration, projectFieldErrors } from '../docs/project-metadata.mjs';
-import { asDocument, namesOf } from './shape.mjs';
+import { asDocument, namesOf, pendingBefore } from './shape.mjs';
 
 // REQ-STORE-012
 export function accountState(open) {
@@ -129,11 +128,12 @@ export async function storeStanding(root, { config, store, client, scheme, retag
         + ' слейте её работу в main либо снимите из состава командой release drop с причиной');
     }
   }
-  // REQ-PROJECT-PROCESS-024
-  const fieldErrors = projectFieldErrors(metadataDeclaration(config).fields);
-  for (const ticket of composition) {
-    const metadata = ships(ticket, merged) ? new Map(ticket.metadata).set('status', 'done') : ticket.metadata;
-    problems.push(...fieldErrors(`Задача ${ticketId(ticket)}`, metadata));
+  // REQ-STORE-025
+  for (const ticket of composition.filter((item) => ships(item, merged))) {
+    for (const condition of pendingBefore(ticket)) {
+      problems.push(`Задача ${ticketId(ticket)}: условие выпуска ${condition.key} (before-release) не выполнено —`
+        + ' выполните его в хранилище либо снимите задачу из состава командой release drop с причиной');
+    }
   }
   const { obligations, isCore } = await loadObligations(root);
   const state = accountState(open);

@@ -24,7 +24,8 @@ export function parseArgs(argv) {
   }
   for (const k of ['root', 'stand', 'out', 'historyDir']) if (!a[k]) throw new Error(USAGE);
   if (!a.parts.length) throw new Error(USAGE);
-  a.workers = a.workers === undefined ? null : Number.parseInt(a.workers, 10);
+  if (a.workers !== undefined && !/^[1-9]\d*$/.test(a.workers)) throw new Error(`--workers: целое больше нуля, а не ${a.workers}`);
+  a.workers = a.workers === undefined ? null : Number(a.workers);
   return a;
 }
 

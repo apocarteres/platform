@@ -28,6 +28,7 @@ test('аргументы: обязательные и неизвестные', (
   assert.throws(() => parseArgs(['run']), /использование/);
   assert.throws(() => parseArgs(['collect', '--root', '.', '--stand', 's', '--out', 'o', '--history-dir', 'h']), /использование/);
   assert.throws(() => parseArgs(['collect', '--bogus']), /неизвестный аргумент/);
+  assert.throws(() => parseArgs(['collect', '--root', '.', '--stand', 's', '--out', 'o', '--history-dir', 'h', '--workers', 'x', 'p']), /--workers/);
   const a = parseArgs(['collect', '--root', '.', '--stand', 's', '--out', 'o', '--history-dir', 'h', '--workers', '4', '--full', 'p1', 'p2']);
   assert.deepEqual([a.workers, a.full, a.parts, a.historyDir], [4, true, ['p1', 'p2'], 'h']);
 });

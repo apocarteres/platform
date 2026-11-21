@@ -71,7 +71,7 @@ test('сводка: отличие от прошлого прогона, дол�
   assert.match(text, /прогон: 12\.0 с \(\+2\.0 с, \+20%\), тестов 2, стенд qa1/);
   assert.match(text, /подготовка стенда: 30 с — сборка 30 с/);
   assert.match(text, /6\.0 с \(\+1\.0 с, \+20%\) {2}a\.spec\.ts › x \[p\]/);
-  assert.match(text, /2\.0 с \(−0\.5 с, -20%\) {2}вход — a\.spec\.ts › x/);
+  assert.match(text, /2\.0 с \(−0\.5 с, −20%\) {2}вход — a\.spec\.ts › x/);
   assert.ok(text.indexOf('› x [p]') < text.indexOf('› y [p]'));
   assert.match(summary(rec, null), /прошлого полного прогона на стенде нет/);
   assert.doesNotMatch(summary(rec, null, { full: false }), /прошлого/);

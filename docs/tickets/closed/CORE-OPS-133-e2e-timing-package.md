@@ -1,7 +1,7 @@
 ---
 id: CORE-OPS-133
 type: ticket
-status: in_progress
+status: done
 scope: testing, tooling
 authority: supporting
 priority: P2
@@ -39,7 +39,11 @@ related: REQ-E2E-TIMING, REQ-TELEMETRY
 
 - 2026-11-21 — пакет `packages/e2e-timing` (`lib/reporter.mjs`,
   `lib/record.mjs`, `lib/send.mjs`, `lib/cli.mjs`, `bin/e2e-timing.mjs`),
-  требование `REQ-E2E-TIMING`, тесты `node --test`.
+  требование `REQ-E2E-TIMING`, тесты `node --test`. Черновик — слот Driada-Lab
+  (патч к ядру по заявке Manager), принят в ядро с правками.
+- 2026-11-21 — правки при приёме: `--workers` вне целого больше нуля —
+  ошибка аргументов (код 2), а не `null` в записи; знак отличия в сводке
+  одним символом; ссылка комментария — на положение.
 
 ## Откуда пришла задача
 

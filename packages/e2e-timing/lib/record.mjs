@@ -88,7 +88,7 @@ const seconds = (ms) => `${(ms / 1000).toFixed(1)} с`;
 function delta(now, before) {
   if (before === undefined || before === null) return '';
   const d = now - before;
-  const pct = before ? `, ${d >= 0 ? '+' : '-'}${Math.round(Math.abs(d / before) * 100)}%` : '';
+  const pct = before ? `, ${d >= 0 ? '+' : '−'}${Math.round(Math.abs(d / before) * 100)}%` : '';
   return ` (${d >= 0 ? '+' : '−'}${(Math.abs(d) / 1000).toFixed(1)} с${pct})`;
 }
 

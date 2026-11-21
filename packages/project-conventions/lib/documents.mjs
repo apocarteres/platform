@@ -33,6 +33,7 @@ export const DELIVERED_DOCUMENTS = [
   'client-actions.md',
   'client-update.md',
   'client-journal.md',
+  'e2e-timing.md',
   'auth.md',
   'support.md',
   'notifications.md',

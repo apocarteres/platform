@@ -1,0 +1,36 @@
+{
+  "name": "@apocarteres/e2e-timing",
+  "version": "0.0.0",
+  "description": "Время прогона e2e на Playwright: репортёр тестов и шагов, запись прогона формата 1, история стенда, сводка и отправка в приём наблюдения.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apocarteres/platform.git",
+    "directory": "packages/e2e-timing"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "type": "module",
+  "bin": {
+    "e2e-timing": "bin/e2e-timing.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./lib/record.mjs",
+    "./reporter": "./lib/reporter.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0"
+  }
+}

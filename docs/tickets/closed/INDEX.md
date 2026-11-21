@@ -232,7 +232,7 @@ authority: navigation
 | [Правила оповещений telemetry не проходят линтер promtool](CORE-OPS-115-telemetry-alerts-fail-promtool-lint.md) | P2 | Выполнена | [RELEASE-15-1-1](../../releases/RELEASE-15-1-1.md) | deployment, operations |
 | [Копии, которые забирает хранилище, не укладываются в порядок ядра](CORE-OPS-118-backups-pull-mode.md) | P2 | Выполнена | [RELEASE-15-5-0](../../releases/RELEASE-15-5-0.md) | deployment, operations, security |
 | [Ворота выпуска при внешнем хранилище читают поля трекера](CORE-OPS-132-store-contract-3-ticket-obligations.md) | P2 | Выполнена | [RELEASE-20-0-0](../../releases/RELEASE-20-0-0.md) | release, tickets, store |
-| [Время прогона e2e — общим пакетом, а не копией в каждом проекте](CORE-OPS-133-e2e-timing-package.md) | P2 | Выполнена | Не назначен | testing, tooling |
+| [Время прогона e2e — общим пакетом, а не копией в каждом проекте](CORE-OPS-133-e2e-timing-package.md) | P2 | Выполнена | [RELEASE-20-1-0](../../releases/RELEASE-20-1-0.md) | testing, tooling |
 | [Монотонный счётчик считался обращением к часам](CORE-QUAL-002-monotonic-timer-counted-as-a-clock.md) | P2 | Выполнена | [RELEASE-0-43-0](../../releases/RELEASE-0-43-0.md) | quality, tooling |
 | [Обращение к часам внутри шаблонной строки правило не видело](CORE-QUAL-003-clock-hidden-in-a-template-string.md) | P2 | Выполнена | [RELEASE-0-44-0](../../releases/RELEASE-0-44-0.md) | quality, tooling |
 | [Команда расписки подтверждает проверки, которых не было](CORE-QUAL-004-receipt-attests-without-checks.md) | P2 | Выполнена | [RELEASE-1-0-0](../../releases/RELEASE-1-0-0.md) | quality, tooling, release |

@@ -5,7 +5,7 @@ status: done
 scope: testing, tooling
 authority: supporting
 priority: P2
-release: unassigned
+release: RELEASE-20-1-0
 related: REQ-E2E-TIMING, REQ-TELEMETRY
 ---
 

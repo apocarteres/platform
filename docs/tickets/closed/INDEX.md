@@ -132,7 +132,7 @@ authority: navigation
 | [Набор verify по частям: расписка части переносится, пока её дерево прежнее](CORE-OPS-129-verify-by-parts.md) | P1 | Выполнена | [RELEASE-17-6-0](../../releases/RELEASE-17-6-0.md) | release, tooling, build |
 | [Локальная публикация ядра занимает почти две минуты](CORE-OPS-130-fast-local-publication.md) | P1 | Выполнена | [RELEASE-17-6-1](../../releases/RELEASE-17-6-1.md) | release, tooling, build |
 | [Состав выпуска при внешнем хранилище ждёт «выполнена», которую ставит сам выпуск](CORE-OPS-131-store-composition-by-merged-work.md) | P1 | Выполнена | [RELEASE-19-0-0](../../releases/RELEASE-19-0-0.md) | release, tooling |
-| [Отметка действия развёртывания — по номеру пункта, а не по тексту](CORE-OPS-134-action-marks-by-item.md) | P1 | Выполнена | Не назначен | release, tooling |
+| [Отметка действия развёртывания — по номеру пункта, а не по тексту](CORE-OPS-134-action-marks-by-item.md) | P1 | Выполнена | [RELEASE-20-1-1](../../releases/RELEASE-20-1-1.md) | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

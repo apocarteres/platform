@@ -510,6 +510,18 @@ test('чтения для скриптов проекта: store --lookup, --wor
     assert.equal(after.release.status, 'in_progress');
     assert.deepEqual(after.actions.map((one) => [one.step, one.done, one.note]), [['before', true, 'выключено'], ['after', false, null]]);
     assert.match(after.problems.join(), /Проверить вход/);
+
+    // REQ-RELEASE-052
+    const recorded = p.store.open().actions[0];
+    recorded.text = 'Выключить\nзадание';
+    const wrapped = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.deepEqual(wrapped.actions[0], { ticket: 'SHOP-OPS-001', step: 'before', item: 1, text: 'Выключить задание', done: true, note: 'выключено' },
+      'перевод строки вместо пробела в записи хранилища отметку не теряет');
+    recorded.text = 'Выключить задание (кто: владелец)';
+    const edited = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.deepEqual([edited.actions[0].done, edited.actions[0].note, edited.actions[0].text, edited.actions[0].recorded],
+      [true, 'выключено', 'Выключить задание', 'Выключить задание (кто: владелец)'],
+      'правка текста после закрытия отметку не теряет; текст записи хранилища показан рядом');
   } finally {
     await p.stop();
   }

@@ -190,6 +190,28 @@ test('перезакрытие сохраняет отметку действи�
   }
 });
 
+// REQ-RELEASE-052
+test('правка текста действия после отметки отметку не теряет: ключ — задача, шаг и номер пункта', async () => {
+  const consumer = await referenceConsumer();
+  const root = consumer.root;
+  try {
+    const { a } = await closedWithActions(consumer);
+    assert.equal((await markDeploymentAction(root, { scheme: 'date', ticketId: a, step: 'before', note: 'флаг включён' })).marked, true);
+    const file = path.join(root, `docs/tickets/closed/${a}-work.md`);
+    await writeFile(file, (await readFile(file, 'utf8')).replace('в настройке среды', 'в настройке\n  среды владельцем'));
+    await summaries(root);
+    const edited = await commit(consumer, `${a} текст действия уточнён`);
+    await receipt(root, edited);
+    const again = await recloseRelease(root, { scheme: 'date', reason: 'проверка ключа отметки' });
+    assert.equal(again.reclosed, true, JSON.stringify(again.problems));
+    const lines = await criteria(root);
+    assert.ok(lines.some((line) => line.startsWith('- [x] До развёртывания') && line.includes(a) && line.endsWith(' — флаг включён')), lines.join('\n'));
+    assert.equal(lines.filter((line) => line.includes('До развёртывания') && line.includes(a)).length, 1, lines.join('\n'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 // CORE-DOC-026
 test('отметка до первого шага закрытия отвергается', async () => {
   const consumer = await referenceConsumer();

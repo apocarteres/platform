@@ -471,7 +471,7 @@ const USAGE = {
     + '\n  Печатает объявленные составляющие проекта по одной в строке; с --environments — среды.',
   deps: 'conventions deps --dir <каталог> [--state <файл>] [--tools node,npm] [--record] [--root <path>]'
     + '\n  Код 0 — зависимости не менялись, ставить нечего; код 1 — изменились.',
-  release: 'conventions release <status|close|reclose|mark|finish|open|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
+  release: 'conventions release <status|close|reclose|mark|finish|open|freeze|unfreeze|record-e2e|drop|cancel|adopt|defer|satisfy|account> [--root <path>]',
 };
 
 // REQ-RELEASE-028
@@ -482,7 +482,11 @@ const RELEASE_USAGE = {
   // REQ-RELEASE-049
   mark: 'conventions release mark <TICKET-ID> --step <before|after> [--item N] --note "<чем подтверждено>" [--root <path>]',
   finish: 'conventions release finish --note "<чем выполнен>" [--root <path>]',
-  open: 'conventions release open [--version X.Y.Z] [--tickets A,B] [--root <path>]',
+  open: 'conventions release open [--version X.Y.Z] [--tickets A,B] [--task <задача выпуска>] [--root <path>]',
+  // REQ-STORE-026
+  freeze: 'conventions release freeze [--root <path>]',
+  unfreeze: 'conventions release unfreeze --reason "<причина>" [--root <path>]',
+  'record-e2e': 'conventions release record-e2e --commit <полный хеш> [--root <path>]',
   drop: 'conventions release drop <TICKET-ID> --reason "<причина>" [--root <path>]',
   cancel: 'conventions release cancel --reason "<причина>" [--root <path>]',
   adopt: 'conventions release adopt [--version X.Y.Z] [--root <path>]',
@@ -501,7 +505,11 @@ const RELEASE_SPEC = {
   // REQ-RELEASE-049
   mark: { values: ['--step', '--item', '--note'], positional: 1 },
   finish: { values: ['--note'] },
-  open: { values: ['--version', '--tickets'] },
+  open: { values: ['--version', '--tickets', '--task'] },
+  // REQ-STORE-026
+  freeze: {},
+  unfreeze: { values: ['--reason'] },
+  'record-e2e': { values: ['--commit'] },
   drop: { values: ['--reason'], positional: 1 },
   cancel: { values: ['--reason'] },
   adopt: { values: ['--version'] },
@@ -679,6 +687,11 @@ async function release(argv) {
   const store = await externalStore(root);
   if (store !== null) {
     await externalRelease(root, store, subcommand, { first, valueOf, tickets: ticketList(valueOf('--tickets')), json: parsed.flags.has('--json') });
+    return;
+  }
+  // REQ-STORE-026
+  if (['freeze', 'unfreeze', 'record-e2e'].includes(subcommand) || valueOf('--task') !== undefined) {
+    refuse(usage, `${valueOf('--task') !== undefined ? 'release open --task' : `release ${subcommand}`} действует при внешнем хранилище: при файлах выпуск ведёт документ выпуска, а закрывает его команда release close`);
     return;
   }
   // REQ-STORE-023

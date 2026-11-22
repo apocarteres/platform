@@ -80,6 +80,10 @@ test('каждый отказ называет выход: команду, кл�
     // REQ-DEPS-010
     await cliRefusal('release full-run', root, 'release', 'full-run');
     await cliRefusal('release defer', root, 'release', 'defer', 'nope', '--reason', 'x');
+    // REQ-STORE-026
+    await cliRefusal('release freeze', root, 'release', 'freeze');
+    await cliRefusal('release unfreeze', root, 'release', 'unfreeze', '--reason', 'x');
+    await cliRefusal('release record-e2e', root, 'release', 'record-e2e', '--commit', 'abc');
     await cliRefusal('components', root, 'components');
     await cliRefusal('deploy-args', root, 'deploy-args', '--', '--env', 'production');
     await cliRefusal('deploy-args', shape.root, 'deploy-args', '--', 'production');

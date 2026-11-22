@@ -7,7 +7,7 @@ import { StoreRefusal, StoreUnreachable, storeClient } from './client.mjs';
 import { filesOnly, storeDeclaration } from './config.mjs';
 import { exportProject } from './export.mjs';
 import { moveToStore } from './move.mjs';
-import { accountCommit, closeRelease, finishRelease, finishability, openRelease, settle } from './cycle.mjs';
+import { accountCommit, closeRelease, finishRelease, finishability, freezeRelease, openRelease, settle } from './cycle.mjs';
 import { accountState, localStanding, storeStanding } from './gate.mjs';
 import { actionsOf } from './shape.mjs';
 import { checkStore } from './check.mjs';
@@ -52,7 +52,8 @@ async function statusReport(root, context) {
   if (open.release === null) return report;
   const state = await storeStanding(root, { ...context, retagging: true });
   const { id, status: standing } = state.release;
-  report.release = { id, status: standing };
+  // REQ-STORE-026
+  report.release = { id, status: standing, task: state.release.task ?? null, e2e: state.release.e2e ?? null };
   report.tag = state.tag;
   report.composition = state.composition.map((ticket) => ({
     id: ticket.metadata.get('id'), title: ticket.title, status: ticket.metadata.get('status'), conditions: ticket.conditions,
@@ -88,7 +89,7 @@ async function status(root, context, json) {
   console.log(`Задач в составе: ${state.composition.length}`);
   for (const reminder of state.reminders) console.log(`Напоминание: ${reminder}`);
   if (state.release.status === 'closing') {
-    console.log('Выпуск заморожен закрытием: повторите release close — команда доведёт закрытие либо снимет заморозку.');
+    console.log('Состав выпуска заморожен: release close закроет выпуск, release unfreeze --reason вернёт его в draft.');
     return;
   }
   const tagged = await tagCommit(root, state.tag);
@@ -142,19 +143,34 @@ async function finish(root, context, note) {
   console.log(`Завершающий шаг: ${result.note}`);
 }
 
-async function open(root, context, version, tickets) {
-  const result = await openRelease(root, context, { version, tickets });
+async function open(root, context, version, tickets, task) {
+  const result = await openRelease(root, context, { version, tickets, task });
   if (!result.opened) {
     refused('Выпуск не открыт:', result.problems);
     return;
   }
   console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
+  if (task) console.log(`- выпуск ведёт задача ${task}`);
   for (const ticket of result.named) console.log(`- в состав указана задача ${ticket}`);
   for (const id of result.taken) console.log(`- обязательство ${id} взято в работу: задача заведена в хранилище`);
 }
 
-// REQ-STORE-008
+// REQ-STORE-026
+async function freeze(root, context) {
+  const result = await freezeRelease(root, context);
+  if (!result.frozen) {
+    refused('Выпуск не заморожен:', result.problems);
+    return;
+  }
+  console.log(`Состав выпуска ${result.id} заморожен: release close закроет его, release unfreeze --reason вернёт в draft.`);
+}
+
+// REQ-STORE-008, REQ-STORE-026
 const THIN = {
+  unfreeze: ({ valueOf }) => ['unfreezeRelease', { reason: valueOf('--reason') ?? '' },
+    (answer) => `Заморозка выпуска ${answer.release?.id ?? ''} снята: выпуск в ${answer.release?.status ?? 'прежнем статусе'}.`],
+  'record-e2e': ({ valueOf }) => ['recordE2e', { commit: valueOf('--commit') ?? '' },
+    (answer) => `Зелёный e2e выпуска ${answer.release?.id ?? ''} записан на коммите ${valueOf('--commit')}.`],
   drop: ({ first, valueOf }) => ['dropTicket', { ticket: first ?? '', reason: valueOf('--reason') ?? '' },
     (answer) => `Задача ${first} снята из состава ${answer.release?.id ?? 'выпуска'}; причина записана в выпуске.`],
   cancel: ({ valueOf }) => ['cancelRelease', { reason: valueOf('--reason') ?? '' },
@@ -183,7 +199,9 @@ export async function externalRelease(root, store, subcommand, request) {
     else if (subcommand === 'close') await close(root, context, undefined);
     else if (subcommand === 'reclose') await close(root, context, valueOf('--reason') ?? '');
     else if (subcommand === 'finish') await finish(root, context, valueOf('--note'));
-    else if (subcommand === 'open') await open(root, context, valueOf('--version'), request.tickets);
+    else if (subcommand === 'open') await open(root, context, valueOf('--version'), request.tickets, valueOf('--task'));
+    // REQ-STORE-026
+    else if (subcommand === 'freeze') await freeze(root, context);
     else if (subcommand === 'account') {
       const result = await accountCommit(root, context, { sha: first, reason: valueOf('--reason') });
       if (!result.accounted) refused('Коммит не учтён:', result.problems);

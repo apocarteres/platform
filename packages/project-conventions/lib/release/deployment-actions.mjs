@@ -30,9 +30,10 @@ export function collectedActions(root, composition, content) {
     const id = ticketId(ticket);
     const actions = deploymentActions(ticket.content);
     for (const step of DEPLOYMENT_STEPS) {
-      for (const text of actions[step.key]) {
-        const kept = recorded.find((entry) => entry.marked && entry.step === step.key && entry.ticket === id
-          && (entry.rest === text || entry.rest.startsWith(`${text} — `)));
+      const own = recorded.filter((entry) => entry.step === step.key && entry.ticket === id);
+      for (const [index, text] of actions[step.key].entries()) {
+        // REQ-RELEASE-052
+        const kept = own[index]?.marked ? own[index] : undefined;
         collected[step.key].push(kept === undefined
           ? `- [ ] ${step.title}, [${id}](${ticketLinkTarget(root, ticket)}): ${text}`
           : kept.line);

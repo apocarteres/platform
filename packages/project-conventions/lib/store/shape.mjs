@@ -54,7 +54,10 @@ export function namesOf(document) {
   return [document.metadata.get('id'), ...document.aliases];
 }
 
-// REQ-RELEASE-049, REQ-STORE-010
+// REQ-RELEASE-052
+const spaced = (text) => text.replace(/\s+/g, ' ').trim();
+
+// REQ-RELEASE-049, REQ-STORE-010, REQ-RELEASE-052
 export function actionsOf(composition, recorded = []) {
   const actions = [];
   for (const ticket of composition) {
@@ -62,11 +65,14 @@ export function actionsOf(composition, recorded = []) {
     const own = deploymentActions(ticket.content);
     for (const step of DEPLOYMENT_STEPS) {
       own[step.key].forEach((text, index) => {
-        const kept = recorded.find((one) => one.done && one.ticket === id && one.step === step.key && one.text === text);
+        const item = index + 1;
+        const kept = recorded.find((one) => one.done && one.ticket === id && one.step === step.key && Number(one.item) === item);
+        const recordedText = typeof kept?.text === 'string' && spaced(kept.text) !== spaced(text) ? { recorded: kept.text } : {};
         actions.push({
-          ticket: id, step: step.key, item: index + 1, text,
+          ticket: id, step: step.key, item, text,
           done: kept !== undefined,
           note: kept?.note ?? null,
+          ...recordedText,
         });
       });
     }

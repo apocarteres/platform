@@ -79,6 +79,12 @@ async function reads(client) {
     for (const key of ['named', 'dropped', 'accounted', 'actions', 'retagged']) {
       if (!isList(open.release[key])) problems.push(`открытый выпуск: ${key} — перечень`);
     }
+    // REQ-STORE-026
+    const { task, e2e } = open.release;
+    if (task !== undefined && task !== null && typeof task !== 'string') problems.push('открытый выпуск: task — строка либо null');
+    if (e2e !== undefined && e2e !== null && !/^[0-9a-f]{40}$/.test(e2e?.commit ?? '')) {
+      problems.push('открытый выпуск: e2e — {commit: полный хеш, at} либо null');
+    }
   }
   return { problems, notes, open };
 }

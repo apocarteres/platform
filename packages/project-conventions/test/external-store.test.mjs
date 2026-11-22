@@ -249,7 +249,8 @@ test('сбой операции после поставленного тега: 
   }
 });
 
-test('сбой между заморозкой и тегом: повтор команды снимает заморозку и закрывает заново', async () => {
+// REQ-STORE-026
+test('замороженный до закрытия выпуск — командой release freeze или сбоем до тега — закрывается без повторной заморозки', async () => {
   const p = await project();
   try {
     p.store.add('SHOP-OPS-001', { status: 'done' });
@@ -259,7 +260,69 @@ test('сбой между заморозкой и тегом: повтор ко�
     const closed = await closeRelease(p.root, p.context());
     assert.equal(closed.closed, true, JSON.stringify(closed.problems));
     assert.equal(closed.replayed, undefined);
-    assert.deepEqual(p.store.operationsSeen(), ['unfreezeRelease', 'freezeRelease', 'closeRelease']);
+    assert.deepEqual(p.store.operationsSeen(), ['closeRelease']);
+  } finally {
+    await p.stop();
+  }
+});
+
+// REQ-STORE-026
+test('выпуск по шагам: задача выпуска, заморозка, e2e на коммите; закрытие на непроверенном коммите отказывает и заморозку не снимает', async () => {
+  const p = await project();
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done' });
+    p.store.add('SHOP-OPS-009', { status: 'in_progress' });
+    const opened = await p.command('release', 'open', '--task', 'SHOP-OPS-009');
+    assert.equal(opened.code, 0, opened.stderr);
+    assert.match(opened.stdout, /выпуск ведёт задача SHOP-OPS-009/);
+    assert.equal(p.store.open().task, 'SHOP-OPS-009');
+
+    const frozen = await p.command('release', 'freeze');
+    assert.equal(frozen.code, 0, frozen.stderr);
+    assert.equal(p.store.open().status, 'closing');
+    const again = await p.command('release', 'freeze');
+    assert.equal(again.code, 1);
+    assert.match(again.stdout + again.stderr, /Замораживается выпуск в draft/);
+
+    const head = await p.attest();
+    const unchecked = await closeRelease(p.root, p.context());
+    assert.equal(unchecked.closed, false);
+    assert.match(unchecked.problems.join('\n'), /ведёт задача SHOP-OPS-009: закрывается только коммит с зелёным e2e выпуска, а e2e не записан/);
+    assert.match(unchecked.problems.join('\n'), new RegExp(`release record-e2e --commit ${head}`));
+    assert.equal(p.store.open().status, 'closing', 'выпуск, замороженный шагом, отказ закрытия оставляет замороженным');
+    assert.equal(await tagCommit(p.root, '2026.11.1'), null);
+
+    const other = 'a'.repeat(40);
+    assert.equal((await p.command('release', 'record-e2e', '--commit', other)).code, 0);
+    const elsewhere = await closeRelease(p.root, p.context());
+    assert.match(elsewhere.problems.join('\n'), new RegExp(`e2e записан на ${other.slice(0, 8)}, закрывается ${head.slice(0, 8)}`));
+    const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'closing', task: 'SHOP-OPS-009', e2e: { commit: other, at: p.store.open().e2e.at } });
+
+    const recorded = await p.command('release', 'record-e2e', '--commit', head);
+    assert.equal(recorded.code, 0, recorded.stderr);
+    assert.match(recorded.stdout, new RegExp(`Зелёный e2e выпуска RELEASE-2026-11-1 записан на коммите ${head}`));
+    const closed = await closeRelease(p.root, p.context());
+    assert.equal(closed.closed, true, JSON.stringify(closed.problems));
+    assert.equal(await tagCommit(p.root, '2026.11.1'), head);
+  } finally {
+    await p.stop();
+  }
+});
+
+// REQ-STORE-026
+test('release unfreeze с причиной возвращает замороженный выпуск в draft; без причины — отказ хранилища', async () => {
+  const p = await project();
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done' });
+    assert.equal((await p.command('release', 'open')).code, 0);
+    assert.equal((await p.command('release', 'freeze')).code, 0);
+    const bare = await p.command('release', 'unfreeze');
+    assert.equal(bare.code, 1);
+    const thawed = await p.command('release', 'unfreeze', '--reason', 'в состав нужна правка');
+    assert.equal(thawed.code, 0, thawed.stderr);
+    assert.match(thawed.stdout, /Заморозка выпуска RELEASE-2026-11-1 снята: выпуск в draft/);
+    assert.equal(p.store.open().status, 'draft');
   } finally {
     await p.stop();
   }
@@ -491,7 +554,7 @@ test('чтения для скриптов проекта: store --lookup, --wor
     assert.equal(before.release, null);
     await openRelease(p.root, p.context(), { version: undefined, tickets: [] });
     const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
-    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'draft' });
+    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'draft', task: null, e2e: null });
     assert.equal(status.tag, '2026.11.1');
     assert.deepEqual(status.composition, [{ id: 'SHOP-OPS-001', title: status.composition[0].title, status: 'done', conditions }]);
     assert.deepEqual(status.actions, [

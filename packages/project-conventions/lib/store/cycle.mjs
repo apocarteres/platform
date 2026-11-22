@@ -70,7 +70,31 @@ async function replayed(root, { client, release, tag }) {
   return manifest;
 }
 
-// REQ-RELEASE-001, REQ-RELEASE-046, REQ-STORE-010, REQ-STORE-011
+// REQ-STORE-026
+function uncheckedCommit(release, commit) {
+  if (typeof release?.task !== 'string' || release.task === '') return null;
+  const checked = release.e2e?.commit ?? null;
+  if (checked === commit) return null;
+  return `Выпуск ${release.id} ведёт задача ${release.task}: закрывается только коммит с зелёным e2e выпуска,`
+    + ` а e2e ${checked === null ? 'не записан' : `записан на ${checked.slice(0, 8)}`}, закрывается ${commit.slice(0, 8)}.`
+    + ` Запишите прогон на этом коммите командой release record-e2e --commit ${commit}`;
+}
+
+// REQ-STORE-026
+export async function freezeRelease(root, context) {
+  const open = await context.client.openRelease();
+  if (open.release === null) {
+    return { frozen: false, problems: ['Открытого выпуска нет: откройте выпуск командой release open или на доске хранилища'] };
+  }
+  if (open.release.status !== 'draft') {
+    return { frozen: false, problems: [`Замораживается выпуск в draft, а ${open.release.id} — ${open.release.status}`] };
+  }
+  await settle(root, context);
+  await context.client.operate('freezeRelease', {});
+  return { frozen: true, id: open.release.id };
+}
+
+// REQ-RELEASE-001, REQ-RELEASE-046, REQ-STORE-010, REQ-STORE-011, REQ-STORE-026
 export async function closeRelease(root, context, { reason = null } = {}) {
   const { config, client, scheme } = context;
   const retagging = reason !== null;
@@ -83,15 +107,21 @@ export async function closeRelease(root, context, { reason = null } = {}) {
   }
   const id = open.release.id;
   const tag = releaseTag(id, scheme);
+  let tagged = await tagCommit(root, tag);
+  let continuing = false;
   if (open.release.status === 'closing') {
     const manifest = await replayed(root, { client, release: open.release, tag });
     if (manifest !== null) {
       return { closed: true, replayed: true, id, tag, commit: manifest.commit, composition: manifest.composition.map((one) => one.id), reminders: [] };
     }
-    await client.operate('unfreezeRelease', { reason: 'Повтор команды закрытия: тега с манифестом этого закрытия нет' });
-    open = await client.openRelease();
+    // REQ-STORE-026
+    continuing = !retagging && tagged === null;
+    if (!continuing) {
+      await client.operate('unfreezeRelease', { reason: 'Повтор команды закрытия: тега с манифестом этого закрытия нет' });
+      open = await client.openRelease();
+      tagged = await tagCommit(root, tag);
+    }
   }
-  const tagged = await tagCommit(root, tag);
   if (retagging) {
     if (tagged === null || open.release.status !== 'in_progress') {
       return { closed: false, problems: [`Первый шаг закрытия ${id} ещё не выполнен: тега ${tag} нет.`
@@ -101,7 +131,7 @@ export async function closeRelease(root, context, { reason = null } = {}) {
       return { closed: false, problems: [`Тег ${tag} уже на текущем коммите: переносить некуда.`
         + ' Правка, ради которой переносят тег, ещё не зафиксирована'], reminders: [] };
     }
-  } else {
+  } else if (!continuing) {
     if (open.release.status !== 'draft') {
       return { closed: false, problems: [`Первый шаг закрытия ${id} уже выполнен (${open.release.status}):`
         + ' завершите выпуск командой release finish либо перенесите тег командой release reclose'], reminders: [] };
@@ -109,8 +139,8 @@ export async function closeRelease(root, context, { reason = null } = {}) {
     await settle(root, context);
   }
 
-  await client.operate('freezeRelease', {});
-  let frozen = true;
+  if (!continuing) await client.operate('freezeRelease', {});
+  let frozen = !continuing;
   const thaw = async (why) => {
     if (!frozen) return;
     frozen = false;
@@ -118,6 +148,9 @@ export async function closeRelease(root, context, { reason = null } = {}) {
   };
   try {
     const state = await storeStanding(root, { ...context, retagging });
+    // REQ-STORE-026
+    const unchecked = uncheckedCommit(state.release, commit);
+    if (unchecked !== null) state.problems.push(unchecked);
     if (state.problems.length > 0) {
       await thaw('Проверки закрытия не пройдены');
       return { closed: false, problems: state.problems, reminders: state.reminders };
@@ -210,7 +243,7 @@ export async function finishRelease(root, context, { note }) {
 }
 
 // REQ-RELEASE-030, REQ-STORE-008
-export async function openRelease(root, context, { version, tickets }) {
+export async function openRelease(root, context, { version, tickets, task }) {
   const { client, scheme } = context;
   if (scheme === 'semver' && !version) {
     return { opened: false, problems: ['Схема semver: номер выпуска задаётся ключом --version X.Y.Z'] };
@@ -218,6 +251,8 @@ export async function openRelease(root, context, { version, tickets }) {
   const answer = await client.operate('openRelease', {
     ...(scheme === 'semver' ? { id: `RELEASE-${version.replaceAll('.', '-')}` } : {}),
     tickets,
+    // REQ-STORE-026
+    ...(task ? { task } : {}),
   });
   const id = answer.release?.id ?? (await client.openRelease()).release?.id;
   const settled = await settle(root, context);

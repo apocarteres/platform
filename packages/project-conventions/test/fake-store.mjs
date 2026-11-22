@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 
 const TERMINAL = new Set(['cancelled', 'superseded']);
-const UNFROZEN = new Set(['unfreezeRelease', 'closeRelease', 'recloseRelease']);
+const UNFROZEN = new Set(['unfreezeRelease', 'closeRelease', 'recloseRelease', 'recordE2e']);
 
 class Refusal extends Error {
   constructor(code, detail, status = 409) {
@@ -68,7 +68,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
   });
 
   const OPERATIONS = {
-    openRelease({ id, tickets = [] }) {
+    openRelease({ id, tickets = [], task }) {
       const already = open();
       if (already !== null) throw new Refusal('release-already-open', `выпуск ${already.id} уже открыт`);
       const [year, month] = today.split('-');
@@ -85,8 +85,14 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
       for (const ticket of named) ticket.release = releaseId;
       state.releases.push({
         id: releaseId, status: 'draft', openedOn: today, named: named.map((ticket) => ticket.id), dropped: [], accounted: [], actions: [],
-        result: null, retagged: [],
+        result: null, retagged: [], task: task ?? null, e2e: null,
       });
+    },
+    recordE2e({ commit }) {
+      const release = open();
+      if (release === null) throw new Refusal('release-not-open', 'открытого выпуска нет');
+      if (!/^[0-9a-f]{40}$/.test(commit ?? '')) throw new Refusal('e2e-invalid', 'commit — полный хеш коммита', 400);
+      release.e2e = { commit, at: today };
     },
     dropTicket({ ticket: name, reason }) {
       const release = draft('снятие задачи');
@@ -171,6 +177,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
     closeRelease(args) {
       const release = open();
       if (release === null || !['closing', 'draft'].includes(release.status)) throw new Refusal('release-not-open', 'закрывается выпуск в draft или closing');
+      if (release.task && release.e2e?.commit !== args.commit) throw new Refusal('release-commit-unchecked', 'коммит не проверен');
       settle(release, args);
     },
     recloseRelease(args) {

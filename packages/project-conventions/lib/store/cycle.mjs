@@ -3,7 +3,7 @@ import { loadObligations, pendingObligations } from '../release/obligations.mjs'
 import { commitSubject, createTag, headCommit, moveTag, tagCommit, tagMessage } from '../release/git.mjs';
 import { inRolloutOrder } from '../release/rollout.mjs';
 import { accountState, compositionOf, localStanding, ships, storeStanding } from './gate.mjs';
-import { e2eStanding } from './e2e.mjs';
+import { e2eDeclaration, e2eStanding } from './e2e.mjs';
 import { actionsOf, asDocument, manifestComposition, manifestMessage, manifestOf } from './shape.mjs';
 
 // REQ-STORE-012
@@ -158,6 +158,8 @@ export async function closeRelease(root, context, { reason = null } = {}) {
       actions: actionsOf(composition, state.release.actions ?? []),
       receipt: receiptOf(receipt),
       ...(e2e.from === null ? {} : { e2e: { commit, from: e2e.from } }),
+      // REQ-STORE-028
+      ...(state.release.e2eRequired === false ? { e2eRequired: false } : {}),
       ...(retagging ? { reason: reason.trim(), from: tagged } : {}),
     };
     try {
@@ -245,15 +247,19 @@ export async function openRelease(root, context, { version, tickets, task }) {
   if (scheme === 'semver' && !version) {
     return { opened: false, problems: ['Схема semver: номер выпуска задаётся ключом --version X.Y.Z'] };
   }
+  // REQ-STORE-028
+  const e2e = task ? e2eDeclaration(context.config) : { required: true, reason: null, problems: [] };
+  if (e2e.problems.length > 0) return { opened: false, problems: e2e.problems };
   const answer = await client.operate('openRelease', {
     ...(scheme === 'semver' ? { id: `RELEASE-${version.replaceAll('.', '-')}` } : {}),
     tickets,
     // REQ-STORE-026
     ...(task ? { task } : {}),
+    ...(e2e.required ? {} : { e2eRequired: false, e2eReason: e2e.reason }),
   });
   const id = answer.release?.id ?? (await client.openRelease()).release?.id;
   const settled = await settle(root, context);
-  return { opened: true, id, tag: releaseTag(id, scheme), named: tickets, taken: settled.taken };
+  return { opened: true, id, tag: releaseTag(id, scheme), named: tickets, taken: settled.taken, e2eReason: e2e.reason };
 }
 
 // REQ-RELEASE-041, REQ-STORE-008

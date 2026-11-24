@@ -234,7 +234,7 @@ test('выпуск по шагам: задача выпуска, замороз�
     const elsewhere = await closeRelease(p.root, p.context());
     assert.match(elsewhere.problems.join('\n'), new RegExp(`e2e записан на ${other.slice(0, 8)}, закрывается ${head.slice(0, 8)}`));
     const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
-    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'closing', task: 'SHOP-OPS-009', e2e: { commit: other, at: p.store.open().e2e.at } });
+    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'closing', task: 'SHOP-OPS-009', e2e: { commit: other, at: p.store.open().e2e.at }, e2eRequired: true });
 
     const recorded = await p.command('release', 'record-e2e', '--commit', head);
     assert.equal(recorded.code, 0, recorded.stderr);
@@ -491,7 +491,7 @@ test('чтения для скриптов проекта: store --lookup, --wor
     assert.equal(before.release, null);
     await openRelease(p.root, p.context(), { version: undefined, tickets: [] });
     const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
-    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'draft', task: null, e2e: null });
+    assert.deepEqual(status.release, { id: 'RELEASE-2026-11-1', status: 'draft', task: null, e2e: null, e2eRequired: true });
     assert.equal(status.tag, '2026.11.1');
     assert.deepEqual(status.composition, [{ id: 'SHOP-OPS-001', title: status.composition[0].title, status: 'done', conditions }]);
     assert.deepEqual(status.actions, [

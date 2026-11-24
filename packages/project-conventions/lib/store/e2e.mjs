@@ -1,5 +1,22 @@
 import { changedFiles, isAncestor, OUTSIDE_THE_CODE } from '../release/git.mjs';
 
+// REQ-STORE-028
+export function e2eDeclaration(config) {
+  const declared = config.e2e;
+  if (declared === undefined) return { required: true, reason: null, problems: [] };
+  if (declared === null || typeof declared !== 'object' || Array.isArray(declared)) {
+    return { required: true, reason: null, problems: ['e2e в .conventions.json — объект: outsideBuild либо required: false с reason'] };
+  }
+  if (declared.required === undefined || declared.required === true) return { required: true, reason: null, problems: [] };
+  const problems = [];
+  if (declared.required !== false) problems.push('e2e.required в .conventions.json — true либо false');
+  else if (typeof declared.reason !== 'string' || declared.reason.trim() === '') {
+    problems.push('e2e.required: false в .conventions.json объявляется с причиной reason — например "у проекта нет QA-стенда"');
+  }
+  if (declared.outsideBuild !== undefined) problems.push('e2e.outsideBuild в .conventions.json не сочетается с required: false: переносить нечего');
+  return { required: false, reason: problems.length === 0 ? declared.reason.trim() : null, problems };
+}
+
 // REQ-STORE-027
 export function outsideBuild(config) {
   const declared = config.e2e?.outsideBuild;
@@ -13,6 +30,8 @@ export function outsideBuild(config) {
 // REQ-STORE-026, REQ-STORE-027
 export async function e2eStanding(root, config, release, commit) {
   if (typeof release?.task !== 'string' || release.task === '') return { problem: null, from: null };
+  // REQ-STORE-028
+  if (release.e2eRequired === false) return { problem: null, from: null };
   const checked = release.e2e?.commit ?? null;
   if (checked === commit) return { problem: null, from: null };
   const lead = `Выпуск ${release.id} ведёт задача ${release.task}: закрывается только коммит с зелёным e2e выпуска,`;

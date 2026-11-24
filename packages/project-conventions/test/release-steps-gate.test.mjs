@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { tagCommit, tagMessage } from '../lib/release/git.mjs';
-import { closeRelease, freezeRelease } from '../lib/store/cycle.mjs';
+import { closeRelease, freezeRelease, openRelease } from '../lib/store/cycle.mjs';
 import { manifestOf } from '../lib/store/shape.mjs';
 import { OBLIGATION, project } from './store-project.mjs';
 
@@ -132,6 +132,69 @@ test('store --check: due у условия — только "freeze" и толь
     assert.match(said, /условие sign-off: due — только "freeze" и только у before-release/);
     assert.match(said, /условие qa: due — только "freeze" и только у before-release/);
     assert.doesNotMatch(said, /условие ok:/);
+  } finally {
+    await p.stop();
+  }
+});
+
+// REQ-STORE-028
+test('проект без e2e: выпуск с задачей открывается с e2eRequired: false и закрывается без записи e2e', async () => {
+  const p = await project({ extra: { e2e: { required: false, reason: 'у проекта нет QA-стенда' } } });
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done' });
+    p.store.add('SHOP-OPS-009', { status: 'in_progress' });
+    const opened = await p.command('release', 'open', '--task', 'SHOP-OPS-009');
+    assert.equal(opened.code, 0, opened.stderr);
+    assert.match(opened.stdout, /e2e выпуску не требуется: у проекта нет QA-стенда/);
+    assert.equal(p.store.open().e2eRequired, false);
+    assert.equal(p.store.open().e2eReason, 'у проекта нет QA-стенда');
+    const status = JSON.parse((await p.command('release', 'status', '--json')).stdout);
+    assert.equal(status.release.e2eRequired, false);
+
+    const head = await p.attest();
+    const closed = await closeRelease(p.root, p.context());
+    assert.equal(closed.closed, true, JSON.stringify(closed.problems));
+    assert.equal(await tagCommit(p.root, '2026.11.1'), head);
+    assert.equal(manifestOf(await tagMessage(p.root, '2026.11.1')).e2eRequired, false);
+  } finally {
+    await p.stop();
+  }
+});
+
+// REQ-STORE-028
+test('e2e.required: false без причины или вместе с outsideBuild — выпуск с задачей не открывается; без задачи объявление не читается', async () => {
+  const p = await project({ extra: { e2e: { required: false } } });
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done' });
+    const bare = await p.command('release', 'open', '--task', 'SHOP-OPS-001');
+    assert.equal(bare.code, 1);
+    assert.match(bare.stdout + bare.stderr, /e2e\.required: false в \.conventions\.json объявляется с причиной reason/);
+    p.config.e2e = { required: false, reason: 'нет стенда', outsideBuild: ['.github/'] };
+    const mixed = await openRelease(p.root, p.context(), { tickets: [], task: 'SHOP-OPS-001' });
+    assert.equal(mixed.opened, false);
+    assert.match(mixed.problems.join('\n'), /не сочетается с required: false/);
+    assert.equal(p.store.open(), null);
+    const plain = await openRelease(p.root, p.context(), { tickets: [] });
+    assert.equal(plain.opened, true);
+    assert.equal(p.store.open().e2eRequired, undefined);
+  } finally {
+    await p.stop();
+  }
+});
+
+// REQ-STORE-028
+test('выпуск с задачей без объявления по-прежнему требует e2e; store --check: e2eRequired — логическое', async () => {
+  const p = await project();
+  try {
+    p.store.add('SHOP-OPS-001', { status: 'done' });
+    assert.equal((await p.command('release', 'open', '--task', 'SHOP-OPS-001')).code, 0);
+    assert.equal(p.store.open().e2eRequired, undefined);
+    await p.attest();
+    const closed = await closeRelease(p.root, p.context());
+    assert.match(closed.problems.join('\n'), /а e2e не записан/);
+    p.store.open().e2eRequired = 'no';
+    const checked = await p.command('store', '--check');
+    assert.match(checked.stdout + checked.stderr, /открытый выпуск: e2eRequired — true либо false/);
   } finally {
     await p.stop();
   }

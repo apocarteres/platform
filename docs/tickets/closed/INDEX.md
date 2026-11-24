@@ -14,7 +14,7 @@ authority: navigation
 
 Правила ведения задач — `REQ-TICKETS` в поставке пакета правил.
 
-Всего: 248. Включены самостоятельные задачи и этапы планов функций.
+Всего: 249. Включены самостоятельные задачи и этапы планов функций.
 
 | Задача | Приоритет | Статус | Выпуск | Области |
 |---|---|---|---|---|
@@ -135,6 +135,7 @@ authority: navigation
 | [Отметка действия развёртывания — по номеру пункта, а не по тексту](CORE-OPS-134-action-marks-by-item.md) | P1 | Выполнена | [RELEASE-20-1-1](../../releases/RELEASE-20-1-1.md) | release, tooling |
 | [Выпуск по шагам: задача выпуска, заморозка и e2e отдельными командами](CORE-OPS-135-release-steps.md) | P1 | Выполнена | [RELEASE-20-2-0](../../releases/RELEASE-20-2-0.md) | release, tooling |
 | [Заморозка проверяет закрываемость; e2e переносится через правки вне сборки](CORE-OPS-136-freeze-gate-e2e-carry.md) | P1 | Выполнена | [RELEASE-20-3-0](../../releases/RELEASE-20-3-0.md) | release, tooling |
+| [Выпуск с задачей у проекта без e2e](CORE-OPS-137-e2e-not-required.md) | P1 | Выполнена | [RELEASE-20-4-0](../../releases/RELEASE-20-4-0.md) | release, tooling |
 | [Starter `platform-time`: порт часов](CORE-QUAL-001-platform-time.md) | P1 | Выполнена | [RELEASE-0-19-0](../../releases/RELEASE-0-19-0.md) | backend, java |
 | [Документ открытого выпуска приходится править руками](CORE-QUAL-007-open-release-document-needs-hand-edits.md) | P1 | Выполнена | [RELEASE-1-10-0](../../releases/RELEASE-1-10-0.md) | tooling, process |
 | [Ограничитель предполагает, что находки только убывают](CORE-QUAL-008-ratchet-assumes-findings-only-shrink.md) | P1 | Выполнена | [RELEASE-1-20-0](../../releases/RELEASE-1-20-0.md) | quality, tooling |

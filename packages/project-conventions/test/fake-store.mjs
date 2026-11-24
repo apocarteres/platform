@@ -68,7 +68,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
   });
 
   const OPERATIONS = {
-    openRelease({ id, tickets = [], task }) {
+    openRelease({ id, tickets = [], task, e2eRequired, e2eReason }) {
       const already = open();
       if (already !== null) throw new Refusal('release-already-open', `выпуск ${already.id} уже открыт`);
       const [year, month] = today.split('-');
@@ -86,6 +86,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
       state.releases.push({
         id: releaseId, status: 'draft', openedOn: today, named: named.map((ticket) => ticket.id), dropped: [], accounted: [], actions: [],
         result: null, retagged: [], task: task ?? null, e2e: null,
+        ...(e2eRequired === false ? { e2eRequired: false, e2eReason } : {}),
       });
     },
     recordE2e({ commit, from }) {
@@ -178,13 +179,13 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
     closeRelease(args) {
       const release = open();
       if (release === null || !['closing', 'draft'].includes(release.status)) throw new Refusal('release-not-open', 'закрывается выпуск в draft или closing');
-      if (release.task && release.e2e?.commit !== args.commit) throw new Refusal('release-commit-unchecked', 'коммит не проверен');
+      if (release.task && release.e2eRequired !== false && release.e2e?.commit !== args.commit) throw new Refusal('release-commit-unchecked', 'коммит не проверен');
       settle(release, args);
     },
     recloseRelease(args) {
       const release = open();
       if (release?.status !== 'closing' || release.frozenFrom !== 'in_progress') throw new Refusal('release-not-open', 'перезакрывается замороженный выпуск после первого шага');
-      if (release.task && release.e2e?.commit !== args.commit) throw new Refusal('release-commit-unchecked', 'коммит не проверен');
+      if (release.task && release.e2eRequired !== false && release.e2e?.commit !== args.commit) throw new Refusal('release-commit-unchecked', 'коммит не проверен');
       release.retagged.push({ from: release.result.commit, to: args.commit, reason: args.reason });
       settle(release, args);
     },

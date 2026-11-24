@@ -52,8 +52,10 @@ async function statusReport(root, context) {
   if (open.release === null) return report;
   const state = await storeStanding(root, { ...context, retagging: true });
   const { id, status: standing } = state.release;
-  // REQ-STORE-026
-  report.release = { id, status: standing, task: state.release.task ?? null, e2e: state.release.e2e ?? null };
+  // REQ-STORE-026, REQ-STORE-028
+  report.release = {
+    id, status: standing, task: state.release.task ?? null, e2e: state.release.e2e ?? null, e2eRequired: state.release.e2eRequired !== false,
+  };
   report.tag = state.tag;
   report.composition = state.composition.map((ticket) => ({
     id: ticket.metadata.get('id'), title: ticket.title, status: ticket.metadata.get('status'), conditions: ticket.conditions,
@@ -151,6 +153,8 @@ async function open(root, context, version, tickets, task) {
   }
   console.log(`Открыт выпуск ${result.id}, тег при закрытии: ${result.tag}.`);
   if (task) console.log(`- выпуск ведёт задача ${task}`);
+  // REQ-STORE-028
+  if (result.e2eReason) console.log(`- e2e выпуску не требуется: ${result.e2eReason}`);
   for (const ticket of result.named) console.log(`- в состав указана задача ${ticket}`);
   for (const id of result.taken) console.log(`- обязательство ${id} взято в работу: задача заведена в хранилище`);
 }

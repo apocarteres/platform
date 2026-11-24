@@ -88,11 +88,12 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
         result: null, retagged: [], task: task ?? null, e2e: null,
       });
     },
-    recordE2e({ commit }) {
+    recordE2e({ commit, from }) {
       const release = open();
       if (release === null) throw new Refusal('release-not-open', 'открытого выпуска нет');
       if (!/^[0-9a-f]{40}$/.test(commit ?? '')) throw new Refusal('e2e-invalid', 'commit — полный хеш коммита', 400);
-      release.e2e = { commit, at: today };
+      if (from !== undefined && !/^[0-9a-f]{40}$/.test(from)) throw new Refusal('e2e-invalid', 'from — полный хеш коммита', 400);
+      release.e2e = { commit, at: today, ...(from === undefined ? {} : { from }) };
     },
     dropTicket({ ticket: name, reason }) {
       const release = draft('снятие задачи');
@@ -183,6 +184,7 @@ export async function fakeStore({ key = 'DEMO', today = '2026-11-12', readKey = 
     recloseRelease(args) {
       const release = open();
       if (release?.status !== 'closing' || release.frozenFrom !== 'in_progress') throw new Refusal('release-not-open', 'перезакрывается замороженный выпуск после первого шага');
+      if (release.task && release.e2e?.commit !== args.commit) throw new Refusal('release-commit-unchecked', 'коммит не проверен');
       release.retagged.push({ from: release.result.commit, to: args.commit, reason: args.reason });
       settle(release, args);
     },

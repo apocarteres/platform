@@ -98,8 +98,8 @@ async function commitProblems(root, { config, store, client, commits: range, com
   });
 }
 
-// REQ-RELEASE-001, REQ-STORE-008, REQ-STORE-010
-export async function storeStanding(root, { config, store, client, scheme, retagging = false }) {
+// REQ-RELEASE-001, REQ-STORE-008, REQ-STORE-010, REQ-STORE-027
+export async function storeStanding(root, { config, store, client, scheme, retagging = false, freezing = false }) {
   const open = await client.openRelease();
   if (open.release === null) {
     return { problems: ['Открытого выпуска нет: откройте выпуск командой release open или на доске хранилища'], reminders: [], release: null, open };
@@ -128,10 +128,11 @@ export async function storeStanding(root, { config, store, client, scheme, retag
         + ' слейте её работу в main либо снимите из состава командой release drop с причиной');
     }
   }
-  // REQ-STORE-025
+  // REQ-STORE-025, REQ-STORE-027
   for (const ticket of composition.filter((item) => ships(item, merged))) {
-    for (const condition of pendingBefore(ticket)) {
-      problems.push(`Задача ${ticketId(ticket)}: условие выпуска ${condition.key} (before-release) не выполнено —`
+    for (const condition of pendingBefore(ticket).filter((one) => !freezing || one.due === 'freeze')) {
+      const due = condition.due === 'freeze' ? 'before-release, до заморозки' : 'before-release';
+      problems.push(`Задача ${ticketId(ticket)}: условие выпуска ${condition.key} (${due}) не выполнено —`
         + ' выполните его в хранилище либо снимите задачу из состава командой release drop с причиной');
     }
   }

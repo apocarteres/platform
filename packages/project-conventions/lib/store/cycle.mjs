@@ -3,6 +3,7 @@ import { loadObligations, pendingObligations } from '../release/obligations.mjs'
 import { commitSubject, createTag, headCommit, moveTag, tagCommit, tagMessage } from '../release/git.mjs';
 import { inRolloutOrder } from '../release/rollout.mjs';
 import { accountState, compositionOf, localStanding, ships, storeStanding } from './gate.mjs';
+import { e2eStanding } from './e2e.mjs';
 import { actionsOf, asDocument, manifestComposition, manifestMessage, manifestOf } from './shape.mjs';
 
 // REQ-STORE-012
@@ -71,16 +72,6 @@ async function replayed(root, { client, release, tag }) {
 }
 
 // REQ-STORE-026
-function uncheckedCommit(release, commit) {
-  if (typeof release?.task !== 'string' || release.task === '') return null;
-  const checked = release.e2e?.commit ?? null;
-  if (checked === commit) return null;
-  return `Выпуск ${release.id} ведёт задача ${release.task}: закрывается только коммит с зелёным e2e выпуска,`
-    + ` а e2e ${checked === null ? 'не записан' : `записан на ${checked.slice(0, 8)}`}, закрывается ${commit.slice(0, 8)}.`
-    + ` Запишите прогон на этом коммите командой release record-e2e --commit ${commit}`;
-}
-
-// REQ-STORE-026
 export async function freezeRelease(root, context) {
   const open = await context.client.openRelease();
   if (open.release === null) {
@@ -90,6 +81,9 @@ export async function freezeRelease(root, context) {
     return { frozen: false, problems: [`Замораживается выпуск в draft, а ${open.release.id} — ${open.release.status}`] };
   }
   await settle(root, context);
+  // REQ-STORE-027
+  const state = await storeStanding(root, { ...context, freezing: true });
+  if (state.problems.length > 0) return { frozen: false, problems: state.problems };
   await context.client.operate('freezeRelease', {});
   return { frozen: true, id: open.release.id };
 }
@@ -148,9 +142,9 @@ export async function closeRelease(root, context, { reason = null } = {}) {
   };
   try {
     const state = await storeStanding(root, { ...context, retagging });
-    // REQ-STORE-026
-    const unchecked = uncheckedCommit(state.release, commit);
-    if (unchecked !== null) state.problems.push(unchecked);
+    // REQ-STORE-026, REQ-STORE-027
+    const e2e = await e2eStanding(root, config, state.release, commit);
+    if (e2e.problem !== null) state.problems.push(e2e.problem);
     if (state.problems.length > 0) {
       await thaw('Проверки закрытия не пройдены');
       return { closed: false, problems: state.problems, reminders: state.reminders };
@@ -163,9 +157,12 @@ export async function closeRelease(root, context, { reason = null } = {}) {
       composition: manifestComposition(composition),
       actions: actionsOf(composition, state.release.actions ?? []),
       receipt: receiptOf(receipt),
+      ...(e2e.from === null ? {} : { e2e: { commit, from: e2e.from } }),
       ...(retagging ? { reason: reason.trim(), from: tagged } : {}),
     };
     try {
+      // REQ-STORE-027
+      if (e2e.from !== null) await client.operate('recordE2e', { commit, from: e2e.from });
       if (retagging) await moveTag(root, tag, commit, manifestMessage(manifest));
       else await createTag(root, tag, commit, manifestMessage(manifest));
     } catch (failure) {

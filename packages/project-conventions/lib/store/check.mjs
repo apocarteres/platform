@@ -30,6 +30,10 @@ function ticketProblems(ticket) {
       if (typeof condition?.key !== 'string' || condition.key === '') problems.push(`${where}: условие без ключа key`);
       if (!PHASES.includes(condition?.phase)) problems.push(`${where}: условие ${condition?.key}: phase — ${PHASES.join(' либо ')}`);
       if (!STATES.includes(condition?.state)) problems.push(`${where}: условие ${condition?.key}: state — ${STATES.join(', ')}`);
+      // REQ-STORE-027
+      if (condition?.due !== undefined && (condition.due !== 'freeze' || condition.phase !== 'before-release')) {
+        problems.push(`${where}: условие ${condition?.key}: due — только "freeze" и только у before-release`);
+      }
     }
     const keys = ticket.conditions.map((condition) => condition?.key);
     if (new Set(keys).size !== keys.length) problems.push(`${where}: ключи условий повторяются`);

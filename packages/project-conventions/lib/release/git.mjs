@@ -134,3 +134,19 @@ export async function commitSubject(root, ref) {
     return null;
   }
 }
+
+// REQ-STORE-027
+export async function isAncestor(root, ancestor, commit) {
+  try {
+    await run('git', ['-C', root, 'merge-base', '--is-ancestor', ancestor, commit], { env: environmentWithoutGit() });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// REQ-STORE-027
+export async function changedFiles(root, from, to) {
+  const listing = await git(root, ['diff', '--name-only', '--no-renames', from, to]);
+  return listing === '' ? [] : listing.split('\n');
+}

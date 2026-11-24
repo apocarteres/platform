@@ -41,7 +41,11 @@ export const STATES = ['pending', 'done', 'not-required'];
 // REQ-STORE-025
 function conditionsOf(ticket) {
   return (Array.isArray(ticket.conditions) ? ticket.conditions : [])
-    .map((one) => ({ key: String(one?.key ?? ''), phase: String(one?.phase ?? ''), state: String(one?.state ?? '') }));
+    .map((one) => ({
+      key: String(one?.key ?? ''), phase: String(one?.phase ?? ''), state: String(one?.state ?? ''),
+      // REQ-STORE-027
+      ...(one?.due === 'freeze' ? { due: 'freeze' } : {}),
+    }));
 }
 
 // REQ-STORE-025
